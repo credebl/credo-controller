@@ -1,7 +1,7 @@
 import type { DidResolutionResultProps } from '../types'
 
 import { Agent } from '@aries-framework/core'
-import { Controller, Example, Get, Path, Route, Tags } from 'tsoa'
+import { Controller, Example, Get, Path, Post, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { Did, DidRecordExample } from '../examples'
