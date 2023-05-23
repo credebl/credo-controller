@@ -1023,6 +1023,9 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ProofExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"IndyRevocationInterval": {
 				"properties": {
 					"from": {
@@ -4512,12 +4515,57 @@
 				}
 			}
 		},
+		"/proofs/request-outofband-proof": {
+			"post": {
+				"operationId": "RequestProofOutOfBand",
+				"responses": {
+					"200": {
+						"description": "ProofRequestMessageResponse",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"proofRecord": {
+											"$ref": "#/components/schemas/ProofExchangeRecord"
+										},
+										"proofUrl": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"proofRecord",
+										"proofUrl"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Creates a presentation request not bound to any proposal or existing connection",
+				"tags": [
+					"Proofs"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RequestProofOptions"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/proofs/request-proof": {
 			"post": {
 				"operationId": "RequestProof",
 				"responses": {
 					"200": {
-						"description": "ProofRequestMessageResponse",
+						"description": "ProofRecord",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -4573,7 +4621,7 @@
 						}
 					}
 				},
-				"description": "Creates a presentation request not bound to any proposal or existing connection",
+				"description": "Creates a presentation request bound to existing connection",
 				"tags": [
 					"Proofs"
 				],
