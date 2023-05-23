@@ -1,53 +1,61 @@
-import type { TestLogger } from './logger'
-import type { AutoAcceptCredential, InitConfig } from '@aries-framework/core'
+import type { InitConfig } from '@aries-framework/core'
 
-import { Agent, ConnectionInvitationMessage, HttpOutboundTransport } from '@aries-framework/core'
+import {
+  AutoAcceptCredential,
+  AutoAcceptProof,
+  Agent,
+  ConnectionInvitationMessage,
+  HttpOutboundTransport,
+  LogLevel,
+  utils,
+} from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
+import path from 'path'
 
+import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
 
-export async function setupAgent({
-  port,
+export const genesisPath = process.env.GENESIS_TXN_PATH
+  ? path.resolve(process.env.GENESIS_TXN_PATH)
+  : path.join(__dirname, '../../../../network/genesis/local-genesis.txn')
+
+export const setupAgent = async ({
+  name,
   publicDidSeed,
   endpoints,
-  name,
-  logger,
-  autoAcceptConnection,
-  autoAcceptCredential,
-  useLegacyDidSovPrefix,
+  port,
 }: {
-  port: number
+  name: string
   publicDidSeed: string
   endpoints: string[]
-  name: string
-  logger: TestLogger
-  autoAcceptConnection: boolean
-  autoAcceptCredential: AutoAcceptCredential
-  useLegacyDidSovPrefix: boolean
-}) {
-  const agentConfig: InitConfig = {
+  port: number
+}) => {
+  const logger = new TsLogger(LogLevel.debug)
+
+  const config: InitConfig = {
+    publicDidSeed,
     label: name,
-    walletConfig: {
-      id: name,
-      key: name,
-    },
+    endpoints: endpoints,
+    autoAcceptConnections: true,
+    autoAcceptProofs: AutoAcceptProof.ContentApproved,
+    autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
+    walletConfig: { id: name, key: name },
+    // connectToIndyLedgersOnStartup: false,
+    // useLegacyDidSovPrefix: true,
+    logger: logger,
     indyLedgers: [
       {
-        id: 'BCovrin Genesis',
+        id: `TestLedger-${utils.uuid()}`,
         genesisTransactions: BCOVRIN_TEST_GENESIS,
         isProduction: false,
-        indyNamespace: ''
+        indyNamespace: 'key',
       },
     ],
-    publicDidSeed: publicDidSeed,
-    endpoints: endpoints,
-    autoAcceptConnections: autoAcceptConnection,
-    autoAcceptCredentials: autoAcceptCredential,
-    useLegacyDidSovPrefix: useLegacyDidSovPrefix,
-    logger: logger,
   }
-
-  const agent = new Agent(agentConfig, agentDependencies)
+  const agent = new Agent({
+    config,
+    dependencies: agentDependencies,
+  })
 
   const httpInbound = new HttpInboundTransport({
     port: port,
@@ -66,9 +74,9 @@ export async function setupAgent({
       const invitation = await ConnectionInvitationMessage.fromUrl(req.url)
       res.send(invitation.toJSON())
     } else {
-      const { invitation } = await agent.connections.createConnection()
+      const { outOfBandInvitation } = await agent.oob.createInvitation()
 
-      res.send(invitation.toUrl({ domain: endpoints + '/invitation', useLegacyDidSovPrefix: useLegacyDidSovPrefix }))
+      res.send(outOfBandInvitation.toUrl({ domain: endpoints + '/invitation' }))
     }
   })
 
