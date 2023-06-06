@@ -1,9 +1,9 @@
 import type { Version } from '../examples'
 import type { Schema } from 'indy-sdk'
-import { AnonCredsError } from '@aries-framework/anoncreds'
+import { AnonCredsError, AnonCredsApi } from '@aries-framework/anoncreds'
 import { Agent, AriesFrameworkError } from '@aries-framework/core'
-import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
-import { isIndyError } from '@aries-framework/core/build/utils/indyError'
+// import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
+// import { isIndyError } from '@aries-framework/core/build/utils/indyError'
 import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -14,9 +14,11 @@ import { SchemaId, SchemaExample } from '../examples'
 @injectable()
 export class SchemaController {
   private agent: Agent
+  private anonCredsSchema: AnonCredsApi
 
-  public constructor(agent: Agent) {
+  public constructor(agent: Agent, anonCredsSchema: AnonCredsApi) {
     this.agent = agent
+    this.anonCredsSchema = anonCredsSchema
   }
 
   /**
@@ -35,19 +37,19 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.modules.getSchema(schemaId)
+      return await this.anonCredsSchema.getSchema(schemaId)
     } catch (error) {
       if (error instanceof AnonCredsError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
           reason: `schema definition with schemaId "${schemaId}" not found.`,
         })
-      } else if (error instanceof LedgerError && error.cause instanceof AnonCredsError) {
-        if (isIndyError(error.cause.cause, 'LedgerInvalidTransaction')) {
+      } else if (error instanceof AnonCredsError && error.cause instanceof AnonCredsError) {
+        if (error.cause.cause, 'LedgerInvalidTransaction') {
           return forbiddenError(403, {
             reason: `schema definition with schemaId "${schemaId}" can not be returned.`,
           })
         }
-        if (isIndyError(error.cause.cause, 'CommonInvalidStructure')) {
+        if (error.cause.cause, 'CommonInvalidStructure') {
           return badRequestError(400, {
             reason: `schemaId "${schemaId}" has invalid structure.`,
           })
@@ -78,7 +80,7 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.modules.registerSchema({
+      return await this.anonCredsSchema.registerSchema({
         schema: {
           issuerId: schema.issuerId,
           name: schema.name,
