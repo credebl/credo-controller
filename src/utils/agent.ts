@@ -1,14 +1,11 @@
-import { ConnectionsModule, CredentialsModule, DidsModule, InitConfig, ProofsModule, V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
+import { CredentialsModule, DidsModule, InitConfig, ProofsModule, V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
 import indySdk from 'indy-sdk'
 
 import {
-  AutoAcceptCredential,
-  AutoAcceptProof,
   Agent,
   ConnectionInvitationMessage,
   HttpOutboundTransport,
   LogLevel,
-  utils,
 } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
 import path from 'path'
@@ -16,10 +13,6 @@ import path from 'path'
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
-import { AskarModule } from '@aries-framework/askar'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidRegistrar, IndyVdrIndyDidResolver, IndyVdrModule } from '@aries-framework/indy-vdr'
-import { CheqdAnonCredsRegistry, CheqdDidRegistrar, CheqdDidResolver } from '@aries-framework/cheqd'
 import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
 
 export const genesisPath = process.env.GENESIS_TXN_PATH
