@@ -9,23 +9,27 @@ import type {
   // V2ProofService,
 } from '@aries-framework/core'
 
+import type {
+  V1ProofProtocol
+} from '@aries-framework/anoncreds'
+
 import { Agent, RecordNotFoundError } from '@aries-framework/core'
-import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder'
 import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
-import { RequestProofOptions, RequestProofProposalOptions } from '../types'
+import { AcceptProofProposal, RequestProofOptions, RequestProofProposalOptions } from '../types'
 
 @Tags('Proofs')
 @Route('/proofs')
 @injectable()
 export class ProofController extends Controller {
   private agent: Agent
-
-  public constructor(agent: Agent) {
+  private v1ProofProtocol: V1ProofProtocol
+  public constructor(agent: Agent, v1ProofProtocol: V1ProofProtocol) {
     super()
     this.agent = agent
+    this.v1ProofProtocol = v1ProofProtocol
   }
 
   /**
@@ -37,7 +41,7 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
   public async getAllProofs(@Query('threadId') threadId?: string) {
-    let proofs = await this.agent.proofs.getAll()
+    let proofs = await this.v1ProofProtocol.getAll(this.agent.context)
 
     if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
 
@@ -58,7 +62,7 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.getById(proofRecordId)
+      const proof = await this.v1ProofProtocol.getById(this.agent.context, proofRecordId)
 
       return proof.toJSON()
     } catch (error) {
@@ -76,24 +80,24 @@ export class ProofController extends Controller {
    *
    * @param proofRecordId
    */
-  @Delete('/:proofRecordId')
-  public async deleteProof(
-    @Path('proofRecordId') proofRecordId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    try {
-      this.setStatus(204)
-      await this.agent.proofs.deleteById(proofRecordId)
-    } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
-    }
-  }
+  // @Delete('/:proofRecordId')
+  // public async deleteProof(
+  //   @Path('proofRecordId') proofRecordId: RecordId,
+  //   @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+  //   @Res() internalServerError: TsoaResponse<500, { message: string }>
+  // ) {
+  //   try {
+  //     this.setStatus(204)
+  //     await this.v1ProofProtocol.delete(proofRecordId)
+  //   } catch (error) {
+  //     if (error instanceof RecordNotFoundError) {
+  //       return notFoundError(404, {
+  //         reason: `proof with proofRecordId "${proofRecordId}" not found.`,
+  //       })
+  //     }
+  //     return internalServerError(500, { message: `something went wrong: ${error}` })
+  //   }
+  // }
 
   /**
    * Initiate a new presentation exchange as prover by sending a presentation proposal request
@@ -115,7 +119,7 @@ export class ProofController extends Controller {
       // const presentationPreview = JsonTransformer.fromJSON({ attributes, predicates }, PresentationPreview)
 
       const proposeProof = {
-        connectionId: proposal.connectionId,
+        connectionRecord: proposal.connectionRecord,
         proofFormats: proposal.proofFormats,
         protocolVersion: proposal.protocolVersion,
         autoAcceptProof: proposal.autoAcceptProof,
@@ -124,9 +128,9 @@ export class ProofController extends Controller {
         parentThreadId: proposal.parentThreadId,
       }
 
-      const proof = await this.agent.proofs.proposeProof(proposeProof)
+      const proof = await this.v1ProofProtocol.createProposal(this.agent.context, proposeProof)
 
-      return proof.toJSON()
+      return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
@@ -149,23 +153,14 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptProposal(
     @Path('proofRecordId') proofRecordId: string,
-    @Body()
-    proposal: {
-      request: { name?: string; version?: string }
-      comment?: string
-    },
+    @Body() acceptProposal: AcceptProofProposal,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.acceptProposal({
-        proofRecordId,
-        proofFormats: {
-          
-        }
-      })
+      const proof = await this.v1ProofProtocol.acceptProposal(this.agent.context, acceptProposal)
 
-      return proof.toJSON()
+      return proof;
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
@@ -182,46 +177,46 @@ export class ProofController extends Controller {
    * @param request
    * @returns ProofRequestMessageResponse
    */
-  @Post('/request-outofband-proof')
-  // @Example<{ proofUrl: string; proofRecord: ProofExchangeRecordProps }>({
-  //   proofUrl: 'https://example.com/proof-url',
-  //   proofRecord: ProofRecordExample,
-  // })
-  public async requestProofOutOfBand(@Body() request: RequestProofOptions) {
-    // const requestProofOutOfBandRequestPayload: CreateProofRequestOptions<
-    //   [IndyProofFormat],
-    //   [V1ProofService, V2ProofService<[IndyProofFormat]>]
-    // > = {
-    //   protocolVersion: request.protocolVersion,
-    //   proofFormats: request.proofFormats,
-    //   comment: request.comment,
-    //   autoAcceptProof: request.autoAcceptProof,
-    //   parentThreadId: request.parentThreadId,
-    // }
-    const { connectionId, proofRequestOptions, ...config } = request
+  // @Post('/request-outofband-proof')
+  // // @Example<{ proofUrl: string; proofRecord: ProofExchangeRecordProps }>({
+  // //   proofUrl: 'https://example.com/proof-url',
+  // //   proofRecord: ProofRecordExample,
+  // // })
+  // public async requestProofOutOfBand(@Body() request: RequestProofOptions) {
+  //   // const requestProofOutOfBandRequestPayload: CreateProofRequestOptions<
+  //   //   [IndyProofFormat],
+  //   //   [V1ProofService, V2ProofService<[IndyProofFormat]>]
+  //   // > = {
+  //   //   protocolVersion: request.protocolVersion,
+  //   //   proofFormats: request.proofFormats,
+  //   //   comment: request.comment,
+  //   //   autoAcceptProof: request.autoAcceptProof,
+  //   //   parentThreadId: request.parentThreadId,
+  //   // }
+  //   const { connectionId, proofRequestOptions, ...config } = request
 
-    const proof = await this.agent.proofs.createRequest({
-      protocolVersion: 'v2',
-      comment: request.comment,
-      proofFormats: {
-        indy: {
-          name: 'proof-request',
-          version: '1.0',
-          nonce: await this.agent.wallet.generateNonce(),
-          requestedAttributes: proofRequestOptions.requestedAttributes,
-          requestedPredicates: proofRequestOptions.requestedPredicates,
-        },
-      },
-      autoAcceptProof: request.autoAcceptProof,
-    })
+  //   const proof = await this.agent.proofs.createRequest({
+  //     protocolVersion: config.protocolVersion,
+  //     comment: config.comment,
+  //     proofFormats: {
+  //       indy: {
+  //         name: 'proof-request',
+  //         version: '1.0',
+  //         nonce: await this.agent.wallet.generateNonce(),
+  //         requestedAttributes: proofRequestOptions.requestedAttributes,
+  //         requestedPredicates: proofRequestOptions.requestedPredicates,
+  //       },
+  //     },
+  //     autoAcceptProof: request.autoAcceptProof,
+  //   })
 
-    return {
-      proofUrl: `${this.agent.config.endpoints[0]}/?d_m=${JsonEncoder.toBase64URL(
-        proof.message.toJSON({ useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed })
-      )}`,
-      proofRecord: proof.proofRecord,
-    }
-  }
+  //   return {
+  //     proofUrl: `${this.agent.config.endpoints[0]}/?d_m=${JsonEncoder.toBase64URL(
+  //       proof.message.toJSON({ useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed })
+  //     )}`,
+  //     proofRecord: proof.proofRecord,
+  //   }
+  // }
 
   /**
    * Creates a presentation request bound to existing connection
@@ -263,7 +258,7 @@ export class ProofController extends Controller {
   @Post('/request-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async requestProof(
-    @Body() request: RequestProofOptions<T>,
+    @Body() request: RequestProofOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
@@ -271,14 +266,13 @@ export class ProofController extends Controller {
 
     try {
 
-      const proof = await this.agent.proofs.requestProof({
-        connectionId: connectionId,
-        protocolVersion: proofRequestOptions.version,
-        comment: request.comment,
-        proofFormats: request.proofFormats
+      const proof = await this.v1ProofProtocol.createRequest(this.agent.context, {
+        connectionRecord: config.connectionRecord,
+        comment: config.comment,
+        proofFormats: config.proofFormats
       })
 
-      return proof.toJSON()
+      return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
@@ -312,14 +306,6 @@ export class ProofController extends Controller {
   ) {
     try {
       const { filterByPresentationPreview, filterByNonRevocationRequirements, comment } = request
-
-      // const retrievedCredentials = await this.agent.proofs.getRequestedCredentialsForProofRequest({
-      //   proofRecordId,
-      //   config: {
-      //     filterByNonRevocationRequirements,
-      //     filterByPresentationPreview,
-      //   },
-      // })
 
       const requestedCredentials = this.agent.proofs.selectCredentialsForRequest({
         proofRecordId,
