@@ -97,9 +97,13 @@
 					"request-received",
 					"credential-issued",
 					"credential-received",
-					"done"
+					"done",
+					"abandoned"
 				],
 				"type": "string"
+			},
+			"ConnectionRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"AutoAcceptCredential": {
 				"description": "Typing of the state for auto acceptance",
@@ -112,12 +116,8 @@
 			},
 			"ProposeCredentialOptions": {
 				"properties": {
-					"protocolVersion": {
-						"type": "string",
-						"enum": [
-							"v1",
-							"v2"
-						]
+					"connectionRecord": {
+						"$ref": "#/components/schemas/ConnectionRecord"
 					},
 					"credentialFormats": {
 						"properties": {
@@ -188,15 +188,21 @@
 					}
 				},
 				"required": [
-					"protocolVersion",
+					"connectionRecord",
 					"credentialFormats",
 					"connectionId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CredentialExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"AcceptCredentialProposalOptions": {
 				"properties": {
+					"credentialRecord": {
+						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					},
 					"credentialFormats": {
 						"properties": {
 							"indy": {
@@ -262,18 +268,14 @@
 						"type": "string"
 					}
 				},
+				"required": [
+					"credentialRecord"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"CreateOfferOptions": {
 				"properties": {
-					"protocolVersion": {
-						"type": "string",
-						"enum": [
-							"v1",
-							"v2"
-						]
-					},
 					"credentialFormats": {
 						"properties": {
 							"indy": {
@@ -320,97 +322,21 @@
 					}
 				},
 				"required": [
-					"protocolVersion",
 					"credentialFormats"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"OfferCredentialOptions": {
-				"properties": {
-					"protocolVersion": {
-						"type": "string",
-						"enum": [
-							"v1",
-							"v2"
-						]
-					},
-					"credentialFormats": {
-						"properties": {
-							"indy": {
-								"properties": {
-									"attributes": {
-										"items": {
-											"properties": {
-												"value": {
-													"type": "string"
-												},
-												"name": {
-													"type": "string"
-												}
-											},
-											"required": [
-												"value",
-												"name"
-											],
-											"type": "object"
-										},
-										"type": "array"
-									},
-									"credentialDefinitionId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"credentialDefinitionId"
-								],
-								"type": "object"
-							}
-						},
-						"required": [
-							"indy"
-						],
-						"type": "object"
-					},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					},
-					"connectionId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"protocolVersion",
-					"credentialFormats",
-					"connectionId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"IndyAcceptOfferFormat": {
-				"properties": {
-					"holderDid": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
 			"CredentialFormatPayload_CredentialFormats.acceptOffer_": {
-				"properties": {
-					"indy": {
-						"$ref": "#/components/schemas/IndyAcceptOfferFormat"
-					}
-				},
+				"properties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"AcceptCredentialOfferOptions": {
 				"properties": {
+					"credentialRecord": {
+						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
 					},
@@ -421,20 +347,22 @@
 						"type": "string"
 					}
 				},
+				"required": [
+					"credentialRecord"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
-				"properties": {
-					"indy": {
-						"$ref": "#/components/schemas/Record_string.any_"
-					}
-				},
+				"properties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"AcceptCredentialRequestOptions": {
 				"properties": {
+					"credentialRecord": {
+						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptRequest_"
 					},
@@ -445,6 +373,21 @@
 						"type": "string"
 					}
 				},
+				"required": [
+					"credentialRecord"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AcceptCredential": {
+				"properties": {
+					"credentialRecord": {
+						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					}
+				},
+				"required": [
+					"credentialRecord"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -492,6 +435,7 @@
 				"$ref": "#/components/schemas/Record_string.any_"
 			},
 			"DIDDocumentMetadata": {
+				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
 				"properties": {
 					"created": {
 						"type": "string"
@@ -552,6 +496,33 @@
 			"Did": {
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+			},
+			"DidRegistrationExtraOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidRegistrationSecretOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidCreateOptions": {
+				"properties": {
+					"method": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"options": {
+						"$ref": "#/components/schemas/DidRegistrationExtraOptions"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"HandshakeProtocol": {
 				"enum": [
@@ -862,7 +833,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"PresentationPreviewAttributeOptions": {
+			"V1PresentationPreviewAttributeOptions": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -886,16 +857,16 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"PredicateType": {
+			"AnonCredsPredicateType": {
+				"type": "string",
 				"enum": [
-					"<",
-					"<=",
+					">=",
 					">",
-					">="
-				],
-				"type": "string"
+					"<=",
+					"<"
+				]
 			},
-			"PresentationPreviewPredicateOptions": {
+			"V1PresentationPreviewPredicateOptions": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -904,7 +875,7 @@
 						"type": "string"
 					},
 					"predicate": {
-						"$ref": "#/components/schemas/PredicateType"
+						"$ref": "#/components/schemas/AnonCredsPredicateType"
 					},
 					"threshold": {
 						"type": "number",
@@ -929,62 +900,28 @@
 				],
 				"type": "string"
 			},
-			"PresentationPreviewAttribute": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"PresentationPreviewPredicate": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"IndyProposeProofFormat": {
-				"properties": {
-					"attributes": {
-						"items": {
-							"$ref": "#/components/schemas/PresentationPreviewAttribute"
-						},
-						"type": "array"
-					},
-					"predicates": {
-						"items": {
-							"$ref": "#/components/schemas/PresentationPreviewPredicate"
-						},
-						"type": "array"
-					},
-					"nonce": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"version": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ProofFormatPayload_%5BIndyProofFormat%5D.createProposal_": {
-				"properties": {
-					"indy": {
-						"$ref": "#/components/schemas/IndyProposeProofFormat"
-					}
-				},
+			"ProofFormatPayload_%5BProofFormat%5D.createProposal_": {
+				"properties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
 			},
 			"RequestProofProposalOptions": {
 				"properties": {
+					"connectionRecord": {
+						"$ref": "#/components/schemas/ConnectionRecord"
+					},
 					"connectionId": {
 						"type": "string"
 					},
 					"attributes": {
 						"items": {
-							"$ref": "#/components/schemas/PresentationPreviewAttributeOptions"
+							"$ref": "#/components/schemas/V1PresentationPreviewAttributeOptions"
 						},
 						"type": "array"
 					},
 					"predicates": {
 						"items": {
-							"$ref": "#/components/schemas/PresentationPreviewPredicateOptions"
+							"$ref": "#/components/schemas/V1PresentationPreviewPredicateOptions"
 						},
 						"type": "array"
 					},
@@ -997,12 +934,12 @@
 					"protocolVersion": {
 						"type": "string",
 						"enum": [
-							"v1",
-							"v2"
-						]
+							"v1"
+						],
+						"nullable": false
 					},
 					"proofFormats": {
-						"$ref": "#/components/schemas/ProofFormatPayload_%5BIndyProofFormat%5D.createProposal_"
+						"$ref": "#/components/schemas/ProofFormatPayload_%5BProofFormat%5D.createProposal_"
 					},
 					"goalCode": {
 						"type": "string"
@@ -1012,6 +949,7 @@
 					}
 				},
 				"required": [
+					"connectionRecord",
 					"connectionId",
 					"attributes",
 					"predicates",
@@ -1026,142 +964,73 @@
 			"ProofExchangeRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
-			"IndyRevocationInterval": {
-				"properties": {
-					"from": {
-						"type": "number",
-						"format": "double"
-					},
-					"to": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"AttributeValue": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"value": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"name",
-					"value"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"AttributeFilter": {
-				"properties": {
-					"schemaId": {
-						"type": "string"
-					},
-					"schemaIssuerDid": {
-						"type": "string"
-					},
-					"schemaName": {
-						"type": "string"
-					},
-					"schemaVersion": {
-						"type": "string"
-					},
-					"issuerDid": {
-						"type": "string"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					},
-					"attributeValue": {
-						"$ref": "#/components/schemas/AttributeValue"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ProofAttributeInfo": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"names": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"nonRevoked": {
-						"$ref": "#/components/schemas/IndyRevocationInterval"
-					},
-					"restrictions": {
-						"items": {
-							"$ref": "#/components/schemas/AttributeFilter"
-						},
-						"type": "array"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ProofPredicateInfo": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"predicateType": {
-						"$ref": "#/components/schemas/PredicateType"
-					},
-					"predicateValue": {
-						"type": "number",
-						"format": "double"
-					},
-					"nonRevoked": {
-						"$ref": "#/components/schemas/IndyRevocationInterval"
-					},
-					"restrictions": {
-						"items": {
-							"$ref": "#/components/schemas/AttributeFilter"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"name",
-					"predicateType",
-					"predicateValue"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ProofsProtocolVersionType_ProofService-Array_": {
-				"type": "string",
-				"description": "Get the supported protocol versions based on the provided proof services."
-			},
-			"ProofFormatPayload_ProofFormat-Array.createRequest_": {
+			"ProofFormatPayload_%5BProofFormat%5D.acceptProposal_": {
 				"properties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
 			},
-			"RequestProofOptions": {
+			"AcceptProofProposal": {
 				"properties": {
-					"protocolVersion": {
-						"$ref": "#/components/schemas/ProofsProtocolVersionType_ProofService-Array_"
+					"proofRecord": {
+						"$ref": "#/components/schemas/ProofExchangeRecord"
 					},
 					"proofFormats": {
-						"$ref": "#/components/schemas/ProofFormatPayload_ProofFormat-Array.createRequest_"
+						"$ref": "#/components/schemas/ProofFormatPayload_%5BProofFormat%5D.acceptProposal_"
 					},
 					"comment": {
 						"type": "string"
 					},
 					"autoAcceptProof": {
 						"$ref": "#/components/schemas/AutoAcceptProof"
+					}
+				},
+				"required": [
+					"proofRecord",
+					"comment",
+					"autoAcceptProof"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ProofsProtocolVersionType_ProofProtocol-Array_": {
+				"type": "string",
+				"description": "Get the supported protocol versions based on the provided proof protocols."
+			},
+			"ProofFormatPayload_ProofFormatsFromProtocols_ProofProtocol-Array_.createRequest_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
+			},
+			"RequestProofOptions": {
+				"properties": {
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
+					},
+					"protocolVersion": {
+						"type": "string",
+						"enum": [
+							"v2"
+						],
+						"nullable": false
+					},
+					"proofFormats": {
+						"$ref": "#/components/schemas/ProofFormatPayload_ProofFormatsFromProtocols_ProofProtocol-Array_.createRequest_"
+					},
+					"goalCode": {
+						"type": "string"
 					},
 					"parentThreadId": {
 						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean",
+						"default": "true"
+					},
+					"connectionRecord": {
+						"$ref": "#/components/schemas/ConnectionRecord"
 					},
 					"connectionId": {
 						"type": "string"
@@ -1171,14 +1040,14 @@
 							"requestedPredicates": {
 								"properties": {},
 								"additionalProperties": {
-									"$ref": "#/components/schemas/ProofPredicateInfo"
+									"$ref": "#/components/schemas/V1PresentationPreviewPredicateOptions"
 								},
 								"type": "object"
 							},
 							"requestedAttributes": {
 								"properties": {},
 								"additionalProperties": {
-									"$ref": "#/components/schemas/ProofAttributeInfo"
+									"$ref": "#/components/schemas/V1PresentationPreviewAttributeOptions"
 								},
 								"type": "object"
 							},
@@ -1199,6 +1068,7 @@
 				"required": [
 					"protocolVersion",
 					"proofFormats",
+					"connectionRecord",
 					"connectionId",
 					"proofRequestOptions"
 				],
@@ -1937,70 +1807,6 @@
 						}
 					}
 				]
-			},
-			"delete": {
-				"operationId": "DeleteCredential",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Deletes a credential exchange record in the credential repository.",
-				"tags": [
-					"Credentials"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "credentialRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
 			}
 		},
 		"/credentials/propose-credential": {
@@ -2008,7 +1814,7 @@
 				"operationId": "ProposeCredential",
 				"responses": {
 					"200": {
-						"description": "CredentialExchangeRecord",
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -2076,7 +1882,7 @@
 						}
 					}
 				},
-				"description": "Initiate a new credential exchange as holder by sending a propose credential message\nto the connection with a specified connection id.",
+				"description": "//  * Deletes a credential exchange record in the credential repository.\n//  *\n//  * @param credentialRecordId\n//",
 				"tags": [
 					"Credentials"
 				],
@@ -2094,7 +1900,7 @@
 				}
 			}
 		},
-		"/credentials/{credentialRecordId}/accept-proposal": {
+		"/credentials/accept-proposal": {
 			"post": {
 				"operationId": "AcceptProposal",
 				"responses": {
@@ -2172,19 +1978,9 @@
 					"Credentials"
 				],
 				"security": [],
-				"parameters": [
-					{
-						"description": "credential identifier",
-						"in": "path",
-						"name": "credentialRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				],
+				"parameters": [],
 				"requestBody": {
-					"required": false,
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -2268,9 +2064,9 @@
 				}
 			}
 		},
-		"/credentials/offer-credential": {
+		"/credentials/accept-offer": {
 			"post": {
-				"operationId": "OfferCredential",
+				"operationId": "AcceptOffer",
 				"responses": {
 					"200": {
 						"description": "CredentialExchangeRecord",
@@ -2352,107 +2148,6 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/OfferCredentialOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/credentials/{credentialRecordId}/accept-offer": {
-			"post": {
-				"operationId": "AcceptOffer",
-				"responses": {
-					"200": {
-						"description": "CredentialExchangeRecord",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"_tags": {
-												"state": "offer-sent",
-												"threadId": "82701488-b43c-4d7b-9244-4bb204a7ae26",
-												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
-											},
-											"metadata": {
-												"_internal/indyCredential": {
-													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
-													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
-												}
-											},
-											"credentials": [],
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b",
-											"threadId": "82701488-b43c-4d7b-9244-4bb204a7ae26",
-											"credentialAttributes": [],
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Accept a credential offer as holder by sending an accept offer message\nto the connection associated with the credential exchange record.",
-				"tags": [
-					"Credentials"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"description": "credential identifier",
-						"in": "path",
-						"name": "credentialRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				],
-				"requestBody": {
-					"required": false,
-					"content": {
-						"application/json": {
-							"schema": {
 								"$ref": "#/components/schemas/AcceptCredentialOfferOptions"
 							}
 						}
@@ -2460,7 +2155,7 @@
 				}
 			}
 		},
-		"/credentials/{credentialRecordId}/accept-request": {
+		"/credentials/accept-request": {
 			"post": {
 				"operationId": "AcceptRequest",
 				"responses": {
@@ -2538,19 +2233,9 @@
 					"Credentials"
 				],
 				"security": [],
-				"parameters": [
-					{
-						"description": "credential identifier",
-						"in": "path",
-						"name": "credentialRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				],
+				"parameters": [],
 				"requestBody": {
-					"required": false,
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -2561,7 +2246,7 @@
 				}
 			}
 		},
-		"/credentials/{credentialRecordId}/accept-credential": {
+		"/credentials/accept-credential": {
 			"post": {
 				"operationId": "AcceptCredential",
 				"responses": {
@@ -2639,16 +2324,17 @@
 					"Credentials"
 				],
 				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "credentialRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AcceptCredential"
+							}
 						}
 					}
-				]
+				}
 			}
 		},
 		"/credential-definitions/{credentialDefinitionId}": {
@@ -2871,17 +2557,17 @@
 									"tag": {
 										"type": "string"
 									},
-									"supportRevocation": {
-										"type": "boolean"
-									},
 									"schemaId": {
 										"$ref": "#/components/schemas/SchemaId"
+									},
+									"issuerId": {
+										"type": "string"
 									}
 								},
 								"required": [
 									"tag",
-									"supportRevocation",
-									"schemaId"
+									"schemaId",
+									"issuerId"
 								],
 								"type": "object"
 							}
@@ -3092,12 +2778,16 @@
 									},
 									"name": {
 										"type": "string"
+									},
+									"issuerId": {
+										"type": "string"
 									}
 								},
 								"required": [
 									"attributes",
 									"version",
-									"name"
+									"name",
+									"issuerId"
 								],
 								"type": "object"
 							}
@@ -3215,6 +2905,55 @@
 						}
 					}
 				]
+			}
+		},
+		"/dids/{write}": {
+			"post": {
+				"operationId": "WriteDid",
+				"responses": {
+					"200": {
+						"description": "DidResolutionResult",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Did nym registration",
+				"tags": [
+					"Dids"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DidCreateOptions"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/oob": {
@@ -4263,70 +4002,6 @@
 						}
 					}
 				]
-			},
-			"delete": {
-				"operationId": "DeleteProof",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Deletes a proof record in the proof repository.",
-				"tags": [
-					"Proofs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "proofRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
 			}
 		},
 		"/proofs/propose-proof": {
@@ -4334,7 +4009,7 @@
 				"operationId": "ProposeProof",
 				"responses": {
 					"200": {
-						"description": "ProofRecord",
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -4390,7 +4065,7 @@
 						}
 					}
 				},
-				"description": "Initiate a new presentation exchange as prover by sending a presentation proposal request\nto the connection with the specified connection id.",
+				"description": "Deletes a proof record in the proof repository.",
 				"tags": [
 					"Proofs"
 				],
@@ -4474,86 +4149,13 @@
 					"Proofs"
 				],
 				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "proofRecordId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"comment": {
-										"type": "string"
-									},
-									"request": {
-										"properties": {
-											"version": {
-												"type": "string"
-											},
-											"name": {
-												"type": "string"
-											}
-										},
-										"type": "object"
-									}
-								},
-								"required": [
-									"request"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/proofs/request-outofband-proof": {
-			"post": {
-				"operationId": "RequestProofOutOfBand",
-				"responses": {
-					"200": {
-						"description": "ProofRequestMessageResponse",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"proofRecord": {
-											"$ref": "#/components/schemas/ProofExchangeRecord"
-										},
-										"proofUrl": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"proofRecord",
-										"proofUrl"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Creates a presentation request not bound to any proposal or existing connection",
-				"tags": [
-					"Proofs"
-				],
-				"security": [],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/RequestProofOptions"
+								"$ref": "#/components/schemas/AcceptProofProposal"
 							}
 						}
 					}
@@ -4565,7 +4167,7 @@
 				"operationId": "RequestProof",
 				"responses": {
 					"200": {
-						"description": "ProofRecord",
+						"description": "ProofRequestMessageResponse",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -4621,7 +4223,7 @@
 						}
 					}
 				},
-				"description": "Creates a presentation request bound to existing connection",
+				"description": "Creates a presentation request not bound to any proposal or existing connection",
 				"tags": [
 					"Proofs"
 				],
