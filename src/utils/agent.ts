@@ -1,4 +1,4 @@
-import type { InitConfig } from '@aries-framework/core'
+import { ConnectionsModule, InitConfig } from '@aries-framework/core'
 
 import {
   AutoAcceptCredential,
@@ -14,6 +14,7 @@ import path from 'path'
 
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
+import { TenantsModule } from '@aries-framework/tenants'
 
 export const genesisPath = process.env.GENESIS_TXN_PATH
   ? path.resolve(process.env.GENESIS_TXN_PATH)
@@ -54,6 +55,78 @@ export const setupAgent = async ({
   }
   const agent = new Agent({
     config,
+    dependencies: agentDependencies,
+  })
+
+  const httpInbound = new HttpInboundTransport({
+    port: port,
+  })
+
+  agent.registerInboundTransport(httpInbound)
+
+  agent.registerOutboundTransport(new HttpOutboundTransport())
+
+  httpInbound.app.get('/invitation', async (req, res) => {
+    if (typeof req.query.d_m === 'string') {
+      const invitation = await ConnectionInvitationMessage.fromUrl(req.url.replace('d_m=', 'c_i='))
+      res.send(invitation.toJSON())
+    }
+    if (typeof req.query.c_i === 'string') {
+      const invitation = await ConnectionInvitationMessage.fromUrl(req.url)
+      res.send(invitation.toJSON())
+    } else {
+      const { outOfBandInvitation } = await agent.oob.createInvitation()
+
+      res.send(outOfBandInvitation.toUrl({ domain: endpoints + '/invitation' }))
+    }
+  })
+
+  await agent.initialize()
+
+  return agent
+}
+
+export const setupAgentForTenant = async ({
+  name,
+  publicDidSeed,
+  endpoints,
+  port,
+}: {
+  name: string
+  publicDidSeed: string
+  endpoints: string[]
+  port: number
+}) => {
+  const logger = new TsLogger(LogLevel.debug)
+
+  const config: InitConfig = {
+    publicDidSeed,
+    label: name,
+    endpoints: endpoints,
+    autoAcceptConnections: true,
+    autoAcceptProofs: AutoAcceptProof.ContentApproved,
+    autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
+    walletConfig: { id: name, key: name },
+    // connectToIndyLedgersOnStartup: false,
+    // useLegacyDidSovPrefix: true,
+    logger: logger,
+    indyLedgers: [
+      {
+        id: `TestLedger-${utils.uuid()}`,
+        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        isProduction: false,
+        indyNamespace: 'key',
+      },
+    ],
+  }
+  const agent = new Agent({
+    config,
+    modules: {
+      tenants: new TenantsModule(),
+      connections: new ConnectionsModule({
+        autoAcceptConnections: true,
+      })
+    },
     dependencies: agentDependencies,
   })
 

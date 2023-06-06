@@ -1,5 +1,6 @@
 import type { Version } from '../examples'
 import type { Schema } from 'indy-sdk'
+import { AnonCredsModule } from '@aries-framework/anoncreds'
 
 import { Agent, AriesFrameworkError, IndySdkError } from '@aries-framework/core'
 import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
@@ -35,7 +36,7 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.ledger.getSchema(schemaId)
+      return await this.agent.modules.anoncreds.getSchema(schemaId)
     } catch (error) {
       if (error instanceof IndySdkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
