@@ -1,5 +1,5 @@
-import type { IndyPoolConfig, InitConfig, AutoAcceptCredential, AutoAcceptProof } from '@aries-framework/core'
-import type { WalletConfig } from '@aries-framework/core/build/types'
+import type { InitConfig, AutoAcceptCredential, AutoAcceptProof } from '@aries-framework/core'
+import type { WalletConfig } from '@aries-framework/core'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
@@ -27,7 +27,6 @@ const outboundTransportMapping = {
 export interface AriesRestConfig {
   label: string
   walletConfig: WalletConfig
-  indyLedgers?: IndyPoolConfig[]
   publicDidSeed?: string
   endpoints?: string[]
   autoAcceptConnections?: boolean
