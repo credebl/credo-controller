@@ -4,7 +4,7 @@ import type {
   AutoAcceptProof,
   CredentialFormatPayload,
   HandshakeProtocol,
-  IndyCredentialFormat,
+  CredentialFormat,
   PresentationPreviewAttributeOptions,
   PresentationPreviewPredicateOptions,
   ReceiveOutOfBandInvitationConfig,
@@ -13,12 +13,31 @@ import type {
   DidDocumentMetadata,
   ProofExchangeRecord,
   ProofFormatPayload,
-  IndyProofFormat,
+  ProofFormat,
   CreateProofRequestOptions,
+  DidRegistrationExtraOptions,
+  DidDocument,
+  DidRegistrationSecretOptions,
+  InitConfig,
+  WalletConfig,
+  ModulesMap,
+  DefaultAgentModules,
+  CredentialProtocol,
+  CredentialProtocolVersionType,
   ProofAttributeInfo,
   ProofPredicateInfo,
+  ProofProtocol,
+  ProofFormatService
 } from '@aries-framework/core'
+import { CredentialFormatsFromProtocols } from '@aries-framework/core/build/modules/credentials/protocol/CredentialProtocolOptions';
+import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 import type { DIDDocument } from 'did-resolver'
+import { BaseOptions } from '@aries-framework/core';
+
+export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
+  walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
+};
+
 
 export interface AgentInfo {
   label: string
@@ -47,11 +66,11 @@ export interface ProofRequestMessageResponse {
   proofRecord: ProofExchangeRecord
 }
 
-type CredentialFormats = [IndyCredentialFormat]
+type CredentialFormats = [CredentialFormat]
 
-//TODO: added type in protocolVersion
-export interface ProposeCredentialOptions {
-  protocolVersion: 'v1' | 'v2'
+// TODO: added type in protocolVersion
+export interface ProposeCredentialOptions<T = never> {
+  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
   credentialFormats: {
     indy: {
       schemaIssuerDid: string
@@ -70,6 +89,12 @@ export interface ProposeCredentialOptions {
   comment?: string
   connectionId: string
 }
+
+// export interface ProposeCredentialOptions<CPs extends CredentialProtocol[] = CredentialProtocol[]> extends BaseOptions {
+//   connectionId: string
+//   protocolVersion: CredentialProtocolVersionType<CPs>
+//   credentialFormats: CredentialFormatPayload<CredentialFormatsFromProtocols<CPs>, 'createProposal'>
+// }
 
 export interface AcceptCredentialProposalOptions {
   credentialFormats?: {
@@ -91,8 +116,8 @@ export interface AcceptCredentialProposalOptions {
 }
 
 // TODO: added type in protocolVersion
-export interface CreateOfferOptions {
-  protocolVersion: 'v1' | 'v2'
+export interface CreateOfferOptions<T = never> {
+  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
   credentialFormats: {
     indy: {
       credentialDefinitionId: string
@@ -106,8 +131,8 @@ export interface CreateOfferOptions {
   comment?: string
 }
 
-export interface OfferCredentialOptions {
-  protocolVersion: 'v1' | 'v2'
+export interface OfferCredentialOptions<T = never> {
+  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
   credentialFormats: {
     indy: {
       credentialDefinitionId: string
@@ -187,8 +212,9 @@ export interface ConnectionInvitationSchema {
 //   parentThreadId?: string
 // }
 
-export interface RequestProofOptions extends CreateProofRequestOptions {
+export interface RequestProofOptions<T extends string> extends CreateProofRequestOptions<ProofProtocol<ProofFormatService<ProofFormat>[]>[]> {
   connectionId: string
+  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
   proofRequestOptions: {
     name: string
     version: string
@@ -204,9 +230,29 @@ export interface RequestProofProposalOptions {
   predicates: PresentationPreviewPredicateOptions[]
   comment?: string
   autoAcceptProof?: AutoAcceptProof
-  protocolVersion: 'v1' | 'v2'
+  protocolVersion: 'v2'
   // TODO: added indy proof formate
-  proofFormats: ProofFormatPayload<[IndyProofFormat], 'createProposal'>
+  proofFormats: ProofFormatPayload<[ProofFormat], 'createProposal'>
   goalCode: string
   parentThreadId: string
 }
+
+// export interface GetTenantAgentOptions {
+//   tenantId: string
+// }
+
+export interface DidCreateOptions {
+  method?: string;
+  did?: string;
+  options?: DidRegistrationExtraOptions;
+  secret?: DidRegistrationSecretOptions;
+  didDocument?: DidDocument;
+}
+
+// export interface CreateTenantOptions {
+//   config: Omit<TenantConfig, 'walletConfig'>
+// }
+
+// export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
+//   tenantAgent: TenantAgent<AgentModules>
+// ) => Promise<void>
