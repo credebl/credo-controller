@@ -24,7 +24,7 @@ export class AgentController extends Controller {
       label: this.agent.config.label,
       endpoints: this.agent.config.endpoints,
       isInitialized: this.agent.isInitialized,
-      publicDid: this.agent.publicDid,
+      // publicDid: this.agent.publicDid,
     }
   }
 }
