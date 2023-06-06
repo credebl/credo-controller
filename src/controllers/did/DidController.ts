@@ -1,7 +1,7 @@
-import type { DidResolutionResultProps } from '../types'
-
+import type { DidCreateOptions, DidResolutionResultProps } from '../types'
+import { JsonTransformer } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
-import { Controller, Example, Get, Path, Post, Route, Tags } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { Did, DidRecordExample } from '../examples'
@@ -33,5 +33,26 @@ export class DidController extends Controller {
     }
 
     return { ...resolveResult, didDocument: resolveResult.didDocument.toJSON() }
+  }
+
+  /**
+   * Did nym registration
+   * @body DidCreateOptions
+   * @returns DidResolutionResult
+   */
+  // @Example<DidResolutionResultProps>(DidRecordExample)
+
+  @Post('/:write')
+  public async writeDid(
+    @Body() data: DidCreateOptions,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>) {
+    try {
+      const resolveResult = await this.agent.dids.create(data);
+      return JsonTransformer.toJSON(resolveResult);
+    }
+    catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+
+    }
   }
 }

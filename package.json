@@ -30,8 +30,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "@aries-framework/core": "^0.3.3",
-    "@aries-framework/node": "^0.3.3",
+    "@aries-framework/anoncreds": "^0.4.0",
+    "@aries-framework/core": "0.4.0",
+    "@aries-framework/node": "0.4.0",
     "@types/ws": "^7.4.7",
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
