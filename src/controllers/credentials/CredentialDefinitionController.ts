@@ -67,20 +67,23 @@ export class CredentialDefinitionController extends Controller {
   public async createCredentialDefinition(
     @Body()
     credentialDefinitionRequest: {
+      issuerId: string
       schemaId: SchemaId
-      supportRevocation: boolean
       tag: string
     },
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const schema = await this.agent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
+      const schema = await this.agent.modules.getSchema(credentialDefinitionRequest.schemaId);
 
       return await this.agent.modules.registerCredentialDefinition({
-        schema,
-        supportRevocation: credentialDefinitionRequest.supportRevocation,
-        tag: credentialDefinitionRequest.tag,
+        credentialDefinition: {
+          issuerId: credentialDefinitionRequest.issuerId,
+          schemaId: credentialDefinitionRequest.schemaId,
+          tag: credentialDefinitionRequest.tag
+        },
+        options: {}
       })
     } catch (error) {
       if (error instanceof LedgerNotFoundError) {
