@@ -665,37 +665,37 @@ export function RegisterRoutes(app: express.Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.delete('/credentials/:credentialRecordId',
-            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.deleteCredential)),
+        // app.delete('/credentials/:credentialRecordId',
+        //     ...(fetchMiddlewares<RequestHandler>(CredentialController)),
+        //     ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.deleteCredential)),
 
-            async function CredentialController_deleteCredential(request: any, response: any, next: any) {
-            const args = {
-                    credentialRecordId: {"in":"path","name":"credentialRecordId","required":true,"ref":"RecordId"},
-                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-            };
+        //     async function CredentialController_deleteCredential(request: any, response: any, next: any) {
+        //     const args = {
+        //             credentialRecordId: {"in":"path","name":"credentialRecordId","required":true,"ref":"RecordId"},
+        //             notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+        //             internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+        //     };
 
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        //     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = getValidatedArgs(args, request, response);
+        //     let validatedArgs: any[] = [];
+        //     try {
+        //         validatedArgs = getValidatedArgs(args, request, response);
 
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+        //         const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<CredentialController>(CredentialController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
+        //         const controller: any = await container.get<CredentialController>(CredentialController);
+        //         if (typeof controller['setStatus'] === 'function') {
+        //         controller.setStatus(undefined);
+        //         }
 
 
-              const promise = controller.deleteCredential.apply(controller, validatedArgs as any);
-              promiseHandler(controller, promise, response, undefined, next);
-            } catch (err) {
-                return next(err);
-            }
-        });
+        //       const promise = controller.deleteCredential.apply(controller, validatedArgs as any);
+        //       promiseHandler(controller, promise, response, undefined, next);
+        //     } catch (err) {
+        //         return next(err);
+        //     }
+        // });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/credentials/propose-credential',
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
@@ -793,37 +793,37 @@ export function RegisterRoutes(app: express.Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/offer-credential',
-            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.offerCredential)),
+        // app.post('/credentials/offer-credential',
+        //     ...(fetchMiddlewares<RequestHandler>(CredentialController)),
+        //     ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.offerCredential)),
 
-            async function CredentialController_offerCredential(request: any, response: any, next: any) {
-            const args = {
-                    options: {"in":"body","name":"options","required":true,"ref":"OfferCredentialOptions"},
-                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-            };
+        //     async function CredentialController_offerCredential(request: any, response: any, next: any) {
+        //     const args = {
+        //             options: {"in":"body","name":"options","required":true,"ref":"OfferCredentialOptions"},
+        //             notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+        //             internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+        //     };
 
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        //     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = getValidatedArgs(args, request, response);
+        //     let validatedArgs: any[] = [];
+        //     try {
+        //         validatedArgs = getValidatedArgs(args, request, response);
 
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+        //         const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<CredentialController>(CredentialController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
+        //         const controller: any = await container.get<CredentialController>(CredentialController);
+        //         if (typeof controller['setStatus'] === 'function') {
+        //         controller.setStatus(undefined);
+        //         }
 
 
-              const promise = controller.offerCredential.apply(controller, validatedArgs as any);
-              promiseHandler(controller, promise, response, undefined, next);
-            } catch (err) {
-                return next(err);
-            }
-        });
+        //       const promise = controller.offerCredential.apply(controller, validatedArgs as any);
+        //       promiseHandler(controller, promise, response, undefined, next);
+        //     } catch (err) {
+        //         return next(err);
+        //     }
+        // });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/credentials/:credentialRecordId/accept-offer',
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
@@ -1428,37 +1428,37 @@ export function RegisterRoutes(app: express.Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.delete('/proofs/:proofRecordId',
-            ...(fetchMiddlewares<RequestHandler>(ProofController)),
-            ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.deleteProof)),
+        // app.delete('/proofs/:proofRecordId',
+        //     ...(fetchMiddlewares<RequestHandler>(ProofController)),
+        //     ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.deleteProof)),
 
-            async function ProofController_deleteProof(request: any, response: any, next: any) {
-            const args = {
-                    proofRecordId: {"in":"path","name":"proofRecordId","required":true,"ref":"RecordId"},
-                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-            };
+        //     async function ProofController_deleteProof(request: any, response: any, next: any) {
+        //     const args = {
+        //             proofRecordId: {"in":"path","name":"proofRecordId","required":true,"ref":"RecordId"},
+        //             notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+        //             internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+        //     };
 
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        //     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = getValidatedArgs(args, request, response);
+        //     let validatedArgs: any[] = [];
+        //     try {
+        //         validatedArgs = getValidatedArgs(args, request, response);
 
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+        //         const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ProofController>(ProofController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
+        //         const controller: any = await container.get<ProofController>(ProofController);
+        //         if (typeof controller['setStatus'] === 'function') {
+        //         controller.setStatus(undefined);
+        //         }
 
 
-              const promise = controller.deleteProof.apply(controller, validatedArgs as any);
-              promiseHandler(controller, promise, response, undefined, next);
-            } catch (err) {
-                return next(err);
-            }
-        });
+        //       const promise = controller.deleteProof.apply(controller, validatedArgs as any);
+        //       promiseHandler(controller, promise, response, undefined, next);
+        //     } catch (err) {
+        //         return next(err);
+        //     }
+        // });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/proofs/:proofRecordId/accept-proposal',
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
