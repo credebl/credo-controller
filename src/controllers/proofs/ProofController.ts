@@ -152,7 +152,6 @@ export class ProofController extends Controller {
   @Post('/:proofRecordId/accept-proposal')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptProposal(
-    @Path('proofRecordId') proofRecordId: string,
     @Body() acceptProposal: AcceptProofProposal,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
@@ -164,7 +163,7 @@ export class ProofController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
+          reason: `proof with proof record  "${acceptProposal.proofRecord}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
