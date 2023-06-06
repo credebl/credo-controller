@@ -1,8 +1,7 @@
 import type { Version } from '../examples'
 import type { Schema } from 'indy-sdk'
-import { AnonCredsModule } from '@aries-framework/anoncreds'
-
-import { Agent, AriesFrameworkError, IndySdkError } from '@aries-framework/core'
+import { AnonCredsError } from '@aries-framework/anoncreds'
+import { Agent, AriesFrameworkError } from '@aries-framework/core'
 import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 import { isIndyError } from '@aries-framework/core/build/utils/indyError'
 import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
@@ -36,13 +35,13 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.modules.anoncreds.getSchema(schemaId)
+      return await this.agent.modules.getSchema(schemaId)
     } catch (error) {
-      if (error instanceof IndySdkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+      if (error instanceof AnonCredsError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
           reason: `schema definition with schemaId "${schemaId}" not found.`,
         })
-      } else if (error instanceof LedgerError && error.cause instanceof IndySdkError) {
+      } else if (error instanceof LedgerError && error.cause instanceof AnonCredsError) {
         if (isIndyError(error.cause.cause, 'LedgerInvalidTransaction')) {
           return forbiddenError(403, {
             reason: `schema definition with schemaId "${schemaId}" can not be returned.`,
@@ -70,6 +69,7 @@ export class SchemaController {
   public async createSchema(
     @Body()
     schema: {
+      issuerId: string
       name: string
       version: Version
       attributes: string[]
@@ -78,10 +78,14 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.ledger.registerSchema({
-        name: schema.name,
-        version: schema.version,
-        attributes: schema.attributes,
+      return await this.agent.modules.registerSchema({
+        schema: {
+          issuerId: schema.issuerId,
+          name: schema.name,
+          version: schema.version,
+          attrNames: schema.attributes
+        },
+        options: {}
       })
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
