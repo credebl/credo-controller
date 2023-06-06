@@ -1,14 +1,15 @@
 import type {
-  AcceptProofPresentationOptions,
+  // AcceptProofPresentationOptions,
+  AcceptProofRequestOptions,
   CreateProofRequestOptions,
-  IndyProofFormat,
+  // IndyProofFormat,
   ProofExchangeRecordProps,
-  ProposeProofOptions,
-  V1ProofService,
-  V2ProofService,
+  // ProposeProofOptions,
+  // V1ProofService,
+  // V2ProofService,
 } from '@aries-framework/core'
 
-import { Agent, JsonTransformer, PresentationPreview, RecordNotFoundError } from '@aries-framework/core'
+import { Agent, RecordNotFoundError } from '@aries-framework/core'
 import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder'
 import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
@@ -159,10 +160,9 @@ export class ProofController extends Controller {
     try {
       const proof = await this.agent.proofs.acceptProposal({
         proofRecordId,
-        config: {
-          name: proposal.request.name || '',
-          version: proposal.request.name || '',
-        },
+        proofFormats: {
+          
+        }
       })
 
       return proof.toJSON()
@@ -201,7 +201,7 @@ export class ProofController extends Controller {
     const { connectionId, proofRequestOptions, ...config } = request
 
     const proof = await this.agent.proofs.createRequest({
-      protocolVersion: 'v1',
+      protocolVersion: 'v2',
       comment: request.comment,
       proofFormats: {
         indy: {
@@ -217,7 +217,7 @@ export class ProofController extends Controller {
 
     return {
       proofUrl: `${this.agent.config.endpoints[0]}/?d_m=${JsonEncoder.toBase64URL(
-        proof.message.toJSON({ useLegacyDidSovPrefix: this.agent.config.useLegacyDidSovPrefix })
+        proof.message.toJSON({ useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed })
       )}`,
       proofRecord: proof.proofRecord,
     }
@@ -263,27 +263,19 @@ export class ProofController extends Controller {
   @Post('/request-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async requestProof(
-    @Body() request: RequestProofOptions,
+    @Body() request: RequestProofOptions<T>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     const { connectionId, proofRequestOptions, ...config } = request
 
     try {
+
       const proof = await this.agent.proofs.requestProof({
-        connectionId,
-        protocolVersion: 'v1',
+        connectionId: connectionId,
+        protocolVersion: proofRequestOptions.version,
         comment: request.comment,
-        proofFormats: {
-          indy: {
-            name: 'proof-request',
-            version: '1.0',
-            nonce: await this.agent.wallet.generateNonce(),
-            requestedAttributes: proofRequestOptions.requestedAttributes,
-            requestedPredicates: proofRequestOptions.requestedPredicates,
-          },
-        },
-        autoAcceptProof: request.autoAcceptProof,
+        proofFormats: request.proofFormats
       })
 
       return proof.toJSON()
@@ -329,15 +321,15 @@ export class ProofController extends Controller {
       //   },
       // })
 
-      const requestedCredentials = this.agent.proofs.autoSelectCredentialsForProofRequest({
+      const requestedCredentials = this.agent.proofs.selectCredentialsForRequest({
         proofRecordId,
-        config: {
+        proofFormats: {
           filterByNonRevocationRequirements,
           filterByPresentationPreview,
         },
       })
 
-      const acceptProofRequest: AcceptProofPresentationOptions = {
+      const acceptProofRequest: AcceptProofRequestOptions = {
         proofRecordId,
         comment,
         proofFormats: (await requestedCredentials).proofFormats,
@@ -370,7 +362,7 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.acceptPresentation(proofRecordId)
+      const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
 
       return proof.toJSON()
     } catch (error) {

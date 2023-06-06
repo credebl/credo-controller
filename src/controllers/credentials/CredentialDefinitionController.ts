@@ -1,7 +1,10 @@
 import type { SchemaId } from '../examples'
 import type { CredDef } from 'indy-sdk'
+import { AnonCredsModule } from '@aries-framework/anoncreds'
+// import { error}
 
-import { Agent, IndySdkError } from '@aries-framework/core'
+// TODO: Chenged IndySdkError to AriesFrameworkError. If approved, the message must be changed too.
+import { Agent, AriesFrameworkError } from '@aries-framework/core'
 import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 import { LedgerNotFoundError } from '@aries-framework/core/build/modules/ledger/error/LedgerNotFoundError'
 import { isIndyError } from '@aries-framework/core/build/utils/indyError'
@@ -36,13 +39,13 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.ledger.getCredentialDefinition(credentialDefinitionId)
+      return await this.agent.modules.getCredentialDefinition(credentialDefinitionId)
     } catch (error) {
-      if (error instanceof IndySdkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+      if (error instanceof AriesFrameworkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
           reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
         })
-      } else if (error instanceof LedgerError && error.cause instanceof IndySdkError) {
+      } else if (error instanceof LedgerError && error.cause instanceof AriesFrameworkError) {
         if (isIndyError(error.cause.cause, 'CommonInvalidStructure')) {
           return badRequestError(400, {
             reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,
@@ -72,9 +75,9 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const schema = await this.agent.ledger.getSchema(credentialDefinitionRequest.schemaId)
+      const schema = await this.agent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
 
-      return await this.agent.ledger.registerCredentialDefinition({
+      return await this.agent.modules.registerCredentialDefinition({
         schema,
         supportRevocation: credentialDefinitionRequest.supportRevocation,
         tag: credentialDefinitionRequest.tag,
