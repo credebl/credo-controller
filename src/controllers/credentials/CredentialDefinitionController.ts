@@ -1,13 +1,10 @@
 import type { SchemaId } from '../examples'
 import type { CredDef } from 'indy-sdk'
-import { AnonCredsModule } from '@aries-framework/anoncreds'
+import { AnonCredsApi, AnonCredsError, } from '@aries-framework/anoncreds'
 // import { error}
 
 // TODO: Chenged IndySdkError to AriesFrameworkError. If approved, the message must be changed too.
 import { Agent, AriesFrameworkError } from '@aries-framework/core'
-import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
-import { LedgerNotFoundError } from '@aries-framework/core/build/modules/ledger/error/LedgerNotFoundError'
-import { isIndyError } from '@aries-framework/core/build/utils/indyError'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -18,10 +15,12 @@ import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples
 @injectable()
 export class CredentialDefinitionController extends Controller {
   private agent: Agent
+  private anonCredsCredentialDefinition: AnonCredsApi
 
-  public constructor(agent: Agent) {
+  public constructor(agent: Agent, anonCredsCredentialDefinition: AnonCredsApi) {
     super()
     this.agent = agent
+    this.anonCredsCredentialDefinition = anonCredsCredentialDefinition
   }
 
   /**
@@ -39,14 +38,14 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.modules.getCredentialDefinition(credentialDefinitionId)
+      return await this.anonCredsCredentialDefinition.getCredentialDefinition(credentialDefinitionId)
     } catch (error) {
       if (error instanceof AriesFrameworkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
           reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
         })
-      } else if (error instanceof LedgerError && error.cause instanceof AriesFrameworkError) {
-        if (isIndyError(error.cause.cause, 'CommonInvalidStructure')) {
+      } else if (error instanceof AnonCredsError && error.cause instanceof AriesFrameworkError) {
+        if (error.cause.cause, 'CommonInvalidStructure') {
           return badRequestError(400, {
             reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,
           })
@@ -75,9 +74,9 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const schema = await this.agent.modules.getSchema(credentialDefinitionRequest.schemaId);
+      const schema = await this.anonCredsCredentialDefinition.getSchema(credentialDefinitionRequest.schemaId);
 
-      return await this.agent.modules.registerCredentialDefinition({
+      return await this.anonCredsCredentialDefinition.registerCredentialDefinition({
         credentialDefinition: {
           issuerId: credentialDefinitionRequest.issuerId,
           schemaId: credentialDefinitionRequest.schemaId,
@@ -86,7 +85,7 @@ export class CredentialDefinitionController extends Controller {
         options: {}
       })
     } catch (error) {
-      if (error instanceof LedgerNotFoundError) {
+      if (error instanceof notFoundError) {
         return notFoundError(404, {
           reason: `schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`,
         })
@@ -96,3 +95,7 @@ export class CredentialDefinitionController extends Controller {
     }
   }
 }
+function isIndyError(cause: Error | undefined, arg1: string) {
+  throw new Error('Function not implemented.')
+}
+

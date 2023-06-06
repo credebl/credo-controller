@@ -5,8 +5,6 @@ import type {
   CredentialFormatPayload,
   HandshakeProtocol,
   CredentialFormat,
-  PresentationPreviewAttributeOptions,
-  PresentationPreviewPredicateOptions,
   ReceiveOutOfBandInvitationConfig,
   OutOfBandDidCommService,
   DidResolutionMetadata,
@@ -24,15 +22,22 @@ import type {
   DefaultAgentModules,
   CredentialProtocol,
   CredentialProtocolVersionType,
-  ProofAttributeInfo,
-  ProofPredicateInfo,
+  // ProofAttributeInfo,
+  // ProofPredicateInfo,
   ProofProtocol,
-  ProofFormatService
+  ProofFormatService,
+  ConnectionRecord,
+  ExtractProofFormats,
+  CredentialExchangeRecord
 } from '@aries-framework/core'
-import { CredentialFormatsFromProtocols } from '@aries-framework/core/build/modules/credentials/protocol/CredentialProtocolOptions';
-import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
+
+import type {
+  V1PresentationPreviewAttributeOptions,
+  V1PresentationPreviewPredicateOptions,
+} from '@aries-framework/anoncreds'
+
+
 import type { DIDDocument } from 'did-resolver'
-import { BaseOptions } from '@aries-framework/core';
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
@@ -70,7 +75,8 @@ type CredentialFormats = [CredentialFormat]
 
 // TODO: added type in protocolVersion
 export interface ProposeCredentialOptions<T = never> {
-  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
+  // protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
+  connectionRecord: ConnectionRecord
   credentialFormats: {
     indy: {
       schemaIssuerDid: string
@@ -97,6 +103,7 @@ export interface ProposeCredentialOptions<T = never> {
 // }
 
 export interface AcceptCredentialProposalOptions {
+  credentialRecord: CredentialExchangeRecord
   credentialFormats?: {
     indy: {
       schemaIssuerDid: string
@@ -147,13 +154,19 @@ export interface OfferCredentialOptions<T = never> {
   connectionId: string
 }
 
+export interface AcceptCredential {
+  credentialRecord: CredentialExchangeRecord
+}
+
 export interface AcceptCredentialOfferOptions {
+  credentialRecord: CredentialExchangeRecord
   credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
 
 export interface AcceptCredentialRequestOptions {
+  credentialRecord: CredentialExchangeRecord
   credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptRequest'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
@@ -212,29 +225,38 @@ export interface ConnectionInvitationSchema {
 //   parentThreadId?: string
 // }
 
-export interface RequestProofOptions<T extends string> extends CreateProofRequestOptions<ProofProtocol<ProofFormatService<ProofFormat>[]>[]> {
+export interface RequestProofOptions extends CreateProofRequestOptions {
+  connectionRecord: ConnectionRecord
   connectionId: string
-  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
+  protocolVersion: 'v2'
   proofRequestOptions: {
     name: string
     version: string
-    requestedAttributes?: { [key: string]: ProofAttributeInfo }
-    requestedPredicates?: { [key: string]: ProofPredicateInfo }
+    requestedAttributes?: { [key: string]: V1PresentationPreviewAttributeOptions }
+    requestedPredicates?: { [key: string]: V1PresentationPreviewPredicateOptions }
   }
 }
 
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
+  connectionRecord: ConnectionRecord
   connectionId: string
-  attributes: PresentationPreviewAttributeOptions[]
-  predicates: PresentationPreviewPredicateOptions[]
+  attributes: V1PresentationPreviewAttributeOptions[]
+  predicates: V1PresentationPreviewPredicateOptions[]
   comment?: string
   autoAcceptProof?: AutoAcceptProof
-  protocolVersion: 'v2'
+  protocolVersion: 'v1'
   // TODO: added indy proof formate
   proofFormats: ProofFormatPayload<[ProofFormat], 'createProposal'>
   goalCode: string
   parentThreadId: string
+}
+
+export interface AcceptProofProposal {
+  proofRecord: ProofExchangeRecord
+  proofFormats?: ProofFormatPayload<[ProofFormat], 'acceptProposal'>
+  comment: string
+  autoAcceptProof: AutoAcceptProof
 }
 
 // export interface GetTenantAgentOptions {
