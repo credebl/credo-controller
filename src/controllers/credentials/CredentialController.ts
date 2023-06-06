@@ -223,7 +223,6 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-offer')
   public async acceptOffer(
-    @Path('credentialRecordId') credentialRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
@@ -234,7 +233,7 @@ export class CredentialController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `credential with credential record id "${credentialRecordId}" not found.`,
+          reason: `credential with credential record "${acceptCredentialOfferOptions.credentialRecord}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -252,7 +251,6 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-request')
   public async acceptRequest(
-    @Path('credentialRecordId') credentialRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions
@@ -263,7 +261,7 @@ export class CredentialController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `credential with credential record id "${credentialRecordId}" not found.`,
+          reason: `credential with credential record "${acceptCredentialRequestOptions.credentialRecord}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -280,7 +278,6 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-credential')
   public async acceptCredential(
-    @Path('credentialRecordId') credentialRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() acceptCredential: AcceptCredential
@@ -291,7 +288,7 @@ export class CredentialController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `credential with credential record id "${credentialRecordId}" not found.`,
+          reason: `credential with credential record id "${acceptCredential.credentialRecord}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })

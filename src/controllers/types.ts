@@ -123,8 +123,7 @@ export interface AcceptCredentialProposalOptions {
 }
 
 // TODO: added type in protocolVersion
-export interface CreateOfferOptions<T = never> {
-  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
+export interface CreateOfferOptions {
   credentialFormats: {
     indy: {
       credentialDefinitionId: string
@@ -138,8 +137,7 @@ export interface CreateOfferOptions<T = never> {
   comment?: string
 }
 
-export interface OfferCredentialOptions<T = never> {
-  protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
+export interface OfferCredentialOptions {
   credentialFormats: {
     indy: {
       credentialDefinitionId: string
