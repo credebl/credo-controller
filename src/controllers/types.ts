@@ -28,7 +28,8 @@ import type {
   ProofFormatService,
   ConnectionRecord,
   ExtractProofFormats,
-  CredentialExchangeRecord
+  CredentialExchangeRecord,
+  DidResolutionOptions
 } from '@aries-framework/core'
 
 import type {
@@ -48,10 +49,11 @@ export interface AgentInfo {
   label: string
   endpoints: string[]
   isInitialized: boolean
-  publicDid?: {
-    did: string
-    verkey: string
-  }
+  publicDid: void
+  // publicDid?: {
+  //   did: string
+  //   verkey: string
+  // }
 }
 
 export interface AgentMessageType {
@@ -238,7 +240,6 @@ export interface RequestProofOptions extends CreateProofRequestOptions {
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
   connectionRecord: ConnectionRecord
-  connectionId: string
   attributes: V1PresentationPreviewAttributeOptions[]
   predicates: V1PresentationPreviewPredicateOptions[]
   comment?: string
@@ -267,6 +268,11 @@ export interface DidCreateOptions {
   options?: DidRegistrationExtraOptions;
   secret?: DidRegistrationSecretOptions;
   didDocument?: DidDocument;
+}
+
+export interface ResolvedDid {
+  didUrl: string
+  options?: DidResolutionOptions
 }
 
 // export interface CreateTenantOptions {

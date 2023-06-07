@@ -15,6 +15,7 @@ const run = async () => {
     name: 'Aries Test Agent',
   })
 
+  console.log("agent--", agent)
   const conf: ServerConfig = {
     port: 3000,
     cors: true,

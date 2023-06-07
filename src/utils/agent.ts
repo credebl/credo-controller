@@ -7,17 +7,13 @@ import {
   HttpOutboundTransport,
   LogLevel,
 } from '@aries-framework/core'
-import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
+import { agentDependencies, HttpInboundTransport, IndySdkPostgresStorageConfig, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin } from '@aries-framework/node'
 import path from 'path'
 
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
-
-export const genesisPath = process.env.GENESIS_TXN_PATH
-  ? path.resolve(process.env.GENESIS_TXN_PATH)
-  : path.join(__dirname, '../../../../network/genesis/local-genesis.txn')
 
 export const setupAgent = async ({
   name,
@@ -32,12 +28,30 @@ export const setupAgent = async ({
 }) => {
   const logger = new TsLogger(LogLevel.debug)
 
+  const storageConfig = {
+    type: 'postgres_storage',
+    config: {
+      url: '192.168.1.12:5432',
+      wallet_scheme: IndySdkPostgresWalletScheme.DatabasePerWallet,
+    },
+    credentials: {
+      account: 'postgres',
+      password: 'Password1',
+      admin_account: 'postgres',
+      admin_password: 'Password1',
+    },
+  }
+
+  loadIndySdkPostgresPlugin(storageConfig.config, storageConfig.credentials)
+
   const config: InitConfig = {
     label: name,
     endpoints: endpoints,
-    walletConfig: { id: name, key: name },
-    // connectToIndyLedgersOnStartup: false,
-    // useLegacyDidSovPrefix: true,
+    walletConfig: {
+      id: name,
+      key: name,
+      // storage: storageConfig,
+    },
     logger: logger,
   }
 
@@ -47,25 +61,14 @@ export const setupAgent = async ({
   const agent = new Agent({
     config,
     modules: {
-      // indyVdr: new IndyVdrModule({
-      //   indyVdr,
-      //   networks: [
-      //     {
-      //       isProduction: false,
-      //       indyNamespace: 'bcovrin:test',
-      //       genesisTransactions: BCOVRIN_TEST_GENESIS,
-      //       connectOnStartup: true,
-      //     },
-      //   ],
-      // }),
       indySdk: new IndySdkModule({
         indySdk,
         networks: [
           {
-            isProduction: false,
+            id: 'Bcovrin Testnet',
             indyNamespace: 'bcovrin:test',
+            isProduction: false,
             genesisTransactions: BCOVRIN_TEST_GENESIS,
-            connectOnStartup: true,
           },
         ]
       }),
@@ -80,9 +83,9 @@ export const setupAgent = async ({
           new V1ProofProtocol({
             indyProofFormat: legacyIndyProofFormat,
           }),
-          new V2ProofProtocol({
-            proofFormats: [legacyIndyProofFormat],
-          }),
+          // new V2ProofProtocol({
+          //   proofFormats: [legacyIndyProofFormat],
+          // }),
         ],
       }),
       credentials: new CredentialsModule({
@@ -90,9 +93,9 @@ export const setupAgent = async ({
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
           }),
-          new V2CredentialProtocol({
-            credentialFormats: [legacyIndyCredentialFormat],
-          }),
+          // new V2CredentialProtocol({
+          //   credentialFormats: [legacyIndyCredentialFormat],
+          // }),
         ],
       }),
     },

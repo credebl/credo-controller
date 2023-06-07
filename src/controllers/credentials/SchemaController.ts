@@ -1,7 +1,7 @@
 import type { Version } from '../examples'
 import type { Schema } from 'indy-sdk'
 import { AnonCredsError, AnonCredsApi } from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+import { Agent, AriesFrameworkError, BaseAgent } from '@aries-framework/core'
 // import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 // import { isIndyError } from '@aries-framework/core/build/utils/indyError'
 import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
@@ -14,11 +14,11 @@ import { SchemaId, SchemaExample } from '../examples'
 @injectable()
 export class SchemaController {
   private agent: Agent
-  private anonCredsSchema: AnonCredsApi
+  // private anonCredsSchema: AnonCredsApi
 
-  public constructor(agent: Agent, anonCredsSchema: AnonCredsApi) {
+  public constructor(agent: Agent) {
     this.agent = agent
-    this.anonCredsSchema = anonCredsSchema
+    // this.anonCredsSchema = anonCredsSchema
   }
 
   /**
@@ -37,7 +37,7 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.anonCredsSchema.getSchema(schemaId)
+      return await this.agent.modules.anoncreds.getSchema(schemaId)
     } catch (error) {
       if (error instanceof AnonCredsError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
@@ -80,7 +80,7 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.anonCredsSchema.registerSchema({
+      return await this.agent.modules.anoncreds.registerSchema({
         schema: {
           issuerId: schema.issuerId,
           name: schema.name,

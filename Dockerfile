@@ -36,5 +36,7 @@ COPY package.json package.json
 RUN yarn install --production
 
 COPY build ./build
+COPY libindystrgpostgres.so /usr/lib/
+COPY libindystrgpostgres.so /usr/local/lib/
 
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
