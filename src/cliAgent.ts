@@ -1,12 +1,16 @@
-import type { InitConfig, AutoAcceptCredential, AutoAcceptProof } from '@aries-framework/core'
-import type { WalletConfig } from '@aries-framework/core'
+import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol } from '@aries-framework/core'
+import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
-import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
+import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin, WsInboundTransport } from '@aries-framework/node'
 import { readFile } from 'fs/promises'
+import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
+import indySdk from 'indy-sdk'
+import { BCOVRIN_TEST_GENESIS } from './utils/util'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
+import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -51,17 +55,81 @@ export async function readRestConfig(path: string) {
 }
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
-  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, ...afjConfig } = restConfig
+  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
 
   const logger = new TsLogger(logLevel ?? LogLevel.error)
 
+  const storageConfig = {
+    type: 'postgres_storage',
+    config: {
+      url: '192.168.1.12:5432',
+      wallet_scheme: IndySdkPostgresWalletScheme.DatabasePerWallet,
+    },
+    credentials: {
+      account: 'postgres',
+      password: 'Password1',
+      admin_account: 'postgres',
+      admin_password: 'Password1',
+    },
+  }
+
+  loadIndySdkPostgresPlugin(storageConfig.config, storageConfig.credentials)
+
   const agentConfig: InitConfig = {
+    walletConfig: {
+      id: walletConfig.id,
+      key: walletConfig.key,
+      storage: storageConfig,
+    },
     ...afjConfig,
     logger,
   }
 
+  const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
+  const legacyIndyProofFormat = new LegacyIndyProofFormatService()
+
+
   const agent = new Agent({
     config: agentConfig,
+    modules: {
+      indySdk: new IndySdkModule({
+        indySdk,
+        networks: [
+          {
+            isProduction: false,
+            indyNamespace: 'bcovrin:test',
+            genesisTransactions: BCOVRIN_TEST_GENESIS,
+            connectOnStartup: true,
+          },
+        ]
+      }),
+      anoncreds: new AnonCredsModule({
+        registries: [new IndySdkAnonCredsRegistry()],
+      }),
+      dids: new DidsModule({
+        resolvers: [new IndySdkIndyDidResolver()],
+      }),
+      proofs: new ProofsModule({
+        proofProtocols: [
+          new V1ProofProtocol({
+            indyProofFormat: legacyIndyProofFormat,
+          }),
+          // new V2ProofProtocol({
+          //   proofFormats: [legacyIndyProofFormat],
+          // }),
+        ],
+      }),
+      credentials: new CredentialsModule({
+        credentialProtocols: [
+          new V1CredentialProtocol({
+            indyCredentialFormat: legacyIndyCredentialFormat,
+          }),
+          // new V2CredentialProtocol({
+          //   credentialFormats: [legacyIndyCredentialFormat],
+          // }),
+        ],
+      }),
+    },
     dependencies: agentDependencies,
   })
   // Register outbound transports

@@ -20,26 +20,13 @@
 					"isInitialized": {
 						"type": "boolean"
 					},
-					"publicDid": {
-						"properties": {
-							"verkey": {
-								"type": "string"
-							},
-							"did": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"verkey",
-							"did"
-						],
-						"type": "object"
-					}
+					"publicDid": {}
 				},
 				"required": [
 					"label",
 					"endpoints",
-					"isInitialized"
+					"isInitialized",
+					"publicDid"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -48,6 +35,41 @@
 				"properties": {},
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
+			},
+			"DidRegistrationExtraOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidRegistrationSecretOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"Record_string.any_": {
+				"properties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"DidDocument": {
+				"$ref": "#/components/schemas/Record_string.any_"
+			},
+			"DidCreateOptions": {
+				"properties": {
+					"method": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"options": {
+						"$ref": "#/components/schemas/DidRegistrationExtraOptions"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"BasicMessageRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
@@ -79,11 +101,6 @@
 					"completed"
 				],
 				"type": "string"
-			},
-			"Record_string.any_": {
-				"properties": {},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
 			},
 			"CredentialState": {
 				"description": "Issue Credential states as defined in RFC 0036 and RFC 0453",
@@ -431,9 +448,6 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"DidDocument": {
-				"$ref": "#/components/schemas/Record_string.any_"
-			},
 			"DIDDocumentMetadata": {
 				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
 				"properties": {
@@ -496,33 +510,6 @@
 			"Did": {
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
-			},
-			"DidRegistrationExtraOptions": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"DidRegistrationSecretOptions": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"DidCreateOptions": {
-				"properties": {
-					"method": {
-						"type": "string"
-					},
-					"did": {
-						"type": "string"
-					},
-					"options": {
-						"$ref": "#/components/schemas/DidRegistrationExtraOptions"
-					},
-					"secret": {
-						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
-					},
-					"didDocument": {
-						"$ref": "#/components/schemas/DidDocument"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
 			},
 			"HandshakeProtocol": {
 				"enum": [
@@ -910,9 +897,6 @@
 					"connectionRecord": {
 						"$ref": "#/components/schemas/ConnectionRecord"
 					},
-					"connectionId": {
-						"type": "string"
-					},
 					"attributes": {
 						"items": {
 							"$ref": "#/components/schemas/V1PresentationPreviewAttributeOptions"
@@ -950,7 +934,6 @@
 				},
 				"required": [
 					"connectionRecord",
-					"connectionId",
 					"attributes",
 					"predicates",
 					"protocolVersion",
@@ -1110,6 +1093,103 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/agent/write/did": {
+			"post": {
+				"operationId": "WriteDid",
+				"responses": {
+					"200": {
+						"description": "DidResolutionResult",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Did nym registration",
+				"tags": [
+					"Agent"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DidCreateOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/agent/resolve/did/{didUrl}": {
+			"post": {
+				"operationId": "ResolveDid",
+				"responses": {
+					"200": {
+						"description": "DidResolutionResult",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Did nym registration",
+				"tags": [
+					"Agent"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "didUrl",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/basic-messages/{connectionId}": {

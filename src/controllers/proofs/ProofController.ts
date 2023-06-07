@@ -134,7 +134,7 @@ export class ProofController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `connection with connectionId "${proposal.connectionId}" not found.`,
+          reason: `connection with connection record "${proposal.connectionRecord}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
