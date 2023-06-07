@@ -34,7 +34,7 @@ const models: TsoaRoute.Models = {
             "label": {"dataType":"string","required":true},
             "endpoints": {"dataType":"array","array":{"dataType":"string"},"required":true},
             "isInitialized": {"dataType":"boolean","required":true},
-            "publicDid": {"dataType":"nestedObjectLiteral","nestedProperties":{"verkey":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
+            "publicDid": {"dataType":"void","required":true},
         },
         "additionalProperties": false,
     },
@@ -42,6 +42,38 @@ const models: TsoaRoute.Models = {
     "Record_string.unknown_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DidRegistrationExtraOptions": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DidRegistrationSecretOptions": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Record_string.any_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DidDocument": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.any_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DidCreateOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "method": {"dataType":"string"},
+            "did": {"dataType":"string"},
+            "options": {"ref":"DidRegistrationExtraOptions"},
+            "secret": {"ref":"DidRegistrationSecretOptions"},
+            "didDocument": {"ref":"DidDocument"},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "BasicMessageRecord": {
@@ -62,11 +94,6 @@ const models: TsoaRoute.Models = {
     "DidExchangeState": {
         "dataType": "refEnum",
         "enums": ["start","invitation-sent","invitation-received","request-sent","request-received","response-sent","response-received","abandoned","completed"],
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Record_string.any_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CredentialState": {
@@ -187,11 +214,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidDocument": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.any_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DIDDocumentMetadata": {
         "dataType": "refObject",
         "properties": {
@@ -225,28 +247,6 @@ const models: TsoaRoute.Models = {
     "Did": {
         "dataType": "refAlias",
         "type": {"dataType":"string","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidRegistrationExtraOptions": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidRegistrationSecretOptions": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidCreateOptions": {
-        "dataType": "refObject",
-        "properties": {
-            "method": {"dataType":"string"},
-            "did": {"dataType":"string"},
-            "options": {"ref":"DidRegistrationExtraOptions"},
-            "secret": {"ref":"DidRegistrationSecretOptions"},
-            "didDocument": {"ref":"DidDocument"},
-        },
-        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "HandshakeProtocol": {
@@ -401,7 +401,6 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "connectionRecord": {"ref":"ConnectionRecord","required":true},
-            "connectionId": {"dataType":"string","required":true},
             "attributes": {"dataType":"array","array":{"dataType":"refObject","ref":"V1PresentationPreviewAttributeOptions"},"required":true},
             "predicates": {"dataType":"array","array":{"dataType":"refObject","ref":"V1PresentationPreviewPredicateOptions"},"required":true},
             "comment": {"dataType":"string"},
@@ -495,6 +494,68 @@ export function RegisterRoutes(app: express.Router) {
 
 
               const promise = controller.getAgentInfo.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/agent/write/did',
+            ...(fetchMiddlewares<RequestHandler>(AgentController)),
+            ...(fetchMiddlewares<RequestHandler>(AgentController.prototype.writeDid)),
+
+            async function AgentController_writeDid(request: any, response: any, next: any) {
+            const args = {
+                    didCreateOptions: {"in":"body","name":"didCreateOptions","required":true,"ref":"DidCreateOptions"},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AgentController>(AgentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.writeDid.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/agent/resolve/did/:didUrl',
+            ...(fetchMiddlewares<RequestHandler>(AgentController)),
+            ...(fetchMiddlewares<RequestHandler>(AgentController.prototype.resolveDid)),
+
+            async function AgentController_resolveDid(request: any, response: any, next: any) {
+            const args = {
+                    didUrl: {"in":"path","name":"didUrl","required":true,"dataType":"string"},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AgentController>(AgentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.resolveDid.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
