@@ -15,12 +15,9 @@ import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples
 @injectable()
 export class CredentialDefinitionController extends Controller {
   private agent: Agent
-  private anonCredsCredentialDefinition: AnonCredsApi
-
-  public constructor(agent: Agent, anonCredsCredentialDefinition: AnonCredsApi) {
+  public constructor(agent: Agent) {
     super()
     this.agent = agent
-    this.anonCredsCredentialDefinition = anonCredsCredentialDefinition
   }
 
   /**
@@ -38,7 +35,7 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.anonCredsCredentialDefinition.getCredentialDefinition(credentialDefinitionId)
+      return await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
     } catch (error) {
       if (error instanceof AriesFrameworkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
@@ -74,9 +71,8 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const schema = await this.anonCredsCredentialDefinition.getSchema(credentialDefinitionRequest.schemaId);
 
-      return await this.anonCredsCredentialDefinition.registerCredentialDefinition({
+      return await this.agent.modules.anoncreds.registerCredentialDefinition({
         credentialDefinition: {
           issuerId: credentialDefinitionRequest.issuerId,
           schemaId: credentialDefinitionRequest.schemaId,
