@@ -1,7 +1,11 @@
-import type {
+import {
   // AcceptProofPresentationOptions,
   AcceptProofRequestOptions,
+  ConnectionRecord,
   CreateProofRequestOptions,
+  DidExchangeRole,
+  DidExchangeState,
+  ProofExchangeRecord,
   // IndyProofFormat,
   ProofExchangeRecordProps,
   // ProposeProofOptions,
@@ -9,7 +13,9 @@ import type {
   // V2ProofService,
 } from '@aries-framework/core'
 
-import type {
+import {
+  LegacyIndyCredentialFormatService,
+  LegacyIndyProofFormatService,
   V1ProofProtocol
 } from '@aries-framework/anoncreds'
 
@@ -265,8 +271,17 @@ export class ProofController extends Controller {
 
     try {
 
-      const proof = await this.v1ProofProtocol.createRequest(this.agent.context, {
-        connectionRecord: config.connectionRecord,
+      const indyProofFormat = new LegacyIndyProofFormatService();
+
+      const connectionRecord: ConnectionRecord = new ConnectionRecord({
+        id: connectionId,
+        state: DidExchangeState.Completed,
+        role: DidExchangeRole.Responder
+      });
+
+      const v1ProofProtocol = new V1ProofProtocol({ indyProofFormat });
+      const proof = await v1ProofProtocol.createRequest(this.agent.context, {
+        connectionRecord,
         comment: config.comment,
         proofFormats: config.proofFormats
       })
@@ -342,18 +357,27 @@ export class ProofController extends Controller {
   @Post('/:proofRecordId/accept-presentation')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptPresentation(
-    @Path('proofRecordId') proofRecordId: string,
+    @Body() proofExchangeRecord: ProofExchangeRecord,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
+      const indyProofFormat = new LegacyIndyProofFormatService();
 
-      return proof.toJSON()
+      // const connectionRecord: ConnectionRecord = new ConnectionRecord({
+      //   id: connectionId,
+      //   state: DidExchangeState.Completed,
+      //   role: DidExchangeRole.Responder
+      // });
+
+      const v1ProofProtocol = new V1ProofProtocol({ indyProofFormat });
+      const proof = await v1ProofProtocol.acceptPresentation(this.agent.context, { proofRecord: proofExchangeRecord })
+
+      return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
+          reason: `proof with proofRecordId "${proofExchangeRecord.id}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })

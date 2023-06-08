@@ -1,9 +1,10 @@
-import type { CredentialExchangeRecordProps } from '@aries-framework/core'
+import { ConnectionRecord, ConnectionState, CredentialExchangeRecord, CredentialExchangeRecordProps, CustomConnectionTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, utils } from '@aries-framework/core'
 
 import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } from '@aries-framework/core'
 import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query } from 'tsoa'
 import { injectable } from 'tsyringe'
-import type {
+import {
+  LegacyIndyCredentialFormatService,
   V1CredentialProtocol
 } from '@aries-framework/anoncreds'
 
@@ -23,12 +24,12 @@ import {
 @injectable()
 export class CredentialController extends Controller {
   private agent: Agent
-  private v1CredentialProtocol: V1CredentialProtocol
+  // private v1CredentialProtocol: V1CredentialProtocol
 
-  public constructor(agent: Agent, v1CredentialProtocol: V1CredentialProtocol) {
+  public constructor(agent: Agent) {
     super()
     this.agent = agent
-    this.v1CredentialProtocol = v1CredentialProtocol
+    // this.v1CredentialProtocol = v1CredentialProtocol
   }
 
   /**
@@ -68,7 +69,10 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const credential = await this.v1CredentialProtocol.getById(this.agent.context, credentialRecordId)
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const credential = await v1CredentialProtocol.getById(this.agent.context, credentialRecordId)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -119,7 +123,10 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const credential = await this.v1CredentialProtocol.createProposal(this.agent.context, options)
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const credential = await v1CredentialProtocol.createProposal(this.agent.context, options)
       return credential
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -148,7 +155,10 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialProposal: AcceptCredentialProposalOptions
   ) {
     try {
-      const credential = await this.v1CredentialProtocol.acceptProposal(this.agent.context, acceptCredentialProposal)
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const credential = await v1CredentialProtocol.acceptProposal(this.agent.context, acceptCredentialProposal)
 
       return credential
     } catch (error) {
@@ -175,7 +185,16 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const offer = await this.v1CredentialProtocol.createOffer(this.agent.context, createOfferOptions)
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+
+      const connectionRecord: ConnectionRecord = new ConnectionRecord({
+        id: createOfferOptions.connectionId,
+        state: DidExchangeState.Completed,
+        role: DidExchangeRole.Responder
+      });
+
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const offer = await v1CredentialProtocol.createOffer(this.agent.context, { credentialFormats: createOfferOptions.credentialFormats, connectionRecord: connectionRecord })
       return {
         message: offer.message.toJSON(),
         credentialRecord: offer.credentialRecord.toJSON(),
@@ -228,7 +247,10 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
   ) {
     try {
-      const credential = await this.v1CredentialProtocol.acceptOffer(this.agent.context, acceptCredentialOfferOptions)
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const credential = await v1CredentialProtocol.acceptOffer(this.agent.context, acceptCredentialOfferOptions)
       return credential
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -256,7 +278,10 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions
   ) {
     try {
-      const credential = await this.v1CredentialProtocol.acceptRequest(this.agent.context, acceptCredentialRequestOptions)
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const credential = await v1CredentialProtocol.acceptRequest(this.agent.context, acceptCredentialRequestOptions)
       return credential
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -283,7 +308,10 @@ export class CredentialController extends Controller {
     @Body() acceptCredential: AcceptCredential
   ) {
     try {
-      const credential = await this.v1CredentialProtocol.acceptCredential(this.agent.context, acceptCredential)
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const credential = await v1CredentialProtocol.acceptCredential(this.agent.context, acceptCredential)
       return credential
     } catch (error) {
       if (error instanceof RecordNotFoundError) {

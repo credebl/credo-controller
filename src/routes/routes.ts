@@ -142,6 +142,7 @@ const models: TsoaRoute.Models = {
     "CreateOfferOptions": {
         "dataType": "refObject",
         "properties": {
+            "connectionId": {"dataType":"string","required":true},
             "credentialFormats": {"dataType":"nestedObjectLiteral","nestedProperties":{"indy":{"dataType":"nestedObjectLiteral","nestedProperties":{"attributes":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"value":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"required":true},"credentialDefinitionId":{"dataType":"string","required":true}},"required":true}},"required":true},
             "autoAcceptCredential": {"ref":"AutoAcceptCredential"},
             "comment": {"dataType":"string"},
@@ -1713,7 +1714,7 @@ export function RegisterRoutes(app: express.Router) {
 
             async function ProofController_acceptPresentation(request: any, response: any, next: any) {
             const args = {
-                    proofRecordId: {"in":"path","name":"proofRecordId","required":true,"dataType":"string"},
+                    proofExchangeRecord: {"in":"body","name":"proofExchangeRecord","required":true,"ref":"ProofExchangeRecord"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
