@@ -29,7 +29,8 @@ import type {
   ConnectionRecord,
   ExtractProofFormats,
   CredentialExchangeRecord,
-  DidResolutionOptions
+  DidResolutionOptions,
+  CreateCredentialOfferOptions
 } from '@aries-framework/core'
 
 import type {
@@ -126,6 +127,7 @@ export interface AcceptCredentialProposalOptions {
 
 // TODO: added type in protocolVersion
 export interface CreateOfferOptions {
+  connectionId: string
   credentialFormats: {
     indy: {
       credentialDefinitionId: string
