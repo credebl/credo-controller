@@ -87,7 +87,10 @@ export class SchemaController {
           version: schema.version,
           attrNames: schema.attributes
         },
-        options: {}
+        options: {
+          endorserMode: 'internal',
+          endorserDid: schema.issuerId,
+        },
       })
     } catch (error) {
       if (error instanceof AriesFrameworkError) {

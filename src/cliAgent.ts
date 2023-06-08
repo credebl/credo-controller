@@ -6,7 +6,7 @@ import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme, l
 import { readFile } from 'fs/promises'
 import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
 import indySdk from 'indy-sdk'
-import { BCOVRIN_TEST_GENESIS } from './utils/util'
+import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
@@ -97,9 +97,13 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         networks: [
           {
             isProduction: false,
-            indyNamespace: 'bcovrin:test',
+            indyNamespace: 'bcovrin',
             genesisTransactions: BCOVRIN_TEST_GENESIS,
             connectOnStartup: true,
+            // transactionAuthorAgreement: {
+            //   version: '1',
+            //   acceptanceMechanism: 'accept'
+            // }
           },
         ]
       }),
@@ -120,6 +124,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         ],
       }),
       credentials: new CredentialsModule({
+        autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
         credentialProtocols: [
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
