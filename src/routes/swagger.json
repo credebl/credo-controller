@@ -293,6 +293,9 @@
 			},
 			"CreateOfferOptions": {
 				"properties": {
+					"connectionId": {
+						"type": "string"
+					},
 					"credentialFormats": {
 						"properties": {
 							"indy": {
@@ -339,6 +342,7 @@
 					}
 				},
 				"required": [
+					"connectionId",
 					"credentialFormats"
 				],
 				"type": "object",
@@ -4486,16 +4490,17 @@
 					"Proofs"
 				],
 				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "proofRecordId",
-						"required": true,
-						"schema": {
-							"type": "string"
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ProofExchangeRecord"
+							}
 						}
 					}
-				]
+				}
 			}
 		}
 	},
