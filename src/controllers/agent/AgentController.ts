@@ -20,13 +20,13 @@ export class AgentController extends Controller {
    */
   @Get('/')
   public async getAgentInfo(): Promise<AgentInfo> {
-    const did = '7Tw5BYsY5zoc4CysdSyDJv';
+    const did = '2XKsaGBrgRoAqNcSycUvKK';
     const publicDid = await this.agent.dids.import({
-      did: `did:indy:bcovrin:test:${did}`,
+      did: `did:indy:bcovrin:${did}`,
       privateKeys: [
         {
           keyType: KeyType.Ed25519,
-          privateKey: TypedArrayEncoder.fromString('01eafa4de4e22ed4fc2ee522b6ce2731'),
+          privateKey: TypedArrayEncoder.fromString('testseed000000000000001100000001'),
         }
       ],
       overwrite: true
@@ -51,7 +51,17 @@ export class AgentController extends Controller {
     @Body() didCreateOptions: DidCreateOptions,
     @Res() internalServerError: TsoaResponse<500, { message: string }>) {
     try {
-      const resolveResult = await this.agent.dids.create(didCreateOptions);
+      const key = await this.agent.wallet.createKey({ keyType: KeyType.Ed25519 })
+      const resolveResult = await this.agent.dids.create({
+        options: {
+          endorserMode: 'internal',
+          endorserDid: didCreateOptions.did,
+          alias: 'Alias',
+          role: 'ENDORSER',
+          verkey: key.publicKeyBase58,
+          useEndpointAttrib: true
+        },
+      });
       return JsonTransformer.toJSON(resolveResult);
     }
     catch (error) {
