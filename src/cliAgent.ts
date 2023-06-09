@@ -4,7 +4,7 @@ import type { WalletConfig } from '@aries-framework/core/build/types'
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin, WsInboundTransport } from '@aries-framework/node'
 import { readFile } from 'fs/promises'
-import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
+import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar } from '@aries-framework/indy-sdk'
 import indySdk from 'indy-sdk'
 import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
 
@@ -112,6 +112,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       }),
       dids: new DidsModule({
         resolvers: [new IndySdkIndyDidResolver()],
+        registrars: [new IndySdkIndyDidRegistrar()],
       }),
       proofs: new ProofsModule({
         proofProtocols: [

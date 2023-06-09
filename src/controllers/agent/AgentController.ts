@@ -56,7 +56,6 @@ export class AgentController extends Controller {
         options: {
           endorserMode: 'internal',
           endorserDid: didCreateOptions.did,
-          alias: 'Alias',
           role: 'ENDORSER',
           verkey: key.publicKeyBase58,
           useEndpointAttrib: true
