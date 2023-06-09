@@ -1,8 +1,9 @@
-import type { DidCreateOptions, DidResolutionResultProps } from '../types'
+import type { DidCreate, DidResolutionResultProps } from '../types'
 import { DidCreateResult, DidOperationStateActionBase, JsonTransformer, KeyType, TypedArrayEncoder } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
+import { IndySdkIndyDidCreateOptions, IndySdkIndyDidRegistrar, IndySdkIndyDidResolver } from '@aries-framework/indy-sdk'
 import { Did, DidRecordExample } from '../examples'
 
 @Tags('Dids')
@@ -43,48 +44,50 @@ export class DidController extends Controller {
 
   @Post('/write')
   public async writeDid(
-    @Body() data: DidCreateOptions,
+    @Body() data: DidCreate,
     @Res() internalServerError: TsoaResponse<500, { message: string }>) {
     try {
-
-      console.log("STARTINGGG")
-      // testseed000000000006000000067890
-      // const resolveResult = await this.agent.dids.create({
-      //   "method": "indy",
-      //   "options": {
-      //     alias: "Hello",
-      //     submitterDid: 'did:indy:bcovrin:AtD4JwyJnd57MpuQ3BTDhy',
-      //     role: 'ENDORSER',
-      //   },
-      //   "secret": {
-      //     "privateKey": TypedArrayEncoder.fromString(data.seed)
-      //   }
-      // });
-      // console.log(JSON.stringify(resolveResult));
       const key = await this.agent.wallet.createKey({
         keyType: KeyType.Ed25519,
-        privateKey: TypedArrayEncoder.fromString(data.seed)
-      });
-      console.log("KEY CREATED");
-      const unqualifiedIndyDid = TypedArrayEncoder.toBase58(key.publicKey.slice(0, 16))
-      console.log("UNQUALIFIEDDID: ", unqualifiedIndyDid);
-      const resolveResult = await this.agent.dids.create({
-        method: 'indy',
+        privateKey: TypedArrayEncoder.fromString(data.seed),
+      })
+
+      const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58)
+      const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16))
+
+      console.log("did", did)
+
+      const registerDid: IndySdkIndyDidRegistrar = new IndySdkIndyDidRegistrar()
+      const createDid = await registerDid.create(this.agent.context, {
+        did: `did:indy:bcovrin:${did}`,
         options: {
-          alias: 'Hi',
-          submitterDid: `did:indy:bcovrin:${unqualifiedIndyDid}`,
+          submitterDid: `did:indy:bcovrin:${did}`,
+          alias: 'Alias',
           role: 'ENDORSER'
-        },
-        // secret: {
-        //   privateKey: TypedArrayEncoder.fromString(data.seed)
-        // }
+        }
       });
-      console.log("resolved: ---- ", JSON.stringify(resolveResult));
-      // if (resolveResult.didState.did) {
-      //   console.log("Inside IF");
-      //   const importing = await this.agent.dids.import({ did: resolveResult.didState.did, overwrite: true });
-      //   console.log("Done with ", importing);
-      // }
+
+      console.log("createDid", createDid);
+
+      const resolverDids = `did:indy:bcovrin:${did}`
+      const resolveDid: IndySdkIndyDidResolver = new IndySdkIndyDidResolver()
+      const resolveIndyDid = await resolveDid.resolve(this.agent.context, resolverDids);
+
+      console.log(`resolveIndyDid`, resolveIndyDid)
+      // const resolveDidUrl = await this.agent.dids.resolve(`did:key:bcovrin:${did}`)
+
+      // console.log("resolveDidUrl", resolveDidUrl)
+
+      const resolveResult = await this.agent.dids.import({
+        did: `did:indy:bcovrin:${did}`,
+        overwrite: true,
+        privateKeys: [
+          {
+            keyType: KeyType.Ed25519,
+            privateKey: TypedArrayEncoder.fromString(data.seed),
+          },
+        ],
+      })
       return JsonTransformer.toJSON(resolveResult);
 
     }
