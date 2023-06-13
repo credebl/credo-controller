@@ -1,4 +1,4 @@
-import { ConnectionRecord, ConnectionState, CredentialExchangeRecord, CredentialExchangeRecordProps, CustomConnectionTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, utils } from '@aries-framework/core'
+import { AutoAcceptCredential, ConnectionRecord, ConnectionState, CredentialExchangeRecord, CredentialExchangeRecordProps, CredentialProtocolVersionType, CustomConnectionTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, utils } from '@aries-framework/core'
 
 import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } from '@aries-framework/core'
 import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query } from 'tsoa'
@@ -187,20 +187,23 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+      // const indyCredentialFormat = new LegacyIndyCredentialFormatService();
 
-      const connectionRecord: ConnectionRecord = new ConnectionRecord({
-        id: createOfferOptions.connectionId,
-        state: DidExchangeState.Completed,
-        role: DidExchangeRole.Responder
-      });
+      // const connectionRecord: ConnectionRecord = new ConnectionRecord({
+      //   id: createOfferOptions.connectionId,
+      //   state: DidExchangeState.Completed,
+      //   role: DidExchangeRole.Responder
+      // });
 
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
-      const offer = await v1CredentialProtocol.createOffer(this.agent.context, { credentialFormats: createOfferOptions.credentialFormats, connectionRecord: connectionRecord })
-      return {
-        message: offer.message.toJSON(),
-        credentialRecord: offer.credentialRecord.toJSON(),
-      }
+      // const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      // const offer = await v1CredentialProtocol.createOffer(this.agent.context, { credentialFormats: createOfferOptions.credentialFormats, connectionRecord: connectionRecord })
+      const offer = await this.agent.credentials.offerCredential({
+        connectionId: createOfferOptions.connectionId,
+        protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
+        credentialFormats: createOfferOptions.credentialFormats,
+        autoAcceptCredential: createOfferOptions.autoAcceptCredential
+      })
+      return offer;
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -249,15 +252,22 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
   ) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
 
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
-      const credential = await v1CredentialProtocol.acceptOffer(this.agent.context, acceptCredentialOfferOptions)
-      return credential
+      const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
+      if (linkSecretIds.length === 0) {
+        await this.agent.modules.anoncreds.createLinkSecret()
+      }
+      const acceptOffer = await this.agent.credentials.acceptOffer({
+        credentialRecordId: acceptCredentialOfferOptions.credentialRecordId,
+        credentialFormats: acceptCredentialOfferOptions.credentialFormats,
+        autoAcceptCredential: acceptCredentialOfferOptions.autoAcceptCredential,
+        comment: acceptCredentialOfferOptions.comment
+      })
+      return acceptOffer
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `credential with credential record "${acceptCredentialOfferOptions.credentialRecord}" not found.`,
+          reason: `credential with credential record id "${acceptCredentialOfferOptions.credentialRecordId}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })

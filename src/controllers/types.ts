@@ -161,7 +161,7 @@ export interface AcceptCredential {
 }
 
 export interface AcceptCredentialOfferOptions {
-  credentialRecord: CredentialExchangeRecord
+  credentialRecordId: string
   credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
