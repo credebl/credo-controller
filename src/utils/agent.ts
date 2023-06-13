@@ -13,7 +13,15 @@ import path from 'path'
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
-import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
+import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar } from '@aries-framework/indy-sdk'
+// import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidRegistrar, IndyVdrIndyDidResolver, IndyVdrModule } from '@aries-framework/indy-vdr'
+// import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
+// import { AskarModule } from '@aries-framework/askar'
+// import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+// import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
+// import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+// import { CheqdModule, CheqdModuleConfig, CheqdAnonCredsRegistry, CheqdDidRegistrar, CheqdDidResolver } from '@aries-framework/cheqd'
+import { TenantsModule } from '@aries-framework/tenants'
 
 export const setupAgent = async ({
   name,
@@ -31,7 +39,7 @@ export const setupAgent = async ({
   const storageConfig = {
     type: 'postgres_storage',
     config: {
-      url: '192.168.1.12:5432',
+      url: '10.100.194.194:5432',
       wallet_scheme: IndySdkPostgresWalletScheme.DatabasePerWallet,
     },
     credentials: {
@@ -42,7 +50,7 @@ export const setupAgent = async ({
     },
   }
 
-  loadIndySdkPostgresPlugin(storageConfig.config, storageConfig.credentials)
+  // loadIndySdkPostgresPlugin(storageConfig.config, storageConfig.credentials)
 
   const config: InitConfig = {
     label: name,
@@ -69,14 +77,31 @@ export const setupAgent = async ({
             indyNamespace: 'bcovrin:test',
             isProduction: false,
             genesisTransactions: BCOVRIN_TEST_GENESIS,
+            connectOnStartup: true
           },
         ]
       }),
+      // indyVdr: new IndyVdrModule({
+      //   indyVdr,
+      //   networks: [
+      //     {
+      //       isProduction: false,
+      //       indyNamespace: 'bcovrin:test',
+      //       genesisTransactions: BCOVRIN_TEST_GENESIS,
+      //       connectOnStartup: true,
+      //     },
+      //   ]
+      // }),
+      // askar: new AskarModule({
+      //   ariesAskar,
+      // }),
+
       anoncreds: new AnonCredsModule({
         registries: [new IndySdkAnonCredsRegistry()],
       }),
       dids: new DidsModule({
         resolvers: [new IndySdkIndyDidResolver()],
+        registrars: [new IndySdkIndyDidRegistrar()]
       }),
       proofs: new ProofsModule({
         proofProtocols: [
@@ -98,9 +123,53 @@ export const setupAgent = async ({
           // }),
         ],
       }),
+      tenants: new TenantsModule()
     },
     dependencies: agentDependencies,
   })
+
+  // const agent = new Agent({
+  //   config,
+  //   dependencies: agentDependencies,
+  //   modules: {
+  //     // Register the Askar module on the agent
+  //     // We do this to have access to a wallet
+  //     askar: new AskarModule({
+  //       ariesAskar,
+  //     }),
+  //     anoncredsRs: new AnonCredsRsModule({
+  //       anoncreds,
+  //     }),
+  //     indyVdr: new IndyVdrModule({
+  //       indyVdr,
+  //       networks: [
+  //         {
+  //           isProduction: false,
+  //           indyNamespace: 'bcovrin:test',
+  //           genesisTransactions: BCOVRIN_TEST_GENESIS,
+  //           connectOnStartup: true,
+  //         },
+  //       ],
+  //     }),
+  //     cheqd: new CheqdModule(
+  //       new CheqdModuleConfig({
+  //         networks: [
+  //           {
+  //             network: 'cheqd-testnet-6',
+  //             cosmosPayerSeed: 'focus install garment hungry teach kick enter inherit wheat become section shaft',
+  //           },
+  //         ],
+  //       })
+  //     ),
+  //     anoncreds: new AnonCredsModule({
+  //       registries: [new IndyVdrAnonCredsRegistry(), new CheqdAnonCredsRegistry()],
+  //     }),
+  //     dids: new DidsModule({
+  //       registrars: [new IndyVdrIndyDidRegistrar(), new CheqdDidRegistrar()],
+  //       resolvers: [new IndyVdrIndyDidResolver(), new CheqdDidResolver()],
+  //     }),
+  //   },
+  // })
 
   const httpInbound = new HttpInboundTransport({
     port: port,
