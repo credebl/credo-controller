@@ -1,4 +1,4 @@
-import { CredentialsModule, DidsModule, InitConfig, ProofsModule, V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
+import { AutoAcceptCredential, CredentialsModule, DidsModule, InitConfig, ProofsModule, V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
 import indySdk from 'indy-sdk'
 
 import {
@@ -13,7 +13,8 @@ import path from 'path'
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
-import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
+import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar, IndySdkPoolConfig } from '@aries-framework/indy-sdk'
+import { randomUUID } from 'crypto'
 
 export const setupAgent = async ({
   name,
@@ -50,7 +51,7 @@ export const setupAgent = async ({
     walletConfig: {
       id: name,
       key: name,
-      // storage: storageConfig,
+      storage: storageConfig,
     },
     logger: logger,
   }
@@ -58,18 +59,21 @@ export const setupAgent = async ({
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
 
+  const indyNetworkConfig = {
+    id: randomUUID(),
+    genesisTransactions: BCOVRIN_TEST_GENESIS,
+    indyNamespace: 'bcovrin',
+    isProduction: false,
+    connectOnStartup: true,
+  } satisfies IndySdkPoolConfig
+
   const agent = new Agent({
-    config,
+    config: config,
     modules: {
       indySdk: new IndySdkModule({
         indySdk,
         networks: [
-          {
-            id: 'Bcovrin Testnet',
-            indyNamespace: 'bcovrin:test',
-            isProduction: false,
-            genesisTransactions: BCOVRIN_TEST_GENESIS,
-          },
+          indyNetworkConfig
         ]
       }),
       anoncreds: new AnonCredsModule({
@@ -77,6 +81,7 @@ export const setupAgent = async ({
       }),
       dids: new DidsModule({
         resolvers: [new IndySdkIndyDidResolver()],
+        registrars: [new IndySdkIndyDidRegistrar()],
       }),
       proofs: new ProofsModule({
         proofProtocols: [
@@ -89,6 +94,7 @@ export const setupAgent = async ({
         ],
       }),
       credentials: new CredentialsModule({
+        autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
         credentialProtocols: [
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,

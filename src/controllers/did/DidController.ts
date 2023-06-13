@@ -3,8 +3,10 @@ import { DidCreateResult, DidOperationStateActionBase, JsonTransformer, KeyType,
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
-import { IndySdkIndyDidCreateOptions, IndySdkIndyDidRegistrar, IndySdkIndyDidResolver } from '@aries-framework/indy-sdk'
+import { IndySdkIndyDidRegistrar, IndySdkIndyDidResolver, IndySdkModuleConfig } from '@aries-framework/indy-sdk'
 import { Did, DidRecordExample } from '../examples'
+import * as IndySdk from 'indy-sdk';
+import axios from 'axios';
 
 @Tags('Dids')
 @Route('/dids')
@@ -47,48 +49,30 @@ export class DidController extends Controller {
     @Body() data: DidCreate,
     @Res() internalServerError: TsoaResponse<500, { message: string }>) {
     try {
-      const key = await this.agent.wallet.createKey({
-        keyType: KeyType.Ed25519,
-        privateKey: TypedArrayEncoder.fromString(data.seed),
-      })
 
-      const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58)
-      const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16))
+      let body = {
+        role: 'ENDORSER',
+        alias: 'Alias',
+        seed: data.seed
+      };
 
-      console.log("did", did)
-
-      const registerDid: IndySdkIndyDidRegistrar = new IndySdkIndyDidRegistrar()
-      const createDid = await registerDid.create(this.agent.context, {
-        did: `did:indy:bcovrin:${did}`,
-        options: {
-          submitterDid: `did:indy:bcovrin:${did}`,
-          alias: 'Alias',
-          role: 'ENDORSER'
-        }
-      });
-
-      console.log("createDid", createDid);
-
-      const resolverDids = `did:indy:bcovrin:${did}`
-      const resolveDid: IndySdkIndyDidResolver = new IndySdkIndyDidResolver()
-      const resolveIndyDid = await resolveDid.resolve(this.agent.context, resolverDids);
-
-      console.log(`resolveIndyDid`, resolveIndyDid)
-      // const resolveDidUrl = await this.agent.dids.resolve(`did:key:bcovrin:${did}`)
-
-      // console.log("resolveDidUrl", resolveDidUrl)
-
-      const resolveResult = await this.agent.dids.import({
-        did: `did:indy:bcovrin:${did}`,
-        overwrite: true,
-        privateKeys: [
-          {
-            keyType: KeyType.Ed25519,
-            privateKey: TypedArrayEncoder.fromString(data.seed),
-          },
-        ],
-      })
-      return JsonTransformer.toJSON(resolveResult);
+      return await axios
+        .post('http://test.bcovrin.vonx.io/register', body)
+        .then(async (res) => {
+          if (res.data) {
+            const resolveResult = await this.agent.dids.import({
+              did: `did:indy:bcovrin:${res.data.did}`,
+              overwrite: true,
+              privateKeys: [
+                {
+                  keyType: KeyType.Ed25519,
+                  privateKey: TypedArrayEncoder.fromString(data.seed),
+                },
+              ],
+            })
+            return JsonTransformer.toJSON(resolveResult);
+          }
+        })
     }
     catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
