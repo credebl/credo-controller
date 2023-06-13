@@ -355,8 +355,8 @@
 			},
 			"AcceptCredentialOfferOptions": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"type": "string"
 					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
@@ -369,7 +369,7 @@
 					}
 				},
 				"required": [
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false

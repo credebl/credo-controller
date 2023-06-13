@@ -158,7 +158,7 @@ const models: TsoaRoute.Models = {
     "AcceptCredentialOfferOptions": {
         "dataType": "refObject",
         "properties": {
-            "credentialRecord": {"ref":"CredentialExchangeRecord","required":true},
+            "credentialRecordId": {"dataType":"string","required":true},
             "credentialFormats": {"ref":"CredentialFormatPayload_CredentialFormats.acceptOffer_"},
             "autoAcceptCredential": {"ref":"AutoAcceptCredential"},
             "comment": {"dataType":"string"},
