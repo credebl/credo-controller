@@ -1,9 +1,12 @@
-import type { DidCreateOptions, DidResolutionResultProps } from '../types'
+import type { DidCreate, DidResolutionResultProps } from '../types'
 import { DidCreateResult, DidOperationStateActionBase, JsonTransformer, KeyType, TypedArrayEncoder } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
+import { IndySdkIndyDidRegistrar, IndySdkIndyDidResolver, IndySdkModuleConfig } from '@aries-framework/indy-sdk'
 import { Did, DidRecordExample } from '../examples'
+import * as IndySdk from 'indy-sdk';
+import axios from 'axios';
 
 @Tags('Dids')
 @Route('/dids')
@@ -43,50 +46,33 @@ export class DidController extends Controller {
 
   @Post('/write')
   public async writeDid(
-    @Body() data: DidCreateOptions,
+    @Body() data: DidCreate,
     @Res() internalServerError: TsoaResponse<500, { message: string }>) {
     try {
 
-      console.log("STARTINGGG")
-      // testseed000000000006000000067890
-      // const resolveResult = await this.agent.dids.create({
-      //   "method": "indy",
-      //   "options": {
-      //     alias: "Hello",
-      //     submitterDid: 'did:indy:bcovrin:AtD4JwyJnd57MpuQ3BTDhy',
-      //     role: 'ENDORSER',
-      //   },
-      //   "secret": {
-      //     "privateKey": TypedArrayEncoder.fromString(data.seed)
-      //   }
-      // });
-      // console.log(JSON.stringify(resolveResult));
-      const key = await this.agent.wallet.createKey({
-        keyType: KeyType.Ed25519,
-        privateKey: TypedArrayEncoder.fromString(data.seed)
-      });
-      console.log("KEY CREATED");
-      const unqualifiedIndyDid = TypedArrayEncoder.toBase58(key.publicKey.slice(0, 16))
-      console.log("UNQUALIFIEDDID: ", unqualifiedIndyDid);
-      const resolveResult = await this.agent.dids.create({
-        method: 'indy',
-        options: {
-          alias: 'Hi',
-          submitterDid: `did:indy:bcovrin:${unqualifiedIndyDid}`,
-          role: 'ENDORSER'
-        },
-        // secret: {
-        //   privateKey: TypedArrayEncoder.fromString(data.seed)
-        // }
-      });
-      console.log("resolved: ---- ", JSON.stringify(resolveResult));
-      // if (resolveResult.didState.did) {
-      //   console.log("Inside IF");
-      //   const importing = await this.agent.dids.import({ did: resolveResult.didState.did, overwrite: true });
-      //   console.log("Done with ", importing);
-      // }
-      return JsonTransformer.toJSON(resolveResult);
+      let body = {
+        role: 'ENDORSER',
+        alias: 'Alias',
+        seed: data.seed
+      };
 
+      return await axios
+        .post('http://test.bcovrin.vonx.io/register', body)
+        .then(async (res) => {
+          if (res.data) {
+            const resolveResult = await this.agent.dids.import({
+              did: `did:indy:bcovrin:${res.data.did}`,
+              overwrite: true,
+              privateKeys: [
+                {
+                  keyType: KeyType.Ed25519,
+                  privateKey: TypedArrayEncoder.fromString(data.seed),
+                },
+              ],
+            })
+            return JsonTransformer.toJSON(resolveResult);
+          }
+        })
     }
     catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })

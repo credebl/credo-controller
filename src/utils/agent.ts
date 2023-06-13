@@ -1,4 +1,4 @@
-import { CredentialsModule, DidsModule, InitConfig, ProofsModule, V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
+import { AutoAcceptCredential, CredentialsModule, DidsModule, InitConfig, ProofsModule, V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
 import indySdk from 'indy-sdk'
 
 import {
@@ -58,7 +58,7 @@ export const setupAgent = async ({
     walletConfig: {
       id: name,
       key: name,
-      // storage: storageConfig,
+      storage: storageConfig,
     },
     logger: logger,
   }
@@ -66,8 +66,16 @@ export const setupAgent = async ({
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
 
+  const indyNetworkConfig = {
+    id: randomUUID(),
+    genesisTransactions: BCOVRIN_TEST_GENESIS,
+    indyNamespace: 'bcovrin',
+    isProduction: false,
+    connectOnStartup: true,
+  } satisfies IndySdkPoolConfig
+
   const agent = new Agent({
-    config,
+    config: config,
     modules: {
       indySdk: new IndySdkModule({
         indySdk,
@@ -114,6 +122,7 @@ export const setupAgent = async ({
         ],
       }),
       credentials: new CredentialsModule({
+        autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
         credentialProtocols: [
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,

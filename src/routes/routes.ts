@@ -250,6 +250,19 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"string","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DidCreate": {
+        "dataType": "refObject",
+        "properties": {
+            "seed": {"dataType":"string","required":true},
+            "method": {"dataType":"string"},
+            "did": {"dataType":"string"},
+            "options": {"ref":"DidRegistrationExtraOptions"},
+            "secret": {"ref":"DidRegistrationSecretOptions"},
+            "didDocument": {"ref":"DidDocument"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "HandshakeProtocol": {
         "dataType": "refEnum",
         "enums": ["https://didcomm.org/connections/1.0","https://didcomm.org/didexchange/1.0"],
@@ -1204,13 +1217,13 @@ export function RegisterRoutes(app: express.Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/dids/:write',
+        app.post('/dids/write',
             ...(fetchMiddlewares<RequestHandler>(DidController)),
             ...(fetchMiddlewares<RequestHandler>(DidController.prototype.writeDid)),
 
             async function DidController_writeDid(request: any, response: any, next: any) {
             const args = {
-                    data: {"in":"body","name":"data","required":true,"ref":"DidCreateOptions"},
+                    data: {"in":"body","name":"data","required":true,"ref":"DidCreate"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 

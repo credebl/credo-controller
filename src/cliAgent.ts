@@ -4,13 +4,14 @@ import type { WalletConfig } from '@aries-framework/core/build/types'
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin, WsInboundTransport } from '@aries-framework/node'
 import { readFile } from 'fs/promises'
-import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule } from '@aries-framework/indy-sdk'
+import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar, IndySdkPoolConfig } from '@aries-framework/indy-sdk'
 import indySdk from 'indy-sdk'
 import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { randomUUID } from 'crypto'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -88,30 +89,27 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
 
+  const indyNetworkConfig = {
+    id: randomUUID(),
+    genesisTransactions: BCOVRIN_TEST_GENESIS,
+    indyNamespace: 'bcovrin',
+    isProduction: false,
+    connectOnStartup: true,
+  } satisfies IndySdkPoolConfig
 
   const agent = new Agent({
     config: agentConfig,
     modules: {
       indySdk: new IndySdkModule({
         indySdk,
-        networks: [
-          {
-            isProduction: false,
-            indyNamespace: 'bcovrin',
-            genesisTransactions: BCOVRIN_TEST_GENESIS,
-            connectOnStartup: true,
-            // transactionAuthorAgreement: {
-            //   version: '1',
-            //   acceptanceMechanism: 'accept'
-            // }
-          },
-        ]
+        networks: [indyNetworkConfig]
       }),
       anoncreds: new AnonCredsModule({
         registries: [new IndySdkAnonCredsRegistry()],
       }),
       dids: new DidsModule({
         resolvers: [new IndySdkIndyDidResolver()],
+        registrars: [new IndySdkIndyDidRegistrar()],
       }),
       proofs: new ProofsModule({
         proofProtocols: [
