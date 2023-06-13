@@ -40,6 +40,7 @@ import type {
 
 
 import type { DIDDocument } from 'did-resolver'
+import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
@@ -260,9 +261,23 @@ export interface AcceptProofProposal {
   autoAcceptProof: AutoAcceptProof
 }
 
-// export interface GetTenantAgentOptions {
-//   tenantId: string
-// }
+export interface GetTenantAgentOptions {
+  tenantId: string
+}
+
+export interface DidCreateOptions {
+  method?: string;
+  did?: string;
+  options?: DidRegistrationExtraOptions;
+  secret?: DidRegistrationSecretOptions;
+  didDocument?: DidDocument;
+  seed?: any;
+}
+
+export interface ResolvedDid {
+  didUrl: string
+  options?: DidResolutionOptions
+}
 
 export interface DidCreate {
   seed: string;
@@ -273,15 +288,17 @@ export interface DidCreate {
   didDocument?: DidDocument;
 }
 
-export interface ResolvedDid {
-  didUrl: string
-  options?: DidResolutionOptions
+export interface CreateTenantOptions {
+  config: Omit<TenantConfig, 'walletConfig'>,
+  seed: string;
 }
-
-// export interface CreateTenantOptions {
-//   config: Omit<TenantConfig, 'walletConfig'>
-// }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
 //   tenantAgent: TenantAgent<AgentModules>
 // ) => Promise<void>
+
+export interface WithTenantAgentOptions {
+  tenantId: string;
+  method: string;
+  payload?: any;
+}
