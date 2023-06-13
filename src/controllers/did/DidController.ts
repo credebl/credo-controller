@@ -1,10 +1,12 @@
-import type { DidCreateOptions, DidResolutionResultProps } from '../types'
-import { JsonTransformer } from '@aries-framework/core'
+import type { DidCreate, DidResolutionResultProps } from '../types'
+import { DidCreateResult, DidOperationStateActionBase, JsonTransformer, KeyType, TypedArrayEncoder } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
-
+import { IndySdkIndyDidRegistrar, IndySdkIndyDidResolver, IndySdkModuleConfig } from '@aries-framework/indy-sdk'
 import { Did, DidRecordExample } from '../examples'
+import * as IndySdk from 'indy-sdk';
+import axios from 'axios';
 
 @Tags('Dids')
 @Route('/dids')
@@ -42,17 +44,49 @@ export class DidController extends Controller {
    */
   // @Example<DidResolutionResultProps>(DidRecordExample)
 
-  @Post('/:write')
+  @Post('/write')
+  @Post('/write')
   public async writeDid(
-    @Body() data: DidCreateOptions,
+    @Body() data: DidCreate,
     @Res() internalServerError: TsoaResponse<500, { message: string }>) {
     try {
-      const resolveResult = await this.agent.dids.create(data);
-      return JsonTransformer.toJSON(resolveResult);
+
+      let body = {
+        role: 'ENDORSER',
+        alias: 'Alias',
+        seed: data.seed
+      };
+
+      return await axios
+        .post('http://test.bcovrin.vonx.io/register', body)
+        .then(async (res) => {
+          if (res.data) {
+            const resolveResult = await this.agent.dids.import({
+              did: `did:indy:bcovrin:${res.data.did}`,
+              overwrite: true,
+              privateKeys: [
+                {
+                  keyType: KeyType.Ed25519,
+                  privateKey: TypedArrayEncoder.fromString(data.seed),
+                },
+              ],
+            })
+            return JsonTransformer.toJSON(resolveResult);
+          }
+        })
     }
     catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
 
     }
   }
+
+  @Get('/')
+  public async getDids() {
+    const createdDids = await this.agent.dids.getCreatedDids({})
+    console.log("Created dids: ", createdDids);
+    return createdDids;
+  }
 }
+
+
