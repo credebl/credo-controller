@@ -264,7 +264,8 @@ export interface AcceptProofProposal {
 //   tenantId: string
 // }
 
-export interface DidCreateOptions {
+export interface DidCreate {
+  seed: string;
   method?: string;
   did?: string;
   options?: DidRegistrationExtraOptions;
