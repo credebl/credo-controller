@@ -515,6 +515,33 @@
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
+			"DidCreate": {
+				"properties": {
+					"seed": {
+						"type": "string"
+					},
+					"method": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"options": {
+						"$ref": "#/components/schemas/DidRegistrationExtraOptions"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"seed"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"HandshakeProtocol": {
 				"enum": [
 					"https://didcomm.org/connections/1.0",
@@ -2991,7 +3018,7 @@
 				]
 			}
 		},
-		"/dids/{write}": {
+		"/dids/write": {
 			"post": {
 				"operationId": "WriteDid",
 				"responses": {
@@ -3033,7 +3060,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/DidCreateOptions"
+								"$ref": "#/components/schemas/DidCreate"
 							}
 						}
 					}

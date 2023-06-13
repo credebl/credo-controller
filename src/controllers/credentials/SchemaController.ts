@@ -1,6 +1,6 @@
 import type { Version } from '../examples'
 import type { Schema } from 'indy-sdk'
-import { AnonCredsError, AnonCredsApi } from '@aries-framework/anoncreds'
+import { AnonCredsError, AnonCredsApi, getUnqualifiedSchemaId } from '@aries-framework/anoncreds'
 import { Agent, AriesFrameworkError, BaseAgent } from '@aries-framework/core'
 // import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 // import { isIndyError } from '@aries-framework/core/build/utils/indyError'
@@ -8,6 +8,7 @@ import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from '
 import { injectable } from 'tsyringe'
 
 import { SchemaId, SchemaExample } from '../examples'
+
 
 @Tags('Schemas')
 @Route('/schemas')
@@ -80,7 +81,8 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.modules.anoncreds.registerSchema({
+
+      const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
         schema: {
           issuerId: schema.issuerId,
           name: schema.name,
@@ -92,6 +94,13 @@ export class SchemaController {
           endorserDid: schema.issuerId,
         },
       })
+
+      const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
+      if(schemaState.state === 'finished') {
+        const skippedString = getSchemaId.substring('did:indy:bcovrin:'.length);
+        schemaState.schemaId = skippedString
+      }
+      return schemaState;
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
         if (error.message.includes('UnauthorizedClientRequest')) {

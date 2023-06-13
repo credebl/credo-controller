@@ -1,6 +1,6 @@
 import type { SchemaId } from '../examples'
 import type { CredDef } from 'indy-sdk'
-import { AnonCredsApi, AnonCredsError, } from '@aries-framework/anoncreds'
+import { AnonCredsApi, AnonCredsError, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 // import { error}
 
 // TODO: Chenged IndySdkError to AriesFrameworkError. If approved, the message must be changed too.
@@ -9,6 +9,7 @@ import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaRespo
 import { injectable } from 'tsyringe'
 
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
+import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
@@ -72,7 +73,7 @@ export class CredentialDefinitionController extends Controller {
   ) {
     try {
 
-      return await this.agent.modules.anoncreds.registerCredentialDefinition({
+      const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
         credentialDefinition: {
           issuerId: credentialDefinitionRequest.issuerId,
           schemaId: credentialDefinitionRequest.schemaId,
@@ -80,6 +81,15 @@ export class CredentialDefinitionController extends Controller {
         },
         options: {}
       })
+
+      const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
+      const schemaDetails = await indySdkAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
+      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
+      if (credentialDefinitionState.state === 'finished') {
+        const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
+        credentialDefinitionState.credentialDefinitionId = skippedString
+      }
+      return credentialDefinitionState;
     } catch (error) {
       if (error instanceof notFoundError) {
         return notFoundError(404, {
@@ -91,7 +101,3 @@ export class CredentialDefinitionController extends Controller {
     }
   }
 }
-function isIndyError(cause: Error | undefined, arg1: string) {
-  throw new Error('Function not implemented.')
-}
-
