@@ -1,4 +1,4 @@
-import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol } from '@aries-framework/core'
+import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
@@ -12,6 +12,7 @@ import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { randomUUID } from 'crypto'
+import { TenantsModule } from '@aries-framework/tenants'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -80,7 +81,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     walletConfig: {
       id: walletConfig.id,
       key: walletConfig.key,
-      storage: storageConfig,
+      // storage: storageConfig,
     },
     ...afjConfig,
     logger,
@@ -100,6 +101,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const agent = new Agent({
     config: agentConfig,
     modules: {
+      tenants: new TenantsModule(
+        { sessionAcquireTimeout: Infinity, sessionLimit: Infinity }
+      ),
       indySdk: new IndySdkModule({
         indySdk,
         networks: [indyNetworkConfig]
@@ -111,14 +115,17 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         resolvers: [new IndySdkIndyDidResolver()],
         registrars: [new IndySdkIndyDidRegistrar()],
       }),
+      connections: new ConnectionsModule({
+        autoAcceptConnections: true,
+      }),
       proofs: new ProofsModule({
         proofProtocols: [
           new V1ProofProtocol({
             indyProofFormat: legacyIndyProofFormat,
           }),
-          // new V2ProofProtocol({
-          //   proofFormats: [legacyIndyProofFormat],
-          // }),
+          new V2ProofProtocol({
+            proofFormats: [legacyIndyProofFormat],
+          }),
         ],
       }),
       credentials: new CredentialsModule({
@@ -127,9 +134,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
           }),
-          // new V2CredentialProtocol({
-          //   credentialFormats: [legacyIndyCredentialFormat],
-          // }),
+          new V2CredentialProtocol({
+            credentialFormats: [legacyIndyCredentialFormat],
+          }),
         ],
       }),
     },
