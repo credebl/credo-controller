@@ -116,9 +116,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           new V1ProofProtocol({
             indyProofFormat: legacyIndyProofFormat,
           }),
-          // new V2ProofProtocol({
-          //   proofFormats: [legacyIndyProofFormat],
-          // }),
+          new V2ProofProtocol({
+            proofFormats: [legacyIndyProofFormat],
+          }),
         ],
       }),
       credentials: new CredentialsModule({
@@ -127,9 +127,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
           }),
-          // new V2CredentialProtocol({
-          //   credentialFormats: [legacyIndyCredentialFormat],
-          // }),
+          new V2CredentialProtocol({
+            credentialFormats: [legacyIndyCredentialFormat],
+          }),
         ],
       }),
     },
