@@ -13,7 +13,7 @@ import path from 'path'
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
-import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar } from '@aries-framework/indy-sdk'
+import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar, IndySdkPoolConfig } from '@aries-framework/indy-sdk'
 // import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidRegistrar, IndyVdrIndyDidResolver, IndyVdrModule } from '@aries-framework/indy-vdr'
 // import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 // import { AskarModule } from '@aries-framework/askar'
@@ -22,6 +22,7 @@ import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySd
 // import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 // import { CheqdModule, CheqdModuleConfig, CheqdAnonCredsRegistry, CheqdDidRegistrar, CheqdDidResolver } from '@aries-framework/cheqd'
 import { TenantsModule } from '@aries-framework/tenants'
+import { randomUUID } from 'crypto'
 
 export const setupAgent = async ({
   name,
