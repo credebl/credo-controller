@@ -157,6 +157,21 @@ export interface OfferCredentialOptions {
   connectionId: string
 }
 
+export interface V2OfferCredentialOptions {
+  protocolVersion: string;
+  connectionId: string;
+  credentialFormats: {
+    indy: {
+      credentialDefinitionId: string
+      attributes: {
+        name: string
+        value: string
+      }[]
+    }
+  }
+  autoAcceptCredential: string
+}
+
 export interface AcceptCredential {
   credentialRecord: CredentialExchangeRecord
 }
