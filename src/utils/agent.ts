@@ -66,13 +66,13 @@ export const setupAgent = async ({
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
 
-  const indyNetworkConfig = {
-    id: randomUUID(),
-    genesisTransactions: BCOVRIN_TEST_GENESIS,
-    indyNamespace: 'bcovrin',
-    isProduction: false,
-    connectOnStartup: true,
-  } satisfies IndySdkPoolConfig
+  // const indyNetworkConfig = {
+  //   id: randomUUID(),
+  //   genesisTransactions: BCOVRIN_TEST_GENESIS,
+  //   indyNamespace: 'bcovrin',
+  //   isProduction: false,
+  //   connectOnStartup: true,
+  // } satisfies IndySdkPoolConfig
 
   const agent = new Agent({
     config: config,
