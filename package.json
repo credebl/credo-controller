@@ -34,6 +34,7 @@
     "@aries-framework/core": "0.4.0",
     "@aries-framework/indy-sdk": "0.4.0",
     "@aries-framework/node": "0.4.0",
+    "@aries-framework/tenants": "^0.4.0",
     "@types/node-fetch": "^2.6.4",
     "@types/ws": "^7.4.7",
     "axios": "^1.4.0",
