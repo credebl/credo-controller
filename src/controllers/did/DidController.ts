@@ -61,7 +61,7 @@ export class DidController extends Controller {
         .post('http://test.bcovrin.vonx.io/register', body)
         .then(async (res) => {
           if (res.data) {
-            const resolveResult = await this.agent.dids.import({
+            await this.agent.dids.import({
               did: `did:indy:bcovrin:${res.data.did}`,
               overwrite: true,
               privateKeys: [
@@ -71,7 +71,7 @@ export class DidController extends Controller {
                 },
               ],
             })
-            return JsonTransformer.toJSON(resolveResult);
+            return res.data;
           }
         })
     }

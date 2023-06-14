@@ -119,6 +119,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         autoAcceptConnections: true,
       }),
       proofs: new ProofsModule({
+        autoAcceptProofs: AutoAcceptProof.ContentApproved,
         proofProtocols: [
           new V1ProofProtocol({
             indyProofFormat: legacyIndyProofFormat,
