@@ -40,7 +40,6 @@ import type {
 
 
 import type { DIDDocument } from 'did-resolver'
-import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
@@ -107,21 +106,8 @@ export interface ProposeCredentialOptions<T = never> {
 // }
 
 export interface AcceptCredentialProposalOptions {
-  credentialRecord: CredentialExchangeRecord
-  credentialFormats?: {
-    indy: {
-      schemaIssuerDid: string
-      schemaId: string
-      schemaName: string
-      schemaVersion: string
-      credentialDefinitionId: string
-      issuerDid: string
-      attributes: {
-        name: string
-        value: string
-      }[]
-    }
-  }
+  credentialRecordId: string
+  credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
@@ -243,37 +229,35 @@ export interface ConnectionInvitationSchema {
 //   parentThreadId?: string
 // }
 
-export interface RequestProofOptions extends CreateProofRequestOptions {
-  connectionRecord: ConnectionRecord
+export interface RequestProofOptions {
   connectionId: string
-  protocolVersion: 'v2'
-  proofRequestOptions: {
-    name: string
-    version: string
-    requestedAttributes?: { [key: string]: V1PresentationPreviewAttributeOptions }
-    requestedPredicates?: { [key: string]: V1PresentationPreviewPredicateOptions }
-  }
+  protocolVersion: string
+  proofFormats: any
+  comment: string
+  autoAcceptProof: AutoAcceptProof
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
 }
 
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
-  connectionRecord: ConnectionRecord
-  attributes: V1PresentationPreviewAttributeOptions[]
-  predicates: V1PresentationPreviewPredicateOptions[]
-  comment?: string
-  autoAcceptProof?: AutoAcceptProof
-  protocolVersion: 'v1'
+  connectionId: string
   // TODO: added indy proof formate
   proofFormats: ProofFormatPayload<[ProofFormat], 'createProposal'>
-  goalCode: string
-  parentThreadId: string
+  goalCode?: string
+  parentThreadId?: string
+  autoAcceptProof?: AutoAcceptProof;
+  comment?: string;
 }
 
 export interface AcceptProofProposal {
-  proofRecord: ProofExchangeRecord
+  proofRecordId: string
   proofFormats?: ProofFormatPayload<[ProofFormat], 'acceptProposal'>
-  comment: string
-  autoAcceptProof: AutoAcceptProof
+  comment?: string
+  autoAcceptProof?: AutoAcceptProof
+  goalCode?: string;
+  willConfirm?: boolean;
 }
 
 export interface GetTenantAgentOptions {
