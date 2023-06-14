@@ -11,7 +11,6 @@ import {
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import {
   AcceptCredentialRequestOptions,
-  OfferCredentialOptions,
   ProposeCredentialOptions,
   AcceptCredentialProposalOptions,
   AcceptCredentialOfferOptions,
@@ -71,10 +70,7 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
-
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
-      const credential = await v1CredentialProtocol.getById(this.agent.context, credentialRecordId)
+      const credential = await this.agent.credentials.getById(credentialRecordId)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -87,30 +83,6 @@ export class CredentialController extends Controller {
   }
 
   /**
-  //  * Deletes a credential exchange record in the credential repository.
-  //  *
-  //  * @param credentialRecordId
-  //  */
-  // @Delete('/:credentialRecordId')
-  // public async deleteCredential(
-  //   @Path('credentialRecordId') credentialRecordId: RecordId,
-  //   @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-  //   @Res() internalServerError: TsoaResponse<500, { message: string }>
-  // ) {
-  //   try {
-  //     this.setStatus(204)
-  //     await this.v1CredentialProtocol.delete(credentialRecordId)
-  //   } catch (error) {
-  //     if (error instanceof RecordNotFoundError) {
-  //       return notFoundError(404, {
-  //         reason: `credential with credential record id "${credentialRecordId}" not found.`,
-  //       })
-  //     }
-  //     return internalServerError(500, { message: `something went wrong: ${error}` })
-  //   }
-  // }
-
-  /**
    * Initiate a new credential exchange as holder by sending a propose credential message
    * to the connection with a specified connection id.
    *
@@ -120,20 +92,23 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/propose-credential')
   public async proposeCredential(
-    @Body() options: ProposeCredentialOptions,
+    @Body() proposeCredentialOptions: ProposeCredentialOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
-
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
-      const credential = await v1CredentialProtocol.createProposal(this.agent.context, options)
+      const credential = await this.agent.credentials.proposeCredential({
+        connectionId: proposeCredentialOptions.connectionId,
+        protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
+        credentialFormats: proposeCredentialOptions.credentialFormats,
+        autoAcceptCredential: proposeCredentialOptions.autoAcceptCredential,
+        comment: proposeCredentialOptions.comment
+      })
       return credential
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `connection with connection record id "${options.connectionId}" not found.`,
+          reason: `connection with connection record id "${proposeCredentialOptions.connectionId}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -157,16 +132,19 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialProposal: AcceptCredentialProposalOptions
   ) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
-
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
-      const credential = await v1CredentialProtocol.acceptProposal(this.agent.context, acceptCredentialProposal)
+    
+      const credential = await this.agent.credentials.acceptProposal({
+        credentialRecordId: acceptCredentialProposal.credentialRecordId,
+        credentialFormats: acceptCredentialProposal.credentialFormats,
+        autoAcceptCredential: acceptCredentialProposal.autoAcceptCredential,
+        comment: acceptCredentialProposal.comment
+      })
 
       return credential
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `credential with credential record id "${acceptCredentialProposal.credentialRecord.id}" not found.`,
+          reason: `credential with credential record id "${acceptCredentialProposal.credentialRecordId}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -187,16 +165,6 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      // const indyCredentialFormat = new LegacyIndyCredentialFormatService();
-
-      // const connectionRecord: ConnectionRecord = new ConnectionRecord({
-      //   id: createOfferOptions.connectionId,
-      //   state: DidExchangeState.Completed,
-      //   role: DidExchangeRole.Responder
-      // });
-
-      // const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
-      // const offer = await v1CredentialProtocol.createOffer(this.agent.context, { credentialFormats: createOfferOptions.credentialFormats, connectionRecord: connectionRecord })
       const offer = await this.agent.credentials.offerCredential({
         connectionId: createOfferOptions.connectionId,
         protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
