@@ -71,7 +71,7 @@ export class DidController extends Controller {
                 },
               ],
             })
-            return res.data;
+            return { did: `did:indy:bcovrin:${res.data.did}` };
           }
         })
     }
