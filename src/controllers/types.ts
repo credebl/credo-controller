@@ -40,8 +40,6 @@ import type {
 
 
 import type { DIDDocument } from 'did-resolver'
-import { CredentialFormatsFromProtocols } from '@aries-framework/core/build/modules/credentials/protocol/CredentialProtocolOptions';
-import { ProofFormatsFromProtocols } from '@aries-framework/core/build/modules/proofs/protocol/ProofProtocolOptions';
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
@@ -247,9 +245,23 @@ export interface AcceptProofProposal {
   willConfirm?: boolean;
 }
 
-// export interface GetTenantAgentOptions {
-//   tenantId: string
-// }
+export interface GetTenantAgentOptions {
+  tenantId: string
+}
+
+export interface DidCreateOptions {
+  method?: string;
+  did?: string;
+  options?: DidRegistrationExtraOptions;
+  secret?: DidRegistrationSecretOptions;
+  didDocument?: DidDocument;
+  seed?: any;
+}
+
+export interface ResolvedDid {
+  didUrl: string
+  options?: DidResolutionOptions
+}
 
 export interface DidCreate {
   seed: string;
@@ -260,15 +272,17 @@ export interface DidCreate {
   didDocument?: DidDocument;
 }
 
-export interface ResolvedDid {
-  didUrl: string
-  options?: DidResolutionOptions
+export interface CreateTenantOptions {
+  config: Omit<TenantConfig, 'walletConfig'>,
+  seed: string;
 }
-
-// export interface CreateTenantOptions {
-//   config: Omit<TenantConfig, 'walletConfig'>
-// }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
 //   tenantAgent: TenantAgent<AgentModules>
 // ) => Promise<void>
+
+export interface WithTenantAgentOptions {
+  tenantId: string;
+  method: string;
+  payload?: any;
+}
