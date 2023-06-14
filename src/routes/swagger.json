@@ -36,41 +36,6 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
-			"DidRegistrationExtraOptions": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"DidRegistrationSecretOptions": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"Record_string.any_": {
-				"properties": {},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
-			},
-			"DidDocument": {
-				"$ref": "#/components/schemas/Record_string.any_"
-			},
-			"DidCreateOptions": {
-				"properties": {
-					"method": {
-						"type": "string"
-					},
-					"did": {
-						"type": "string"
-					},
-					"options": {
-						"$ref": "#/components/schemas/DidRegistrationExtraOptions"
-					},
-					"secret": {
-						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
-					},
-					"didDocument": {
-						"$ref": "#/components/schemas/DidDocument"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
 			"BasicMessageRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
@@ -101,6 +66,11 @@
 					"completed"
 				],
 				"type": "string"
+			},
+			"Record_string.any_": {
+				"properties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
 			},
 			"CredentialState": {
 				"description": "Issue Credential states as defined in RFC 0036 and RFC 0453",
@@ -212,71 +182,18 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialExchangeRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
+			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"AcceptCredentialProposalOptions": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"type": "string"
 					},
 					"credentialFormats": {
-						"properties": {
-							"indy": {
-								"properties": {
-									"attributes": {
-										"items": {
-											"properties": {
-												"value": {
-													"type": "string"
-												},
-												"name": {
-													"type": "string"
-												}
-											},
-											"required": [
-												"value",
-												"name"
-											],
-											"type": "object"
-										},
-										"type": "array"
-									},
-									"issuerDid": {
-										"type": "string"
-									},
-									"credentialDefinitionId": {
-										"type": "string"
-									},
-									"schemaVersion": {
-										"type": "string"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"schemaId": {
-										"type": "string"
-									},
-									"schemaIssuerDid": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"issuerDid",
-									"credentialDefinitionId",
-									"schemaVersion",
-									"schemaName",
-									"schemaId",
-									"schemaIssuerDid"
-								],
-								"type": "object"
-							}
-						},
-						"required": [
-							"indy"
-						],
-						"type": "object"
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptProposal_"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -286,7 +203,7 @@
 					}
 				},
 				"required": [
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -374,6 +291,9 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CredentialExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
 				"properties": {},
 				"type": "object",
@@ -452,6 +372,9 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"DidDocument": {
+				"$ref": "#/components/schemas/Record_string.any_"
+			},
 			"DIDDocumentMetadata": {
 				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
 				"properties": {
@@ -515,6 +438,12 @@
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
+			"DidRegistrationExtraOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidRegistrationSecretOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"DidCreate": {
 				"properties": {
 					"seed": {
@@ -538,6 +467,73 @@
 				},
 				"required": [
 					"seed"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
+				"properties": {
+					"label": {
+						"type": "string"
+					},
+					"connectionImageUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"label"
+				],
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_TenantConfig.walletConfig_": {
+				"$ref": "#/components/schemas/Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"CreateTenantOptions": {
+				"properties": {
+					"config": {
+						"$ref": "#/components/schemas/Omit_TenantConfig.walletConfig_"
+					},
+					"seed": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"config",
+					"seed"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"GetTenantAgentOptions": {
+				"properties": {
+					"tenantId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"tenantId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"WithTenantAgentOptions": {
+				"properties": {
+					"tenantId": {
+						"type": "string"
+					},
+					"method": {
+						"type": "string"
+					},
+					"payload": {}
+				},
+				"required": [
+					"tenantId",
+					"method"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -851,63 +847,10 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"V1PresentationPreviewAttributeOptions": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					},
-					"mimeType": {
-						"type": "string"
-					},
-					"value": {
-						"type": "string"
-					},
-					"referent": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"name"
-				],
+			"ProofFormatPayload_%5BProofFormat%5D.createProposal_": {
+				"properties": {},
 				"type": "object",
-				"additionalProperties": false
-			},
-			"AnonCredsPredicateType": {
-				"type": "string",
-				"enum": [
-					">=",
-					">",
-					"<=",
-					"<"
-				]
-			},
-			"V1PresentationPreviewPredicateOptions": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					},
-					"predicate": {
-						"$ref": "#/components/schemas/AnonCredsPredicateType"
-					},
-					"threshold": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"name",
-					"credentialDefinitionId",
-					"predicate",
-					"threshold"
-				],
-				"type": "object",
-				"additionalProperties": false
+				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
 			},
 			"AutoAcceptProof": {
 				"description": "Typing of the state for auto acceptance",
@@ -918,40 +861,10 @@
 				],
 				"type": "string"
 			},
-			"ProofFormatPayload_%5BProofFormat%5D.createProposal_": {
-				"properties": {},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
-			},
 			"RequestProofProposalOptions": {
 				"properties": {
-					"connectionRecord": {
-						"$ref": "#/components/schemas/ConnectionRecord"
-					},
-					"attributes": {
-						"items": {
-							"$ref": "#/components/schemas/V1PresentationPreviewAttributeOptions"
-						},
-						"type": "array"
-					},
-					"predicates": {
-						"items": {
-							"$ref": "#/components/schemas/V1PresentationPreviewPredicateOptions"
-						},
-						"type": "array"
-					},
-					"comment": {
+					"connectionId": {
 						"type": "string"
-					},
-					"autoAcceptProof": {
-						"$ref": "#/components/schemas/AutoAcceptProof"
-					},
-					"protocolVersion": {
-						"type": "string",
-						"enum": [
-							"v1"
-						],
-						"nullable": false
 					},
 					"proofFormats": {
 						"$ref": "#/components/schemas/ProofFormatPayload_%5BProofFormat%5D.createProposal_"
@@ -961,22 +874,20 @@
 					},
 					"parentThreadId": {
 						"type": "string"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
 					}
 				},
 				"required": [
-					"connectionRecord",
-					"attributes",
-					"predicates",
-					"protocolVersion",
-					"proofFormats",
-					"goalCode",
-					"parentThreadId"
+					"connectionId",
+					"proofFormats"
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"ProofExchangeRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"ProofFormatPayload_%5BProofFormat%5D.acceptProposal_": {
 				"properties": {},
@@ -985,8 +896,8 @@
 			},
 			"AcceptProofProposal": {
 				"properties": {
-					"proofRecord": {
-						"$ref": "#/components/schemas/ProofExchangeRecord"
+					"proofRecordId": {
+						"type": "string"
 					},
 					"proofFormats": {
 						"$ref": "#/components/schemas/ProofFormatPayload_%5BProofFormat%5D.acceptProposal_"
@@ -996,42 +907,34 @@
 					},
 					"autoAcceptProof": {
 						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
 					}
 				},
 				"required": [
-					"proofRecord",
-					"comment",
-					"autoAcceptProof"
+					"proofRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ProofsProtocolVersionType_ProofProtocol-Array_": {
-				"type": "string",
-				"description": "Get the supported protocol versions based on the provided proof protocols."
-			},
-			"ProofFormatPayload_ProofFormatsFromProtocols_ProofProtocol-Array_.createRequest_": {
-				"properties": {},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
-			},
 			"RequestProofOptions": {
 				"properties": {
-					"autoAcceptProof": {
-						"$ref": "#/components/schemas/AutoAcceptProof"
-					},
-					"comment": {
+					"connectionId": {
 						"type": "string"
 					},
 					"protocolVersion": {
-						"type": "string",
-						"enum": [
-							"v2"
-						],
-						"nullable": false
+						"type": "string"
 					},
-					"proofFormats": {
-						"$ref": "#/components/schemas/ProofFormatPayload_ProofFormatsFromProtocols_ProofProtocol-Array_.createRequest_"
+					"proofFormats": {},
+					"comment": {
+						"type": "string"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
 					},
 					"goalCode": {
 						"type": "string"
@@ -1040,51 +943,15 @@
 						"type": "string"
 					},
 					"willConfirm": {
-						"type": "boolean",
-						"default": "true"
-					},
-					"connectionRecord": {
-						"$ref": "#/components/schemas/ConnectionRecord"
-					},
-					"connectionId": {
-						"type": "string"
-					},
-					"proofRequestOptions": {
-						"properties": {
-							"requestedPredicates": {
-								"properties": {},
-								"additionalProperties": {
-									"$ref": "#/components/schemas/V1PresentationPreviewPredicateOptions"
-								},
-								"type": "object"
-							},
-							"requestedAttributes": {
-								"properties": {},
-								"additionalProperties": {
-									"$ref": "#/components/schemas/V1PresentationPreviewAttributeOptions"
-								},
-								"type": "object"
-							},
-							"version": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"version",
-							"name"
-						],
-						"type": "object"
+						"type": "boolean"
 					}
 				},
 				"required": [
+					"connectionId",
 					"protocolVersion",
 					"proofFormats",
-					"connectionRecord",
-					"connectionId",
-					"proofRequestOptions"
+					"comment",
+					"autoAcceptProof"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -1124,103 +991,6 @@
 				],
 				"security": [],
 				"parameters": []
-			}
-		},
-		"/agent/write/did": {
-			"post": {
-				"operationId": "WriteDid",
-				"responses": {
-					"200": {
-						"description": "DidResolutionResult",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Did nym registration",
-				"tags": [
-					"Agent"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/DidCreateOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/agent/resolve/did/{didUrl}": {
-			"post": {
-				"operationId": "ResolveDid",
-				"responses": {
-					"200": {
-						"description": "DidResolutionResult",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Did nym registration",
-				"tags": [
-					"Agent"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "didUrl",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
 			}
 		},
 		"/basic-messages/{connectionId}": {
@@ -1925,7 +1695,7 @@
 				"operationId": "ProposeCredential",
 				"responses": {
 					"200": {
-						"description": "Ok",
+						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -1993,7 +1763,7 @@
 						}
 					}
 				},
-				"description": "//  * Deletes a credential exchange record in the credential repository.\n//  *\n//  * @param credentialRecordId\n//",
+				"description": "Initiate a new credential exchange as holder by sending a propose credential message\nto the connection with a specified connection id.",
 				"tags": [
 					"Credentials"
 				],
@@ -3061,6 +2831,357 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/DidCreate"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/dids": {
+			"get": {
+				"operationId": "GetDids",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/DidRecord"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Dids"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/multi-tenancy": {
+			"post": {
+				"operationId": "CreateTenant",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Multi-Tenancy"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateTenantOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/{tenantId}": {
+			"get": {
+				"operationId": "GetTenantById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Multi-Tenancy"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "DeleteTenantById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Multi-Tenancy"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/multi-tenancy/tenant": {
+			"post": {
+				"operationId": "GetTenantAgent",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Multi-Tenancy"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/GetTenantAgentOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/with-tenant-agent": {
+			"post": {
+				"operationId": "WithTenantAgent",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Multi-Tenancy"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/WithTenantAgentOptions"
 							}
 						}
 					}
@@ -4517,13 +4638,60 @@
 					"Proofs"
 				],
 				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "proofRecordId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/v2-credentials/offer-credential": {
+			"post": {
+				"operationId": "OfferCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Credentials"
+				],
+				"security": [],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/ProofExchangeRecord"
+								"$ref": "#/components/schemas/CreateOfferOptions"
 							}
 						}
 					}

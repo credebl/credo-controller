@@ -8,6 +8,7 @@ import {
   ProofExchangeRecord,
   // IndyProofFormat,
   ProofExchangeRecordProps,
+  ProofsProtocolVersionType,
   // ProposeProofOptions,
   // V1ProofService,
   // V2ProofService,
@@ -31,11 +32,9 @@ import { AcceptProofProposal, RequestProofOptions, RequestProofProposalOptions }
 @injectable()
 export class ProofController extends Controller {
   private agent: Agent
-  private v1ProofProtocol: V1ProofProtocol
-  public constructor(agent: Agent, v1ProofProtocol: V1ProofProtocol) {
+  public constructor(agent: Agent) {
     super()
     this.agent = agent
-    this.v1ProofProtocol = v1ProofProtocol
   }
 
   /**
@@ -47,7 +46,7 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
   public async getAllProofs(@Query('threadId') threadId?: string) {
-    let proofs = await this.v1ProofProtocol.getAll(this.agent.context)
+    let proofs = await this.agent.proofs.getAll()
 
     if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
 
@@ -68,7 +67,7 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.v1ProofProtocol.getById(this.agent.context, proofRecordId)
+      const proof = await this.agent.proofs.getById(proofRecordId)
 
       return proof.toJSON()
     } catch (error) {
@@ -115,32 +114,28 @@ export class ProofController extends Controller {
   @Post('/propose-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async proposeProof(
-    @Body() proposal: RequestProofProposalOptions,
+    @Body() requestProofProposalOptions: RequestProofProposalOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
-    // const { attributes, predicates, connectionId, ...proposalOptions } = proposal
 
     try {
-      // const presentationPreview = JsonTransformer.fromJSON({ attributes, predicates }, PresentationPreview)
 
-      const proposeProof = {
-        connectionRecord: proposal.connectionRecord,
-        proofFormats: proposal.proofFormats,
-        protocolVersion: proposal.protocolVersion,
-        autoAcceptProof: proposal.autoAcceptProof,
-        comment: proposal.comment,
-        goalCode: proposal.goalCode,
-        parentThreadId: proposal.parentThreadId,
-      }
-
-      const proof = await this.v1ProofProtocol.createProposal(this.agent.context, proposeProof)
+      const proof = await this.agent.proofs.proposeProof({
+        connectionId: requestProofProposalOptions.connectionId,
+        protocolVersion: 'v1' as ProofsProtocolVersionType<[]>,
+        proofFormats: requestProofProposalOptions.proofFormats,
+        comment: requestProofProposalOptions.comment,
+        autoAcceptProof: requestProofProposalOptions.autoAcceptProof,
+        goalCode: requestProofProposalOptions.goalCode,
+        parentThreadId: requestProofProposalOptions.parentThreadId
+      })
 
       return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `connection with connection record "${proposal.connectionRecord}" not found.`,
+          reason: `connection with connection id "${requestProofProposalOptions.connectionId}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -163,13 +158,13 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.v1ProofProtocol.acceptProposal(this.agent.context, acceptProposal)
+      const proof = await this.agent.proofs.acceptProposal(acceptProposal)
 
       return proof;
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `proof with proof record  "${acceptProposal.proofRecord}" not found.`,
+          reason: `proof with proof record  "${acceptProposal.proofRecordId}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -263,36 +258,26 @@ export class ProofController extends Controller {
   @Post('/request-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async requestProof(
-    @Body() request: RequestProofOptions,
+    @Body() requestProofOptions: RequestProofOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
-    const { connectionId, proofRequestOptions, ...config } = request
-
     try {
 
-      const indyProofFormat = new LegacyIndyProofFormatService();
-
-      const connectionRecord: ConnectionRecord = new ConnectionRecord({
-        id: connectionId,
-        state: DidExchangeState.Completed,
-        role: DidExchangeRole.Responder
-      });
-
-      const v1ProofProtocol = new V1ProofProtocol({ indyProofFormat });
-      const proof = await v1ProofProtocol.createRequest(this.agent.context, {
-        connectionRecord,
-        comment: config.comment,
-        proofFormats: config.proofFormats
-      })
+      const requestProofPayload = {
+        connectionId: requestProofOptions.connectionId,
+        protocolVersion: requestProofOptions.protocolVersion as ProofsProtocolVersionType<[]>,
+        comment: requestProofOptions.comment,
+        proofFormats: requestProofOptions.proofFormats,
+        autoAcceptProof: requestProofOptions.autoAcceptProof,
+        goalCode: requestProofOptions.goalCode,
+        parentThreadId: requestProofOptions.parentThreadId,
+        willConfirm: requestProofOptions.willConfirm
+      }
+      const proof = await this.agent.proofs.requestProof(requestProofPayload)
 
       return proof
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `connection with connectionId "${connectionId}" not found.`,
-        })
-      }
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -319,21 +304,17 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const { filterByPresentationPreview, filterByNonRevocationRequirements, comment } = request
 
-      const requestedCredentials = this.agent.proofs.selectCredentialsForRequest({
+      const requestedCredentials = await this.agent.proofs.selectCredentialsForRequest({
         proofRecordId,
-        proofFormats: {
-          filterByNonRevocationRequirements,
-          filterByPresentationPreview,
-        },
       })
 
       const acceptProofRequest: AcceptProofRequestOptions = {
         proofRecordId,
-        comment,
-        proofFormats: (await requestedCredentials).proofFormats,
+        comment: request.comment,
+        proofFormats: requestedCredentials.proofFormats,
       }
+
       const proof = await this.agent.proofs.acceptRequest(acceptProofRequest)
 
       return proof.toJSON()
@@ -357,27 +338,17 @@ export class ProofController extends Controller {
   @Post('/:proofRecordId/accept-presentation')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptPresentation(
-    @Body() proofExchangeRecord: ProofExchangeRecord,
+    @Path('proofRecordId') proofRecordId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const indyProofFormat = new LegacyIndyProofFormatService();
-
-      // const connectionRecord: ConnectionRecord = new ConnectionRecord({
-      //   id: connectionId,
-      //   state: DidExchangeState.Completed,
-      //   role: DidExchangeRole.Responder
-      // });
-
-      const v1ProofProtocol = new V1ProofProtocol({ indyProofFormat });
-      const proof = await v1ProofProtocol.acceptPresentation(this.agent.context, { proofRecord: proofExchangeRecord })
-
+      const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
       return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofExchangeRecord.id}" not found.`,
+          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
