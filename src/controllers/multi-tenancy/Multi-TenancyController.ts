@@ -1,4 +1,4 @@
-import { Agent, JsonTransformer, KeyType, RecordNotFoundError, TypedArrayEncoder, injectable } from '@aries-framework/core'
+import { AcceptProofRequestOptions, Agent, JsonTransformer, KeyType, RecordNotFoundError, TypedArrayEncoder, injectable } from '@aries-framework/core'
 import { CreateTenantOptions, GetTenantAgentOptions, WithTenantAgentOptions } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path } from 'tsoa'
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
@@ -6,9 +6,6 @@ import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
 import { AnonCredsApi, getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
-
-
-
 
 @Tags("Multi-Tenancy")
 @Route("/multi-tenancy")
@@ -203,25 +200,25 @@ export class MultiTenancyController extends Controller {
                             break;
 
                         case "registerCredentialDefinition":
-                            var { issuerId, schemaId, tag } = payload; 
+                            var { issuerId, schemaId, tag } = payload;
                             const getTenantToCreateCredentialDefinition = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
                             const { credentialDefinitionState } = await getTenantToCreateCredentialDefinition.modules.anoncreds.registerCredentialDefinition({
                                 credentialDefinition: {
-                                  issuerId,
-                                  schemaId,
-                                  tag
+                                    issuerId,
+                                    schemaId,
+                                    tag
                                 },
                                 options: {}
-                              })
-                              const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
-                              const schemaDetails = await indySdkAnonCredsRegistry.getSchema(getTenantToCreateCredentialDefinition.context, schemaId)
-                              const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
-                              if (credentialDefinitionState.state === 'finished') {
+                            })
+                            const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
+                            const schemaDetails = await indySdkAnonCredsRegistry.getSchema(getTenantToCreateCredentialDefinition.context, schemaId)
+                            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
+                            if (credentialDefinitionState.state === 'finished') {
                                 const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
                                 credentialDefinitionState.credentialDefinitionId = skippedString
-                              }
-                              resolve({ credentialDefinitionState });
-                              break;
+                            }
+                            resolve({ credentialDefinitionState });
+                            break;
 
                         case "getConnections":
                             const connections = await tenantAgent.connections.getAll();
@@ -245,7 +242,7 @@ export class MultiTenancyController extends Controller {
                             const linkSecretIds = await getTenant.modules.anoncreds.getLinkSecretIds();
                             if (linkSecretIds.length === 0) {
                                 await getTenant.modules.anoncreds.createLinkSecret()
-                              }
+                            }
                             const acceptOffer = await tenantAgent.credentials.acceptOffer({
                                 credentialRecordId,
                                 autoAcceptCredential,
@@ -262,7 +259,19 @@ export class MultiTenancyController extends Controller {
                             break;
 
                         case "acceptRequestForProofPresentation":
-                            const acceptRequest = await tenantAgent.proofs.acceptRequest(payload);
+                            var { proofRecordId, comment } = payload;
+                            const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
+                                proofRecordId,
+                            });
+                            console.log(`Requested credentials: ${requestedCredentials}`);
+                            const acceptProofRequest: AcceptProofRequestOptions = {
+                                proofRecordId,
+                                comment,
+                                proofFormats: requestedCredentials.proofFormats,
+                            }
+
+                            const acceptRequest = await tenantAgent.proofs.acceptRequest(acceptProofRequest);
+                            console.log("accept request executed");
                             console.log("Request has been accepted by sending presentation: ", acceptRequest);
                             resolve({ ProofExchangeRecord: acceptRequest.toJSON() });
                             break;
@@ -297,33 +306,33 @@ export class MultiTenancyController extends Controller {
 {
   "_tags": {},
   "metadata": {},
-  "id": "6db8eae3-a7e6-4a48-ad1a-55b93b10fffc", 861d69a4-1550-421e-a8df-a04f80f7e144
-  "createdAt": "2023-06-14T11:04:44.791Z",
+  "id": "4a31567f-8aa9-410a-8324-75022fa86b12", 095012d5-901c-4672-997c-5f27bab1bb9d
+  "createdAt": "2023-06-14T14:51:47.901Z",
   "config": {
     "label": "t1",
     "walletConfig": {
-      "id": "tenant-6db8eae3-a7e6-4a48-ad1a-55b93b10fffc",
-      "key": "3dRFnmJMzoXnp1SmCPG4uL8JkWYM54qCnccrWFovQw2f",
+      "id": "tenant-4a31567f-8aa9-410a-8324-75022fa86b12",
+      "key": "EYciuZyUuJe4ryH1ejgJFFc8dWbaLUQXHmj2wAKNaGuT",
       "keyDerivationMethod": "RAW"
     }
   },
-  "updatedAt": "2023-06-14T11:04:44.791Z"
+  "updatedAt": "2023-06-14T14:51:47.901Z"
 }
 
 {
   "_tags": {},
   "metadata": {},
-  "id": "d4c130e2-0d4a-449b-a1c1-3326a686c205", e89c85e9-abd0-4a8a-9e5e-8a780d0f639b
-  "createdAt": "2023-06-14T11:05:12.590Z",
+  "id": "eca61dbc-ff83-4bac-a129-02c795ac18bb", f0496df5-78a9-4e42-b834-caf7b58dbf98
+  "createdAt": "2023-06-14T14:52:31.420Z",
   "config": {
     "label": "t2",
     "walletConfig": {
-      "id": "tenant-d4c130e2-0d4a-449b-a1c1-3326a686c205",
-      "key": "GZYT7HYEBsh2zgs4XpmpvaYZPXQLQYGfcXmBV7qmyhLk",
+      "id": "tenant-eca61dbc-ff83-4bac-a129-02c795ac18bb",
+      "key": "2vE3tDGNhW82JsNS1orDyV4TGraE2m9Wj4LhCzVp4JMy",
       "keyDerivationMethod": "RAW"
     }
   },
-  "updatedAt": "2023-06-14T11:05:12.590Z"
+  "updatedAt": "2023-06-14T14:52:31.420Z"
 }
 
 
@@ -335,7 +344,7 @@ rest-sample_1  |     name: 'GM',
 rest-sample_1  |     version: '1.1.0',
 rest-sample_1  |     id: '2XKsaGBrgRoAqNcSycUvKK:2:GMM:1.1.1',
 rest-sample_1  |     ver: '1.0'
-rest-sample_1  |   } issuerId: 'did:indy:bcovrin:4HQoJ62U34utYg5Yr9U8bn', KcEztZvgs65UJos8YKvjvT:3:CL:849728:kb
+rest-sample_1  |   } issuerId: 'did:indy:bcovrin:4HQoJ62U34utYg5Yr9U8bn', KcEztZvgs65UJos8YKvjvT:3:CL:850285:kb
 
 t1: did:indy:bcovrin:KcEztZvgs65UJos8YKvjvT
 t2:  did:indy:bcovrin:2TomyR1f669gWwBVqL3HqF 
@@ -349,9 +358,9 @@ t2:  did:indy:bcovrin:2TomyR1f669gWwBVqL3HqF
       ],
       "issuerId": "did:indy:bcovrin:KcEztZvgs65UJos8YKvjvT",
       "name": "gym",
-      "version": "1.8.9"
+      "version": "1.9.9"
     },
-    "schemaId": "KcEztZvgs65UJos8YKvjvT:2:gym:1.8.9"
+    "schemaId": "KcEztZvgs65UJos8YKvjvT:2:gym:1.9.9"
   }
 }
 
