@@ -1,53 +1,185 @@
-import type { TestLogger } from './logger'
-import type { AutoAcceptCredential, InitConfig } from '@aries-framework/core'
+import { AutoAcceptCredential, CredentialsModule, DidsModule, InitConfig, ProofsModule, V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
+import indySdk from 'indy-sdk'
 
-import { Agent, ConnectionInvitationMessage, HttpOutboundTransport } from '@aries-framework/core'
-import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
+import {
+  Agent,
+  ConnectionInvitationMessage,
+  HttpOutboundTransport,
+  LogLevel,
+} from '@aries-framework/core'
+import { agentDependencies, HttpInboundTransport, IndySdkPostgresStorageConfig, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin } from '@aries-framework/node'
+import path from 'path'
 
+import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
+import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar, IndySdkPoolConfig } from '@aries-framework/indy-sdk'
+// import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidRegistrar, IndyVdrIndyDidResolver, IndyVdrModule } from '@aries-framework/indy-vdr'
+// import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
+// import { AskarModule } from '@aries-framework/askar'
+// import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+// import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
+// import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+// import { CheqdModule, CheqdModuleConfig, CheqdAnonCredsRegistry, CheqdDidRegistrar, CheqdDidResolver } from '@aries-framework/cheqd'
+import { TenantsModule } from '@aries-framework/tenants'
+import { randomUUID } from 'crypto'
 
-export async function setupAgent({
-  port,
+export const setupAgent = async ({
+  name,
   publicDidSeed,
   endpoints,
-  name,
-  logger,
-  autoAcceptConnection,
-  autoAcceptCredential,
-  useLegacyDidSovPrefix,
+  port,
 }: {
-  port: number
+  name: string
   publicDidSeed: string
   endpoints: string[]
-  name: string
-  logger: TestLogger
-  autoAcceptConnection: boolean
-  autoAcceptCredential: AutoAcceptCredential
-  useLegacyDidSovPrefix: boolean
-}) {
-  const agentConfig: InitConfig = {
+  port: number
+}) => {
+  const logger = new TsLogger(LogLevel.debug)
+
+  const storageConfig = {
+    type: 'postgres_storage',
+    config: {
+      url: '10.100.194.194:5432',
+      wallet_scheme: IndySdkPostgresWalletScheme.DatabasePerWallet,
+    },
+    credentials: {
+      account: 'postgres',
+      password: 'Password1',
+      admin_account: 'postgres',
+      admin_password: 'Password1',
+    },
+  }
+
+  // loadIndySdkPostgresPlugin(storageConfig.config, storageConfig.credentials)
+
+  const config: InitConfig = {
     label: name,
+    endpoints: endpoints,
     walletConfig: {
       id: name,
       key: name,
+      storage: storageConfig,
     },
-    indyLedgers: [
-      {
-        id: 'BCovrin Genesis',
-        genesisTransactions: BCOVRIN_TEST_GENESIS,
-        isProduction: false,
-        indyNamespace: ''
-      },
-    ],
-    publicDidSeed: publicDidSeed,
-    endpoints: endpoints,
-    autoAcceptConnections: autoAcceptConnection,
-    autoAcceptCredentials: autoAcceptCredential,
-    useLegacyDidSovPrefix: useLegacyDidSovPrefix,
     logger: logger,
   }
 
-  const agent = new Agent(agentConfig, agentDependencies)
+  const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
+  const legacyIndyProofFormat = new LegacyIndyProofFormatService()
+
+  // const indyNetworkConfig = {
+  //   id: randomUUID(),
+  //   genesisTransactions: BCOVRIN_TEST_GENESIS,
+  //   indyNamespace: 'bcovrin',
+  //   isProduction: false,
+  //   connectOnStartup: true,
+  // } satisfies IndySdkPoolConfig
+
+  const agent = new Agent({
+    config: config,
+    modules: {
+      indySdk: new IndySdkModule({
+        indySdk,
+        networks: [
+          {
+            id: 'Bcovrin Testnet',
+            indyNamespace: 'bcovrin:test',
+            isProduction: false,
+            genesisTransactions: BCOVRIN_TEST_GENESIS,
+            connectOnStartup: true
+          },
+        ]
+      }),
+      // indyVdr: new IndyVdrModule({
+      //   indyVdr,
+      //   networks: [
+      //     {
+      //       isProduction: false,
+      //       indyNamespace: 'bcovrin:test',
+      //       genesisTransactions: BCOVRIN_TEST_GENESIS,
+      //       connectOnStartup: true,
+      //     },
+      //   ]
+      // }),
+      // askar: new AskarModule({
+      //   ariesAskar,
+      // }),
+
+      anoncreds: new AnonCredsModule({
+        registries: [new IndySdkAnonCredsRegistry()],
+      }),
+      dids: new DidsModule({
+        resolvers: [new IndySdkIndyDidResolver()],
+        registrars: [new IndySdkIndyDidRegistrar()]
+      }),
+      proofs: new ProofsModule({
+        proofProtocols: [
+          new V1ProofProtocol({
+            indyProofFormat: legacyIndyProofFormat,
+          }),
+          // new V2ProofProtocol({
+          //   proofFormats: [legacyIndyProofFormat],
+          // }),
+        ],
+      }),
+      credentials: new CredentialsModule({
+        autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
+        credentialProtocols: [
+          new V1CredentialProtocol({
+            indyCredentialFormat: legacyIndyCredentialFormat,
+          }),
+          // new V2CredentialProtocol({
+          //   credentialFormats: [legacyIndyCredentialFormat],
+          // }),
+        ],
+      }),
+      tenants: new TenantsModule()
+    },
+    dependencies: agentDependencies,
+  })
+
+  // const agent = new Agent({
+  //   config,
+  //   dependencies: agentDependencies,
+  //   modules: {
+  //     // Register the Askar module on the agent
+  //     // We do this to have access to a wallet
+  //     askar: new AskarModule({
+  //       ariesAskar,
+  //     }),
+  //     anoncredsRs: new AnonCredsRsModule({
+  //       anoncreds,
+  //     }),
+  //     indyVdr: new IndyVdrModule({
+  //       indyVdr,
+  //       networks: [
+  //         {
+  //           isProduction: false,
+  //           indyNamespace: 'bcovrin:test',
+  //           genesisTransactions: BCOVRIN_TEST_GENESIS,
+  //           connectOnStartup: true,
+  //         },
+  //       ],
+  //     }),
+  //     cheqd: new CheqdModule(
+  //       new CheqdModuleConfig({
+  //         networks: [
+  //           {
+  //             network: 'cheqd-testnet-6',
+  //             cosmosPayerSeed: 'focus install garment hungry teach kick enter inherit wheat become section shaft',
+  //           },
+  //         ],
+  //       })
+  //     ),
+  //     anoncreds: new AnonCredsModule({
+  //       registries: [new IndyVdrAnonCredsRegistry(), new CheqdAnonCredsRegistry()],
+  //     }),
+  //     dids: new DidsModule({
+  //       registrars: [new IndyVdrIndyDidRegistrar(), new CheqdDidRegistrar()],
+  //       resolvers: [new IndyVdrIndyDidResolver(), new CheqdDidResolver()],
+  //     }),
+  //   },
+  // })
 
   const httpInbound = new HttpInboundTransport({
     port: port,
@@ -66,9 +198,9 @@ export async function setupAgent({
       const invitation = await ConnectionInvitationMessage.fromUrl(req.url)
       res.send(invitation.toJSON())
     } else {
-      const { invitation } = await agent.connections.createConnection()
+      const { outOfBandInvitation } = await agent.oob.createInvitation()
 
-      res.send(invitation.toUrl({ domain: endpoints + '/invitation', useLegacyDidSovPrefix: useLegacyDidSovPrefix }))
+      res.send(outOfBandInvitation.toUrl({ domain: endpoints + '/invitation' }))
     }
   })
 
@@ -76,3 +208,4 @@ export async function setupAgent({
 
   return agent
 }
+
