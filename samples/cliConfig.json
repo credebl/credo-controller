@@ -9,9 +9,8 @@
       "isProduction": false
     }
   ],
-  "publicDidSeed": "testseed000000000000000000000029",
   "endpoint": [
-    "http://192.168.1.12:5001"
+    "http://192.168.1.19:6001"
   ],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
@@ -21,7 +20,7 @@
   "inboundTransport": [
     {
       "transport": "http",
-      "port": 5001
+      "port": 9001
     }
   ],
   "outboundTransport": [
@@ -29,5 +28,5 @@
     "ws"
   ],
   "autoAcceptMediationRequests": false,
-  "adminPort": 3001
+  "adminPort": 6001
 }
