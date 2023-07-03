@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@aries-framework/anoncreds": "^0.4.0",
+    "@aries-framework/cheqd": "^0.4.0",
     "@aries-framework/core": "0.4.0",
     "@aries-framework/indy-sdk": "0.4.0",
     "@aries-framework/node": "0.4.0",

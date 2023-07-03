@@ -84,7 +84,6 @@ export class DidController extends Controller {
   @Get('/')
   public async getDids() {
     const createdDids = await this.agent.dids.getCreatedDids({})
-    console.log("Created dids: ", createdDids);
     return createdDids;
   }
 }
