@@ -4,7 +4,7 @@ import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaRespo
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
-import { AnonCredsApi, getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
+import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
 
 @Tags("Multi-Tenancy")
@@ -31,7 +31,6 @@ export class MultiTenancyController extends Controller {
                 alias: 'Alias',
                 seed
             };
-            console.log("config", config);
             const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config });
             const tenantAgent: TenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id });
             const didRegistration = await axios.post('http://test.bcovrin.vonx.io/register', body);
@@ -94,7 +93,6 @@ export class MultiTenancyController extends Controller {
     ) {
         try {
             const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantAgentOptions.tenantId });
-            console.log('tenantAgent:::::::===========', await tenantAgent.dids.getCreatedDids({}));
             return tenantAgent;
         }
         catch (error) {
@@ -203,7 +201,6 @@ export class MultiTenancyController extends Controller {
             invitationUrl,
             remaining
         );
-        console.log("Executed: ", outOfBandRecord.toJSON(), connectionRecord?.toJSON());
 
         return ({
             outOfBandRecord: outOfBandRecord.toJSON(),
@@ -232,7 +229,6 @@ export class MultiTenancyController extends Controller {
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
         const { tenantId, method, payload } = withTenantAgentOptions;
-        console.log("STARTING");
 
         try {
             const result = await new Promise((resolve,) => {
@@ -290,7 +286,6 @@ export class MultiTenancyController extends Controller {
 
                         case "getCredentials":
                             const credentials = await tenantAgent.credentials.getAll();
-                            console.log(`Credentials associated with ${tenantId} are ${credentials}`);
                             resolve({ CredentialExchangeRecord: credentials });
                         case "issueCredential":
                             const offerCredential = await tenantAgent.credentials.offerCredential(payload);
@@ -301,13 +296,11 @@ export class MultiTenancyController extends Controller {
                             var { credentialRecordId, autoAcceptCredential, comment } = payload;
                             var getTenant = await this.agent.modules.tenants.getTenantAgent({ tenantId });
                             const acceptOffer = await this.acceptOfferWithTenant(getTenant, { credentialRecordId, autoAcceptCredential, comment })
-                            console.log("Offer accepted: ", acceptOffer);
                             resolve({ acceptOffer });
                             break;
 
                         case "createRequestForProofPresentation":
                             const createRequest = await tenantAgent.proofs.requestProof(payload);
-                            console.log("Request sent for presentation: ", createRequest);
                             resolve({ ProofExchangeRecord: createRequest.toJSON() });
                             break;
 
@@ -316,7 +309,6 @@ export class MultiTenancyController extends Controller {
                             const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
                                 proofRecordId,
                             });
-                            console.log(`Requested credentials: ${requestedCredentials}`);
                             const acceptProofRequest: AcceptProofRequestOptions = {
                                 proofRecordId,
                                 comment,
@@ -324,14 +316,11 @@ export class MultiTenancyController extends Controller {
                             }
 
                             const acceptRequest = await tenantAgent.proofs.acceptRequest(acceptProofRequest);
-                            console.log("accept request executed");
-                            console.log("Request has been accepted by sending presentation: ", acceptRequest);
                             resolve({ ProofExchangeRecord: acceptRequest.toJSON() });
                             break;
 
                         case "acceptPresentation":
                             const acceptPresentation = await tenantAgent.proofs.acceptPresentation(payload);
-                            console.log("Presentation accepted: ", acceptPresentation);
                             resolve({ ProofExchangeRecord: acceptPresentation.toJSON() });
                             break;
 
