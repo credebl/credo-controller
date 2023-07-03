@@ -4,7 +4,7 @@ import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaRespo
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
-import { AnonCredsApi, getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
+import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
 
 @Tags("Multi-Tenancy")
@@ -31,7 +31,6 @@ export class MultiTenancyController extends Controller {
                 alias: 'Alias',
                 seed
             };
-            console.log("config", config);
             const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config });
             const tenantAgent: TenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id });
             const didRegistration = await axios.post('http://test.bcovrin.vonx.io/register', body);
@@ -48,9 +47,12 @@ export class MultiTenancyController extends Controller {
                     ],
                 });
             }
-            console.log("doneee");
-
-            return tenantRecord;
+            const resolveResult = await this.agent.dids.resolve(`did:indy:bcovrin:${didRegistration.data.did}`);
+            let verkey;
+            if (resolveResult.didDocument?.verificationMethod) {
+                verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+            }
+            return { tenantRecord, did: `did:indy:bcovrin:${didRegistration.data.did}`, verkey };
         }
         catch (error) {
             if (error instanceof RecordNotFoundError) {
@@ -123,6 +125,103 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    async registerSchemaWithTenant(tenantAgent: any, payload: any) {
+        const { issuerId, name, version, attributes } = payload;
+        const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
+            schema: {
+                issuerId: issuerId,
+                name: name,
+                version: version,
+                attrNames: attributes
+            },
+            options: {
+                endorserMode: 'internal',
+                endorserDid: issuerId,
+            },
+        })
+
+        const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, name, version);
+        if (schemaState.state === 'finished') {
+            const skippedString = getSchemaId.substring('did:indy:bcovrin:'.length);
+            schemaState.schemaId = skippedString
+        }
+        return schemaState;
+    }
+
+    async getSchemaWithTenant(tenantAgent: any, schemaId: any) {
+        const schema = await tenantAgent.modules.anoncreds.getSchema(schemaId);
+        return schema;
+    }
+
+    async getCredentialDefinition(tenantAgent: any, credentialDefinitionId: any) {
+        const credDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId);
+        return credDef;
+    }
+
+    async createCredentialDefinitionWithTenant(tenantAgent: any, payload: any) {
+        const { issuerId, schemaId, tag } = payload;
+        const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+            credentialDefinition: {
+                issuerId,
+                schemaId,
+                tag
+            },
+            options: {}
+        })
+        const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
+        const schemaDetails = await indySdkAnonCredsRegistry.getSchema(tenantAgent.context, schemaId)
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
+        if (credentialDefinitionState.state === 'finished') {
+            const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
+            credentialDefinitionState.credentialDefinitionId = skippedString
+        }
+        return credentialDefinitionState;
+    }
+
+    async createInvitationWithTenant(tenantAgent: any) {
+        const config = {
+            autoAcceptConnection: true,
+        }
+        const createInvitation = await tenantAgent.oob.createInvitation(config);
+
+        return ({
+            invitationUrl: createInvitation.outOfBandInvitation.toUrl({
+                domain: this.agent.config.endpoints[0],
+            }),
+            invitation: createInvitation.outOfBandInvitation.toJSON({
+                useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+            }),
+            outOfBandRecord: createInvitation.toJSON(),
+        });
+    }
+
+    async receiveInvitationWithTenant(tenantAgent: any, payload: any) {
+        const { invitationUrl, remaining } = payload;
+        const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(
+            invitationUrl,
+            remaining
+        );
+
+        return ({
+            outOfBandRecord: outOfBandRecord.toJSON(),
+            connectionRecord: connectionRecord?.toJSON(),
+        });
+    }
+
+    async acceptOfferWithTenant(tenantAgent: any, payload: any) {
+        const { credentialRecordId, autoAcceptCredential, comment } = payload;
+        const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds();
+        if (linkSecretIds.length === 0) {
+            await tenantAgent.modules.anoncreds.createLinkSecret()
+        }
+        const acceptOffer = await tenantAgent.credentials.acceptOffer({
+            credentialRecordId,
+            autoAcceptCredential,
+            comment
+        });
+        return ({ CredentialExchangeRecord: acceptOffer });
+    }
+
     @Post("/with-tenant-agent")
     async withTenantAgent(
         @Body() withTenantAgentOptions: WithTenantAgentOptions,
@@ -130,131 +229,78 @@ export class MultiTenancyController extends Controller {
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
         const { tenantId, method, payload } = withTenantAgentOptions;
-        console.log("STARTING");
 
         try {
             const result = await new Promise((resolve,) => {
                 this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent: TenantAgent) => {
                     switch (method) {
                         case "createInvitation":
-                            const config = {
-                                autoAcceptConnection: true,
-                            }
-                            const createInvitation = await tenantAgent.oob.createInvitation(config);
-
-                            resolve({
-                                invitationUrl: createInvitation.outOfBandInvitation.toUrl({
-                                    domain: this.agent.config.endpoints[0],
-                                }),
-                                invitation: createInvitation.outOfBandInvitation.toJSON({
-                                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-                                }),
-                                outOfBandRecord: createInvitation.toJSON(),
-                            });
+                            const getTenantToCreateInvitation = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
+                            const createInvitation = await this.createInvitationWithTenant(getTenantToCreateInvitation);
+                            resolve({ createInvitation });
                             break;
 
                         case "receiveInvitation":
-                            const { invitationUrl, ...remaining } = payload;
-                            const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(
-                                invitationUrl,
-                                remaining
-                            );
-                            console.log("Executed: ", outOfBandRecord.toJSON(), connectionRecord?.toJSON());
-
-                            resolve({
-                                outOfBandRecord: outOfBandRecord.toJSON(),
-                                connectionRecord: connectionRecord?.toJSON(),
-                            });
+                            const { invitationUrl, remaining } = payload;
+                            const getTenantToReceiveInvitation = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+                            const receiveInvitation = await this.receiveInvitationWithTenant(getTenantToReceiveInvitation, { invitationUrl, remaining });
+                            resolve({ receiveInvitation });
                             break;
 
                         case "getConnection":
                             const { connectionId } = payload;
                             const connection = await tenantAgent.connections.findById(connectionId);
-                            console.log("Connection: ", connection);
                             resolve({ connection: connection?.toJSON() });
                             break;
 
                         case "registerSchema":
                             var { issuerId, name, version, attributes } = payload;
-                            const getTenantToCreateSchema = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
-                            const { schemaState } = await getTenantToCreateSchema.modules.anoncreds.registerSchema({
-                                schema: {
-                                    issuerId: issuerId,
-                                    name: name,
-                                    version: version,
-                                    attrNames: attributes
-                                },
-                                options: {
-                                    endorserMode: 'internal',
-                                    endorserDid: issuerId,
-                                },
-                            })
-                            console.log("schema registered", schemaState);
+                            const getTenantToCreateSchema = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+                            const schema = await this.registerSchemaWithTenant(getTenantToCreateSchema, { issuerId, name, version, attributes });
+                            resolve({ schema });
+                            break;
 
-                            const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, name, version);
-                            if (schemaState.state === 'finished') {
-                                const skippedString = getSchemaId.substring('did:indy:bcovrin:'.length);
-                                schemaState.schemaId = skippedString
-                            }
-                            resolve({ schemaState });
+                        case "getSchemaById":
+                            var { schemaId } = payload;
+                            const schemaById = await this.getSchemaWithTenant(tenantAgent, schemaId);
+                            resolve(schemaById);
                             break;
 
                         case "registerCredentialDefinition":
                             var { issuerId, schemaId, tag } = payload;
-                            const getTenantToCreateCredentialDefinition = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
-                            const { credentialDefinitionState } = await getTenantToCreateCredentialDefinition.modules.anoncreds.registerCredentialDefinition({
-                                credentialDefinition: {
-                                    issuerId,
-                                    schemaId,
-                                    tag
-                                },
-                                options: {}
-                            })
-                            const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
-                            const schemaDetails = await indySdkAnonCredsRegistry.getSchema(getTenantToCreateCredentialDefinition.context, schemaId)
-                            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
-                            if (credentialDefinitionState.state === 'finished') {
-                                const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
-                                credentialDefinitionState.credentialDefinitionId = skippedString
-                            }
-                            resolve({ credentialDefinitionState });
+                            const getTenantToCreateCredentialDefinition = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+                            const credentialDefinition = await this.createCredentialDefinitionWithTenant(getTenantToCreateCredentialDefinition, { issuerId, schemaId, tag });
+                            resolve({ credentialDefinition });
+                            break;
+
+                        case "getCredentialDefinitionById":
+                            var { credentialDefinitionId } = payload;
+                            const credentialDefinitionById = await this.getCredentialDefinition(tenantAgent, credentialDefinitionId);
+                            resolve(credentialDefinitionById);
                             break;
 
                         case "getConnections":
                             const connections = await tenantAgent.connections.getAll();
-                            console.log(`Connections associated ${tenantId} are `, connections);
                             resolve({ connectionRecord: connections });
                             break;
 
                         case "getCredentials":
                             const credentials = await tenantAgent.credentials.getAll();
-                            console.log(`Credentials associated with ${tenantId} are ${credentials}`);
                             resolve({ CredentialExchangeRecord: credentials });
                         case "issueCredential":
                             const offerCredential = await tenantAgent.credentials.offerCredential(payload);
-                            console.log("Credential offered: ", offerCredential);
                             resolve({ offerCredential });
                             break;
 
                         case "acceptOffer":
                             var { credentialRecordId, autoAcceptCredential, comment } = payload;
                             var getTenant = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-                            const linkSecretIds = await getTenant.modules.anoncreds.getLinkSecretIds();
-                            if (linkSecretIds.length === 0) {
-                                await getTenant.modules.anoncreds.createLinkSecret()
-                            }
-                            const acceptOffer = await tenantAgent.credentials.acceptOffer({
-                                credentialRecordId,
-                                autoAcceptCredential,
-                                comment
-                            });
-                            console.log("Offer accepted: ", acceptOffer);
-                            resolve({ CredentialExchangeRecord: acceptOffer });
+                            const acceptOffer = await this.acceptOfferWithTenant(getTenant, { credentialRecordId, autoAcceptCredential, comment })
+                            resolve({ acceptOffer });
                             break;
 
                         case "createRequestForProofPresentation":
                             const createRequest = await tenantAgent.proofs.requestProof(payload);
-                            console.log("Request sent for presentation: ", createRequest);
                             resolve({ ProofExchangeRecord: createRequest.toJSON() });
                             break;
 
@@ -263,7 +309,6 @@ export class MultiTenancyController extends Controller {
                             const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
                                 proofRecordId,
                             });
-                            console.log(`Requested credentials: ${requestedCredentials}`);
                             const acceptProofRequest: AcceptProofRequestOptions = {
                                 proofRecordId,
                                 comment,
@@ -271,14 +316,11 @@ export class MultiTenancyController extends Controller {
                             }
 
                             const acceptRequest = await tenantAgent.proofs.acceptRequest(acceptProofRequest);
-                            console.log("accept request executed");
-                            console.log("Request has been accepted by sending presentation: ", acceptRequest);
                             resolve({ ProofExchangeRecord: acceptRequest.toJSON() });
                             break;
 
                         case "acceptPresentation":
                             const acceptPresentation = await tenantAgent.proofs.acceptPresentation(payload);
-                            console.log("Presentation accepted: ", acceptPresentation);
                             resolve({ ProofExchangeRecord: acceptPresentation.toJSON() });
                             break;
 
@@ -300,109 +342,3 @@ export class MultiTenancyController extends Controller {
         }
     }
 }
-
-
-/*
-{
-  "_tags": {},
-  "metadata": {},
-  "id": "4a31567f-8aa9-410a-8324-75022fa86b12", 095012d5-901c-4672-997c-5f27bab1bb9d
-  "createdAt": "2023-06-14T14:51:47.901Z",
-  "config": {
-    "label": "t1",
-    "walletConfig": {
-      "id": "tenant-4a31567f-8aa9-410a-8324-75022fa86b12",
-      "key": "EYciuZyUuJe4ryH1ejgJFFc8dWbaLUQXHmj2wAKNaGuT",
-      "keyDerivationMethod": "RAW"
-    }
-  },
-  "updatedAt": "2023-06-14T14:51:47.901Z"
-}
-
-{
-  "_tags": {},
-  "metadata": {},
-  "id": "eca61dbc-ff83-4bac-a129-02c795ac18bb", f0496df5-78a9-4e42-b834-caf7b58dbf98
-  "createdAt": "2023-06-14T14:52:31.420Z",
-  "config": {
-    "label": "t2",
-    "walletConfig": {
-      "id": "tenant-eca61dbc-ff83-4bac-a129-02c795ac18bb",
-      "key": "2vE3tDGNhW82JsNS1orDyV4TGraE2m9Wj4LhCzVp4JMy",
-      "keyDerivationMethod": "RAW"
-    }
-  },
-  "updatedAt": "2023-06-14T14:52:31.420Z"
-}
-
-
-schema: {
-rest-sample_1  |     attrNames: [
-rest-sample_1  |       'name'
-rest-sample_1  |     ],
-rest-sample_1  |     name: 'GM',
-rest-sample_1  |     version: '1.1.0',
-rest-sample_1  |     id: '2XKsaGBrgRoAqNcSycUvKK:2:GMM:1.1.1',
-rest-sample_1  |     ver: '1.0'
-rest-sample_1  |   } issuerId: 'did:indy:bcovrin:4HQoJ62U34utYg5Yr9U8bn', KcEztZvgs65UJos8YKvjvT:3:CL:850285:kb
-
-t1: did:indy:bcovrin:KcEztZvgs65UJos8YKvjvT
-t2:  did:indy:bcovrin:2TomyR1f669gWwBVqL3HqF 
-
-{
-  "schemaState": {
-    "state": "finished",
-    "schema": {
-      "attrNames": [
-        "weight"
-      ],
-      "issuerId": "did:indy:bcovrin:KcEztZvgs65UJos8YKvjvT",
-      "name": "gym",
-      "version": "1.9.9"
-    },
-    "schemaId": "KcEztZvgs65UJos8YKvjvT:2:gym:1.9.9"
-  }
-}
-
-{
-  "offerCredential": {
-    "_tags": {},
-    "metadata": {
-      "_anoncreds/credential": {
-        "schemaId": "KcEztZvgs65UJos8YKvjvT:2:gym:1.4.9",
-        "credentialDefinitionId": "KcEztZvgs65UJos8YKvjvT:3:CL:849543:kb"
-      }
-    },
-    "credentials": [],
-    "id": "acb916fa-aa12-4bee-a64e-70176269cdb8",
-    "createdAt": "2023-06-14T06:53:54.127Z",
-    "state": "offer-sent",
-    "connectionId": "6971adfe-85a2-43b5-b720-ec1f585fb88c",
-    "threadId": "3fafc8a9-6d24-46c3-9107-258265ac4935",
-    "protocolVersion": "v2",
-    "credentialAttributes": [
-      {
-        "name": "weight",
-        "value": "62"
-      }
-    ],
-    "updatedAt": "2023-06-14T06:53:56.245Z"
-  }
-}
-
-{
-  "ProofExchangeRecord": {
-    "_tags": {},
-    "metadata": {},
-    "id": "06588a24-2680-4c03-8341-b8c3c7d7ac84",
-    "createdAt": "2023-06-14T09:42:35.068Z",
-    "protocolVersion": "v1",
-    "state": "request-sent",
-    "connectionId": "ac410905-2374-4027-95a0-280b14fca701",
-    "threadId": "0204e8cd-3e52-48df-9378-b6699e23244a",
-    "autoAcceptProof": "always",
-    "updatedAt": "2023-06-14T09:42:35.080Z"
-  }
-}
-
-*/ 
