@@ -1,13 +1,13 @@
 {
   "label": "AFJ Rest Agent 1",
-  "walletId": "walletId",
-  "walletKey": "walletKey",
+  "walletId": "Shankisaasasasas",
+  "walletKey": "Shankisaasasasas",
   "walletType": "postgres_storage",
-  "walletUrl": "192.168.1.74:5432",
+  "walletUrl": "192.168.1.29:5432",
   "walletAccount": "postgres",
-  "walletPassword": "postgres",
+  "walletPassword": "Password1",
   "walletAdminAccount": "postgres",
-  "walletAdminPassword": "postgres",
+  "walletAdminPassword": "Password1",
   "walletScheme": "DatabasePerWallet",
   "indyLedger": [
     {
@@ -16,7 +16,7 @@
       "isProduction": false
     }
   ],
-  "endpoint": ["http://192.168.1.74:7001"],
+  "endpoint": ["http://192.168.1.29:7001"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
   "autoAcceptProofs": "contentApproved",
