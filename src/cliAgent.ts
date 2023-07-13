@@ -13,6 +13,7 @@ import { TsLogger } from './utils/logger'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { randomUUID } from 'crypto'
 import { TenantsModule } from '@aries-framework/tenants'
+import { IndySdkPostgresWalletStorageConfig, IndySdkPostgresWalletStorageCredentials } from '@aries-framework/node/build/PostgresPlugin'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -44,7 +45,7 @@ export interface AriesRestConfig {
   outboundTransports?: Transports[]
   autoAcceptMediationRequests?: boolean
   connectionImageUrl?: string
-
+  tenancy?: boolean,
   webhookUrl?: string
   adminPort: number
 }
@@ -61,31 +62,17 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   const logger = new TsLogger(logLevel ?? LogLevel.error)
 
-  const storageConfig = {
-    type: 'postgres_storage',
-    config: {
-      url: '192.168.1.12:5432',
-      wallet_scheme: IndySdkPostgresWalletScheme.DatabasePerWallet,
-    },
-    credentials: {
-      account: 'postgres',
-      password: 'Password1',
-      admin_account: 'postgres',
-      admin_password: 'Password1',
-    },
-  }
-
-  loadIndySdkPostgresPlugin(storageConfig.config, storageConfig.credentials)
-
   const agentConfig: InitConfig = {
     walletConfig: {
       id: walletConfig.id,
       key: walletConfig.key,
-      // storage: storageConfig,
+      storage: walletConfig.storage
     },
     ...afjConfig,
-    logger,
-  }
+    logger
+  };
+
+  loadIndySdkPostgresPlugin(walletConfig.storage?.config as IndySdkPostgresWalletStorageConfig, walletConfig.storage?.credentials as IndySdkPostgresWalletStorageCredentials);
 
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
@@ -101,12 +88,17 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const agent = new Agent({
     config: agentConfig,
     modules: {
-      tenants: new TenantsModule(
-        { sessionAcquireTimeout: Infinity, sessionLimit: Infinity }
-      ),
+      ...(afjConfig.tenancy
+        ? {
+          tenants: new TenantsModule({
+            sessionAcquireTimeout: Infinity,
+            sessionLimit: Infinity,
+          }),
+        }
+        : {}),
       indySdk: new IndySdkModule({
         indySdk,
-        networks: [indyNetworkConfig]
+        networks: [indyNetworkConfig],
       }),
       anoncreds: new AnonCredsModule({
         registries: [new IndySdkAnonCredsRegistry()],
@@ -142,7 +134,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       }),
     },
     dependencies: agentDependencies,
-  })
+  });
+
   // Register outbound transports
   for (const outboundTransport of outboundTransports) {
     const OutboundTransport = outboundTransportMapping[outboundTransport]
