@@ -4,6 +4,23 @@ import yargs from 'yargs'
 
 import { runRestAgent } from './cliAgent'
 
+const walletConfig = {
+  // Other properties of walletConfig
+  storage: {
+    type: "string",
+    config: {
+      url: "string",
+      wallet_scheme: "string",
+    },
+    credentials: {
+      account: "string",
+      password: "string",
+      admin_account: "string",
+      admin_password: "string",
+    },
+  },
+};
+
 const parsed = yargs
   .command('start', 'Start AFJ Rest agent')
   .option('label', {
@@ -16,6 +33,34 @@ const parsed = yargs
     demandOption: true,
   })
   .option('wallet-key', {
+    string: true,
+    demandOption: true,
+  })
+  .option('wallet-type', {
+    string: true,
+    demandOption: true,
+  })
+  .option('wallet-url', {
+    string: true,
+    demandOption: true,
+  })
+  .option('wallet-scheme', {
+    string: true,
+    demandOption: true,
+  })
+  .option('wallet-account', {
+    string: true,
+    demandOption: true,
+  })
+  .option('wallet-password', {
+    string: true,
+    demandOption: true,
+  })
+  .option('wallet-admin-account', {
+    string: true,
+    demandOption: true,
+  })
+  .option('wallet-admin-password', {
     string: true,
     demandOption: true,
   })
@@ -98,9 +143,36 @@ const parsed = yargs
     number: true,
     demandOption: true,
   })
+  .option('tenancy', {
+    boolean: true,
+    default: false
+  })
+  // .option('storage-config', {
+  //   array: true,
+  //   default: [],
+  //   coerce: (input) => JSON.parse(input),
+  // })
+  // .option('storageConfig', {
+  //   type: 'string',
+  //   describe: 'Storage configuration JSON',
+  //   coerce: (value) => {
+  //     try {
+  //       return JSON.parse(value);
+  //     } catch (error) {
+  //       throw new Error('Invalid JSON format for storageConfig');
+  //     }
+  //   },
+  // })
+
   .config()
   .env('AFJ_REST')
   .parse()
+
+
+const argv = yargs.argv;
+const storageConfig = argv["wallet-type"];
+
+console.log("Storage Config after YARGS::", storageConfig);
 
 export async function runCliServer() {
   await runRestAgent({
@@ -108,6 +180,19 @@ export async function runCliServer() {
     walletConfig: {
       id: parsed['wallet-id'],
       key: parsed['wallet-key'],
+      storage: {
+        type: parsed['wallet-type'],
+        config: {
+          url: parsed['wallet-url'],
+          wallet_scheme: parsed['wallet-scheme'],
+        },
+        credentials: {
+          account: parsed["wallet-account"],
+          password: parsed["wallet-password"],
+          admin_account: parsed["wallet-admin-account"],
+          admin_password: parsed["wallet-admin-password"],
+        }
+      }
     },
     // indyLedgers: parsed['indy-ledger'],
     // publicDidSeed: parsed['public-did-seed'],
@@ -123,5 +208,6 @@ export async function runCliServer() {
     connectionImageUrl: parsed['connection-image-url'],
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
+    tenancy: parsed['tenancy']
   } as AriesRestConfig)
 }
