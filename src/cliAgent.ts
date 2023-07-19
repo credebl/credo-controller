@@ -1,4 +1,4 @@
-import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule } from '@aries-framework/core'
+import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, W3cCredentialsModule, KeyDidRegistrar, KeyDidResolver, CacheModule, InMemoryLruCache } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
@@ -14,6 +14,8 @@ import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofForm
 import { randomUUID } from 'crypto'
 import { TenantsModule } from '@aries-framework/tenants'
 import { IndySdkPostgresWalletStorageConfig, IndySdkPostgresWalletStorageCredentials } from '@aries-framework/node/build/PostgresPlugin'
+import { JsonLdCredentialFormatService } from '@aries-framework/core'
+import { W3cCredentialSchema, W3cCredentialsApi, W3cCredentialService, W3cJsonLdVerifyCredentialOptions } from '@aries-framework/core'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -46,6 +48,7 @@ export interface AriesRestConfig {
   autoAcceptMediationRequests?: boolean
   connectionImageUrl?: string
   tenancy?: boolean,
+  indyLedgers?: string[],
   webhookUrl?: string
   adminPort: number
 }
@@ -76,14 +79,68 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
+  const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
 
-  const indyNetworkConfig = {
-    id: randomUUID(),
-    genesisTransactions: BCOVRIN_TEST_GENESIS,
-    indyNamespace: 'bcovrin',
-    isProduction: false,
-    connectOnStartup: true,
-  } satisfies IndySdkPoolConfig
+  let networkConfig: IndySdkPoolConfig[] = [
+    {
+      id: '',
+      genesisTransactions: '',
+      indyNamespace: '',
+      isProduction: false,
+      connectOnStartup: true
+    }
+  ];
+
+  if (afjConfig?.indyLedgers?.includes("bcovrin") && afjConfig?.indyLedgers?.includes("indicio")) {
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        indyNamespace: 'bcovrin',
+        isProduction: false,
+        connectOnStartup: true
+      },
+      {
+        id: randomUUID(),
+        genesisTransactions: INDICIO_TEST_GENESIS,
+        indyNamespace: 'indicio',
+        isProduction: false,
+        connectOnStartup: true,
+        transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
+      }
+    ];
+  } else if (afjConfig?.indyLedgers?.includes("indicio")) {
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: INDICIO_TEST_GENESIS,
+        indyNamespace: 'indicio',
+        isProduction: false,
+        connectOnStartup: true,
+        transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
+      }
+    ];
+  } else if (afjConfig?.indyLedgers?.includes("bcovrin")) {
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        indyNamespace: 'bcovrin',
+        isProduction: false,
+        connectOnStartup: true
+      }
+    ];
+  } else {
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        indyNamespace: 'bcovrin',
+        isProduction: false,
+        connectOnStartup: true
+      }
+    ];
+  }
 
   const agent = new Agent({
     config: agentConfig,
@@ -98,14 +155,14 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         : {}),
       indySdk: new IndySdkModule({
         indySdk,
-        networks: [indyNetworkConfig],
+        networks: networkConfig
       }),
       anoncreds: new AnonCredsModule({
         registries: [new IndySdkAnonCredsRegistry()],
       }),
       dids: new DidsModule({
-        resolvers: [new IndySdkIndyDidResolver()],
-        registrars: [new IndySdkIndyDidRegistrar()],
+        resolvers: [new IndySdkIndyDidResolver(), new KeyDidResolver()],
+        registrars: [new IndySdkIndyDidRegistrar(), new KeyDidRegistrar()],
       }),
       connections: new ConnectionsModule({
         autoAcceptConnections: true,
@@ -122,16 +179,20 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         ],
       }),
       credentials: new CredentialsModule({
-        autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
+        autoAcceptCredentials: AutoAcceptCredential.Always,
         credentialProtocols: [
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
           }),
           new V2CredentialProtocol({
-            credentialFormats: [legacyIndyCredentialFormat],
+            credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService],
           }),
         ],
       }),
+      w3cCredentials: new W3cCredentialsModule(),
+      cache: new CacheModule({
+        cache: new InMemoryLruCache({ limit: Infinity })
+      })
     },
     dependencies: agentDependencies,
   });

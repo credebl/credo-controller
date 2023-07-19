@@ -96,9 +96,16 @@ export class SchemaController {
       })
 
       const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
-      if(schemaState.state === 'finished') {
-        const skippedString = getSchemaId.substring('did:indy:bcovrin:'.length);
-        schemaState.schemaId = skippedString
+      if (schemaState.state === 'finished') {
+        let schemaId;
+        const indyNamespace = getSchemaId.split(':')[2];
+        if ('bcovrin' === indyNamespace) {
+          schemaId = getSchemaId.substring('did:indy:bcovrin:'.length);
+        } else if ('indicio' === indyNamespace) {
+          schemaId = getSchemaId.substring('did:indy:indicio:'.length);
+        }
+
+        schemaState.schemaId = schemaId
       }
       return schemaState;
     } catch (error) {

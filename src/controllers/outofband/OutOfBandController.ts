@@ -1,9 +1,11 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
-import type { AgentMessageType } from '../types'
-import type {
+import type { AgentMessageType, CreateInvitationOptions } from '../types'
+import {
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
   CreateLegacyInvitationConfig,
+  CreateCredentialOfferOptions,
+  AutoAcceptCredential,
 } from '@aries-framework/core'
 
 import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFoundError } from '@aries-framework/core'
@@ -12,6 +14,8 @@ import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
 import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
+import { V1CredentialProtocol } from '@aries-framework/anoncreds'
+// import prepareForAnon
 
 @Tags('Out Of Band')
 @Route('/oob')
@@ -76,9 +80,10 @@ export class OutOfBandController extends Controller {
   @Post('/create-invitation')
   public async createInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
+    @Body() config: CreateInvitationOptions // props removed because of issues with serialization
   ) {
     try {
+      console.log(config);
       const outOfBandRecord = await this.agent.oob.createInvitation(config)
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -220,6 +225,10 @@ export class OutOfBandController extends Controller {
     const { invitationUrl, ...config } = invitationRequest
 
     try {
+      const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
+      if (linkSecretIds.length === 0) {
+        await this.agent.modules.anoncreds.createLinkSecret()
+      }
       const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveInvitationFromUrl(invitationUrl, config)
       return {
         outOfBandRecord: outOfBandRecord.toJSON(),
@@ -287,3 +296,5 @@ export class OutOfBandController extends Controller {
     }
   }
 }
+
+
