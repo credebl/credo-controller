@@ -8,8 +8,6 @@ import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample } from '../examples';
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
-// import type { Agent } from "@aries-framework/core"
-// import { tenantAgentModules } from '../../cliAgent';
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 
 @Tags("MultiTenancy")
@@ -32,35 +30,76 @@ export class MultiTenancyController extends Controller {
     ) {
         try {
             const { config, seed } = createTenantOptions;
-            const body = {
-                role: 'ENDORSER',
-                alias: 'Alias',
-                seed
-            };
             const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config });
             const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id });
-            const didRegistration = await axios.post('http://test.bcovrin.vonx.io/register', body);
 
-            if (didRegistration.data) {
-                await tenantAgent.dids.import({
-                    did: `did:indy:bcovrin:${didRegistration.data.did}`,
-                    overwrite: true,
-                    privateKeys: [
-                        {
-                            keyType: KeyType.Ed25519,
-                            privateKey: TypedArrayEncoder.fromString(seed),
-                        },
-                    ],
+            createTenantOptions.method = createTenantOptions.method ? createTenantOptions.method : 'bcovrin';
+            if ('bcovrin' === createTenantOptions.method) {
+                const body = {
+                    role: 'ENDORSER',
+                    alias: 'Alias',
+                    seed
+                };
+                const didRegistration = await axios.post('http://test.bcovrin.vonx.io/register', body);
+
+                if (didRegistration.data) {
+                    await tenantAgent.dids.import({
+                        did: `did:indy:bcovrin:${didRegistration.data.did}`,
+                        overwrite: true,
+                        privateKeys: [
+                            {
+                                keyType: KeyType.Ed25519,
+                                privateKey: TypedArrayEncoder.fromString(seed),
+                            },
+                        ],
+                    });
+                }
+                const resolveResult = await this.agent.dids.resolve(`did:indy:bcovrin:${didRegistration.data.did}`);
+                let verkey;
+                if (resolveResult.didDocument?.verificationMethod) {
+                    verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+                }
+                return { tenantRecord, did: `did:indy:bcovrin:${didRegistration.data.did}`, verkey };
+
+            } else if ('indicio' === createTenantOptions.method) {
+
+                const key = await this.agent.wallet.createKey({
+                    privateKey: TypedArrayEncoder.fromString(seed),
+                    keyType: KeyType.Ed25519
                 });
+
+                const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
+                const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
+                let body = {
+                    network: 'testnet',
+                    did,
+                    verkey: TypedArrayEncoder.toBase58(buffer)
+                };
+
+                return await axios
+                    .post('https://selfserve.indiciotech.io/nym', body)
+                    .then(async (res) => {
+                        if (200 === res.data.statusCode) {
+                            await tenantAgent.dids.import({
+                                did: `did:indy:indicio:${body.did}`,
+                                overwrite: true,
+                                privateKeys: [
+                                    {
+                                        keyType: KeyType.Ed25519,
+                                        privateKey: TypedArrayEncoder.fromString(seed)
+                                    },
+                                ],
+                            })
+                            const resolveResult = await this.agent.dids.resolve(`did:indy:indicio:${body.did}`);
+                            let verkey;
+                            if (resolveResult.didDocument?.verificationMethod) {
+                                verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+                            }
+                            return { tenantRecord, did: `did:indy:indicio:${body.did}`, verkey };
+                        }
+                    })
             }
-            const resolveResult = await this.agent.dids.resolve(`did:indy:bcovrin:${didRegistration.data.did}`);
-            let verkey;
-            if (resolveResult.didDocument?.verificationMethod) {
-                verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
-            }
-            return { tenantRecord, did: `did:indy:bcovrin:${didRegistration.data.did}`, verkey };
-        }
-        catch (error) {
+        } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `Tenant not created`,
@@ -203,13 +242,20 @@ export class MultiTenancyController extends Controller {
                     endorserDid: schema.issuerId,
                 },
             })
-            if (!schemaState.schema) {
-                throw new Error('')
-            }
             const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
             if (schemaState.state === 'finished') {
-                const skippedString = getSchemaId.substring('did:indy:bcovrin:'.length);
-                schemaState.schemaId = skippedString
+
+                let schemaId;
+                const indyNamespace = getSchemaId.split(':')[2];
+                if ('bcovrin' === indyNamespace) {
+                    schemaId = getSchemaId.substring('did:indy:bcovrin:'.length);
+                } else if ('indicio' === indyNamespace) {
+                    console.log("indyNamespace---", indyNamespace)
+                    schemaId = getSchemaId.substring('did:indy:indicio:'.length);
+                    console.log("schemaId---", schemaId)
+                }
+
+                schemaState.schemaId = schemaId
             }
             return schemaState;
         } catch (error) {
@@ -287,8 +333,17 @@ export class MultiTenancyController extends Controller {
             }
             const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
             if (credentialDefinitionState.state === 'finished') {
-                const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
-                credentialDefinitionState.credentialDefinitionId = skippedString
+
+                let credDefId;
+                const indyNamespace = getCredentialDefinitionId.split(':')[2];
+                if ('bcovrin' === indyNamespace) {
+                    credDefId = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
+                } else if ('indicio' === indyNamespace) {
+                    credDefId = getCredentialDefinitionId.substring('did:indy:indicio:'.length);
+                }
+
+                credentialDefinitionState.credentialDefinitionId = credDefId;
+
             }
             return credentialDefinitionState;
         } catch (error) {
@@ -329,7 +384,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/create-offer/:tenantId')
+    @Post('/credentials/create-offer/:tenantId')
     public async createOffer(
         @Body() createOfferOptions: CreateOfferOptions,
         @Path('tenantId') tenantId: string,
@@ -349,7 +404,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/create-offer-oob/:tenantId')
+    @Post('/credentials/create-offer-oob/:tenantId')
     public async createOfferOob(
         @Path('tenantId') tenantId: string,
         @Body() createOfferOptions: CreateOfferOobOptions,
@@ -369,7 +424,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/accept-offer/:tenantId')
+    @Post('/credentials/accept-offer/:tenantId')
     public async acceptOffer(
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
@@ -399,7 +454,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Get('/:credentialRecordId/:tenantId')
+    @Get('/credentials/:credentialRecordId/:tenantId')
     public async getCredentialById(
         @Path('credentialRecordId') credentialRecordId: RecordId,
         @Path('tenantId') tenantId: string,
@@ -453,7 +508,7 @@ export class MultiTenancyController extends Controller {
         return proofs.map((proof: any) => proof.toJSON())
     }
 
-    @Post('/request-proof/:tenantId')
+    @Post('/proofs/request-proof/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async requestProof(
         @Body() requestProofOptions: RequestProofOptions,
@@ -481,7 +536,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('create-request/:tenantId')
+    @Post('/proofs/create-request/:tenantId')
     public async createRequest(
         @Path('tenantId') tenantId: string,
         @Body() createRequestOptions: CreateProofRequestOobOptions,
@@ -504,7 +559,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/:proofRecordId/accept-request/:tenantId')
+    @Post('/proofs/:proofRecordId/accept-request/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async acceptRequest(
         @Path('tenantId') tenantId: string,
@@ -543,7 +598,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/:proofRecordId/accept-presentation/:tenantId')
+    @Post('/proofs/:proofRecordId/accept-presentation/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async acceptPresentation(
         @Path('tenantId') tenantId: string,
@@ -565,7 +620,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Get('/:proofRecordId/:tenantId')
+    @Get('/proofs/:proofRecordId/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async getProofById(
         @Path('tenantId') tenantId: string,
