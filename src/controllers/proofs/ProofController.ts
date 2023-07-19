@@ -5,6 +5,7 @@ import {
   CreateProofRequestOptions,
   DidExchangeRole,
   DidExchangeState,
+  JsonEncoder,
   ProofExchangeRecord,
   // IndyProofFormat,
   ProofExchangeRecordProps,
@@ -25,7 +26,7 @@ import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, 
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
-import { AcceptProofProposal, RequestProofOptions, RequestProofProposalOptions } from '../types'
+import { AcceptProofProposal, CreateProofRequestOobOptions, RequestProofOptions, RequestProofProposalOptions } from '../types'
 
 @Tags('Proofs')
 @Route('/proofs')
@@ -171,28 +172,28 @@ export class ProofController extends Controller {
     }
   }
 
-  /**
-   * Creates a presentation request not bound to any proposal or existing connection
-   *
-   * @param request
-   * @returns ProofRequestMessageResponse
-   */
+  // /**
+  //  * Creates a presentation request not bound to any proposal or existing connection
+  //  *
+  //  * @param request
+  //  * @returns ProofRequestMessageResponse
+  //  */
   // @Post('/request-outofband-proof')
   // // @Example<{ proofUrl: string; proofRecord: ProofExchangeRecordProps }>({
   // //   proofUrl: 'https://example.com/proof-url',
   // //   proofRecord: ProofRecordExample,
   // // })
   // public async requestProofOutOfBand(@Body() request: RequestProofOptions) {
-  //   // const requestProofOutOfBandRequestPayload: CreateProofRequestOptions<
-  //   //   [IndyProofFormat],
-  //   //   [V1ProofService, V2ProofService<[IndyProofFormat]>]
-  //   // > = {
-  //   //   protocolVersion: request.protocolVersion,
-  //   //   proofFormats: request.proofFormats,
-  //   //   comment: request.comment,
-  //   //   autoAcceptProof: request.autoAcceptProof,
-  //   //   parentThreadId: request.parentThreadId,
-  //   // }
+  //   const requestProofOutOfBandRequestPayload: CreateProofRequestOptions<
+  //     [IndyProofFormat],
+  //     [V1ProofService, V2ProofService<[IndyProofFormat]>]
+  //   > = {
+  //     protocolVersion: request.protocolVersion,
+  //     proofFormats: request.proofFormats,
+  //     comment: request.comment,
+  //     autoAcceptProof: request.autoAcceptProof,
+  //     parentThreadId: request.parentThreadId,
+  //   }
   //   const { connectionId, proofRequestOptions, ...config } = request
 
   //   const proof = await this.agent.proofs.createRequest({
@@ -277,6 +278,27 @@ export class ProofController extends Controller {
       const proof = await this.agent.proofs.requestProof(requestProofPayload)
 
       return proof
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Post('create-request')
+  public async createRequest(
+    @Body() createRequestOptions: CreateProofRequestOobOptions,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const proof = await this.agent.proofs.createRequest({
+        protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
+        proofFormats: createRequestOptions.proofFormats,
+        goalCode: createRequestOptions.goalCode,
+        willConfirm: createRequestOptions.willConfirm,
+        parentThreadId: createRequestOptions.parentThreadId,
+        autoAcceptProof: createRequestOptions.autoAcceptProof,
+        comment: createRequestOptions.comment
+      });
+      return proof;
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
