@@ -114,6 +114,23 @@ export interface CreateOfferOptions {
   comment?: string
 }
 
+export interface CreateOfferOobOptions {
+  protocolVersion: string;
+  credentialFormats: any;
+  autoAcceptCredential?: AutoAcceptCredential
+  comment?: string
+}
+
+export interface CreateProofRequestOobOptions {
+  protocolVersion: string;
+  proofFormats: any;
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+  autoAcceptProof?: AutoAcceptProof;
+  comment?: string;
+}
+
 export interface OfferCredentialOptions {
   credentialFormats: {
     indy: {
@@ -286,4 +303,9 @@ export interface WithTenantAgentOptions {
   tenantId: string;
   method: string;
   payload?: any;
+}
+
+export interface ReceiveConnectionsForTenants {
+  tenantId: string;
+  invitationId?: string;
 }
