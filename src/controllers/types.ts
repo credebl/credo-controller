@@ -19,7 +19,15 @@ import type {
   WalletConfig,
   ConnectionRecord,
   CredentialExchangeRecord,
-  DidResolutionOptions} from '@aries-framework/core'
+  DidResolutionOptions,
+  CreateCredentialOfferOptions,
+  JsonLdCredentialFormat,
+  JsonLdCredentialDetailFormat,
+  JsonCredential,
+  AgentMessage,
+  Routing,
+  Attachment
+} from '@aries-framework/core'
 
 
 
@@ -100,16 +108,9 @@ export interface AcceptCredentialProposalOptions {
 
 // TODO: added type in protocolVersion
 export interface CreateOfferOptions {
+  protocolVersion: string;
   connectionId: string
-  credentialFormats: {
-    indy: {
-      credentialDefinitionId: string
-      attributes: {
-        name: string
-        value: string
-      }[]
-    }
-  }
+  credentialFormats: any
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
@@ -119,6 +120,15 @@ export interface CreateOfferOobOptions {
   credentialFormats: any;
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+}
+export interface CredentialCreateOfferOptions {
+  credentialRecord: CredentialExchangeRecord;
+  credentialFormats: JsonCredential
+  options: any;
+  attachmentId?: string;
 }
 
 export interface CreateProofRequestOobOptions {
@@ -182,7 +192,7 @@ export interface AcceptCredentialRequestOptions {
 type ReceiveOutOfBandInvitationProps = Omit<ReceiveOutOfBandInvitationConfig, 'routing'>
 
 export interface ReceiveInvitationProps extends ReceiveOutOfBandInvitationProps {
-  invitation: Omit<OutOfBandInvitationSchema, 'appendedAttachments'>
+  invitation: OutOfBandInvitationSchema
 }
 
 export interface ReceiveInvitationByUrlProps extends ReceiveOutOfBandInvitationProps {
@@ -207,7 +217,7 @@ export interface OutOfBandInvitationSchema {
   accept?: string[]
   handshake_protocols?: HandshakeProtocol[]
   services: Array<OutOfBandDidCommService | string>
-  imageUrl?: string
+  imageUrl?: string,
 }
 
 export interface ConnectionInvitationSchema {
@@ -293,6 +303,7 @@ export interface DidCreate {
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>,
   seed: string;
+  method?: string;
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
@@ -308,4 +319,19 @@ export interface WithTenantAgentOptions {
 export interface ReceiveConnectionsForTenants {
   tenantId: string;
   invitationId?: string;
+}
+
+export interface CreateInvitationOptions {
+  label?: string;
+  alias?: string;
+  imageUrl?: string;
+  goalCode?: string;
+  goal?: string;
+  handshake?: boolean;
+  handshakeProtocols?: HandshakeProtocol[];
+  messages?: AgentMessage[];
+  multiUseInvitation?: boolean;
+  autoAcceptConnection?: boolean;
+  routing?: Routing;
+  appendedAttachments?: Attachment[];
 }

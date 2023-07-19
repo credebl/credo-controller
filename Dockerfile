@@ -31,12 +31,12 @@ RUN apt-get install -y --no-install-recommends yarn
 # AFJ specifc setup
 WORKDIR /www
 
-COPY bin ./bin
-COPY package.json package.json
+COPY /apps/agent-provisioning/AFJ/afj-controller/bin ./bin
+COPY /apps/agent-provisioning/AFJ/afj-controller/package.json package.json
 RUN yarn install --production
 
-COPY build ./build
-COPY libindystrgpostgres.so /usr/lib/
-COPY libindystrgpostgres.so /usr/local/lib/
+COPY /apps/agent-provisioning/AFJ/afj-controller/build ./build
+COPY /apps/agent-provisioning/AFJ/afj-controller/libindystrgpostgres.so /usr/lib/
+COPY /apps/agent-provisioning/AFJ/afj-controller/libindystrgpostgres.so /usr/local/lib/
 
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
