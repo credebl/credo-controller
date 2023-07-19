@@ -16,6 +16,7 @@ import {
   AcceptCredentialOfferOptions,
   CreateOfferOptions,
   AcceptCredential,
+  CreateOfferOobOptions,
 } from '../types'
 
 
@@ -132,7 +133,7 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialProposal: AcceptCredentialProposalOptions
   ) {
     try {
-    
+
       const credential = await this.agent.credentials.acceptProposal({
         credentialRecordId: acceptCredentialProposal.credentialRecordId,
         credentialFormats: acceptCredentialProposal.credentialFormats,
@@ -172,6 +173,24 @@ export class CredentialController extends Controller {
         autoAcceptCredential: createOfferOptions.autoAcceptCredential
       })
       return offer;
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Post('/create-offer-oob')
+  public async createOfferOob(
+    @Body() createOfferOptions: CreateOfferOobOptions,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const offerOob = await this.agent.credentials.createOffer({
+        protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
+        credentialFormats: createOfferOptions.credentialFormats,
+        autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+        comment: createOfferOptions.comment
+      });
+      return offerOob;
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
