@@ -8,8 +8,6 @@ import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample } from '../examples';
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
-// import type { Agent } from "@aries-framework/core"
-// import { tenantAgentModules } from '../../cliAgent';
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 
 @Tags("MultiTenancy")
