@@ -1,4 +1,4 @@
-import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule } from '@aries-framework/core'
+import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, CacheModule, InMemoryLruCache } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
@@ -131,6 +131,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
             credentialFormats: [legacyIndyCredentialFormat],
           }),
         ],
+      }),
+      cache: new CacheModule({
+        cache: new InMemoryLruCache({ limit: 1000 }),
       }),
     },
     dependencies: agentDependencies,
