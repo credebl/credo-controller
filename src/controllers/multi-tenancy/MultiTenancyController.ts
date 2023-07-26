@@ -327,7 +327,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/create-offer/:tenantId')
+    @Post('/credentials/create-offer/:tenantId')
     public async createOffer(
         @Body() createOfferOptions: CreateOfferOptions,
         @Path('tenantId') tenantId: string,
@@ -347,7 +347,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/create-offer-oob/:tenantId')
+    @Post('/credentials/create-offer-oob/:tenantId')
     public async createOfferOob(
         @Path('tenantId') tenantId: string,
         @Body() createOfferOptions: CreateOfferOobOptions,
@@ -367,7 +367,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/accept-offer/:tenantId')
+    @Post('/credentials/accept-offer/:tenantId')
     public async acceptOffer(
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
@@ -397,7 +397,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Get('/:credentialRecordId/:tenantId')
+    @Get('/credentials/:credentialRecordId/:tenantId')
     public async getCredentialById(
         @Path('credentialRecordId') credentialRecordId: RecordId,
         @Path('tenantId') tenantId: string,
@@ -451,7 +451,7 @@ export class MultiTenancyController extends Controller {
         return proofs.map((proof: any) => proof.toJSON())
     }
 
-    @Post('/request-proof/:tenantId')
+    @Post('/proofs/request-proof/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async requestProof(
         @Body() requestProofOptions: RequestProofOptions,
@@ -479,7 +479,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('create-request/:tenantId')
+    @Post('/proofs/create-request/:tenantId')
     public async createRequest(
         @Path('tenantId') tenantId: string,
         @Body() createRequestOptions: CreateProofRequestOobOptions,
@@ -502,7 +502,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/:proofRecordId/accept-request/:tenantId')
+    @Post('/proofs/:proofRecordId/accept-request/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async acceptRequest(
         @Path('tenantId') tenantId: string,
@@ -541,7 +541,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/:proofRecordId/accept-presentation/:tenantId')
+    @Post('/proofs/:proofRecordId/accept-presentation/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async acceptPresentation(
         @Path('tenantId') tenantId: string,
@@ -563,7 +563,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Get('/:proofRecordId/:tenantId')
+    @Get('/proofs/:proofRecordId/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async getProofById(
         @Path('tenantId') tenantId: string,
