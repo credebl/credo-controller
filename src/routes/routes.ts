@@ -206,11 +206,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidDocument": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.any_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DIDDocumentMetadata": {
         "dataType": "refObject",
         "properties": {
@@ -222,21 +217,6 @@ const models: TsoaRoute.Models = {
             "nextVersionId": {"dataType":"string"},
             "equivalentId": {"dataType":"string"},
             "canonicalId": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidDocumentMetadata": {
-        "dataType": "refAlias",
-        "type": {"ref":"DIDDocumentMetadata","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidResolutionResult": {
-        "dataType": "refObject",
-        "properties": {
-            "didResolutionMetadata": {"ref":"DidResolutionMetadata","required":true},
-            "didDocument": {"dataType":"union","subSchemas":[{"ref":"DidDocument"},{"dataType":"enum","enums":[null]}],"required":true},
-            "didDocumentMetadata": {"ref":"DidDocumentMetadata","required":true},
         },
         "additionalProperties": false,
     },
@@ -254,6 +234,11 @@ const models: TsoaRoute.Models = {
     "DidRegistrationSecretOptions": {
         "dataType": "refAlias",
         "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DidDocument": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.any_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidCreate": {
@@ -289,6 +274,7 @@ const models: TsoaRoute.Models = {
         "properties": {
             "config": {"ref":"Omit_TenantConfig.walletConfig_","required":true},
             "seed": {"dataType":"string","required":true},
+            "method": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
