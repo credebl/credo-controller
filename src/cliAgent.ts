@@ -48,6 +48,7 @@ export interface AriesRestConfig {
   autoAcceptMediationRequests?: boolean
   connectionImageUrl?: string
   tenancy?: boolean,
+  indyLedgers?: string[],
   webhookUrl?: string
   adminPort: number
 }
@@ -80,13 +81,56 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
 
-  const indyNetworkConfig = {
-    id: randomUUID(),
-    genesisTransactions: BCOVRIN_TEST_GENESIS,
-    indyNamespace: 'bcovrin',
-    isProduction: false,
-    connectOnStartup: true,
-  } satisfies IndySdkPoolConfig
+  let networkConfig: IndySdkPoolConfig[] = [
+    {
+      id: '',
+      genesisTransactions: '',
+      indyNamespace: '',
+      isProduction: false,
+      connectOnStartup: true
+    }
+  ];
+  if (afjConfig?.indyLedgers?.includes("bcovrin") && afjConfig?.indyLedgers?.includes("indicio")) {
+    console.log("----", afjConfig?.indyLedgers);
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        indyNamespace: 'bcovrin',
+        isProduction: false,
+        connectOnStartup: true
+      },
+      {
+        id: randomUUID(),
+        genesisTransactions: INDICIO_TEST_GENESIS,
+        indyNamespace: 'indicio',
+        isProduction: false,
+        connectOnStartup: true,
+        transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
+      }
+    ];
+  } else if (afjConfig?.indyLedgers?.includes("indicio")) {
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: INDICIO_TEST_GENESIS,
+        indyNamespace: 'indicio',
+        isProduction: false,
+        connectOnStartup: true,
+        transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
+      }
+    ];
+  } else if (afjConfig?.indyLedgers?.includes("bcovrin")) {
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        indyNamespace: 'bcovrin',
+        isProduction: false,
+        connectOnStartup: true
+      }
+    ];
+  }
 
   const agent = new Agent({
     config: agentConfig,
@@ -101,7 +145,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         : {}),
       indySdk: new IndySdkModule({
         indySdk,
-        networks: [indyNetworkConfig],
+        networks: networkConfig
       }),
       anoncreds: new AnonCredsModule({
         registries: [new IndySdkAnonCredsRegistry()],

@@ -86,8 +86,14 @@ export class CredentialDefinitionController extends Controller {
       const schemaDetails = await indySdkAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
       if (credentialDefinitionState.state === 'finished') {
-        const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
-        credentialDefinitionState.credentialDefinitionId = skippedString
+        let credDefId;
+        const indyNamespace = getCredentialDefinitionId.split(':')[2];
+        if ('bcovrin' === indyNamespace) {
+          credDefId = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
+        } else if ('indicio' === indyNamespace) {
+          credDefId = getCredentialDefinitionId.substring('did:indy:indicio:'.length);
+        }
+        credentialDefinitionState.credentialDefinitionId = credDefId;
       }
       return credentialDefinitionState;
     } catch (error) {

@@ -4,23 +4,6 @@ import yargs from 'yargs'
 
 import { runRestAgent } from './cliAgent'
 
-const walletConfig = {
-  // Other properties of walletConfig
-  storage: {
-    type: "string",
-    config: {
-      url: "string",
-      wallet_scheme: "string",
-    },
-    credentials: {
-      account: "string",
-      password: "string",
-      admin_account: "string",
-      admin_password: "string",
-    },
-  },
-};
-
 const parsed = yargs
   .command('start', 'Start AFJ Rest agent')
   .option('label', {
@@ -65,9 +48,7 @@ const parsed = yargs
     demandOption: true,
   })
   .option('indy-ledger', {
-    array: true,
-    default: [],
-    coerce: (items: unknown[]) => items.map((i) => (typeof i === 'string' ? JSON.parse(i) : i)),
+    array: true
   })
   .option('public-did-seed', {
     string: true,
@@ -194,7 +175,7 @@ export async function runCliServer() {
         }
       }
     },
-    // indyLedgers: parsed['indy-ledger'],
+    indyLedgers: parsed['indy-ledger'],
     // publicDidSeed: parsed['public-did-seed'],
     endpoints: parsed.endpoint,
     autoAcceptConnections: parsed['auto-accept-connections'],
@@ -202,7 +183,7 @@ export async function runCliServer() {
     autoAcceptProofs: parsed['auto-accept-proofs'],
     autoAcceptMediationRequests: parsed['auto-accept-mediation-requests'],
     useLegacyDidSovPrefix: parsed['use-legacy-did-sov-prefix'],
-    logLevel: parsed['log-level'],
+    logLevel: 2,
     inboundTransports: parsed['inbound-transport'],
     outboundTransports: parsed['outbound-transport'],
     connectionImageUrl: parsed['connection-image-url'],
