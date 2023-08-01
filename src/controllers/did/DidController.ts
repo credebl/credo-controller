@@ -1,11 +1,9 @@
 import type { DidCreate, DidResolutionResultProps } from '../types'
-import { DidCreateResult, DidOperationStateActionBase, Hasher, JsonTransformer, Key, KeyType, TypedArrayEncoder } from '@aries-framework/core'
+import { KeyType, TypedArrayEncoder, KeyDidCreateOptions } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
-import { IndySdkIndyDidCreateOptions, IndySdkIndyDidRegistrar, IndySdkIndyDidResolver, IndySdkModuleConfig } from '@aries-framework/indy-sdk'
 import { Did, DidRecordExample } from '../examples'
-import * as IndySdk from 'indy-sdk';
 import axios from 'axios';
 
 @Tags('Dids')
@@ -117,6 +115,37 @@ export class DidController extends Controller {
     catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
 
+    }
+  }
+
+  @Post('/create-key-did')
+  public async createDidKey(
+    @Body() didOptions: DidCreate,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const did = await this.agent.dids.create<KeyDidCreateOptions>({
+        method: 'key',
+        options: {
+          keyType: KeyType.Ed25519,
+        },
+        secret: {
+          privateKey: TypedArrayEncoder.fromString(didOptions.seed)
+        }
+      });
+      await this.agent.dids.import({
+        did: `${did.didState.did}`,
+        overwrite: true,
+        privateKeys: [
+          {
+            keyType: KeyType.Ed25519,
+            privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+          },
+        ],
+      });
+      return { did: `${did.didState.did}` };
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
 
