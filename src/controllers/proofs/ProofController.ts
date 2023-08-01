@@ -5,6 +5,7 @@ import {
   CreateProofRequestOptions,
   DidExchangeRole,
   DidExchangeState,
+  HandshakeProtocol,
   JsonEncoder,
   ProofExchangeRecord,
   // IndyProofFormat,
@@ -298,7 +299,23 @@ export class ProofController extends Controller {
         autoAcceptProof: createRequestOptions.autoAcceptProof,
         comment: createRequestOptions.comment
       });
-      return proof;
+      const proofMessage = proof.message;
+      const outOfBandRecord = await this.agent.oob.createInvitation({
+        label: 'test-connection',
+        handshakeProtocols: [HandshakeProtocol.Connections],
+        messages: [proofMessage],
+        autoAcceptConnection: true
+      })
+
+      return {
+        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+          domain: this.agent.config.endpoints[0],
+        }),
+        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+        }),
+        outOfBandRecord: outOfBandRecord.toJSON(),
+      }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
