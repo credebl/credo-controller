@@ -13,7 +13,7 @@ import { injectable } from 'tsyringe'
 import { ConnectionRecordExample, RecordId } from '../examples'
 
 @Tags('Connections')
-@Route('/connections')
+@Route()
 @injectable()
 export class ConnectionController extends Controller {
   private agent: Agent
@@ -33,7 +33,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord[]
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
-  @Get('/')
+  @Get('/connections')
   public async getAllConnections(
     @Query('outOfBandId') outOfBandId?: string,
     @Query('alias') alias?: string,
@@ -75,7 +75,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Get('/:connectionId')
+  @Get('/connections/:connectionId')
   public async getConnectionById(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>
@@ -92,7 +92,7 @@ export class ConnectionController extends Controller {
    *
    * @param connectionId Connection identifier
    */
-  @Delete('/:connectionId')
+  @Delete('/connections/:connectionId')
   public async deleteConnection(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
@@ -119,7 +119,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Post('/:connectionId/accept-request')
+  @Post('/connections/:connectionId/accept-request')
   public async acceptRequest(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
@@ -146,7 +146,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Post('/:connectionId/accept-response')
+  @Post('/connections/:connectionId/accept-response')
   public async acceptResponse(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
@@ -161,5 +161,22 @@ export class ConnectionController extends Controller {
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
+  }
+
+  @Get('/url/:invitationId')
+  public async getInvitation(
+    @Path('invitationId') invitationId: string,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    const outOfBandRecord = await this.agent.oob.findByCreatedInvitationId(invitationId)
+    // connections.oob.findByCreatedInvitationId(req.params.invitationId)
+
+    if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
+      return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
+
+    const invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
+    return invitationJson;
+    // return res.header('content-type', 'application/json').send(invitationJson)
   }
 }
