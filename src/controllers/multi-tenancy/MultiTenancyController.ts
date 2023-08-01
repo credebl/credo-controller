@@ -1,4 +1,4 @@
-import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidExchangeState, JsonTransformer, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, injectable } from '@aries-framework/core'
+import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
 import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
@@ -98,6 +98,63 @@ export class MultiTenancyController extends Controller {
                             return { tenantRecord, did: `did:indy:indicio:${body.did}`, verkey };
                         }
                     })
+            } else if ('key' === createTenantOptions.method) {
+
+                const did = await this.agent.dids.create<KeyDidCreateOptions>({
+                    method: 'key',
+                    options: {
+                        keyType: KeyType.Ed25519,
+                    },
+                    secret: {
+                        privateKey: TypedArrayEncoder.fromString(seed)
+                    }
+                });
+                await this.agent.dids.import({
+                    did: `${did.didState.did}`,
+                    overwrite: true,
+                    privateKeys: [
+                        {
+                            keyType: KeyType.Ed25519,
+                            privateKey: TypedArrayEncoder.fromString(seed)
+                        },
+                    ],
+                });
+                const resolveResult = await this.agent.dids.resolve(`did:key:${did}`);
+                let verkey;
+                if (resolveResult.didDocument?.verificationMethod) {
+                    verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+                }
+                return { tenantRecord, did, verkey };
+
+            } else if ('web' === createTenantOptions.method) {
+
+                const domain = 'credebl.github.io';
+                const did = `did:web:${domain}`;
+                const keyId = `${did}#key-1`;
+
+                const key = await this.agent.wallet.createKey({
+                    keyType: KeyType.Ed25519,
+                    privateKey: TypedArrayEncoder.fromString(seed)
+                });
+
+                const didDocument = new DidDocumentBuilder(did)
+                    .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
+                    .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
+                    .addAuthentication(keyId)
+                    .build();
+
+                await this.agent.dids.import({
+                    did,
+                    overwrite: true,
+                    didDocument
+                });
+
+                const resolveResult = await this.agent.dids.resolve(did);
+                let verkey;
+                if (resolveResult.didDocument?.verificationMethod) {
+                    verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+                }
+                return { tenantRecord, did, verkey };
             }
         } catch (error) {
             if (error instanceof RecordNotFoundError) {

@@ -159,10 +159,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       anoncreds: new AnonCredsModule({
         registries: [new IndySdkAnonCredsRegistry()],
       }),
-      dids: new DidsModule({
-        resolvers: [new IndySdkIndyDidResolver(), new KeyDidResolver()],
-        registrars: [new IndySdkIndyDidRegistrar(), new KeyDidRegistrar()],
-      }),
       connections: new ConnectionsModule({
         autoAcceptConnections: true,
       }),
