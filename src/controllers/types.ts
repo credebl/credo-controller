@@ -307,6 +307,7 @@ export interface DidCreate {
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>,
   seed: string;
+  method?: string;
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
