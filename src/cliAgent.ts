@@ -90,8 +90,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       connectOnStartup: true
     }
   ];
+
   if (afjConfig?.indyLedgers?.includes("bcovrin") && afjConfig?.indyLedgers?.includes("indicio")) {
-    console.log("----", afjConfig?.indyLedgers);
     networkConfig = [
       {
         id: randomUUID(),
@@ -121,6 +121,16 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       }
     ];
   } else if (afjConfig?.indyLedgers?.includes("bcovrin")) {
+    networkConfig = [
+      {
+        id: randomUUID(),
+        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        indyNamespace: 'bcovrin',
+        isProduction: false,
+        connectOnStartup: true
+      }
+    ];
+  } else {
     networkConfig = [
       {
         id: randomUUID(),

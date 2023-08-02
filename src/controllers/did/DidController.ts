@@ -139,7 +139,7 @@ export class DidController extends Controller {
         privateKeys: [
           {
             keyType: KeyType.Ed25519,
-            privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+            privateKey: TypedArrayEncoder.fromString(didOptions.seed)
           },
         ],
       });
