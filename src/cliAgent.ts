@@ -90,7 +90,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       connectOnStartup: true
     }
   ];
-
   if (afjConfig?.indyLedgers?.includes("bcovrin") && afjConfig?.indyLedgers?.includes("indicio")) {
     networkConfig = [
       {
