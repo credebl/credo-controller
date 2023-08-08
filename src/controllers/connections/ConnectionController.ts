@@ -170,13 +170,11 @@ export class ConnectionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     const outOfBandRecord = await this.agent.oob.findByCreatedInvitationId(invitationId)
-    // connections.oob.findByCreatedInvitationId(req.params.invitationId)
 
     if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
       return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
 
     const invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
     return invitationJson;
-    // return res.header('content-type', 'application/json').send(invitationJson)
   }
 }
