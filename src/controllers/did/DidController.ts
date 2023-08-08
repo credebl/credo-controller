@@ -1,5 +1,5 @@
 import type { DidCreate, DidResolutionResultProps } from '../types'
-import { KeyType, TypedArrayEncoder, KeyDidCreateOptions } from '@aries-framework/core'
+import { KeyType, TypedArrayEncoder, KeyDidCreateOptions, DidDocumentBuilder, getEd25519VerificationKey2018 } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
@@ -118,7 +118,7 @@ export class DidController extends Controller {
     }
   }
 
-  @Post('/create-key-did')
+  @Post('/did/key')
   public async createDidKey(
     @Body() didOptions: DidCreate,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
@@ -148,6 +148,40 @@ export class DidController extends Controller {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
+
+  @Post('/did/web')
+  public async createDidWeb(
+    @Body() didOptions: DidCreate,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const domain = 'credebl.github.io';
+      const did = `did:web:${domain}`;
+      const keyId = `${did}#key-1`;
+
+      const key = await this.agent.wallet.createKey({
+        keyType: KeyType.Ed25519,
+        privateKey: TypedArrayEncoder.fromString(didOptions.seed)
+      });
+
+      const didDocument = new DidDocumentBuilder(did)
+        .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
+        .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
+        .addAuthentication(keyId)
+        .build();
+
+      await this.agent.dids.import({
+        did,
+        overwrite: true,
+        didDocument
+      });
+      return { did };
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+
 
   @Get('/')
   public async getDids() {
