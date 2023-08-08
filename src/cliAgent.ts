@@ -1,4 +1,4 @@
-import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, W3cCredentialsModule, KeyDidRegistrar, KeyDidResolver, CacheModule, InMemoryLruCache } from '@aries-framework/core'
+import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, W3cCredentialsModule, KeyDidRegistrar, KeyDidResolver, CacheModule, InMemoryLruCache, WebDidResolver } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
@@ -155,6 +155,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       indySdk: new IndySdkModule({
         indySdk,
         networks: networkConfig
+      }),
+      dids: new DidsModule({
+        registrars: [new IndySdkIndyDidRegistrar(), new KeyDidRegistrar()],
+        resolvers: [new IndySdkIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
       }),
       anoncreds: new AnonCredsModule({
         registries: [new IndySdkAnonCredsRegistry()],
