@@ -20,22 +20,11 @@ export class AgentController extends Controller {
    */
   @Get('/')
   public async getAgentInfo(): Promise<AgentInfo> {
-    const did = '2XKsaGBrgRoAqNcSycUvKK';
-    const publicDid = await this.agent.dids.import({
-      did: `did:indy:bcovrin:${did}`,
-      privateKeys: [
-        {
-          keyType: KeyType.Ed25519,
-          privateKey: TypedArrayEncoder.fromString('testseed000000000000001100000001'),
-        }
-      ],
-      overwrite: true
-    })
     return {
       label: this.agent.config.label,
       endpoints: this.agent.config.endpoints,
       isInitialized: this.agent.isInitialized,
-      publicDid
+      publicDid: undefined
     }
   }
 }
