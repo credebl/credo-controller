@@ -293,6 +293,7 @@ export interface ResolvedDid {
 
 export interface DidCreate {
   seed: string;
+  domain?: string;
   method?: string;
   did?: string;
   options?: DidRegistrationExtraOptions;

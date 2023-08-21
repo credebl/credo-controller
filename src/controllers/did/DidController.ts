@@ -122,7 +122,7 @@ export class DidController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const domain = 'credebl.github.io';
+      const domain = didOptions.domain ? didOptions.domain : 'credebl.github.io';
       const did = `did:web:${domain}`;
       const keyId = `${did}#key-1`;
 
