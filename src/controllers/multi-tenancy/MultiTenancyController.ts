@@ -189,6 +189,31 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Post('/create-legacy-invitation/:tenantId')
+    public async createLegacyInvitation(
+        @Res() internalServerError: TsoaResponse<500, { message: string }>,
+        @Path("tenantId") tenantId: string,
+        @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
+    ) {
+        try {
+            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+            const { outOfBandRecord, invitation } = await tenantAgent.oob.createLegacyInvitation(config)
+
+            return {
+                invitationUrl: invitation.toUrl({
+                    domain: this.agent.config.endpoints[0],
+                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                }),
+                invitation: invitation.toJSON({
+                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                }),
+                outOfBandRecord: outOfBandRecord.toJSON(),
+            }
+        } catch (error) {
+            return internalServerError(500, { message: `something went wrong: ${error}` })
+        }
+    }
+
     @Post('/receive-invitation/:tenantId')
     public async receiveInvitation(
         @Body() invitationRequest: ReceiveInvitationProps,
@@ -270,6 +295,22 @@ export class MultiTenancyController extends Controller {
 
             return connections.map((c: any) => c.toJSON())
         }
+    }
+
+    @Get('/url/:tenantId/:invitationId')
+    public async getInvitation(
+        @Path('invitationId') invitationId: string,
+        @Path('tenantId') tenantId: string,
+        @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    ) {
+        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        const outOfBandRecord = await tenantAgent.oob.findByCreatedInvitationId(invitationId)
+
+        if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
+            return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
+
+        const invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
+        return invitationJson;
     }
 
     @Post('/schema/:tenantId')
