@@ -1,11 +1,11 @@
-import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
+import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, ConnectionRecordProps, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
 import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
 import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
-import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample } from '../examples';
+import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples';
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
@@ -165,6 +165,22 @@ export class MultiTenancyController extends Controller {
             return internalServerError(500, { message: `Something went wrong: ${error}` });
         }
     }
+
+    @Example<ConnectionRecordProps>(ConnectionRecordExample)
+    @Get('/connections/:connectionId/:tenantId')
+    public async getConnectionById(
+        @Path("tenantId") tenantId: string,
+        @Path('connectionId') connectionId: RecordId,
+        @Res() notFoundError: TsoaResponse<404, { reason: string }>
+    ) {
+        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        const connection = await tenantAgent.connections.findById(connectionId)
+
+        if (!connection) return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+
+        return connection.toJSON()
+    }
+
 
     @Post('/create-invitation/:tenantId')
     public async createInvitation(
