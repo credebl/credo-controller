@@ -1,4 +1,4 @@
-import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, ConnectionRecordProps, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
+import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, ConnectionRecordProps, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, HandshakeProtocol, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
 import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
@@ -526,13 +526,34 @@ export class MultiTenancyController extends Controller {
     ) {
         try {
             const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+            const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
+            if (linkSecretIds.length === 0) {
+                await tenantAgent.modules.anoncreds.createLinkSecret()
+            }
+
             const offerOob = await tenantAgent.credentials.createOffer({
                 protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
                 credentialFormats: createOfferOptions.credentialFormats,
                 autoAcceptCredential: createOfferOptions.autoAcceptCredential,
                 comment: createOfferOptions.comment
             });
-            return offerOob;
+
+            const credentialMessage = offerOob.message;
+            const outOfBandRecord = await tenantAgent.oob.createInvitation({
+                label: 'test-connection',
+                handshakeProtocols: [HandshakeProtocol.Connections],
+                messages: [credentialMessage],
+                autoAcceptConnection: true
+            })
+            return {
+                invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+                    domain: this.agent.config.endpoints[0],
+                }),
+                invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                }),
+                outOfBandRecord: outOfBandRecord.toJSON(),
+            }
         } catch (error) {
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
@@ -650,7 +671,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
-    @Post('/proofs/create-request/:tenantId')
+    @Post('/proofs/create-request-oob/:tenantId')
     public async createRequest(
         @Path('tenantId') tenantId: string,
         @Body() createRequestOptions: CreateProofRequestOobOptions,
@@ -667,7 +688,24 @@ export class MultiTenancyController extends Controller {
                 autoAcceptProof: createRequestOptions.autoAcceptProof,
                 comment: createRequestOptions.comment
             });
-            return proof;
+
+            const proofMessage = proof.message;
+            const outOfBandRecord = await tenantAgent.oob.createInvitation({
+                label: 'test-connection',
+                handshakeProtocols: [HandshakeProtocol.Connections],
+                messages: [proofMessage],
+                autoAcceptConnection: true
+            })
+
+            return {
+                invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+                    domain: this.agent.config.endpoints[0],
+                }),
+                invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                }),
+                outOfBandRecord: outOfBandRecord.toJSON(),
+            }
         } catch (error) {
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }

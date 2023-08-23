@@ -206,18 +206,6 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const issuerId = 'did:key:z6Mkgg342Ycpuk263R9d8Aq6MUaxPn1DDeHyGo38EefXmgDL'
-      await this.agent.dids.import({
-        did: issuerId,
-        overwrite: true,
-        privateKeys: [
-          {
-            keyType: KeyType.Ed25519,
-            privateKey: TypedArrayEncoder.fromString('testseed000000000000000000000001'),
-          },
-        ],
-      })
-      const dids = await this.agent.dids.getCreatedDids()
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
@@ -230,27 +218,12 @@ export class CredentialController extends Controller {
       });
 
       const credentialMessage = offerOob.message;
-
-      // const proof = await this.agent.proofs.createRequest({
-      //   protocolVersion: outOfBandOption.proofRequest.protocolVersion as ProofsProtocolVersionType<[]>,
-      //   proofFormats: outOfBandOption.proofRequest.proofFormats,
-      //   goalCode: outOfBandOption.proofRequest.goalCode,
-      //   willConfirm: outOfBandOption.proofRequest.willConfirm,
-      //   parentThreadId: outOfBandOption.proofRequest.parentThreadId,
-      //   autoAcceptProof: outOfBandOption.proofRequest.autoAcceptProof,
-      //   comment: outOfBandOption.proofRequest.comment
-      // });
-      console.log('credMessage::::::::', JSON.stringify(credentialMessage, null, 2));
-      // const proofMessage = proof.message;
-      // console.log(JSON.stringify(proof.message));
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: 'test-connection',
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [credentialMessage],
         autoAcceptConnection: true
       })
-
-      // console.log("createInvitation---", JSON.stringify(outOfBandRecord))
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
           domain: this.agent.config.endpoints[0],
@@ -264,121 +237,6 @@ export class CredentialController extends Controller {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
-
-
-  // @Post('/create-offer-jsonld')
-  // public async createOfferJsonld(
-  //   @Body() createOfferOptions: any,
-  //   @Res() internalServerError: TsoaResponse<500, { message: string }>
-  // ) {
-  //   try {
-  //     const jsonLdFormatService = new JsonLdCredentialFormatService();
-  //     const { attachment, previewAttributes, format } = await jsonLdFormatService.createOffer(this.agent.context, {
-  //       credentialRecord: await this.mockCredentialRecord({ connectionId: createOfferOptions.credentialRecord.connectionId }),
-  //       credentialFormats: { jsonld: { credential: createOfferOptions.credentialFormats, options: createOfferOptions.options } },
-  //     });
-  //     return { attachment, previewAttributes, format };
-  //     // const { attachment, previewAttributes, format } = await jsonLdFormatService.createOffer(this.agent.context, {
-  //     //   credentialFormats: {
-  //     //     jsonld: signCredentialOptions,
-  //     //   },
-  //     //   credentialRecord: await this.mockCredentialRecord(),
-  //     // })
-  //     // const inputDocAsJson: JsonCredential = {
-  //     //   '@context': [CREDENTIALS_CONTEXT_V1_URL, 'https://www.w3.org/2018/credentials/examples/v1'],
-  //     //   type: ['VerifiableCredential', 'UniversityDegreeCredential'],
-  //     //   issuer: 'did:key:z6Mkgg342Ycpuk263R9d8Aq6MUaxPn1DDeHyGo38EefXmgDL',
-  //     //   issuanceDate: '2017-10-22T12:23:48Z',
-  //     //   credentialSubject: {
-  //     //     degree: {
-  //     //       type: 'BachelorDegree',
-  //     //       name: 'Bachelor of Science and Arts',
-  //     //     },
-  //     //     alumniOf: 'oops',
-  //     //   },
-  //     // }
-  //     // const signCredentialOptions: JsonLdCredentialDetailFormat = {
-  //     //   credential: inputDocAsJson,
-  //     //   options: {
-  //     //     proofPurpose: 'assertionMethod',
-  //     //     proofType: 'Ed25519Signature2018',
-  //     //   },
-  //     // }
-
-  //     // const jsonld = {
-  //     //   credentialFormats: {
-  //     //     jsonld: signCredentialOptions,
-  //     //   },
-  //     //   credentialRecord: await this.mockCredentialRecord(),
-  //     // }
-
-  //     // return { attachment, previewAttributes, format };
-  //   } catch (error) {
-  //     return internalServerError(500, { message: `something went wrong: ${error}` })
-  //   }
-  // }
-
-  // async mockCredentialRecord(
-  //   {
-  //     state,
-  //     threadId,
-  //     connectionId,
-  //     tags,
-  //     id,
-  //     credentialAttributes,
-  //   }: {
-  //     state?: CredentialState
-  //     tags?: CustomCredentialTags
-  //     threadId?: string
-  //     connectionId?: string
-  //     id?: string
-  //     credentialAttributes?: CredentialPreviewAttribute[]
-  //   } = {}
-  // ) {
-  //   const credentialPreview = V2CredentialPreview.fromRecord({
-  //     name: 'John',
-  //     age: '99',
-  //   })
-  //   // const credentialRecord = new CredentialExchangeRecord({
-  //   //   id,
-  //   //   credentialAttributes: credentialAttributes || credentialPreview.attributes,
-  //   //   state: state || CredentialState.OfferSent,
-  //   //   threadId: threadId ?? 'add7e1a0-109e-4f37-9caa-cfd0fcdfe540',
-  //   //   connectionId: connectionId ?? '123',
-  //   //   tags,
-  //   //   protocolVersion: 'v2',
-  //   // })
-
-  //   console.log("credentialRecord-----", credentialRecord)
-  //   return credentialRecord
-  // }
-
-  /**
-   * Initiate a new credential exchange as issuer by sending a offer credential message
-   * to the connection with the specified connection id.
-   *
-   * @param options
-   * @returns CredentialExchangeRecord
-   */
-  // @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
-  // @Post('/offer-credential')
-  // public async offerCredential(
-  //   @Body() options: OfferCredentialOptions,
-  //   @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-  //   @Res() internalServerError: TsoaResponse<500, { message: string }>
-  // ) {
-  //   try {
-  //     const credential = await this.v1CredentialProtocol.offerCredential(options)
-  //     return credential.toJSON()
-  //   } catch (error) {
-  //     if (error instanceof RecordNotFoundError) {
-  //       return notFoundError(404, {
-  //         reason: `connection with connection record id "${options.connectionId}" not found.`,
-  //       })
-  //     }
-  //     return internalServerError(500, { message: `something went wrong: ${error}` })
-  //   }
-  // }
 
   /**
    * Accept a credential offer as holder by sending an accept offer message

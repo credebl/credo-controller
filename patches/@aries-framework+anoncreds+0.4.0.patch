@@ -1,0 +1,53 @@
+diff --git a/node_modules/@aries-framework/anoncreds/build/protocols/credentials/v1/V1CredentialProtocol.js b/node_modules/@aries-framework/anoncreds/build/protocols/credentials/v1/V1CredentialProtocol.js
+index 7b8209d..508ac92 100644
+--- a/node_modules/@aries-framework/anoncreds/build/protocols/credentials/v1/V1CredentialProtocol.js
++++ b/node_modules/@aries-framework/anoncreds/build/protocols/credentials/v1/V1CredentialProtocol.js
+@@ -495,7 +495,7 @@ class V1CredentialProtocol extends core_1.BaseCredentialProtocol {
+         // only depends on the public api, rather than the internal API (this helps with breaking changes)
+         const connectionService = agentContext.dependencyManager.resolve(core_1.ConnectionService);
+         agentContext.config.logger.debug(`Processing credential request with id ${requestMessage.id}`);
+-        const credentialRecord = await this.getByThreadAndConnectionId(messageContext.agentContext, requestMessage.threadId, connection === null || connection === void 0 ? void 0 : connection.id);
++        const credentialRecord = await this.getByThreadAndConnectionId(messageContext.agentContext, requestMessage.threadId);
+         agentContext.config.logger.trace('Credential record found when processing credential request', credentialRecord);
+         const proposalMessage = await didCommMessageRepository.findAgentMessage(messageContext.agentContext, {
+             associatedRecordId: credentialRecord.id,
+@@ -591,7 +591,7 @@ class V1CredentialProtocol extends core_1.BaseCredentialProtocol {
+         // TODO: with this method, we should update the credential protocol to use the ConnectionApi, so it
+         // only depends on the public api, rather than the internal API (this helps with breaking changes)
+         const connectionService = agentContext.dependencyManager.resolve(core_1.ConnectionService);
+-        const credentialRecord = await this.getByThreadAndConnectionId(messageContext.agentContext, issueMessage.threadId, connection === null || connection === void 0 ? void 0 : connection.id);
++        const credentialRecord = await this.getByThreadAndConnectionId(messageContext.agentContext, issueMessage.threadId);
+         const requestCredentialMessage = await didCommMessageRepository.findAgentMessage(messageContext.agentContext, {
+             associatedRecordId: credentialRecord.id,
+             messageClass: messages_1.V1RequestCredentialMessage,
+@@ -660,7 +660,7 @@ class V1CredentialProtocol extends core_1.BaseCredentialProtocol {
+         // TODO: with this method, we should update the credential protocol to use the ConnectionApi, so it
+         // only depends on the public api, rather than the internal API (this helps with breaking changes)
+         const connectionService = agentContext.dependencyManager.resolve(core_1.ConnectionService);
+-        const credentialRecord = await this.getByThreadAndConnectionId(messageContext.agentContext, ackMessage.threadId, connection === null || connection === void 0 ? void 0 : connection.id);
++        const credentialRecord = await this.getByThreadAndConnectionId(messageContext.agentContext, ackMessage.threadId);
+         const requestCredentialMessage = await didCommMessageRepository.getAgentMessage(messageContext.agentContext, {
+             associatedRecordId: credentialRecord.id,
+             messageClass: messages_1.V1RequestCredentialMessage,
+diff --git a/node_modules/@aries-framework/anoncreds/build/protocols/proofs/v1/V1ProofProtocol.js b/node_modules/@aries-framework/anoncreds/build/protocols/proofs/v1/V1ProofProtocol.js
+index 77bbe5c..e47ede0 100644
+--- a/node_modules/@aries-framework/anoncreds/build/protocols/proofs/v1/V1ProofProtocol.js
++++ b/node_modules/@aries-framework/anoncreds/build/protocols/proofs/v1/V1ProofProtocol.js
+@@ -505,7 +505,7 @@ class V1ProofProtocol extends core_1.BaseProofProtocol {
+         // TODO: with this method, we should update the credential protocol to use the ConnectionApi, so it
+         // only depends on the public api, rather than the internal API (this helps with breaking changes)
+         const connectionService = agentContext.dependencyManager.resolve(core_1.ConnectionService);
+-        const proofRecord = await this.getByThreadAndConnectionId(agentContext, presentationMessage.threadId, connection === null || connection === void 0 ? void 0 : connection.id);
++        const proofRecord = await this.getByThreadAndConnectionId(agentContext, presentationMessage.threadId);
+         const proposalMessage = await didCommMessageRepository.findAgentMessage(agentContext, {
+             associatedRecordId: proofRecord.id,
+             messageClass: messages_1.V1ProposePresentationMessage,
+@@ -565,7 +565,7 @@ class V1ProofProtocol extends core_1.BaseProofProtocol {
+         // TODO: with this method, we should update the credential protocol to use the ConnectionApi, so it
+         // only depends on the public api, rather than the internal API (this helps with breaking changes)
+         const connectionService = agentContext.dependencyManager.resolve(core_1.ConnectionService);
+-        const proofRecord = await this.getByThreadAndConnectionId(agentContext, presentationAckMessage.threadId, connection === null || connection === void 0 ? void 0 : connection.id);
++        const proofRecord = await this.getByThreadAndConnectionId(agentContext, presentationAckMessage.threadId);
+         const previousReceivedMessage = await didCommMessageRepository.getAgentMessage(agentContext, {
+             associatedRecordId: proofRecord.id,
+             messageClass: messages_1.V1RequestPresentationMessage,

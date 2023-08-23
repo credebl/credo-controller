@@ -83,30 +83,6 @@ export class ProofController extends Controller {
   }
 
   /**
-   * Deletes a proof record in the proof repository.
-   *
-   * @param proofRecordId
-   */
-  // @Delete('/:proofRecordId')
-  // public async deleteProof(
-  //   @Path('proofRecordId') proofRecordId: RecordId,
-  //   @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-  //   @Res() internalServerError: TsoaResponse<500, { message: string }>
-  // ) {
-  //   try {
-  //     this.setStatus(204)
-  //     await this.v1ProofProtocol.delete(proofRecordId)
-  //   } catch (error) {
-  //     if (error instanceof RecordNotFoundError) {
-  //       return notFoundError(404, {
-  //         reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-  //       })
-  //     }
-  //     return internalServerError(500, { message: `something went wrong: ${error}` })
-  //   }
-  // }
-
-  /**
    * Initiate a new presentation exchange as prover by sending a presentation proposal request
    * to the connection with the specified connection id.
    *
@@ -173,90 +149,6 @@ export class ProofController extends Controller {
     }
   }
 
-  // /**
-  //  * Creates a presentation request not bound to any proposal or existing connection
-  //  *
-  //  * @param request
-  //  * @returns ProofRequestMessageResponse
-  //  */
-  // @Post('/request-outofband-proof')
-  // // @Example<{ proofUrl: string; proofRecord: ProofExchangeRecordProps }>({
-  // //   proofUrl: 'https://example.com/proof-url',
-  // //   proofRecord: ProofRecordExample,
-  // // })
-  // public async requestProofOutOfBand(@Body() request: RequestProofOptions) {
-  //   const requestProofOutOfBandRequestPayload: CreateProofRequestOptions<
-  //     [IndyProofFormat],
-  //     [V1ProofService, V2ProofService<[IndyProofFormat]>]
-  //   > = {
-  //     protocolVersion: request.protocolVersion,
-  //     proofFormats: request.proofFormats,
-  //     comment: request.comment,
-  //     autoAcceptProof: request.autoAcceptProof,
-  //     parentThreadId: request.parentThreadId,
-  //   }
-  //   const { connectionId, proofRequestOptions, ...config } = request
-
-  //   const proof = await this.agent.proofs.createRequest({
-  //     protocolVersion: config.protocolVersion,
-  //     comment: config.comment,
-  //     proofFormats: {
-  //       indy: {
-  //         name: 'proof-request',
-  //         version: '1.0',
-  //         nonce: await this.agent.wallet.generateNonce(),
-  //         requestedAttributes: proofRequestOptions.requestedAttributes,
-  //         requestedPredicates: proofRequestOptions.requestedPredicates,
-  //       },
-  //     },
-  //     autoAcceptProof: request.autoAcceptProof,
-  //   })
-
-  //   return {
-  //     proofUrl: `${this.agent.config.endpoints[0]}/?d_m=${JsonEncoder.toBase64URL(
-  //       proof.message.toJSON({ useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed })
-  //     )}`,
-  //     proofRecord: proof.proofRecord,
-  //   }
-  // }
-
-  /**
-   * Creates a presentation request bound to existing connection
-   *
-   * @param request
-   * @returns ProofRecord
-   */
-  // @Post('/request-proof')
-  // // @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  // public async requestProof(
-  //   @Body() request: RequestProofOptions,
-  //   @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-  //   @Res() internalServerError: TsoaResponse<500, { message: string }>
-  // ) {
-  //   // const { connectionId, proofRequestOptions, ...config } = request
-
-  //   try {
-  //     const requestProofPayload: RequestProofOptions = {
-  //       protocolVersion: request.protocolVersion,
-  //       proofFormats: request.proofFormats,
-  //       comment: request.comment,
-  //       autoAcceptProof: request.autoAcceptProof,
-  //       parentThreadId: request.parentThreadId,
-  //       connectionId: request.connectionId,
-  //     }
-  //     const proof = await this.agent.proofs.requestProof(requestProofPayload)
-
-  //     return proof.toJSON()
-  //   } catch (error) {
-  //     if (error instanceof RecordNotFoundError) {
-  //       return notFoundError(404, {
-  //         reason: `connection with connectionId "${request.connectionId}" not found.`,
-  //       })
-  //     }
-  //     return internalServerError(500, { message: `something went wrong: ${error}` })
-  //   }
-  // }
-
   @Post('/request-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async requestProof(
@@ -284,7 +176,7 @@ export class ProofController extends Controller {
     }
   }
 
-  @Post('create-request')
+  @Post('create-request-oob')
   public async createRequest(
     @Body() createRequestOptions: CreateProofRequestOobOptions,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
