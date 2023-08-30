@@ -285,4 +285,24 @@ export class ProofController extends Controller {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
+
+  @Get('/:proofRecordId/form-data')
+  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  public async proofFormData(
+    @Path('proofRecordId') proofRecordId: string,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const proof = await this.agent.proofs.getFormatData(proofRecordId)
+      return proof
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, {
+          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
+        })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
 }

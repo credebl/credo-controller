@@ -643,6 +643,28 @@ export class MultiTenancyController extends Controller {
         return proofs.map((proof: any) => proof.toJSON())
     }
 
+    @Get('/form-data/:tenantId/:proofRecordId')
+    @Example<ProofExchangeRecordProps>(ProofRecordExample)
+    public async proofFormData(
+        @Path('proofRecordId') proofRecordId: string,
+        @Path('tenantId') tenantId: string,
+        @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+        @Res() internalServerError: TsoaResponse<500, { message: string }>
+    ) {
+        try {
+            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+            const proof = await tenantAgent.proofs.getFormatData(proofRecordId)
+            return proof
+        } catch (error) {
+            if (error instanceof RecordNotFoundError) {
+                return notFoundError(404, {
+                    reason: `proof with proofRecordId "${proofRecordId}" not found.`,
+                })
+            }
+            return internalServerError(500, { message: `something went wrong: ${error}` })
+        }
+    }
+
     @Post('/proofs/request-proof/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async requestProof(
