@@ -164,18 +164,18 @@ export async function runCliServer() {
       storage: {
         type: parsed['wallet-type'],
         config: {
-          url: parsed['wallet-url'],
-          wallet_scheme: parsed['wallet-scheme'],
+          host: parsed['wallet-url'],
+          connectTimeout: 10
         },
         credentials: {
           account: parsed["wallet-account"],
           password: parsed["wallet-password"],
-          admin_account: parsed["wallet-admin-account"],
-          admin_password: parsed["wallet-admin-password"],
+          adminAccount: parsed["wallet-admin-account"],
+          adminPassword: parsed["wallet-admin-password"],
         }
       }
     },
-    indyLedgers: parsed['indy-ledger'],
+    indyLedger: parsed['indy-ledger'],
     // publicDidSeed: parsed['public-did-seed'],
     endpoints: parsed.endpoint,
     autoAcceptConnections: parsed['auto-accept-connections'],
