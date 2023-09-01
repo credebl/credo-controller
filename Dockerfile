@@ -27,16 +27,18 @@ RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
 
 # Install yarn seperately due to `no-install-recommends` to skip nodejs install 
 RUN apt-get install -y --no-install-recommends yarn
-
+ 
+RUN yarn global add patch-package
 # AFJ specifc setup
 WORKDIR /www
 
-COPY /apps/agent-provisioning/AFJ/afj-controller/bin ./bin
-COPY /apps/agent-provisioning/AFJ/afj-controller/package.json package.json
+COPY bin ./bin
+COPY patches ./patches
+COPY package.json package.json
 RUN yarn install --production
 
-COPY /apps/agent-provisioning/AFJ/afj-controller/build ./build
-COPY /apps/agent-provisioning/AFJ/afj-controller/libindystrgpostgres.so /usr/lib/
-COPY /apps/agent-provisioning/AFJ/afj-controller/libindystrgpostgres.so /usr/local/lib/
+COPY build ./build
+COPY libindystrgpostgres.so /usr/lib/
+COPY libindystrgpostgres.so /usr/local/lib/
 
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
