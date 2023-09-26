@@ -4,8 +4,8 @@ import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaRespo
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
 import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
-import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples';
+import { IndyVdrAnonCredsRegistry } from '@aries-framework/indy-vdr'
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
@@ -364,9 +364,7 @@ export class MultiTenancyController extends Controller {
                 if ('bcovrin' === indyNamespace) {
                     schemaId = getSchemaId.substring('did:indy:bcovrin:'.length);
                 } else if ('indicio' === indyNamespace) {
-                    console.log("indyNamespace---", indyNamespace)
                     schemaId = getSchemaId.substring('did:indy:indicio:'.length);
-                    console.log("schemaId---", schemaId)
                 }
 
                 schemaState.schemaId = schemaId
@@ -440,8 +438,8 @@ export class MultiTenancyController extends Controller {
                 },
                 options: {}
             })
-            const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
-            const schemaDetails = await indySdkAnonCredsRegistry.getSchema(tenantAgent.context, credentialDefinitionRequest.schemaId)
+            const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
+            const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(tenantAgent.context, credentialDefinitionRequest.schemaId)
             if (!credentialDefinitionState?.credentialDefinition) {
                 throw new Error('')
             }
@@ -920,8 +918,8 @@ export class MultiTenancyController extends Controller {
             },
             options: {}
         })
-        const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
-        const schemaDetails = await indySdkAnonCredsRegistry.getSchema(tenantAgent.context, schemaId)
+        const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
+        const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(tenantAgent.context, schemaId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
         if (credentialDefinitionState.state === 'finished') {
             const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);

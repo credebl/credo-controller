@@ -2,10 +2,8 @@ import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsMo
 import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
-import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin, WsInboundTransport } from '@aries-framework/node'
+import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
 import { readFile } from 'fs/promises'
-import { IndySdkAnonCredsRegistry, IndySdkIndyDidResolver, IndySdkModule, IndySdkIndyDidRegistrar, IndySdkPoolConfig } from '@aries-framework/indy-sdk'
-import indySdk from 'indy-sdk'
 import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
 
 import { setupServer } from './server'
@@ -13,9 +11,14 @@ import { TsLogger } from './utils/logger'
 import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { randomUUID } from 'crypto'
 import { TenantsModule } from '@aries-framework/tenants'
-import { IndySdkPostgresWalletStorageConfig, IndySdkPostgresWalletStorageCredentials } from '@aries-framework/node/build/PostgresPlugin'
 import { JsonLdCredentialFormatService } from '@aries-framework/core'
 import { W3cCredentialSchema, W3cCredentialsApi, W3cCredentialService, W3cJsonLdVerifyCredentialOptions } from '@aries-framework/core'
+import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
+import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidResolver, IndyVdrModule, IndyVdrPoolConfig, IndyVdrIndyDidRegistrar } from '@aries-framework/indy-vdr'
+import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
+import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
+import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -47,8 +50,8 @@ export interface AriesRestConfig {
   outboundTransports?: Transports[]
   autoAcceptMediationRequests?: boolean
   connectionImageUrl?: string
-  tenancy?: boolean,
-  indyLedgers?: string[],
+  tenancy?: boolean
+  indyLedger?: any[]
   webhookUrl?: string
   adminPort: number
 }
@@ -75,32 +78,28 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     logger
   };
 
-  loadIndySdkPostgresPlugin(walletConfig.storage?.config as IndySdkPostgresWalletStorageConfig, walletConfig.storage?.credentials as IndySdkPostgresWalletStorageCredentials);
-
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
 
-  let networkConfig: IndySdkPoolConfig[] = [
+  let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]] = [
     {
-      id: '',
       genesisTransactions: '',
       indyNamespace: '',
       isProduction: false,
       connectOnStartup: true
     }
   ];
-  if (afjConfig?.indyLedgers?.includes("bcovrin") && afjConfig?.indyLedgers?.includes("indicio")) {
+
+  if (afjConfig?.indyLedger?.includes("bcovrin") && afjConfig?.indyLedger?.includes("indicio")) {
     networkConfig = [
       {
-        id: randomUUID(),
         genesisTransactions: BCOVRIN_TEST_GENESIS,
         indyNamespace: 'bcovrin',
         isProduction: false,
         connectOnStartup: true
       },
       {
-        id: randomUUID(),
         genesisTransactions: INDICIO_TEST_GENESIS,
         indyNamespace: 'indicio',
         isProduction: false,
@@ -108,10 +107,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
       }
     ];
-  } else if (afjConfig?.indyLedgers?.includes("indicio")) {
+  } else if (afjConfig?.indyLedger?.includes("indicio")) {
     networkConfig = [
       {
-        id: randomUUID(),
         genesisTransactions: INDICIO_TEST_GENESIS,
         indyNamespace: 'indicio',
         isProduction: false,
@@ -119,10 +117,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
       }
     ];
-  } else if (afjConfig?.indyLedgers?.includes("bcovrin")) {
+  } else if (afjConfig?.indyLedger?.includes("bcovrin")) {
     networkConfig = [
       {
-        id: randomUUID(),
         genesisTransactions: BCOVRIN_TEST_GENESIS,
         indyNamespace: 'bcovrin',
         isProduction: false,
@@ -132,7 +129,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   } else {
     networkConfig = [
       {
-        id: randomUUID(),
         genesisTransactions: BCOVRIN_TEST_GENESIS,
         indyNamespace: 'bcovrin',
         isProduction: false,
@@ -152,16 +148,27 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           }),
         }
         : {}),
-      indySdk: new IndySdkModule({
-        indySdk,
+
+      askar: new AskarModule({
+        ariesAskar,
+        multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet, 
+      }),
+
+      indyVdr: new IndyVdrModule({
+        indyVdr,
         networks: networkConfig
       }),
+
       dids: new DidsModule({
-        registrars: [new IndySdkIndyDidRegistrar(), new KeyDidRegistrar()],
-        resolvers: [new IndySdkIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
+        registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
+        resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
       }),
       anoncreds: new AnonCredsModule({
-        registries: [new IndySdkAnonCredsRegistry()],
+        registries: [new IndyVdrAnonCredsRegistry()],
+      }),
+      // Use anoncreds-rs as anoncreds backend
+      _anoncreds: new AnonCredsRsModule({
+        anoncreds,
       }),
       connections: new ConnectionsModule({
         autoAcceptConnections: true,
