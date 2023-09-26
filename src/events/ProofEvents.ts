@@ -9,7 +9,7 @@ import { sendWebhookEvent } from './WebhookEvent'
 export const proofEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
     const record = event.payload.proofRecord
-    const body = record.toJSON()
+    const body = { ...record.toJSON(), ...event.metadata }
 
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
