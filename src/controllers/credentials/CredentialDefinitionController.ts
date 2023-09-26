@@ -1,5 +1,4 @@
 import type { SchemaId } from '../examples'
-import type { CredDef } from 'indy-sdk'
 import { AnonCredsApi, AnonCredsError, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 // import { error}
 
@@ -7,9 +6,8 @@ import { AnonCredsApi, AnonCredsError, getUnqualifiedCredentialDefinitionId } fr
 import { Agent, AriesFrameworkError } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
-
+import { IndyVdrAnonCredsRegistry } from '@aries-framework/indy-vdr'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
-import { IndySdkAnonCredsRegistry } from '@aries-framework/indy-sdk'
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
@@ -27,7 +25,7 @@ export class CredentialDefinitionController extends Controller {
    * @param credentialDefinitionId
    * @returns CredDef
    */
-  @Example<CredDef>(CredentialDefinitionExample)
+  @Example(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
   public async getCredentialDefinitionById(
     @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
@@ -59,7 +57,7 @@ export class CredentialDefinitionController extends Controller {
    * @param credentialDefinitionRequest
    * @returns CredDef
    */
-  @Example<CredDef>(CredentialDefinitionExample)
+  @Example(CredentialDefinitionExample)
   @Post('/')
   public async createCredentialDefinition(
     @Body()
@@ -82,8 +80,8 @@ export class CredentialDefinitionController extends Controller {
         options: {}
       })
 
-      const indySdkAnonCredsRegistry = new IndySdkAnonCredsRegistry()
-      const schemaDetails = await indySdkAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
+      const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
+      const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
       if (credentialDefinitionState.state === 'finished') {
         let credDefId;

@@ -1,12 +1,10 @@
 import type { Version } from '../examples'
-import type { Schema } from 'indy-sdk'
 import { AnonCredsError, AnonCredsApi, getUnqualifiedSchemaId } from '@aries-framework/anoncreds'
 import { Agent, AriesFrameworkError, BaseAgent } from '@aries-framework/core'
 // import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 // import { isIndyError } from '@aries-framework/core/build/utils/indyError'
 import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
-
 import { SchemaId, SchemaExample } from '../examples'
 
 
@@ -28,7 +26,7 @@ export class SchemaController {
    * @param schemaId
    * @returns Schema
    */
-  @Example<Schema>(SchemaExample)
+  @Example(SchemaExample)
   @Get('/:schemaId')
   public async getSchemaById(
     @Path('schemaId') schemaId: SchemaId,
@@ -67,7 +65,7 @@ export class SchemaController {
    * @param schema
    * @returns schema
    */
-  @Example<Schema>(SchemaExample)
+  @Example(SchemaExample)
   @Post('/')
   public async createSchema(
     @Body()
