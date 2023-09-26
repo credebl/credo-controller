@@ -137,8 +137,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ];
   }
 
-  console.log("networkConfig---",networkConfig);
-
   const agent = new Agent({
     config: agentConfig,
     modules: {
