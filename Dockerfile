@@ -32,8 +32,6 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
 RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
     libindy
 
-RUN apt-get install yarn -y
-
 # Install yarn seperately due to `no-install-recommends` to skip nodejs install 
 RUN apt-get install -y --no-install-recommends yarn
  
