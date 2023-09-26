@@ -18,11 +18,6 @@ RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable"
 # RUN /bin/bash -c "source /root/.nvm/nvm.sh && nvm install 18 && nvm use 18"
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get install -y nodejs
-
-# Verify the Node.js and npm installation
-RUN node -v
-RUN npm -v
 
 # yarn
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
@@ -30,7 +25,8 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
 
 # install depdencies
 RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
-    libindy
+    libindy \
+    nodejs
 
 # Install yarn seperately due to `no-install-recommends` to skip nodejs install 
 RUN apt-get install -y --no-install-recommends yarn
