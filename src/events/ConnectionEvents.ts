@@ -9,7 +9,7 @@ import { sendWebhookEvent } from './WebhookEvent'
 export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ConnectionEventTypes.ConnectionStateChanged, async (event: ConnectionStateChangedEvent) => {
     const record = event.payload.connectionRecord
-    const body = record.toJSON()
+    const body = { ...record.toJSON(), ...event.metadata }
 
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
