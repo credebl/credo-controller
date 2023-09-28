@@ -84,13 +84,15 @@ export class CredentialDefinitionController extends Controller {
       const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
       if (credentialDefinitionState.state === 'finished') {
+
+        const indyNamespace = credentialDefinitionRequest.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
         let credDefId;
-        const indyNamespace = getCredentialDefinitionId.split(':')[2];
-        if ('bcovrin' === indyNamespace) {
-          credDefId = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
-        } else if ('indicio' === indyNamespace) {
-          credDefId = getCredentialDefinitionId.substring('did:indy:indicio:'.length);
+        if (indyNamespace) {
+          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}`.length);
+        } else {
+          throw new Error('No indyNameSpace found')
         }
+
         credentialDefinitionState.credentialDefinitionId = credDefId;
       }
       return credentialDefinitionState;

@@ -19,6 +19,7 @@ import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidResolver, IndyVdrModule, IndyVd
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+import axios from 'axios';
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -36,9 +37,14 @@ const outboundTransportMapping = {
   ws: WsOutboundTransport,
 } as const
 
+interface indyLedger {
+  genesisTransactions: string
+  indyNamespace: string
+}
 export interface AriesRestConfig {
   label: string
   walletConfig: WalletConfig
+  indyLedger: indyLedger[]
   publicDidSeed?: string
   endpoints?: string[]
   autoAcceptConnections?: boolean
@@ -51,7 +57,6 @@ export interface AriesRestConfig {
   autoAcceptMediationRequests?: boolean
   connectionImageUrl?: string
   tenancy?: boolean
-  indyLedger?: any[]
   webhookUrl?: string
   adminPort: number
 }
@@ -82,58 +87,45 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
 
-  let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]] = [
-    {
-      genesisTransactions: '',
-      indyNamespace: '',
-      isProduction: false,
-      connectOnStartup: true
-    }
-  ];
+  async function fetchLedgerData(ledgerConfig: any): Promise<IndyVdrPoolConfig> {
+    const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
 
-  if (afjConfig?.indyLedger?.includes("bcovrin") && afjConfig?.indyLedger?.includes("indicio")) {
-    networkConfig = [
-      {
-        genesisTransactions: BCOVRIN_TEST_GENESIS,
-        indyNamespace: 'bcovrin',
-        isProduction: false,
-        connectOnStartup: true
-      },
-      {
-        genesisTransactions: INDICIO_TEST_GENESIS,
-        indyNamespace: 'indicio',
-        isProduction: false,
-        connectOnStartup: true,
-        transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
-      }
-    ];
-  } else if (afjConfig?.indyLedger?.includes("indicio")) {
-    networkConfig = [
-      {
-        genesisTransactions: INDICIO_TEST_GENESIS,
-        indyNamespace: 'indicio',
-        isProduction: false,
-        connectOnStartup: true,
-        transactionAuthorAgreement: { version: '1.0', acceptanceMechanism: 'wallet_agreement' }
-      }
-    ];
-  } else if (afjConfig?.indyLedger?.includes("bcovrin")) {
-    networkConfig = [
-      {
-        genesisTransactions: BCOVRIN_TEST_GENESIS,
-        indyNamespace: 'bcovrin',
-        isProduction: false,
-        connectOnStartup: true
-      }
-    ];
+    if (!urlPattern.test(ledgerConfig.genesisTransactions)) {
+      throw new Error('Not a valid URL');
+    }
+
+    const genesisTransactions = await axios.get(ledgerConfig.genesisTransactions);
+
+    const networkConfig: IndyVdrPoolConfig = {
+      genesisTransactions: genesisTransactions.data,
+      indyNamespace: ledgerConfig.indyNamespace,
+      isProduction: false,
+      connectOnStartup: true,
+    };
+
+    if (ledgerConfig.indyNamespace.includes('indicio')) {
+      networkConfig.transactionAuthorAgreement = {
+        version: '1.0',
+        acceptanceMechanism: 'wallet_agreement',
+      };
+    }
+
+    return networkConfig;
+  }
+
+  let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
+
+  const parseIndyLedger = afjConfig?.indyLedger;
+  if (parseIndyLedger.length !== 0) {
+    networkConfig = [await fetchLedgerData(parseIndyLedger[0]), ...await Promise.all(parseIndyLedger.slice(1).map(fetchLedgerData))];
   } else {
     networkConfig = [
       {
         genesisTransactions: BCOVRIN_TEST_GENESIS,
-        indyNamespace: 'bcovrin',
+        indyNamespace: 'bcovrin:testnet',
         isProduction: false,
-        connectOnStartup: true
-      }
+        connectOnStartup: true,
+      },
     ];
   }
 
@@ -151,7 +143,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
       askar: new AskarModule({
         ariesAskar,
-        multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet, 
+        multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet,
       }),
 
       indyVdr: new IndyVdrModule({
