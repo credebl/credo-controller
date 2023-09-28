@@ -95,12 +95,14 @@ export class SchemaController {
 
       const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
       if (schemaState.state === 'finished') {
+
+        const indyNamespace = schema.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
         let schemaId;
-        const indyNamespace = getSchemaId.split(':')[2];
-        if ('bcovrin' === indyNamespace) {
-          schemaId = getSchemaId.substring('did:indy:bcovrin:'.length);
-        } else if ('indicio' === indyNamespace) {
-          schemaId = getSchemaId.substring('did:indy:indicio:'.length);
+
+        if (indyNamespace) {
+          schemaId = getSchemaId.substring(`did:indy:${indyNamespace[1]}`.length);
+        } else {
+          throw new Error('No indyNameSpace found')
         }
 
         schemaState.schemaId = schemaId
