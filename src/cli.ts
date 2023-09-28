@@ -48,7 +48,8 @@ const parsed = yargs
     demandOption: true,
   })
   .option('indy-ledger', {
-    array: true
+    array: true,
+    default: [],
   })
   .option('public-did-seed', {
     string: true,
