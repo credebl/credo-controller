@@ -6,6 +6,7 @@ import { Agent, AriesFrameworkError, BaseAgent } from '@aries-framework/core'
 import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 import { SchemaId, SchemaExample } from '../examples'
+import { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
 
 
 @Tags('Schemas')
@@ -74,35 +75,62 @@ export class SchemaController {
       name: string
       version: Version
       attributes: string[]
+      endorse?: boolean
+      endorserDid?: string
     },
     @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
-        schema: {
-          issuerId: schema.issuerId,
-          name: schema.name,
-          version: schema.version,
-          attrNames: schema.attributes
-        },
-        options: {
-          endorserMode: 'internal',
-          endorserDid: schema.issuerId,
-        },
-      })
-      const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
-      if (schemaState.state === 'finished') {
-        const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
-        let schemaId;
-        if (indyNamespace) {
-          schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
-        } else {
-          throw new Error('No indyNameSpace found')
+      schema.endorse = schema.endorse ? schema.endorse : false
+      if (!schema.endorse) {
+        const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
+          schema: {
+            issuerId: schema.issuerId,
+            name: schema.name,
+            version: schema.version,
+            attrNames: schema.attributes
+          },
+          options: {
+            endorserMode: 'internal',
+            endorserDid: schema.issuerId,
+          },
+        })
+        const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
+        if (schemaState.state === 'finished') {
+          const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
+          let schemaId;
+          if (indyNamespace) {
+            schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
+          } else {
+            throw new Error('No indyNameSpace found')
+          }
+          schemaState.schemaId = schemaId
         }
-        schemaState.schemaId = schemaId
+        return schemaState;
+
+      } else {
+
+        if(!schema.endorserDid){
+          throw new Error('Please provide the endorser DID')
+        }
+
+        const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema({
+          options: {
+            endorserMode: 'external',
+            endorserDid: schema.endorserDid ? schema.endorserDid : '',
+          },
+          schema: {
+            attrNames: schema.attributes,
+            issuerId: schema.issuerId,
+            name: schema.name,
+            version: schema.version
+          },
+        })
+
+        return createSchemaTxResult
       }
-      return schemaState;
+
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
