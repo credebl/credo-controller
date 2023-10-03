@@ -65,44 +65,69 @@ export class CredentialDefinitionController extends Controller {
       issuerId: string
       schemaId: SchemaId
       tag: string
+      endorse?: boolean
+      endorserDid?: string
     },
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-  
-      const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
-        credentialDefinition: {
-          issuerId: credentialDefinitionRequest.issuerId,
-          schemaId: credentialDefinitionRequest.schemaId,
-          tag: credentialDefinitionRequest.tag
-        },
-        options: {}
-      })
-  
-      const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
-      const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
-      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
-      if (credentialDefinitionState.state === 'finished') {
-  
-        const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
-        let credDefId;
-        if (indyNamespaceMatch) {
-          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
-        } else {
-          throw new Error('No indyNameSpace found')
+
+      credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse ? credentialDefinitionRequest.endorse : false
+      if (!credentialDefinitionRequest.endorse) {
+        const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
+          credentialDefinition: {
+            issuerId: credentialDefinitionRequest.issuerId,
+            schemaId: credentialDefinitionRequest.schemaId,
+            tag: credentialDefinitionRequest.tag
+          },
+          options: {}
+        })
+
+        const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
+        const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
+        if (credentialDefinitionState.state === 'finished') {
+
+          const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
+          let credDefId;
+          if (indyNamespaceMatch) {
+            credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
+          } else {
+            throw new Error('No indyNameSpace found')
+          }
+
+          credentialDefinitionState.credentialDefinitionId = credDefId;
         }
-  
-        credentialDefinitionState.credentialDefinitionId = credDefId;
+        return credentialDefinitionState;
+      } else {
+
+        if(!credentialDefinitionRequest.endorserDid){
+          throw new Error('Please provide the endorser DID')
+        }
+
+        const createCredDefTxResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
+          credentialDefinition: {
+            issuerId: credentialDefinitionRequest.issuerId,
+            tag: credentialDefinitionRequest.tag,
+            schemaId: credentialDefinitionRequest.schemaId,
+            type: 'CL'
+          },
+          options: {
+            endorserMode: 'external',
+            endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
+          },
+        })
+
+        return createCredDefTxResult
       }
-      return credentialDefinitionState;
     } catch (error) {
       if (error instanceof notFoundError) {
         return notFoundError(404, {
           reason: `schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`,
         })
       }
-  
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
