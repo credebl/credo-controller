@@ -359,7 +359,7 @@ export class MultiTenancyController extends Controller {
             const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
             if (schemaState.state === 'finished') {
 
-                const indyNamespace = schema.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
+                const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
                 let schemaId;
 
                 if (indyNamespace) {
@@ -447,12 +447,14 @@ export class MultiTenancyController extends Controller {
             const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
             if (credentialDefinitionState.state === 'finished') {
 
-                const indyNamespace = credentialDefinitionRequest.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
+                // const indyNamespace = credentialDefinitionRequest.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
+                const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
+
                 let credDefId;
                 if (indyNamespace) {
-                  credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}`.length);
+                    credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}`.length);
                 } else {
-                  throw new Error('No indyNameSpace found')
+                    throw new Error('No indyNameSpace found')
                 }
 
                 credentialDefinitionState.credentialDefinitionId = credDefId;
