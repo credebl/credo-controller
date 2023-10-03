@@ -79,7 +79,6 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-
       const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
         schema: {
           issuerId: schema.issuerId,
@@ -92,19 +91,15 @@ export class SchemaController {
           endorserDid: schema.issuerId,
         },
       })
-
       const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
       if (schemaState.state === 'finished') {
-
         const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
         let schemaId;
-
         if (indyNamespace) {
           schemaId = getSchemaId.substring(`did:indy:${indyNamespace[1]}`.length);
         } else {
           throw new Error('No indyNameSpace found')
         }
-
         schemaState.schemaId = schemaId
       }
       return schemaState;
