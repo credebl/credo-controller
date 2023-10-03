@@ -70,7 +70,7 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-
+  
       const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
         credentialDefinition: {
           issuerId: credentialDefinitionRequest.issuerId,
@@ -79,20 +79,20 @@ export class CredentialDefinitionController extends Controller {
         },
         options: {}
       })
-
+  
       const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
       const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
       if (credentialDefinitionState.state === 'finished') {
-
-        const indyNamespace = credentialDefinitionRequest.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
+  
+        const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
         let credDefId;
-        if (indyNamespace) {
-          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}`.length);
+        if (indyNamespaceMatch) {
+          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
         } else {
           throw new Error('No indyNameSpace found')
         }
-
+  
         credentialDefinitionState.credentialDefinitionId = credDefId;
       }
       return credentialDefinitionState;
@@ -102,7 +102,7 @@ export class CredentialDefinitionController extends Controller {
           reason: `schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`,
         })
       }
-
+  
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
