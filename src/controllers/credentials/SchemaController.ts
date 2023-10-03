@@ -96,7 +96,7 @@ export class SchemaController {
       const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
       if (schemaState.state === 'finished') {
 
-        const indyNamespace = schema.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
+        const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
         let schemaId;
 
         if (indyNamespace) {
