@@ -34,7 +34,7 @@ export class MultiTenancyController extends Controller {
             const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config });
             const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id });
 
-            createTenantOptions.method = createTenantOptions.method || 'bcovrin:testnet';
+            createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet';
             const didMethod = `did:indy:${createTenantOptions.method}`;
 
             if (createTenantOptions.method.includes('bcovrin')) {
@@ -47,7 +47,7 @@ export class MultiTenancyController extends Controller {
                 const res = await axios.post(BCOVRIN_REGISTER_URL, body);
 
                 if (res) {
-                    const { did } = res?.data;
+                    const { did } = res?.data || {};
                     await this.importDid(didMethod, did, createTenantOptions.seed, tenantAgent);
                 }
 
