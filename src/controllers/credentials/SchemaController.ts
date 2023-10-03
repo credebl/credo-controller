@@ -37,25 +37,25 @@ export class SchemaController {
   ) {
     try {
       return await this.agent.modules.anoncreds.getSchema(schemaId)
-    } catch (error) {
-      if (error instanceof AnonCredsError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+    } catch (errorMessage) {
+      if (errorMessage instanceof AnonCredsError && errorMessage.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
           reason: `schema definition with schemaId "${schemaId}" not found.`,
         })
-      } else if (error instanceof AnonCredsError && error.cause instanceof AnonCredsError) {
-        if (error.cause.cause, 'LedgerInvalidTransaction') {
+      } else if (errorMessage instanceof AnonCredsError && errorMessage.cause instanceof AnonCredsError) {
+        if (errorMessage.cause.cause, 'LedgerInvalidTransaction') {
           return forbiddenError(403, {
             reason: `schema definition with schemaId "${schemaId}" can not be returned.`,
           })
         }
-        if (error.cause.cause, 'CommonInvalidStructure') {
+        if (errorMessage.cause.cause, 'CommonInvalidStructure') {
           return badRequestError(400, {
             reason: `schemaId "${schemaId}" has invalid structure.`,
           })
         }
       }
 
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      return internalServerError(500, { message: `something went wrong: ${errorMessage}` })
     }
   }
 
@@ -91,12 +91,12 @@ export class SchemaController {
           endorserDid: schema.issuerId,
         },
       })
-      const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
+      const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
       if (schemaState.state === 'finished') {
         const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
         let schemaId;
         if (indyNamespace) {
-          schemaId = getSchemaId.substring(`did:indy:${indyNamespace[1]}`.length);
+          schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
         } else {
           throw new Error('No indyNameSpace found')
         }
