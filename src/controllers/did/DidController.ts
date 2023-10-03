@@ -68,7 +68,7 @@ export class DidController extends Controller {
         const res = await axios.post(BCOVRIN_REGISTER_URL, body);
 
         if (res) {
-          const { did } = res?.data;
+          const { did } = res?.data || {};
           await this.importDid(didMethod, did, data.seed);
           return { did: `${didMethod}:${did}` };
         }
