@@ -447,7 +447,6 @@ export class MultiTenancyController extends Controller {
             const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
             if (credentialDefinitionState.state === 'finished') {
 
-                // const indyNamespace = credentialDefinitionRequest.issuerId.match(/did:indy:([^:]+:?(mainnet|testnet)?:?)/);
                 const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
 
                 let credDefId;
