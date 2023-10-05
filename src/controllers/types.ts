@@ -46,6 +46,7 @@ import type {
 
 
 import type { DIDDocument } from 'did-resolver'
+import { Version } from './examples';
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
@@ -308,8 +309,10 @@ export interface DidCreate {
   domain?: string;
   method?: string;
   did?: string;
+  role?: string;
   options?: DidRegistrationExtraOptions;
   secret?: DidRegistrationSecretOptions;
+  endorserDid?: string;
   didDocument?: DidDocument;
 }
 
@@ -317,6 +320,8 @@ export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>,
   seed: string;
   method?: string;
+  role?: string;
+  endorserDid?: string;
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
@@ -347,4 +352,30 @@ export interface CreateInvitationOptions {
   autoAcceptConnection?: boolean;
   routing?: Routing;
   appendedAttachments?: Attachment[];
+}
+
+export interface EndorserTransaction {
+  transaction: string | Record<string, unknown>,
+  endorserDid: string
+}
+
+export interface DidNymTransaction {
+  did: string
+  nymRequest: string
+}
+
+export interface WriteTransaction {
+  endorserDid?: string
+  endorsedTransaction?: string
+  schema?: {
+    issuerId: string
+    name: string
+    version: Version
+    attributes: string[]
+  },
+  credentialDefinition?: {
+    schemaId: string,
+    issuerId: string,
+    tag: string
+  }
 }

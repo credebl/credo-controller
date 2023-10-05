@@ -65,44 +65,65 @@ export class CredentialDefinitionController extends Controller {
       issuerId: string
       schemaId: SchemaId
       tag: string
+      endorse?: boolean
+      endorserDid?: string
     },
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-  
-      const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
-        credentialDefinition: {
-          issuerId: credentialDefinitionRequest.issuerId,
-          schemaId: credentialDefinitionRequest.schemaId,
-          tag: credentialDefinitionRequest.tag
-        },
-        options: {}
-      })
-  
-      const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
-      const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
-      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
-      if (credentialDefinitionState.state === 'finished') {
-  
-        const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
-        let credDefId;
-        if (indyNamespaceMatch) {
-          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
-        } else {
-          throw new Error('No indyNameSpace found')
-        }
-  
-        credentialDefinitionState.credentialDefinitionId = credDefId;
+
+      const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
+      const credentialDefinitionPyload = {
+        issuerId,
+        schemaId,
+        tag,
+        type: 'CL'
       }
-      return credentialDefinitionState;
+      if (!endorse) {
+        const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
+          credentialDefinition: credentialDefinitionPyload,
+          options: {}
+        })
+
+        const schemaDetails = await this.agent.modules.anoncreds.getSchema(this.agent.context, schemaId)
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
+        if (credentialDefinitionState.state === 'finished') {
+
+          const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
+          let credDefId;
+          if (indyNamespaceMatch) {
+            credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
+          } else {
+            throw new Error('No indyNameSpace found')
+          }
+
+          credentialDefinitionState.credentialDefinitionId = credDefId;
+        }
+        return credentialDefinitionState;
+      } else {
+
+        if (!endorserDid) {
+          throw new Error('Please provide the endorser DID')
+        }
+
+        const createCredDefTxResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
+          credentialDefinition: credentialDefinitionPyload,
+          options: {
+            endorserMode: 'external',
+            endorserDid: endorserDid ? endorserDid : '',
+          },
+        })
+
+        return createCredDefTxResult
+      }
     } catch (error) {
       if (error instanceof notFoundError) {
         return notFoundError(404, {
           reason: `schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`,
         })
       }
-  
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
