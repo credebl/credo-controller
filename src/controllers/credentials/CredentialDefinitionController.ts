@@ -111,7 +111,7 @@ export class CredentialDefinitionController extends Controller {
           credentialDefinition: credentialDefinitionPyload,
           options: {
             endorserMode: 'external',
-            endorserDid: endorserDid ? credentialDefinitionRequest.endorserDid : '',
+            endorserDid: endorserDid ? endorserDid : '',
           },
         })
 
