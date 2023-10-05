@@ -82,23 +82,27 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      schema.endorse = schema.endorse ? schema.endorse : false
+
+      const { issuerId, name, version, attributes } = schema;
+
+      const schemaPayload = {
+        issuerId: issuerId,
+        name: name,
+        version: version,
+        attrNames: attributes
+      }
+
       if (!schema.endorse) {
         const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
-          schema: {
-            issuerId: schema.issuerId,
-            name: schema.name,
-            version: schema.version,
-            attrNames: schema.attributes
-          },
+          schema: schemaPayload,
           options: {
             endorserMode: 'internal',
-            endorserDid: schema.issuerId,
+            endorserDid: issuerId,
           },
         })
-        const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
+        const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, name, version);
         if (schemaState.state === 'finished') {
-          const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
+          const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
           let schemaId;
           if (indyNamespace) {
             schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
@@ -111,7 +115,7 @@ export class SchemaController {
 
       } else {
 
-        if(!schema.endorserDid){
+        if (!schema.endorserDid) {
           throw new Error('Please provide the endorser DID')
         }
 
@@ -120,12 +124,7 @@ export class SchemaController {
             endorserMode: 'external',
             endorserDid: schema.endorserDid ? schema.endorserDid : '',
           },
-          schema: {
-            attrNames: schema.attributes,
-            issuerId: schema.issuerId,
-            name: schema.name,
-            version: schema.version
-          },
+          schema: schemaPayload,
         })
 
         return createSchemaTxResult
