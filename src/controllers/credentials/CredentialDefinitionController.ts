@@ -73,23 +73,24 @@ export class CredentialDefinitionController extends Controller {
   ) {
     try {
 
-      credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse ? credentialDefinitionRequest.endorse : false
-      if (!credentialDefinitionRequest.endorse) {
+      const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
+      const credentialDefinitionPyload = {
+        issuerId,
+        schemaId,
+        tag,
+        type: 'CL'
+      }
+      if (!endorse) {
         const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
-          credentialDefinition: {
-            issuerId: credentialDefinitionRequest.issuerId,
-            schemaId: credentialDefinitionRequest.schemaId,
-            tag: credentialDefinitionRequest.tag
-          },
+          credentialDefinition: credentialDefinitionPyload,
           options: {}
         })
 
-        const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
-        const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinitionRequest.schemaId)
+        const schemaDetails = await this.agent.modules.anoncreds.getSchema(this.agent.context, schemaId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
         if (credentialDefinitionState.state === 'finished') {
 
-          const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
+          const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
           let credDefId;
           if (indyNamespaceMatch) {
             credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
@@ -102,20 +103,15 @@ export class CredentialDefinitionController extends Controller {
         return credentialDefinitionState;
       } else {
 
-        if(!credentialDefinitionRequest.endorserDid){
+        if (!endorserDid) {
           throw new Error('Please provide the endorser DID')
         }
 
         const createCredDefTxResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
-          credentialDefinition: {
-            issuerId: credentialDefinitionRequest.issuerId,
-            tag: credentialDefinitionRequest.tag,
-            schemaId: credentialDefinitionRequest.schemaId,
-            type: 'CL'
-          },
+          credentialDefinition: credentialDefinitionPyload,
           options: {
             endorserMode: 'external',
-            endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
+            endorserDid: endorserDid ? endorserDid : '',
           },
         })
 
