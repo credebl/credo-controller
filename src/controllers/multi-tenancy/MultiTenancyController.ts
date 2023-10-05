@@ -5,7 +5,7 @@ import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
 import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples';
-import { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
+import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
