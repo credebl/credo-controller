@@ -1,4 +1,4 @@
-import type { DidCreate, DidResolutionResultProps } from '../types'
+import type { DidCreate, DidNymTransaction, DidResolutionResultProps } from '../types'
 import { KeyType, TypedArrayEncoder, KeyDidCreateOptions, DidDocumentBuilder, getEd25519VerificationKey2018, Key, Hasher } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
@@ -56,44 +56,79 @@ export class DidController extends Controller {
     try {
 
       data.method = data.method || 'bcovrin:testnet';
+      data.role = data.role || 'endorser';
       const didMethod = `did:indy:${data.method}`;
 
       if (data.method.includes('bcovrin')) {
-        const body = {
-          role: 'ENDORSER',
-          alias: 'Alias',
-          seed: data.seed
-        };
 
-        const res = await axios.post(BCOVRIN_REGISTER_URL, body);
+        if (data?.role?.toLowerCase() === "endorser") {
+          const body = {
+            role: 'ENDORSER',
+            alias: 'Alias',
+            seed: data.seed
+          };
 
-        if (res) {
-          const { did } = res?.data || {};
-          await this.importDid(didMethod, did, data.seed);
-          return { did: `${didMethod}:${did}` };
+          const res = await axios.post(BCOVRIN_REGISTER_URL, body);
+
+          if (res) {
+            const { did } = res?.data || {};
+            await this.importDid(didMethod, did, data.seed);
+            return { did: `${didMethod}:${did}` };
+          }
+        } else {
+
+          if(!data.endorserDid){
+            throw new Error('Please provide the endorser DID')
+          }
+          
+          const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
+            method: 'indy',
+            options: {
+              endorserMode: 'external',
+              endorserDid: data.endorserDid ? data.endorserDid : '',
+            },
+          })) as IndyVdrDidCreateResult
+          return { did: didCreateTxResult.didState.did };
         }
 
       } else if (data.method.includes('indicio')) {
 
-        const key = await this.agent.wallet.createKey({
-          privateKey: TypedArrayEncoder.fromString(data.seed),
-          keyType: KeyType.Ed25519
-        });
+        if (data?.role?.toLowerCase() === "endorser") {
+          const key = await this.agent.wallet.createKey({
+            privateKey: TypedArrayEncoder.fromString(data.seed),
+            keyType: KeyType.Ed25519
+          });
 
-        const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
-        const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
+          const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
+          const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
 
-        const body = {
-          network: 'testnet',
-          did,
-          verkey: TypedArrayEncoder.toBase58(buffer)
-        };
+          const body = {
+            network: 'testnet',
+            did,
+            verkey: TypedArrayEncoder.toBase58(buffer)
+          };
 
-        const res = await axios.post(INDICIO_NYM_URL, body);
+          const res = await axios.post(INDICIO_NYM_URL, body);
 
-        if (res.data.statusCode === 200) {
-          await this.importDid(didMethod, body.did, data.seed);
-          return { did: `${didMethod}:${body.did}` };
+          if (res.data.statusCode === 200) {
+            await this.importDid(didMethod, body.did, data.seed);
+            return { did: `${didMethod}:${body.did}` };
+          }
+        } else {
+
+          if(!data.endorserDid){
+            throw new Error('Please provide the endorser DID')
+          }
+          
+          const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
+            method: 'indy',
+            options: {
+              endorserMode: 'external',
+              endorserDid: data.endorserDid ? data.endorserDid : '',
+            },
+          })) as IndyVdrDidCreateResult
+          // return { did: didCreateTxResult.didState.did };
+          return didCreateTxResult;
         }
       }
     } catch (error) {
