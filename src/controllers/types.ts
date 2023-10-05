@@ -365,8 +365,8 @@ export interface DidNymTransaction {
 }
 
 export interface WriteTransaction {
-  endorsedTransaction: string
   endorserDid?: string
+  endorsedTransaction?: string
   schema?: {
     issuerId: string
     name: string
@@ -376,14 +376,6 @@ export interface WriteTransaction {
   credentialDefinition?: {
     schemaId: string,
     issuerId: string,
-    tag: string,
-    value: CredDefValue,
-    type: string
+    tag: string
   }
 }
-
-export interface CredDefValue {
-  primary: Record<string, unknown>
-  revocation?: unknown
-}
-

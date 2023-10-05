@@ -1,7 +1,7 @@
 import { Agent, AriesFrameworkError } from "@aries-framework/core"
 import { Body, Controller, Post, Res, Route, Tags, TsoaResponse } from "tsoa"
 import { injectable } from "tsyringe"
-import { DidNymTransaction, EndorserTransaction, WriteTransaction, CredDefValue } from "../types"
+import { DidNymTransaction, EndorserTransaction, WriteTransaction } from "../types"
 import { SchemaId, Version } from "../examples"
 import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId } from "@aries-framework/anoncreds"
 import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions } from "@aries-framework/indy-vdr"
@@ -144,9 +144,7 @@ export class EndorserTransactionController extends Controller {
     credentialDefinition: {
       schemaId: string,
       issuerId: string,
-      tag: string,
-      value: CredDefValue,
-      type: string
+      tag: string
     },
     endorsedTransaction?: string
   ) {
@@ -160,8 +158,11 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
+      console.log("credentialDefinitionState---", credentialDefinitionState)
       const schemaDetails = await this.agent.modules.anoncreds.getSchema(credentialDefinition.schemaId)
+      console.log("schemaDetails---", schemaDetails)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinition.tag);
+      console.log("getCredentialDefinitionId---", getCredentialDefinitionId)
       if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
 
         const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinition.issuerId);

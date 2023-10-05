@@ -1,5 +1,5 @@
 import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, ConnectionRecordProps, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, HandshakeProtocol, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
-import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction, CredDefValue } from '../types';
+import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
@@ -60,7 +60,6 @@ export class MultiTenancyController extends Controller {
                     if (resolveResult.didDocument?.verificationMethod) {
                         verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
                     }
-                    await tenantAgent.endSession();
                     return { tenantRecord, did: `${didMethod}:${res.data.did}`, verkey };
                 } else {
                     const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
@@ -71,7 +70,6 @@ export class MultiTenancyController extends Controller {
                         },
                     })) as IndyVdrDidCreateResult
 
-                    await tenantAgent.endSession();
                     return { tenantRecord, did: didCreateTxResult.didState.did };
                 }
 
@@ -102,22 +100,18 @@ export class MultiTenancyController extends Controller {
                         if (resolveResult.didDocument?.verificationMethod) {
                             verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
                         }
-
-                        await tenantAgent.endSession();
                         return { tenantRecord, did: `${didMethod}:${body.did}`, verkey };
 
                     }
                 } else {
 
-                    const didCreateTxResult = await tenantAgent.dids.create({
+                    const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
                         method: 'indy',
                         options: {
                             endorserMode: 'external',
                             endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
                         },
-                    })
-
-                    await tenantAgent.endSession();
+                    })) as IndyVdrDidCreateResult
                     return { tenantRecord, didTx: didCreateTxResult };
                 }
             } else if ('key' === createTenantOptions.method) {
@@ -205,15 +199,13 @@ export class MultiTenancyController extends Controller {
         });
     }
 
-    @Post('/transactions/set-endorser-role/:tenantId')
+    @Post('/transactions/set-endorser-role')
     public async didNymTransaction(
-        @Path("tenantId") tenantId: string,
         @Body() didNymTransaction: DidNymTransaction,
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
     ) {
         try {
-            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
-            const didCreateSubmitResult = await tenantAgent.dids.create({
+            const didCreateSubmitResult = await this.agent.dids.create<IndyVdrDidCreateOptions>({
                 did: didNymTransaction.did,
                 options: {
                     endorserMode: 'external',
@@ -222,12 +214,6 @@ export class MultiTenancyController extends Controller {
                     },
                 }
             })
-            await tenantAgent.dids.import({
-                did: didNymTransaction.did,
-                overwrite: true
-            });
-
-            await tenantAgent.endSession();
             return didCreateSubmitResult
         } catch (error) {
             return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -248,7 +234,6 @@ export class MultiTenancyController extends Controller {
                 endorserTransaction.endorserDid
             )
 
-            await tenantAgent.endSession();
             return { signedTransaction };
         } catch (error) {
             if (error instanceof AriesFrameworkError) {
@@ -450,6 +435,7 @@ export class MultiTenancyController extends Controller {
     ) {
         try {
 
+            schema.endorse = schema.endorse ? schema.endorse : false
             const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
             if (!schema.endorse) {
                 const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
@@ -464,7 +450,7 @@ export class MultiTenancyController extends Controller {
                         endorserDid: schema.issuerId,
                     },
                 })
-                const getSchemaId = await getUnqualifiedSchemaId(schema.issuerId, schema.name, schema.version);
+                const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
                 if (schemaState.state === 'finished') {
 
                     const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
@@ -478,14 +464,8 @@ export class MultiTenancyController extends Controller {
 
                     schemaState.schemaId = schemaId
                 }
-
-                await tenantAgent.endSession();
                 return schemaState;
             } else {
-
-                if (!schema.endorserDid) {
-                    throw new Error('Please provide the endorser DID')
-                }
 
                 const createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
                     options: {
@@ -500,98 +480,8 @@ export class MultiTenancyController extends Controller {
                     },
                 })
 
-                await tenantAgent.endSession();
                 return createSchemaTxResult
             }
-        } catch (error) {
-            if (error instanceof AriesFrameworkError) {
-                if (error.message.includes('UnauthorizedClientRequest')) {
-                    return forbiddenError(400, {
-                        reason: 'this action is not allowed.',
-                    })
-                }
-            }
-            return internalServerError(500, { message: `something went wrong: ${error}` })
-        }
-    }
-
-    @Post('/transactions/write/:tenantId')
-    public async writeSchemaAndCredDefOnLedger(
-        @Path("tenantId") tenantId: string,
-        @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
-        @Res() internalServerError: TsoaResponse<500, { message: string }>,
-        @Body()
-        writeTransaction: WriteTransaction
-    ) {
-        try {
-            if (writeTransaction.schema) {
-
-                const writeSchema = await this.submitSchemaOnLedger(writeTransaction.schema, writeTransaction.endorsedTransaction, tenantId);
-                return writeSchema;
-            } else if (writeTransaction.credentialDefinition) {
-
-                const writeCredDef = await this.submitCredDefOnLedger(writeTransaction.credentialDefinition, writeTransaction.endorsedTransaction, tenantId);
-                return writeCredDef;
-            } else {
-
-                throw new Error('Please provide valid schema or credential-def!');
-            }
-
-        } catch (error) {
-            if (error instanceof AriesFrameworkError) {
-                if (error.message.includes('UnauthorizedClientRequest')) {
-                    return forbiddenError(400, {
-                        reason: 'this action is not allowed.',
-                    })
-                }
-            }
-            return internalServerError(500, { message: `something went wrong: ${error}` })
-        }
-    }
-
-    public async submitSchemaOnLedger(
-        schema: {
-            issuerId: string
-            name: string
-            version: Version
-            attributes: string[]
-        },
-        endorsedTransaction: string,
-        tenantId: string
-    ) {
-        try {
-
-            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-            const { issuerId, name, version, attributes } = schema;
-            const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
-                options: {
-                    endorserMode: 'external',
-                    endorsedTransaction
-                },
-                schema: {
-                    attrNames: attributes,
-                    issuerId: issuerId,
-                    name: name,
-                    version: version
-                },
-            })
-
-            const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(issuerId, name, version);
-            if (schemaState.state === 'finished' || schemaState.state === 'action') {
-                const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
-                let schemaId;
-
-                if (indyNamespace) {
-                    schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
-                } else {
-                    throw new Error('No indyNameSpace found')
-                }
-                schemaState.schemaId = schemaId
-            }
-
-            await tenantAgent.endSession();
-            return schemaState;
-
         } catch (error) {
             return error
         }
@@ -707,7 +597,8 @@ export class MultiTenancyController extends Controller {
                     },
                     options: {}
                 })
-                const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
+                const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
+                const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(tenantAgent.context, credentialDefinitionRequest.schemaId)
                 if (!credentialDefinitionState?.credentialDefinition) {
                     throw new Error('')
                 }
@@ -725,12 +616,10 @@ export class MultiTenancyController extends Controller {
 
                     credentialDefinitionState.credentialDefinitionId = credDefId;
                 }
-
-                await tenantAgent.endSession();
                 return credentialDefinitionState;
             } else {
 
-                const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+                const createCredDefTxResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
                     credentialDefinition: {
                         issuerId: credentialDefinitionRequest.issuerId,
                         tag: credentialDefinitionRequest.tag,
@@ -742,7 +631,7 @@ export class MultiTenancyController extends Controller {
                         endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
                     },
                 })
-                await tenantAgent.endSession();
+
                 return createCredDefTxResult
             }
         } catch (error) {
