@@ -74,11 +74,11 @@ export class EndorserTransactionController extends Controller {
     try {
       if (writeTransaction.schema) {
 
-        const writeSchema = await this.submitSchemaOnLedger(writeTransaction.schema, writeTransaction.endorsedTransaction, writeTransaction.endorserDid);
+        const writeSchema = await this.submitSchemaOnLedger(writeTransaction.schema, writeTransaction.endorsedTransaction);
         return writeSchema;
       } else if (writeTransaction.credentialDefinition) {
 
-        const writeCredDef = await this.submitCredDefOnLedger(writeTransaction.credentialDefinition, writeTransaction.endorsedTransaction, writeTransaction.endorserDid);
+        const writeCredDef = await this.submitCredDefOnLedger(writeTransaction.credentialDefinition, writeTransaction.endorsedTransaction);
         return writeCredDef;
       } else {
 
@@ -105,20 +105,20 @@ export class EndorserTransactionController extends Controller {
       attributes: string[]
     },
     endorsedTransaction?: string,
-    endorserDid?: string
   ) {
     try {
 
+      const { issuerId, name, version, attributes } = schema;
       const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
         options: {
           endorserMode: 'external',
           endorsedTransaction
         },
         schema: {
-          attrNames: schema.attributes,
-          issuerId: schema.issuerId,
-          name: schema.name,
-          version: schema.version
+          attrNames: attributes,
+          issuerId: issuerId,
+          name: name,
+          version: version
         },
       })
 
@@ -146,8 +146,7 @@ export class EndorserTransactionController extends Controller {
       issuerId: string,
       tag: string
     },
-    endorsedTransaction?: string,
-    endorserDid?: string
+    endorsedTransaction?: string
   ) {
     try {
 
@@ -159,9 +158,11 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
-      const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(this.agent.context, credentialDefinition.schemaId)
+      console.log("credentialDefinitionState---", credentialDefinitionState)
+      const schemaDetails = await this.agent.modules.anoncreds.getSchema(credentialDefinition.schemaId)
+      console.log("schemaDetails---", schemaDetails)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinition.tag);
+      console.log("getCredentialDefinitionId---", getCredentialDefinitionId)
       if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
 
         const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinition.issuerId);
