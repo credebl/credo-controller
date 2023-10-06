@@ -68,6 +68,83 @@ export async function readRestConfig(path: string) {
   return config
 }
 
+export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenantModules>>
+
+let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
+
+
+const getWithTenantModules = () => {
+  const modules = getModules()
+  return {
+    tenants: new TenantsModule<typeof modules>({
+      sessionAcquireTimeout: Infinity,
+      sessionLimit: Infinity,
+    }),
+    ...modules
+  }
+}
+
+
+const getModules = () => {
+  const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
+  const legacyIndyProofFormat = new LegacyIndyProofFormatService()
+  const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
+  return {
+    askar: new AskarModule({
+      ariesAskar,
+      multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet,
+    }),
+
+    indyVdr: new IndyVdrModule({
+      indyVdr,
+      networks: networkConfig
+    }),
+
+    dids: new DidsModule({
+      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
+      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
+    }),
+    anoncreds: new AnonCredsModule({
+      registries: [new IndyVdrAnonCredsRegistry()],
+    }),
+    // Use anoncreds-rs as anoncreds backend
+    _anoncreds: new AnonCredsRsModule({
+      anoncreds,
+    }),
+    connections: new ConnectionsModule({
+      autoAcceptConnections: true,
+    }),
+    proofs: new ProofsModule({
+      autoAcceptProofs: AutoAcceptProof.ContentApproved,
+      proofProtocols: [
+        new V1ProofProtocol({
+          indyProofFormat: legacyIndyProofFormat,
+        }),
+        new V2ProofProtocol({
+          proofFormats: [legacyIndyProofFormat],
+        }),
+      ],
+    }),
+    credentials: new CredentialsModule({
+      autoAcceptCredentials: AutoAcceptCredential.Always,
+      credentialProtocols: [
+        new V1CredentialProtocol({
+          indyCredentialFormat: legacyIndyCredentialFormat,
+        }),
+        new V2CredentialProtocol({
+          credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService],
+        }),
+      ],
+    }),
+    w3cCredentials: new W3cCredentialsModule(),
+    cache: new CacheModule({
+      cache: new InMemoryLruCache({ limit: Infinity })
+    })
+  }
+
+}
+
+
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
 

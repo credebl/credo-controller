@@ -1,23 +1,23 @@
 import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, ConnectionRecordProps, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, HandshakeProtocol, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
-import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions } from '../types';
+import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
 import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples';
-import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
+import { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
-import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
+import { RestMultiTenantAgentModules } from '../../cliAgent';
 
 @Tags("MultiTenancy")
 @Route("/multi-tenancy")
 @injectable()
 export class MultiTenancyController extends Controller {
-    private readonly agent: Agent;
+    private readonly agent: Agent<RestMultiTenantAgentModules>;
 
-    public constructor(agent: Agent) {
+    public constructor(agent: Agent<RestMultiTenantAgentModules>) {
         super()
         this.agent = agent;
     }
@@ -105,13 +105,13 @@ export class MultiTenancyController extends Controller {
                     }
                 } else {
 
-                    const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
+                    const didCreateTxResult = await tenantAgent.dids.create({
                         method: 'indy',
                         options: {
                             endorserMode: 'external',
                             endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
                         },
-                    })) as IndyVdrDidCreateResult
+                    })
                     return { tenantRecord, didTx: didCreateTxResult };
                 }
             } else if ('key' === createTenantOptions.method) {
@@ -195,13 +195,15 @@ export class MultiTenancyController extends Controller {
         });
     }
 
-    @Post('/transactions/set-endorser-role')
+    @Post('/transactions/set-endorser-role/:tenantId')
     public async didNymTransaction(
+        @Path("tenantId") tenantId: string,
         @Body() didNymTransaction: DidNymTransaction,
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
     ) {
         try {
-            const didCreateSubmitResult = await this.agent.dids.create<IndyVdrDidCreateOptions>({
+            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
+            const didCreateSubmitResult = await tenantAgent.dids.create({
                 did: didNymTransaction.did,
                 options: {
                     endorserMode: 'external',
@@ -210,7 +212,10 @@ export class MultiTenancyController extends Controller {
                     },
                 }
             })
-
+            await tenantAgent.dids.import({
+                did: didNymTransaction.did,
+                overwrite: true
+            });
             return didCreateSubmitResult
         } catch (error) {
             return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -424,7 +429,6 @@ export class MultiTenancyController extends Controller {
     ) {
         try {
 
-            schema.endorse = schema.endorse ? schema.endorse : false
             const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
             if (!schema.endorse) {
                 const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
@@ -439,7 +443,7 @@ export class MultiTenancyController extends Controller {
                         endorserDid: schema.issuerId,
                     },
                 })
-                const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
+                const getSchemaId = await getUnqualifiedSchemaId(schema.issuerId, schema.name, schema.version);
                 if (schemaState.state === 'finished') {
 
                     const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
@@ -455,6 +459,10 @@ export class MultiTenancyController extends Controller {
                 }
                 return schemaState;
             } else {
+
+                if (!schema.endorserDid) {
+                    throw new Error('Please provide the endorser DID')
+                }
 
                 const createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
                     options: {
@@ -480,6 +488,128 @@ export class MultiTenancyController extends Controller {
                 }
             }
             return internalServerError(500, { message: `something went wrong: ${error}` })
+        }
+    }
+
+    @Post('/transactions/write/:tenantId')
+    public async writeSchemaAndCredDefOnLedger(
+        @Path("tenantId") tenantId: string,
+        @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
+        @Res() internalServerError: TsoaResponse<500, { message: string }>,
+        @Body()
+        writeTransaction: WriteTransaction
+    ) {
+        try {
+            if (writeTransaction.schema) {
+
+                const writeSchema = await this.submitSchemaOnLedger(writeTransaction.schema, writeTransaction.endorsedTransaction, tenantId);
+                return writeSchema;
+            } else if (writeTransaction.credentialDefinition) {
+
+                const writeCredDef = await this.submitCredDefOnLedger(writeTransaction.credentialDefinition, writeTransaction.endorsedTransaction, tenantId);
+                return writeCredDef;
+            } else {
+
+                throw new Error('Please provide valid schema or credential-def!');
+            }
+
+        } catch (error) {
+            if (error instanceof AriesFrameworkError) {
+                if (error.message.includes('UnauthorizedClientRequest')) {
+                    return forbiddenError(400, {
+                        reason: 'this action is not allowed.',
+                    })
+                }
+            }
+            return internalServerError(500, { message: `something went wrong: ${error}` })
+        }
+    }
+
+    public async submitSchemaOnLedger(
+        schema: {
+            issuerId: string
+            name: string
+            version: Version
+            attributes: string[]
+        },
+        endorsedTransaction: string,
+        tenantId: string
+    ) {
+        try {
+
+            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+            const { issuerId, name, version, attributes } = schema;
+            const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
+                options: {
+                    endorserMode: 'external',
+                    endorsedTransaction
+                },
+                schema: {
+                    attrNames: attributes,
+                    issuerId: issuerId,
+                    name: name,
+                    version: version
+                },
+            })
+
+            const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(issuerId, name, version);
+            if (schemaState.state === 'finished' || schemaState.state === 'action') {
+                const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
+                let schemaId;
+
+                if (indyNamespace) {
+                    schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
+                } else {
+                    throw new Error('No indyNameSpace found')
+                }
+                schemaState.schemaId = schemaId
+            }
+            return schemaState;
+
+        } catch (error) {
+            return error
+        }
+    }
+
+    public async submitCredDefOnLedger(
+        credentialDefinition: {
+            schemaId: string,
+            issuerId: string,
+            tag: string
+        },
+        endorsedTransaction: string,
+        tenantId: string
+    ) {
+        try {
+
+            const { issuerId, schemaId, tag } = credentialDefinition;
+            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+            const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+                credentialDefinition,
+                options: {
+                    endorserMode: 'external',
+                    endorsedTransaction: endorsedTransaction,
+                },
+            })
+
+            const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(schemaId)
+            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
+            if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
+
+                const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
+                let credDefId;
+                if (indyNamespaceMatch) {
+                    credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
+                } else {
+                    throw new Error('No indyNameSpace found')
+                }
+
+                credentialDefinitionState.credentialDefinitionId = credDefId;
+            }
+            return credentialDefinitionState;
+
+        } catch (error) {
+            return error
         }
     }
 
@@ -545,8 +675,7 @@ export class MultiTenancyController extends Controller {
                     },
                     options: {}
                 })
-                const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
-                const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(tenantAgent.context, credentialDefinitionRequest.schemaId)
+                const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
                 if (!credentialDefinitionState?.credentialDefinition) {
                     throw new Error('')
                 }
@@ -567,7 +696,7 @@ export class MultiTenancyController extends Controller {
                 return credentialDefinitionState;
             } else {
 
-                const createCredDefTxResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
+                const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
                     credentialDefinition: {
                         issuerId: credentialDefinitionRequest.issuerId,
                         tag: credentialDefinitionRequest.tag,
@@ -753,8 +882,8 @@ export class MultiTenancyController extends Controller {
 
     @Get('/proofs/:tenantId')
     public async getAllProofs(
+        @Path('tenantId') tenantId: string,
         @Query('threadId') threadId?: string,
-        @Path('tenantId') tenantId?: string,
     ) {
         const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
 
@@ -1042,8 +1171,7 @@ export class MultiTenancyController extends Controller {
             },
             options: {}
         })
-        const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
-        const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(tenantAgent.context, schemaId)
+        const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(schemaId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
         if (credentialDefinitionState.state === 'finished') {
             const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
@@ -1096,123 +1224,123 @@ export class MultiTenancyController extends Controller {
         return ({ CredentialExchangeRecord: acceptOffer });
     }
 
-    @Post("with-tenant-agent")
-    async withTenantAgent(
-        @Body() withTenantAgentOptions: WithTenantAgentOptions,
-        @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-        @Res() internalServerError: TsoaResponse<500, { message: string }>
-    ) {
-        const { tenantId, method, payload } = withTenantAgentOptions;
+    // @Post("with-tenant-agent")
+    // async withTenantAgent(
+    //     @Body() withTenantAgentOptions: WithTenantAgentOptions,
+    //     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    //     @Res() internalServerError: TsoaResponse<500, { message: string }>
+    // ) {
+    //     const { tenantId, method, payload } = withTenantAgentOptions;
 
-        try {
-            const result = await new Promise((resolve,) => {
-                this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent: TenantAgent) => {
-                    switch (method) {
-                        case "createInvitation":
-                            const getTenantToCreateInvitation = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
-                            const createInvitation = await this.createInvitationWithTenant(getTenantToCreateInvitation);
-                            resolve({ createInvitation });
-                            break;
+    //     try {
+    //         const result = await new Promise((resolve,) => {
+    //             this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent: TenantAgent) => {
+    //                 switch (method) {
+    //                     case "createInvitation":
+    //                         const getTenantToCreateInvitation = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
+    //                         const createInvitation = await this.createInvitationWithTenant(getTenantToCreateInvitation);
+    //                         resolve({ createInvitation });
+    //                         break;
 
-                        case "receiveInvitation":
-                            const { invitationUrl, remaining } = payload;
-                            const getTenantToReceiveInvitation = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-                            const receiveInvitation = await this.receiveInvitationWithTenant(getTenantToReceiveInvitation, { invitationUrl, remaining });
-                            resolve({ receiveInvitation });
-                            break;
+    //                     case "receiveInvitation":
+    //                         const { invitationUrl, remaining } = payload;
+    //                         const getTenantToReceiveInvitation = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+    //                         const receiveInvitation = await this.receiveInvitationWithTenant(getTenantToReceiveInvitation, { invitationUrl, remaining });
+    //                         resolve({ receiveInvitation });
+    //                         break;
 
-                        case "getConnection":
-                            const { connectionId } = payload;
-                            const connection = await tenantAgent.connections.findById(connectionId);
-                            resolve({ connection: connection?.toJSON() });
-                            break;
+    //                     case "getConnection":
+    //                         const { connectionId } = payload;
+    //                         const connection = await tenantAgent.connections.findById(connectionId);
+    //                         resolve({ connection: connection?.toJSON() });
+    //                         break;
 
-                        case "registerSchema":
-                            var { issuerId, name, version, attributes } = payload;
-                            const getTenantToCreateSchema = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-                            const schema = await this.registerSchemaWithTenant(getTenantToCreateSchema, { issuerId, name, version, attributes });
-                            resolve({ schema });
-                            break;
+    //                     case "registerSchema":
+    //                         var { issuerId, name, version, attributes } = payload;
+    //                         const getTenantToCreateSchema = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+    //                         const schema = await this.registerSchemaWithTenant(getTenantToCreateSchema, { issuerId, name, version, attributes });
+    //                         resolve({ schema });
+    //                         break;
 
-                        case "getSchemaById":
-                            var { schemaId } = payload;
-                            const schemaById = await this.getSchemaWithTenant(tenantAgent, schemaId);
-                            resolve(schemaById);
-                            break;
+    //                     case "getSchemaById":
+    //                         var { schemaId } = payload;
+    //                         const schemaById = await this.getSchemaWithTenant(tenantAgent, schemaId);
+    //                         resolve(schemaById);
+    //                         break;
 
-                        case "registerCredentialDefinition":
-                            var { issuerId, schemaId, tag } = payload;
-                            const getTenantToCreateCredentialDefinition = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-                            const credentialDefinition = await this.createCredentialDefinitionWithTenant(getTenantToCreateCredentialDefinition, { issuerId, schemaId, tag });
-                            resolve({ credentialDefinition });
-                            break;
+    //                     case "registerCredentialDefinition":
+    //                         var { issuerId, schemaId, tag } = payload;
+    //                         const getTenantToCreateCredentialDefinition = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+    //                         const credentialDefinition = await this.createCredentialDefinitionWithTenant(getTenantToCreateCredentialDefinition, { issuerId, schemaId, tag });
+    //                         resolve({ credentialDefinition });
+    //                         break;
 
-                        case "getCredentialDefinitionById":
-                            var { credentialDefinitionId } = payload;
-                            const credentialDefinitionById = await this.getCredentialDefinition(tenantAgent, credentialDefinitionId);
-                            resolve(credentialDefinitionById);
-                            break;
+    //                     case "getCredentialDefinitionById":
+    //                         var { credentialDefinitionId } = payload;
+    //                         const credentialDefinitionById = await this.getCredentialDefinition(tenantAgent, credentialDefinitionId);
+    //                         resolve(credentialDefinitionById);
+    //                         break;
 
-                        case "getConnections":
-                            const connections = await tenantAgent.connections.getAll();
-                            resolve({ connectionRecord: connections });
-                            break;
+    //                     case "getConnections":
+    //                         const connections = await tenantAgent.connections.getAll();
+    //                         resolve({ connectionRecord: connections });
+    //                         break;
 
-                        case "getCredentials":
-                            const credentials = await tenantAgent.credentials.getAll();
-                            resolve({ CredentialExchangeRecord: credentials });
-                        case "issueCredential":
-                            const offerCredential = await tenantAgent.credentials.offerCredential(payload);
-                            resolve({ offerCredential });
-                            break;
+    //                     case "getCredentials":
+    //                         const credentials = await tenantAgent.credentials.getAll();
+    //                         resolve({ CredentialExchangeRecord: credentials });
+    //                     case "issueCredential":
+    //                         const offerCredential = await tenantAgent.credentials.offerCredential(payload);
+    //                         resolve({ offerCredential });
+    //                         break;
 
-                        case "acceptOffer":
-                            var { credentialRecordId, autoAcceptCredential, comment } = payload;
-                            var getTenant = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-                            const acceptOffer = await this.acceptOfferWithTenant(getTenant, { credentialRecordId, autoAcceptCredential, comment })
-                            resolve({ acceptOffer });
-                            break;
+    //                     case "acceptOffer":
+    //                         var { credentialRecordId, autoAcceptCredential, comment } = payload;
+    //                         var getTenant = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+    //                         const acceptOffer = await this.acceptOfferWithTenant(getTenant, { credentialRecordId, autoAcceptCredential, comment })
+    //                         resolve({ acceptOffer });
+    //                         break;
 
-                        case "createRequestForProofPresentation":
-                            const createRequest = await tenantAgent.proofs.requestProof(payload);
-                            resolve({ ProofExchangeRecord: createRequest.toJSON() });
-                            break;
+    //                     case "createRequestForProofPresentation":
+    //                         const createRequest = await tenantAgent.proofs.requestProof(payload);
+    //                         resolve({ ProofExchangeRecord: createRequest.toJSON() });
+    //                         break;
 
-                        case "acceptRequestForProofPresentation":
-                            var { proofRecordId, comment } = payload;
-                            const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
-                                proofRecordId,
-                            });
-                            const acceptProofRequest: AcceptProofRequestOptions = {
-                                proofRecordId,
-                                comment,
-                                proofFormats: requestedCredentials.proofFormats,
-                            }
+    //                     case "acceptRequestForProofPresentation":
+    //                         var { proofRecordId, comment } = payload;
+    //                         const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
+    //                             proofRecordId,
+    //                         });
+    //                         const acceptProofRequest: AcceptProofRequestOptions = {
+    //                             proofRecordId,
+    //                             comment,
+    //                             proofFormats: requestedCredentials.proofFormats,
+    //                         }
 
-                            const acceptRequest = await tenantAgent.proofs.acceptRequest(acceptProofRequest);
-                            resolve({ ProofExchangeRecord: acceptRequest.toJSON() });
-                            break;
+    //                         const acceptRequest = await tenantAgent.proofs.acceptRequest(acceptProofRequest);
+    //                         resolve({ ProofExchangeRecord: acceptRequest.toJSON() });
+    //                         break;
 
-                        case "acceptPresentation":
-                            const acceptPresentation = await tenantAgent.proofs.acceptPresentation(payload);
-                            resolve({ ProofExchangeRecord: acceptPresentation.toJSON() });
-                            break;
+    //                     case "acceptPresentation":
+    //                         const acceptPresentation = await tenantAgent.proofs.acceptPresentation(payload);
+    //                         resolve({ ProofExchangeRecord: acceptPresentation.toJSON() });
+    //                         break;
 
-                        case "getProofs":
-                            const presentations = await tenantAgent.proofs.getAll();
-                            resolve({ presentations });
-                            break;
-                    }
-                });
-            });
-            return result;
-        } catch (error) {
-            if (error instanceof RecordNotFoundError) {
-                return notFoundError(404, {
-                    reason: `Tenant with id: ${tenantId} not found.`,
-                });
-            }
-            return internalServerError(500, { message: `Something went wrong: ${error}` });
-        }
-    }
+    //                     case "getProofs":
+    //                         const presentations = await tenantAgent.proofs.getAll();
+    //                         resolve({ presentations });
+    //                         break;
+    //                 }
+    //             });
+    //         });
+    //         return result;
+    //     } catch (error) {
+    //         if (error instanceof RecordNotFoundError) {
+    //             return notFoundError(404, {
+    //                 reason: `Tenant with id: ${tenantId} not found.`,
+    //             });
+    //         }
+    //         return internalServerError(500, { message: `Something went wrong: ${error}` });
+    //     }
+    // }
 }

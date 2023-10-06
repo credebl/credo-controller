@@ -158,11 +158,8 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      console.log("credentialDefinitionState---", credentialDefinitionState)
       const schemaDetails = await this.agent.modules.anoncreds.getSchema(credentialDefinition.schemaId)
-      console.log("schemaDetails---", schemaDetails)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinition.tag);
-      console.log("getCredentialDefinitionId---", getCredentialDefinitionId)
       if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
 
         const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinition.issuerId);
