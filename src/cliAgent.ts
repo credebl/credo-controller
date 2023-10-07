@@ -74,7 +74,7 @@ let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
 
 
 const getWithTenantModules = () => {
-  const modules = getModules()
+  const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
       sessionAcquireTimeout: Infinity,
@@ -85,7 +85,7 @@ const getWithTenantModules = () => {
 }
 
 
-const getModules = () => {
+const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
@@ -162,10 +162,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     logger
   };
 
-  const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
-  const legacyIndyProofFormat = new LegacyIndyProofFormatService()
-  const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
-
   async function fetchLedgerData(ledgerConfig: any): Promise<IndyVdrPoolConfig> {
     const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
 
@@ -208,6 +204,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ];
   }
 
+  const modules = getModules(networkConfig)
   const agent = new Agent({
     config: agentConfig,
     modules: {
@@ -219,57 +216,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           }),
         }
         : {}),
-
-      askar: new AskarModule({
-        ariesAskar,
-        multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet,
-      }),
-
-      indyVdr: new IndyVdrModule({
-        indyVdr,
-        networks: networkConfig
-      }),
-
-      dids: new DidsModule({
-        registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
-        resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
-      }),
-      anoncreds: new AnonCredsModule({
-        registries: [new IndyVdrAnonCredsRegistry()],
-      }),
-      // Use anoncreds-rs as anoncreds backend
-      _anoncreds: new AnonCredsRsModule({
-        anoncreds,
-      }),
-      connections: new ConnectionsModule({
-        autoAcceptConnections: true,
-      }),
-      proofs: new ProofsModule({
-        autoAcceptProofs: AutoAcceptProof.ContentApproved,
-        proofProtocols: [
-          new V1ProofProtocol({
-            indyProofFormat: legacyIndyProofFormat,
-          }),
-          new V2ProofProtocol({
-            proofFormats: [legacyIndyProofFormat],
-          }),
-        ],
-      }),
-      credentials: new CredentialsModule({
-        autoAcceptCredentials: AutoAcceptCredential.Always,
-        credentialProtocols: [
-          new V1CredentialProtocol({
-            indyCredentialFormat: legacyIndyCredentialFormat,
-          }),
-          new V2CredentialProtocol({
-            credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService],
-          }),
-        ],
-      }),
-      w3cCredentials: new W3cCredentialsModule(),
-      cache: new CacheModule({
-        cache: new InMemoryLruCache({ limit: Infinity })
-      })
+      ...modules,
     },
     dependencies: agentDependencies,
   });
