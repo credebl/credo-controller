@@ -73,7 +73,7 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
 
-const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+const getWithTenantModules = () => {
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({}),
