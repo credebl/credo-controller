@@ -8,7 +8,7 @@ import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { randomUUID } from 'crypto'
 import { TenantsModule } from '@aries-framework/tenants'
 import { JsonLdCredentialFormatService } from '@aries-framework/core'
@@ -89,6 +89,8 @@ const getModules = () => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
+  const anonCredsCredentialFormatService = new AnonCredsCredentialFormatService()
+  const anonCredsProofFormatService = new AnonCredsProofFormatService()
   return {
     askar: new AskarModule({
       ariesAskar,
@@ -121,7 +123,7 @@ const getModules = () => {
           indyProofFormat: legacyIndyProofFormat,
         }),
         new V2ProofProtocol({
-          proofFormats: [legacyIndyProofFormat],
+          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService],
         }),
       ],
     }),
@@ -132,7 +134,7 @@ const getModules = () => {
           indyCredentialFormat: legacyIndyCredentialFormat,
         }),
         new V2CredentialProtocol({
-          credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService],
+          credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService, anonCredsCredentialFormatService],
         }),
       ],
     }),
