@@ -8,7 +8,7 @@ import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { randomUUID } from 'crypto'
 import { TenantsModule } from '@aries-framework/tenants'
 import { JsonLdCredentialFormatService } from '@aries-framework/core'
@@ -68,6 +68,85 @@ export async function readRestConfig(path: string) {
   return config
 }
 
+export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenantModules>>
+
+let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
+
+
+const getWithTenantModules = () => {
+  const modules = getModules(networkConfig)
+  return {
+    tenants: new TenantsModule<typeof modules>({
+      sessionAcquireTimeout: Infinity,
+      sessionLimit: Infinity,
+    }),
+    ...modules
+  }
+}
+
+
+const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+  const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
+  const legacyIndyProofFormat = new LegacyIndyProofFormatService()
+  const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
+  const anonCredsCredentialFormatService = new AnonCredsCredentialFormatService()
+  const anonCredsProofFormatService = new AnonCredsProofFormatService()
+  return {
+    askar: new AskarModule({
+      ariesAskar,
+      multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet,
+    }),
+
+    indyVdr: new IndyVdrModule({
+      indyVdr,
+      networks: networkConfig
+    }),
+
+    dids: new DidsModule({
+      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
+      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
+    }),
+    anoncreds: new AnonCredsModule({
+      registries: [new IndyVdrAnonCredsRegistry()],
+    }),
+    // Use anoncreds-rs as anoncreds backend
+    _anoncreds: new AnonCredsRsModule({
+      anoncreds,
+    }),
+    connections: new ConnectionsModule({
+      autoAcceptConnections: true,
+    }),
+    proofs: new ProofsModule({
+      autoAcceptProofs: AutoAcceptProof.ContentApproved,
+      proofProtocols: [
+        new V1ProofProtocol({
+          indyProofFormat: legacyIndyProofFormat,
+        }),
+        new V2ProofProtocol({
+          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService],
+        }),
+      ],
+    }),
+    credentials: new CredentialsModule({
+      autoAcceptCredentials: AutoAcceptCredential.Always,
+      credentialProtocols: [
+        new V1CredentialProtocol({
+          indyCredentialFormat: legacyIndyCredentialFormat,
+        }),
+        new V2CredentialProtocol({
+          credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService, anonCredsCredentialFormatService],
+        }),
+      ],
+    }),
+    w3cCredentials: new W3cCredentialsModule(),
+    cache: new CacheModule({
+      cache: new InMemoryLruCache({ limit: Infinity })
+    })
+  }
+
+}
+
+
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
 
@@ -82,10 +161,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ...afjConfig,
     logger
   };
-
-  const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
-  const legacyIndyProofFormat = new LegacyIndyProofFormatService()
-  const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
 
   async function fetchLedgerData(ledgerConfig: any): Promise<IndyVdrPoolConfig> {
     const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
@@ -129,6 +204,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ];
   }
 
+  const modules = getModules(networkConfig)
   const agent = new Agent({
     config: agentConfig,
     modules: {
@@ -140,57 +216,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           }),
         }
         : {}),
-
-      askar: new AskarModule({
-        ariesAskar,
-        multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet,
-      }),
-
-      indyVdr: new IndyVdrModule({
-        indyVdr,
-        networks: networkConfig
-      }),
-
-      dids: new DidsModule({
-        registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
-        resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
-      }),
-      anoncreds: new AnonCredsModule({
-        registries: [new IndyVdrAnonCredsRegistry()],
-      }),
-      // Use anoncreds-rs as anoncreds backend
-      _anoncreds: new AnonCredsRsModule({
-        anoncreds,
-      }),
-      connections: new ConnectionsModule({
-        autoAcceptConnections: true,
-      }),
-      proofs: new ProofsModule({
-        autoAcceptProofs: AutoAcceptProof.ContentApproved,
-        proofProtocols: [
-          new V1ProofProtocol({
-            indyProofFormat: legacyIndyProofFormat,
-          }),
-          new V2ProofProtocol({
-            proofFormats: [legacyIndyProofFormat],
-          }),
-        ],
-      }),
-      credentials: new CredentialsModule({
-        autoAcceptCredentials: AutoAcceptCredential.Always,
-        credentialProtocols: [
-          new V1CredentialProtocol({
-            indyCredentialFormat: legacyIndyCredentialFormat,
-          }),
-          new V2CredentialProtocol({
-            credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService],
-          }),
-        ],
-      }),
-      w3cCredentials: new W3cCredentialsModule(),
-      cache: new CacheModule({
-        cache: new InMemoryLruCache({ limit: Infinity })
-      })
+      ...modules,
     },
     dependencies: agentDependencies,
   });
