@@ -1,5 +1,5 @@
 import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, ConnectionRecordProps, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, HandshakeProtocol, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
-import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction, credDefValue } from '../types';
+import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction, CredDefValue } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
@@ -576,7 +576,7 @@ export class MultiTenancyController extends Controller {
             schemaId: string,
             issuerId: string,
             tag: string,
-            value: credDefValue,
+            value: CredDefValue,
             type: string
         },
         endorsedTransaction: string,
