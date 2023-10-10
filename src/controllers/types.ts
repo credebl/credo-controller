@@ -376,6 +376,21 @@ export interface WriteTransaction {
   credentialDefinition?: {
     schemaId: string,
     issuerId: string,
-    tag: string
+    tag: string,
+    value: credDefValue,
+    type: string
   }
+}
+
+export interface credDefValue {
+  primary: {
+    n: string;
+    s: string;
+    r: {
+      master_secret: string;
+      name: string;
+    };
+    rctxt: string;
+    z: string;
+  };
 }

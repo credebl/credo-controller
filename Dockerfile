@@ -35,13 +35,12 @@ RUN yarn global add patch-package
 # AFJ specifc setup
 WORKDIR /www
 
-COPY apps/agent-provisioning/AFJ/afj-controller/bin ./bin
-COPY apps/agent-provisioning/AFJ/afj-controller/patches ./patches
-COPY apps/agent-provisioning/AFJ/afj-controller/package.json ./package.json
+COPY bin ./bin
+COPY package.json ./package.json
 RUN yarn install --production
 
-COPY apps/agent-provisioning/AFJ/afj-controller/build ./build
-COPY apps/agent-provisioning/AFJ/afj-controller/libindy_vdr.so /usr/lib/
-COPY apps/agent-provisioning/AFJ/afj-controller/libindy_vdr.so /usr/local/lib/
+COPY build ./build
+COPY libindy_vdr.so /usr/lib/
+COPY libindy_vdr.so /usr/local/lib/
 
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
