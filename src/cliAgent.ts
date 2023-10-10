@@ -60,7 +60,7 @@ export interface AriesRestConfig {
   webhookUrl?: string
   adminPort: number
 }
-
+ 
 export async function readRestConfig(path: string) {
   const configString = await readFile(path, { encoding: 'utf-8' })
   const config = JSON.parse(configString)
@@ -72,14 +72,17 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
+let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
 
-const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+
+const getWithTenantModules = () => {
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({}),
     ...modules
   }
 }
+
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
@@ -200,7 +203,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ];
   }
 
-  const tenantModule = await getWithTenantModules(networkConfig)
   const modules = getModules(networkConfig)
   const agent = new Agent({
     config: agentConfig,
@@ -210,6 +212,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           ...tenantModule
         }
         : {}),
+      ...modules,
       ...modules,
     },
     dependencies: agentDependencies,
