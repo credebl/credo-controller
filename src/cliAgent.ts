@@ -70,6 +70,8 @@ export async function readRestConfig(path: string) {
 
 export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenantModules>>
 
+export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
+
 let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
 
 
