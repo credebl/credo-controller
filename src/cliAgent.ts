@@ -60,7 +60,7 @@ export interface AriesRestConfig {
   webhookUrl?: string
   adminPort: number
 }
-
+ 
 export async function readRestConfig(path: string) {
   const configString = await readFile(path, { encoding: 'utf-8' })
   const config = JSON.parse(configString)
