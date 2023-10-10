@@ -1,7 +1,7 @@
 import { Agent, AriesFrameworkError } from "@aries-framework/core"
 import { Body, Controller, Post, Res, Route, Tags, TsoaResponse } from "tsoa"
 import { injectable } from "tsyringe"
-import { DidNymTransaction, EndorserTransaction, WriteTransaction } from "../types"
+import { DidNymTransaction, EndorserTransaction, WriteTransaction, CredDefValue } from "../types"
 import { SchemaId, Version } from "../examples"
 import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId } from "@aries-framework/anoncreds"
 import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions } from "@aries-framework/indy-vdr"
@@ -144,7 +144,9 @@ export class EndorserTransactionController extends Controller {
     credentialDefinition: {
       schemaId: string,
       issuerId: string,
-      tag: string
+      tag: string,
+      value: CredDefValue,
+      type: string
     },
     endorsedTransaction?: string
   ) {
