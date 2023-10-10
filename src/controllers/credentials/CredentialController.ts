@@ -20,6 +20,7 @@ import {
   CredentialCreateOfferOptions,
 } from '../types'
 import { OutOfBandController } from '../outofband/OutOfBandController'
+import { RestAgentModules } from '../../cliAgent'
 
 
 
@@ -27,12 +28,12 @@ import { OutOfBandController } from '../outofband/OutOfBandController'
 @Route('/credentials')
 @injectable()
 export class CredentialController extends Controller {
-  private agent: Agent
+  private agent: Agent<RestAgentModules>
   private outOfBandController: OutOfBandController;
 
   // private v1CredentialProtocol: V1CredentialProtocol
 
-  public constructor(agent: Agent, outOfBandController: OutOfBandController) {
+  public constructor(agent: Agent<RestAgentModules>, outOfBandController: OutOfBandController) {
     super()
     this.agent = agent
     this.outOfBandController = outOfBandController
