@@ -377,20 +377,13 @@ export interface WriteTransaction {
     schemaId: string,
     issuerId: string,
     tag: string,
-    value: credDefValue,
+    value: CredDefValue,
     type: string
   }
 }
 
-export interface credDefValue {
-  primary: {
-    n: string;
-    s: string;
-    r: {
-      master_secret: string;
-      name: string;
-    };
-    rctxt: string;
-    z: string;
-  };
+export interface CredDefValue {
+  primary: Record<string, unknown>
+  revocation?: unknown
 }
+
