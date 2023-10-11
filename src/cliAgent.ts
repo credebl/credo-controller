@@ -72,20 +72,14 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
-let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
 
-
-const getWithTenantModules = () => {
+const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const modules = getModules(networkConfig)
   return {
-    tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
-      sessionLimit: Infinity,
-    }),
+    tenants: new TenantsModule<typeof modules>({}),
     ...modules
   }
 }
-
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
@@ -206,16 +200,14 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ];
   }
 
+  const tenantModule = await getWithTenantModules(networkConfig)
   const modules = getModules(networkConfig)
   const agent = new Agent({
     config: agentConfig,
     modules: {
       ...(afjConfig.tenancy
         ? {
-          tenants: new TenantsModule({
-            sessionAcquireTimeout: Infinity,
-            sessionLimit: Infinity,
-          }),
+          ...tenantModule
         }
         : {}),
       ...modules,
