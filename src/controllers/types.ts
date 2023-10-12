@@ -377,13 +377,7 @@ export interface WriteTransaction {
     schemaId: string,
     issuerId: string,
     tag: string,
-    value: CredDefValue,
+    value: unknown,
     type: string
   }
 }
-
-export interface CredDefValue {
-  primary: Record<string, unknown>
-  revocation?: unknown
-}
-
