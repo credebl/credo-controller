@@ -1,5 +1,5 @@
 import type { Version } from '../examples'
-import { AnonCredsError, AnonCredsApi, getUnqualifiedSchemaId } from '@aries-framework/anoncreds'
+import { AnonCredsError, AnonCredsApi, getUnqualifiedSchemaId, parseIndySchemaId } from '@aries-framework/anoncreds'
 import { Agent, AriesFrameworkError, BaseAgent } from '@aries-framework/core'
 // import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 // import { isIndyError } from '@aries-framework/core/build/utils/indyError'
@@ -100,16 +100,16 @@ export class SchemaController {
             endorserDid: issuerId,
           },
         })
-        const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, name, version);
+
+        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+        const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+          indySchemaId.namespaceIdentifier,
+          indySchemaId.schemaName,
+          indySchemaId.schemaVersion
+        );
         if (schemaState.state === 'finished') {
-          const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
-          let schemaId;
-          if (indyNamespace) {
-            schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
-          } else {
-            throw new Error('No indyNameSpace found')
-          }
-          schemaState.schemaId = schemaId
+          
+          schemaState.schemaId = getSchemaUnqualifiedId
         }
         return schemaState;
 

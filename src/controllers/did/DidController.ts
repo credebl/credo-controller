@@ -57,86 +57,102 @@ export class DidController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-
       data.method = data.method || 'bcovrin:testnet';
       data.role = data.role || 'endorser';
+
       const didMethod = `did:indy:${data.method}`;
 
       if (data.method.includes('bcovrin')) {
-
-        if (data?.role?.toLowerCase() === "endorser") {
-          const body = {
-            role: 'ENDORSER',
-            alias: 'Alias',
-            seed: data.seed
-          };
-
-          const res = await axios.post(BCOVRIN_REGISTER_URL, body);
-
-          if (res) {
-            const { did } = res?.data || {};
-            await this.importDid(didMethod, did, data.seed);
-            return { did: `${didMethod}:${did}` };
-          }
-        } else {
-
-          if(!data.endorserDid){
-            throw new Error('Please provide the endorser DID')
-          }
-          
-          const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
-            method: 'indy',
-            options: {
-              endorserMode: 'external',
-              endorserDid: data.endorserDid ? data.endorserDid : '',
-            },
-          })) as IndyVdrDidCreateResult
-          return { did: didCreateTxResult.didState.did };
-        }
-
+        return this.handleBcovrin(data, didMethod);
       } else if (data.method.includes('indicio')) {
-
-        if (data?.role?.toLowerCase() === "endorser") {
-          const key = await this.agent.wallet.createKey({
-            privateKey: TypedArrayEncoder.fromString(data.seed),
-            keyType: KeyType.Ed25519
-          });
-
-          const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
-          const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
-
-          const body = {
-            network: 'testnet',
-            did,
-            verkey: TypedArrayEncoder.toBase58(buffer)
-          };
-
-          const res = await axios.post(INDICIO_NYM_URL, body);
-
-          if (res.data.statusCode === 200) {
-            await this.importDid(didMethod, body.did, data.seed);
-            return { did: `${didMethod}:${body.did}` };
-          }
-        } else {
-
-          if(!data.endorserDid){
-            throw new Error('Please provide the endorser DID')
-          }
-          
-          const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
-            method: 'indy',
-            options: {
-              endorserMode: 'external',
-              endorserDid: data.endorserDid ? data.endorserDid : '',
-            },
-          })) as IndyVdrDidCreateResult
-          // return { did: didCreateTxResult.didState.did };
-          return didCreateTxResult;
-        }
+        return this.handleIndicio(data, didMethod);
+      } else {
+        throw new Error('Invalid did method');
       }
     } catch (error) {
       return internalServerError(500, { message: `Something went wrong: ${error}` });
     }
+  }
+
+  private async handleBcovrin(data: DidCreate, didMethod: string) {
+    if (data?.role?.toLowerCase() === 'endorser') {
+      if (data.did) {
+        await this.importDid(didMethod, data.did, data.seed);
+        return { did: `${didMethod}:${data.did}` };
+      } else {
+        const res = await axios.post(BCOVRIN_REGISTER_URL, { role: 'ENDORSER', alias: 'Alias', seed: data.seed });
+        const { did } = res?.data || {};
+        await this.importDid(didMethod, did, data.seed);
+        return { did: `${didMethod}:${did}` };
+      }
+    } else {
+      if (!data.endorserDid) {
+        throw new Error('Please provide the endorser DID');
+      }
+      const didCreateTxResult = await this.createEndorserDid(data.endorserDid);
+      return { did: didCreateTxResult.didState.did };
+    }
+  }
+
+  private async handleIndicio(data: DidCreate, didMethod: string) {
+    if (data?.role?.toLowerCase() === 'endorser') {
+      if (data.did) {
+        await this.importDid(didMethod, data.did, data.seed);
+        return { did: `${didMethod}:${data.did}` };
+      } else {
+        const method = data.method || 'indicio:testnet';
+        const key = await this.createIndicioKey(data.seed, method);
+        const res = await axios.post(INDICIO_NYM_URL, key);
+        if (res.data.statusCode === 200) {
+          await this.importDid(didMethod, key.did, data.seed);
+          return { did: `${didMethod}:${key.did}` };
+        }
+      }
+    } else {
+      if (!data.endorserDid) {
+        throw new Error('Please provide the endorser DID');
+      }
+      const didCreateTxResult = await this.createEndorserDid(data.endorserDid);
+      return didCreateTxResult;
+    }
+  }
+
+  private async createEndorserDid(endorserDid: string) {
+    return this.agent.dids.create({
+      method: 'indy',
+      options: {
+        endorserMode: 'external',
+        endorserDid: endorserDid || '',
+      },
+    });
+  }
+
+  private async createIndicioKey(seed: string, method: string) {
+    const key = await this.agent.wallet.createKey({
+      privateKey: TypedArrayEncoder.fromString(seed),
+      keyType: KeyType.Ed25519,
+    });
+
+    const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
+    const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
+
+    let body;
+    if (method === 'indicio:testnet') {
+      body = {
+        network: 'testnet',
+        did,
+        verkey: TypedArrayEncoder.toBase58(buffer),
+      };
+    } else if (method === 'indicio:demonet') {
+      body = {
+        network: 'demonet',
+        did,
+        verkey: TypedArrayEncoder.toBase58(buffer),
+      };
+    } else {
+      throw new Error('Please provide a valid did method');
+    }
+    return body;
   }
 
   private async importDid(didMethod: string, did: string, seed: string) {

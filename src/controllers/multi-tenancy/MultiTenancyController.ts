@@ -1,15 +1,18 @@
-import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, ConnectionRecordProps, ConnectionRepository, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, DidDocumentBuilder, DidExchangeState, HandshakeProtocol, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
-import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction, CredDefValue } from '../types';
+import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, CacheModule, ConnectionRecordProps, ConnectionRepository, ConnectionsModule, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, CredentialsModule, DidDocumentBuilder, DidExchangeState, DidsModule, HandshakeProtocol, JsonLdCredentialFormatService, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsModule, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, V2CredentialProtocol, V2ProofProtocol, W3cCredentialsModule, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
+import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
-import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
+import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId, AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol, parseIndyCredentialDefinitionId, parseIndySchemaId } from '@aries-framework/anoncreds'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples';
-import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
+import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions, IndyVdrDidCreateResult, IndyVdrModule } from '@aries-framework/indy-vdr'
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { RestMultiTenantAgentModules } from '../../cliAgent';
+import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs';
+import { AskarModule } from '@aries-framework/askar';
+import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
 
 @Tags("MultiTenancy")
 @Route("/multi-tenancy")
@@ -22,188 +25,42 @@ export class MultiTenancyController extends Controller {
         this.agent = agent;
     }
 
-
     @Post("/create-tenant")
     public async createTenant(
         @Body() createTenantOptions: CreateTenantOptions,
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const { config, seed } = createTenantOptions;
-        const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config });
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id });
         try {
+            const { config } = createTenantOptions;
+            const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config });
+            const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id });
 
             createTenantOptions.role = createTenantOptions.role || 'endorser';
             createTenantOptions.role = createTenantOptions.role || 'endorser';
             createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet';
             const didMethod = `did:indy:${createTenantOptions.method}`;
 
-
+            let result;
 
             if (createTenantOptions.method.includes('bcovrin')) {
 
-                if (createTenantOptions?.role?.toLowerCase() === "endorser") {
-                    const body = {
-                        role: 'ENDORSER',
-                        alias: 'Alias',
-                        seed
-                    };
-
-                if (createTenantOptions?.role?.toLowerCase() === "endorser") {
-                    const body = {
-                        role: 'ENDORSER',
-                        alias: 'Alias',
-                        seed
-                    };
-
-                    const res = await axios.post(BCOVRIN_REGISTER_URL, body);
-                    const res = await axios.post(BCOVRIN_REGISTER_URL, body);
-
-                    if (res) {
-                        const { did } = res?.data || {};
-                        await this.importDid(didMethod, did, createTenantOptions.seed, tenantAgent);
-                    }
-                    if (res) {
-                        const { did } = res?.data || {};
-                        await this.importDid(didMethod, did, createTenantOptions.seed, tenantAgent);
-                    }
-
-                    const resolveResult = await this.agent.dids.resolve(`${didMethod}:${res.data.did}`);
-                    let verkey;
-                    if (resolveResult.didDocument?.verificationMethod) {
-                        verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
-                    }
-                    return { tenantRecord, did: `${didMethod}:${res.data.did}`, verkey };
-                } else {
-                    const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
-                        method: 'indy',
-                        options: {
-                            endorserMode: 'external',
-                            endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
-                        },
-                    })) as IndyVdrDidCreateResult
-
-                    return { tenantRecord, did: didCreateTxResult.didState.did };
-                }
-
+                result = await this.handleBcovrin(createTenantOptions, tenantAgent, didMethod);
             } else if (createTenantOptions.method.includes('indicio')) {
 
-                if (createTenantOptions?.role?.toLowerCase() === "endorser") {
+                result = await this.handleIndicio(createTenantOptions, tenantAgent, didMethod);
+            } else if (createTenantOptions.method === 'key') {
 
-                if (createTenantOptions?.role?.toLowerCase() === "endorser") {
+                result = await this.handleKey(createTenantOptions, tenantAgent);
+            } else if (createTenantOptions.method === 'web') {
 
-                    const key = await this.agent.wallet.createKey({
-                        privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
-                        keyType: KeyType.Ed25519
-                    });
-                    const key = await this.agent.wallet.createKey({
-                        privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
-                        keyType: KeyType.Ed25519
-                    });
-
-                    const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
-                    const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
-                    const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
-                    const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
-
-                    const body = {
-                        network: 'testnet',
-                        did,
-                        verkey: TypedArrayEncoder.toBase58(buffer)
-                    };
-                    const body = {
-                        network: 'testnet',
-                        did,
-                        verkey: TypedArrayEncoder.toBase58(buffer)
-                    };
-
-                    const res = await axios.post(INDICIO_NYM_URL, body);
-                    const res = await axios.post(INDICIO_NYM_URL, body);
-
-                    if (res.data.statusCode === 200) {
-                        await this.importDid(didMethod, body.did, createTenantOptions.seed, tenantAgent);
-                        const resolveResult = await this.agent.dids.resolve(`${didMethod}:${body.did}`);
-                        let verkey;
-                        if (resolveResult.didDocument?.verificationMethod) {
-                            verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
-                        }
-                        return { tenantRecord, did: `${didMethod}:${body.did}`, verkey };
-
-                    }
-                } else {
-
-                    const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
-                        method: 'indy',
-                        options: {
-                            endorserMode: 'external',
-                            endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
-                        },
-                    })) as IndyVdrDidCreateResult
-                    return { tenantRecord, didTx: didCreateTxResult };
-                }
-            } else if ('key' === createTenantOptions.method) {
-
-                const did = await this.agent.dids.create<KeyDidCreateOptions>({
-                    method: 'key',
-                    options: {
-                        keyType: KeyType.Ed25519,
-                    },
-                    secret: {
-                        privateKey: TypedArrayEncoder.fromString(seed)
-                    }
-                });
-                await this.agent.dids.import({
-                    did: `${did.didState.did}`,
-                    overwrite: true,
-                    privateKeys: [
-                        {
-                            keyType: KeyType.Ed25519,
-                            privateKey: TypedArrayEncoder.fromString(seed)
-                        },
-                    ],
-                });
-                const resolveResult = await this.agent.dids.resolve(`did:key:${did}`);
-                let verkey;
-                if (resolveResult.didDocument?.verificationMethod) {
-                    verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
-                }
-
-                await tenantAgent.endSession();
-                return { tenantRecord, did, verkey };
-
-            } else if ('web' === createTenantOptions.method) {
-
-                const domain = 'credebl.github.io';
-                const did = `did:web:${domain}`;
-                const keyId = `${did}#key-1`;
-
-                const key = await this.agent.wallet.createKey({
-                    keyType: KeyType.Ed25519,
-                    privateKey: TypedArrayEncoder.fromString(seed)
-                });
-
-                const didDocument = new DidDocumentBuilder(did)
-                    .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
-                    .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
-                    .addAuthentication(keyId)
-                    .build();
-
-                await this.agent.dids.import({
-                    did,
-                    overwrite: true,
-                    didDocument
-                });
-
-                const resolveResult = await this.agent.dids.resolve(did);
-                let verkey;
-                if (resolveResult.didDocument?.verificationMethod) {
-                    verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
-                }
-
-                await tenantAgent.endSession();
-                return { tenantRecord, did, verkey };
+                result = await this.handleWeb(createTenantOptions, tenantAgent);
+            } else {
+                return internalServerError(500, { message: `Invalid method: ${createTenantOptions.method}` });
             }
+
+            await tenantAgent.endSession();
+            return { tenantRecord, ...result };
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
@@ -212,6 +69,168 @@ export class MultiTenancyController extends Controller {
             }
             return internalServerError(500, { message: `Something went wrong: ${error}` });
         }
+    }
+
+    private async handleBcovrin(createTenantOptions: CreateTenantOptions, tenantAgent: TenantAgent<{ askar: AskarModule; indyVdr: IndyVdrModule; dids: DidsModule; anoncreds: AnonCredsModule; _anoncreds: AnonCredsRsModule; connections: ConnectionsModule; proofs: ProofsModule<(V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]>; credentials: CredentialsModule<(V1CredentialProtocol | V2CredentialProtocol<(LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]>)[]>; w3cCredentials: W3cCredentialsModule; cache: CacheModule; }>, didMethod: string) {
+        if (createTenantOptions.did) {
+            await this.importDid(didMethod, createTenantOptions.did, createTenantOptions.seed, tenantAgent);
+            const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createTenantOptions.did}`);
+            let verkey;
+            if (resolveResult.didDocument?.verificationMethod) {
+                verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+            }
+            return { did: `${didMethod}:${createTenantOptions.did}`, verkey };
+        } else {
+            if (createTenantOptions?.role?.toLowerCase() === "endorser") {
+                const body = {
+                    role: 'ENDORSER',
+                    alias: 'Alias',
+                    seed: createTenantOptions.seed,
+                };
+                const res = await axios.post(BCOVRIN_REGISTER_URL, body);
+
+                if (res) {
+                    const { did } = res?.data || {};
+                    await this.importDid(didMethod, did, createTenantOptions.seed, tenantAgent);
+                    const resolveResult = await this.agent.dids.resolve(`${didMethod}:${res.data.did}`);
+                    let verkey;
+                    if (resolveResult.didDocument?.verificationMethod) {
+                        verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+                    }
+                    return { did: `${didMethod}:${res.data.did}`, verkey };
+                }
+            } else {
+                const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
+                    method: 'indy',
+                    options: {
+                        endorserMode: 'external',
+                        endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
+                    },
+                })) as IndyVdrDidCreateResult;
+                return { did: didCreateTxResult.didState.did };
+            }
+        }
+    }
+
+    private async handleIndicio(createTenantOptions: CreateTenantOptions, tenantAgent: TenantAgent<{ askar: AskarModule; indyVdr: IndyVdrModule; dids: DidsModule; anoncreds: AnonCredsModule; _anoncreds: AnonCredsRsModule; connections: ConnectionsModule; proofs: ProofsModule<(V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]>; credentials: CredentialsModule<(V1CredentialProtocol | V2CredentialProtocol<(LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]>)[]>; w3cCredentials: W3cCredentialsModule; cache: CacheModule; }>, didMethod: string) {
+        if (createTenantOptions.did) {
+            return await this.handleDidCreation(createTenantOptions, tenantAgent, didMethod);
+        } else {
+            if (createTenantOptions?.role?.toLowerCase() === "endorser") {
+                return await this.handleEndorserCreation(createTenantOptions, tenantAgent, didMethod);
+            } else {
+                return await this.handleIndyDidCreation(createTenantOptions, tenantAgent);
+            }
+        }
+    }
+
+    private async handleDidCreation(createTenantOptions: CreateTenantOptions, tenantAgent: TenantAgent<{ askar: AskarModule; indyVdr: IndyVdrModule; dids: DidsModule; anoncreds: AnonCredsModule; _anoncreds: AnonCredsRsModule; connections: ConnectionsModule; proofs: ProofsModule<(V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]>; credentials: CredentialsModule<(V1CredentialProtocol | V2CredentialProtocol<(LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]>)[]>; w3cCredentials: W3cCredentialsModule; cache: CacheModule; }>, didMethod: string) {
+        await this.importDid(didMethod, createTenantOptions?.did as string, createTenantOptions.seed, tenantAgent);
+        const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createTenantOptions.did}`);
+        let verkey;
+        if (resolveResult.didDocument?.verificationMethod) {
+            verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+        }
+        return { did: `${didMethod}:${createTenantOptions.did}`, verkey };
+    }
+
+    private async handleEndorserCreation(createTenantOptions: CreateTenantOptions, tenantAgent: TenantAgent<{ askar: AskarModule; indyVdr: IndyVdrModule; dids: DidsModule; anoncreds: AnonCredsModule; _anoncreds: AnonCredsRsModule; connections: ConnectionsModule; proofs: ProofsModule<(V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]>; credentials: CredentialsModule<(V1CredentialProtocol | V2CredentialProtocol<(LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]>)[]>; w3cCredentials: W3cCredentialsModule; cache: CacheModule; }>, didMethod: string) {
+        const key = await this.agent.wallet.createKey({
+            privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
+            keyType: KeyType.Ed25519,
+        });
+        const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58);
+        const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16));
+        let body;
+        if (createTenantOptions.method === 'indicio:testnet') {
+            body = {
+                network: 'testnet',
+                did,
+                verkey: TypedArrayEncoder.toBase58(buffer),
+            };
+        } else if (createTenantOptions.method === 'indicio:demonet') {
+            body = {
+                network: 'demonet',
+                did,
+                verkey: TypedArrayEncoder.toBase58(buffer),
+            };
+        }
+        const res = await axios.post(INDICIO_NYM_URL, body);
+
+        if (res.data.statusCode === 200) {
+            await this.importDid(didMethod, did, createTenantOptions.seed, tenantAgent);
+            const resolveResult = await this.agent.dids.resolve(`${didMethod}:${did}`);
+            let verkey;
+            if (resolveResult.didDocument?.verificationMethod) {
+                verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+            }
+            return { did: `${didMethod}:${body?.did}`, verkey };
+        }
+    }
+
+    private async handleIndyDidCreation(createTenantOptions: CreateTenantOptions, tenantAgent: TenantAgent<{ askar: AskarModule; indyVdr: IndyVdrModule; dids: DidsModule; anoncreds: AnonCredsModule; _anoncreds: AnonCredsRsModule; connections: ConnectionsModule; proofs: ProofsModule<(V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]>; credentials: CredentialsModule<(V1CredentialProtocol | V2CredentialProtocol<(LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]>)[]>; w3cCredentials: W3cCredentialsModule; cache: CacheModule; }>) {
+        const didCreateTxResult = await tenantAgent.dids.create({
+            method: 'indy',
+            options: {
+                endorserMode: 'external',
+                endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
+            },
+        });
+        return { didTx: didCreateTxResult };
+    }
+
+    private async handleKey(createTenantOptions: CreateTenantOptions, tenantAgent: TenantAgent<{ askar: AskarModule; indyVdr: IndyVdrModule; dids: DidsModule; anoncreds: AnonCredsModule; _anoncreds: AnonCredsRsModule; connections: ConnectionsModule; proofs: ProofsModule<(V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]>; credentials: CredentialsModule<(V1CredentialProtocol | V2CredentialProtocol<(LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]>)[]>; w3cCredentials: W3cCredentialsModule; cache: CacheModule; }>) {
+        const did = await this.agent.dids.create<KeyDidCreateOptions>({
+            method: 'key',
+            options: {
+                keyType: KeyType.Ed25519,
+            },
+            secret: {
+                privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
+            },
+        });
+        await this.agent.dids.import({
+            did: `${did.didState.did}`,
+            overwrite: true,
+            privateKeys: [
+                {
+                    keyType: KeyType.Ed25519,
+                    privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
+                },
+            ],
+        });
+        const resolveResult = await this.agent.dids.resolve(`did:key:${did}`);
+        let verkey;
+        if (resolveResult.didDocument?.verificationMethod) {
+            verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+        }
+        return { did, verkey };
+    }
+
+    private async handleWeb(createTenantOptions: CreateTenantOptions, tenantAgent: TenantAgent<{ askar: AskarModule; indyVdr: IndyVdrModule; dids: DidsModule; anoncreds: AnonCredsModule; _anoncreds: AnonCredsRsModule; connections: ConnectionsModule; proofs: ProofsModule<(V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]>; credentials: CredentialsModule<(V1CredentialProtocol | V2CredentialProtocol<(LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]>)[]>; w3cCredentials: W3cCredentialsModule; cache: CacheModule; }>) {
+        const domain = 'credebl.github.io';
+        const did = `did:web:${domain}`;
+        const keyId = `${did}#key-1`;
+        const key = await this.agent.wallet.createKey({
+            keyType: KeyType.Ed25519,
+            privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
+        });
+        const didDocument = new DidDocumentBuilder(did)
+            .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
+            .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
+            .addAuthentication(keyId)
+            .build();
+        await this.agent.dids.import({
+            did,
+            overwrite: true,
+            didDocument,
+        });
+        const resolveResult = await this.agent.dids.resolve(did);
+        let verkey;
+        if (resolveResult.didDocument?.verificationMethod) {
+            verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58;
+        }
+        return { did, verkey };
     }
 
     private async importDid(didMethod: string, did: string, seed: string, tenantAgent: { dids: { import: (arg0: { did: string; overwrite: boolean; privateKeys: { keyType: KeyType; privateKey: Buffer; }[]; }) => any; }; }) {
@@ -481,26 +500,15 @@ export class MultiTenancyController extends Controller {
                         endorserDid: schema.issuerId,
                     },
                 })
-                const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
+
+                const indySchemaId = parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
+                const getSchemaId = await getUnqualifiedSchemaId(
+                    indySchemaId.namespaceIdentifier,
+                    indySchemaId.schemaName,
+                    indySchemaId.schemaVersion
+                );
                 if (schemaState.state === 'finished') {
-
-                    const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
-                    let schemaId;
-                    const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
-                    let schemaId;
-
-                    if (indyNamespace) {
-                        schemaId = getSchemaId.substring(`did:indy:${indyNamespace[1]}`.length);
-                    } else {
-                        throw new Error('No indyNameSpace found')
-                    }
-                    if (indyNamespace) {
-                        schemaId = getSchemaId.substring(`did:indy:${indyNamespace[1]}`.length);
-                    } else {
-                        throw new Error('No indyNameSpace found')
-                    }
-
-                    schemaState.schemaId = schemaId
+                    schemaState.schemaId = getSchemaId
                 }
                 return schemaState;
             } else {
@@ -593,17 +601,14 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(issuerId, name, version);
+            const indySchemaId = parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
+            const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+                indySchemaId.namespaceIdentifier,
+                indySchemaId.schemaName,
+                indySchemaId.schemaVersion
+            );
             if (schemaState.state === 'finished' || schemaState.state === 'action') {
-                const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
-                let schemaId;
-
-                if (indyNamespace) {
-                    schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
-                } else {
-                    throw new Error('No indyNameSpace found')
-                }
-                schemaState.schemaId = schemaId
+                schemaState.schemaId = getSchemaUnqualifiedId
             }
 
             await tenantAgent.endSession();
@@ -619,7 +624,7 @@ export class MultiTenancyController extends Controller {
             schemaId: string,
             issuerId: string,
             tag: string,
-            value: CredDefValue,
+            value: unknown,
             type: string
             tag: string,
             value: CredDefValue,
@@ -640,19 +645,15 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(schemaId)
-            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
+            const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '');
+            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+                indyCredDefId.namespaceIdentifier,
+                indyCredDefId.schemaSeqNo,
+                indyCredDefId.tag
+            );
             if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
 
-                const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
-                let credDefId;
-                if (indyNamespaceMatch) {
-                    credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
-                } else {
-                    throw new Error('No indyNameSpace found')
-                }
-
-                credentialDefinitionState.credentialDefinitionId = credDefId;
+                credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
             }
 
             await tenantAgent.endSession();
@@ -730,31 +731,17 @@ export class MultiTenancyController extends Controller {
                     },
                     options: {}
                 })
-                const indyVdrAnonCredsRegistry = new IndyVdrAnonCredsRegistry()
-                const schemaDetails = await indyVdrAnonCredsRegistry.getSchema(tenantAgent.context, credentialDefinitionRequest.schemaId)
                 if (!credentialDefinitionState?.credentialDefinition) {
                     throw new Error('')
                 }
-                const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
+                const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '')
+                const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+                    indyCredDefId.namespaceIdentifier,
+                    indyCredDefId.schemaSeqNo,
+                    indyCredDefId.tag
+                );
                 if (credentialDefinitionState.state === 'finished') {
-
-                    const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
-                    const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinitionRequest.issuerId);
-
-                    let credDefId;
-                    if (indyNamespace) {
-                        credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}`.length);
-                    } else {
-                        throw new Error('No indyNameSpace found')
-                    }
-                    let credDefId;
-                    if (indyNamespace) {
-                        credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}`.length);
-                    } else {
-                        throw new Error('No indyNameSpace found')
-                    }
-
-                    credentialDefinitionState.credentialDefinitionId = credDefId;
+                    credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
                 }
                 return credentialDefinitionState;
             } else {
@@ -1227,10 +1214,13 @@ export class MultiTenancyController extends Controller {
             },
         })
 
-        const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, name, version);
+        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+        const getSchemaId = await getUnqualifiedSchemaId(
+            indySchemaId.namespaceIdentifier,
+            indySchemaId.schemaName,
+            indySchemaId.schemaVersion);
         if (schemaState.state === 'finished') {
-            const skippedString = getSchemaId.substring('did:indy:bcovrin:'.length);
-            schemaState.schemaId = skippedString
+            schemaState.schemaId = getSchemaId
         }
 
         await tenantAgent.endSession();
@@ -1261,11 +1251,15 @@ export class MultiTenancyController extends Controller {
             },
             options: {}
         })
-        const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(schemaId)
-        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
+
+        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+            indyCredDefId.namespaceIdentifier,
+            indyCredDefId.schemaSeqNo,
+            indyCredDefId.tag
+        );
         if (credentialDefinitionState.state === 'finished') {
-            const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
-            credentialDefinitionState.credentialDefinitionId = skippedString
+            credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
         }
 
         await tenantAgent.endSession();
