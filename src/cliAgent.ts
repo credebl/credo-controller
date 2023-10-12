@@ -60,7 +60,7 @@ export interface AriesRestConfig {
   webhookUrl?: string
   adminPort: number
 }
- 
+
 export async function readRestConfig(path: string) {
   const configString = await readFile(path, { encoding: 'utf-8' })
   const config = JSON.parse(configString)
@@ -178,10 +178,18 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     };
 
     if (ledgerConfig.indyNamespace.includes('indicio')) {
-      networkConfig.transactionAuthorAgreement = {
-        version: '1.0',
-        acceptanceMechanism: 'wallet_agreement',
-      };
+
+      if (ledgerConfig.indyNamespace === 'indicio:testnet') {
+        networkConfig.transactionAuthorAgreement = {
+          version: '1.0',
+          acceptanceMechanism: 'wallet_agreement',
+        };
+      } else {
+        networkConfig.transactionAuthorAgreement = {
+          version: '1.3',
+          acceptanceMechanism: 'wallet_agreement',
+        };
+      }
     }
 
     return networkConfig;

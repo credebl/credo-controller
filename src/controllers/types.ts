@@ -311,8 +311,7 @@ export interface CreateTenantOptions {
   method?: string;
   role?: string;
   endorserDid?: string;
-  role?: string;
-  endorserDid?: string;
+  did?: string;
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
@@ -368,13 +367,7 @@ export interface WriteTransaction {
     schemaId: string,
     issuerId: string,
     tag: string,
-    value: CredDefValue,
+    value: unknown,
     type: string
   }
 }
-
-export interface CredDefValue {
-  primary: Record<string, unknown>
-  revocation?: unknown
-}
-

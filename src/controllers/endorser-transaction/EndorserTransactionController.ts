@@ -1,9 +1,9 @@
 import { Agent, AriesFrameworkError } from "@aries-framework/core"
 import { Body, Controller, Post, Res, Route, Tags, TsoaResponse } from "tsoa"
 import { injectable } from "tsyringe"
-import { DidNymTransaction, EndorserTransaction, WriteTransaction, CredDefValue } from "../types"
+import { DidNymTransaction, EndorserTransaction, WriteTransaction } from "../types"
 import { SchemaId, Version } from "../examples"
-import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId } from "@aries-framework/anoncreds"
+import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId, parseIndyCredentialDefinitionId, parseIndySchemaId } from "@aries-framework/anoncreds"
 import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions } from "@aries-framework/indy-vdr"
 
 @Tags('EndorserTransaction')
@@ -122,16 +122,14 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
+      const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+      const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+        indySchemaId.namespaceIdentifier,
+        indySchemaId.schemaName,
+        indySchemaId.schemaVersion
+      );
       if (schemaState.state === 'finished' || schemaState.state === 'action') {
-        const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
-        let schemaId;
-        if (indyNamespace) {
-          schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
-        } else {
-          throw new Error('No indyNameSpace found')
-        }
-        schemaState.schemaId = schemaId
+        schemaState.schemaId = getSchemaUnqualifiedId
       }
       return schemaState;
 
@@ -145,7 +143,7 @@ export class EndorserTransactionController extends Controller {
       schemaId: string,
       issuerId: string,
       tag: string,
-      value: CredDefValue,
+      value: unknown,
       type: string
     },
     endorsedTransaction?: string
@@ -160,22 +158,14 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      console.log("credentialDefinitionState---", credentialDefinitionState)
-      const schemaDetails = await this.agent.modules.anoncreds.getSchema(credentialDefinition.schemaId)
-      console.log("schemaDetails---", schemaDetails)
-      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinition.tag);
-      console.log("getCredentialDefinitionId---", getCredentialDefinitionId)
+      const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+        indyCredDefId.namespaceIdentifier,
+        indyCredDefId.schemaSeqNo,
+        indyCredDefId.tag
+      );
       if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
-
-        const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinition.issuerId);
-        let credDefId;
-        if (indyNamespaceMatch) {
-          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
-        } else {
-          throw new Error('No indyNameSpace found')
-        }
-
-        credentialDefinitionState.credentialDefinitionId = credDefId;
+        credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
       }
       return credentialDefinitionState;
 
