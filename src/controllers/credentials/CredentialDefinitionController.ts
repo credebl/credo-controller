@@ -90,10 +90,10 @@ export class CredentialDefinitionController extends Controller {
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
         if (credentialDefinitionState.state === 'finished') {
 
-          const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
+          const indyNamespaceMatch = /did:indy:([^:]+:([^:]+))/.exec(issuerId);
           let credDefId;
           if (indyNamespaceMatch) {
-            credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
+            credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}:`.length);
           } else {
             throw new Error('No indyNameSpace found')
           }
