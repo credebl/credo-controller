@@ -102,10 +102,10 @@ export class SchemaController {
         })
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, name, version);
         if (schemaState.state === 'finished') {
-          const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(issuerId);
+          const indyNamespace = /did:indy:([^:]+:([^:]+))/.exec(issuerId);
           let schemaId;
           if (indyNamespace) {
-            schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
+            schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}:`.length);
           } else {
             throw new Error('No indyNameSpace found')
           }

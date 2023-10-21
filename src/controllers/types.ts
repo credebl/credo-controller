@@ -322,6 +322,7 @@ export interface CreateTenantOptions {
   method?: string;
   role?: string;
   endorserDid?: string;
+  did?: string;
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
