@@ -124,10 +124,10 @@ export class EndorserTransactionController extends Controller {
 
       const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
       if (schemaState.state === 'finished' || schemaState.state === 'action') {
-        const indyNamespace = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(schema.issuerId);
+        const indyNamespace = /did:indy:([^:]+:([^:]+))/.exec(issuerId);
         let schemaId;
         if (indyNamespace) {
-          schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}`.length);
+          schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}:`.length);
         } else {
           throw new Error('No indyNameSpace found')
         }
@@ -164,10 +164,10 @@ export class EndorserTransactionController extends Controller {
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinition.tag);
       if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
 
-        const indyNamespaceMatch = /did:indy:([^:]+:?(mainnet|testnet)?:?)/.exec(credentialDefinition.issuerId);
+        const indyNamespaceMatch = /did:indy:([^:]+:([^:]+))/.exec(credentialDefinition.issuerId);
         let credDefId;
         if (indyNamespaceMatch) {
-          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}`.length);
+          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}:`.length);
         } else {
           throw new Error('No indyNameSpace found')
         }
