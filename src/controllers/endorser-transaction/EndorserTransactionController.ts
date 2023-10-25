@@ -5,6 +5,7 @@ import { DidNymTransaction, EndorserTransaction, WriteTransaction } from "../typ
 import { SchemaId, Version } from "../examples"
 import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId, parseIndyCredentialDefinitionId, parseIndySchemaId } from "@aries-framework/anoncreds"
 import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions } from "@aries-framework/indy-vdr"
+import { CredentialEnum } from '../../enums/enum';
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
