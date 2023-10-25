@@ -101,7 +101,7 @@ export class SchemaController {
           },
         })
 
-        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+        const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
           indySchemaId.namespaceIdentifier,
           indySchemaId.schemaName,
