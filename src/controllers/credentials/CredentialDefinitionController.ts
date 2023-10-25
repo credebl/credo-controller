@@ -86,7 +86,7 @@ export class CredentialDefinitionController extends Controller {
           options: {}
         })
 
-        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+        const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
           indyCredDefId.namespaceIdentifier,
           indyCredDefId.schemaSeqNo,

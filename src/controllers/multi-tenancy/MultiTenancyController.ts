@@ -497,7 +497,7 @@ export class MultiTenancyController extends Controller {
                     },
                 })
 
-                const indySchemaId = parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
+                const indySchemaId = await parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
                 const getSchemaId = await getUnqualifiedSchemaId(
                     indySchemaId.namespaceIdentifier,
                     indySchemaId.schemaName,
@@ -597,7 +597,7 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const indySchemaId = parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
+            const indySchemaId = await parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
             const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
                 indySchemaId.namespaceIdentifier,
                 indySchemaId.schemaName,
@@ -638,7 +638,7 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '');
+            const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '');
             const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
                 indyCredDefId.namespaceIdentifier,
                 indyCredDefId.schemaSeqNo,
@@ -724,7 +724,7 @@ export class MultiTenancyController extends Controller {
                 if (!credentialDefinitionState?.credentialDefinition) {
                     throw new Error('')
                 }
-                const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '')
+                const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '')
                 const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
                     indyCredDefId.namespaceIdentifier,
                     indyCredDefId.schemaSeqNo,
@@ -1204,7 +1204,7 @@ export class MultiTenancyController extends Controller {
             },
         })
 
-        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+        const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
         const getSchemaId = await getUnqualifiedSchemaId(
             indySchemaId.namespaceIdentifier,
             indySchemaId.schemaName,
@@ -1242,7 +1242,7 @@ export class MultiTenancyController extends Controller {
             options: {}
         })
 
-        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+        const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
             indyCredDefId.namespaceIdentifier,
             indyCredDefId.schemaSeqNo,
