@@ -122,13 +122,13 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
+      const indySchemaId = parseIndySchemaId(schemaState.schemaId)
       const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
         indySchemaId.namespaceIdentifier,
         indySchemaId.schemaName,
         indySchemaId.schemaVersion
       );
-      if (schemaState.state === 'finished' || schemaState.state === 'action') {
+      if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
         schemaState.schemaId = getSchemaUnqualifiedId
       }
       return schemaState;
@@ -158,13 +158,13 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const indyCredDefId = await  parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+      const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
         indyCredDefId.namespaceIdentifier,
         indyCredDefId.schemaSeqNo,
         indyCredDefId.tag
       );
-      if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
+      if (credentialDefinitionState.state === CredentialEnum.Finished || credentialDefinitionState.state === CredentialEnum.Action) {
         credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
       }
       return credentialDefinitionState;
