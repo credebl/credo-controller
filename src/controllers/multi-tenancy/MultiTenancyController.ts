@@ -13,6 +13,7 @@ import { RestMultiTenantAgentModules } from '../../cliAgent';
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs';
 import { AskarModule } from '@aries-framework/askar';
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent';
+import { CredentialEnum } from '../../enums/enum';
 
 @Tags("MultiTenancy")
 @Route("/multi-tenancy")
