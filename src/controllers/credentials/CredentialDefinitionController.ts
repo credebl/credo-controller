@@ -8,6 +8,7 @@ import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaRespo
 import { injectable } from 'tsyringe'
 import { IndyVdrAnonCredsRegistry } from '@aries-framework/indy-vdr'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
+import { CredentialEnum } from '../../enums/enum';
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')

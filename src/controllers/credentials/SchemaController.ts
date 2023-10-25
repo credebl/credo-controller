@@ -7,6 +7,7 @@ import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from '
 import { injectable } from 'tsyringe'
 import { SchemaId, SchemaExample } from '../examples'
 import { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
+import { CredentialEnum } from '../../enums/enum';
 
 
 @Tags('Schemas')
