@@ -122,7 +122,7 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+      const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
       const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
         indySchemaId.namespaceIdentifier,
         indySchemaId.schemaName,
@@ -158,7 +158,7 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+      const indyCredDefId = await  parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
         indyCredDefId.namespaceIdentifier,
         indyCredDefId.schemaSeqNo,
