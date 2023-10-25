@@ -101,13 +101,13 @@ export class SchemaController {
           },
         })
 
-        const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
+        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
           indySchemaId.namespaceIdentifier,
           indySchemaId.schemaName,
           indySchemaId.schemaVersion
         );
-        if (schemaState.state === 'finished') {
+        if (schemaState.state === CredentialEnum.Finished) {
           
           schemaState.schemaId = getSchemaUnqualifiedId
         }

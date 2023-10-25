@@ -501,13 +501,17 @@ export class MultiTenancyController extends Controller {
                     },
                 })
 
-                const indySchemaId = await parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
+                if (!schemaState.schemaId) {
+                    throw Error('SchemaId not found')
+                }
+
+                const indySchemaId = parseIndySchemaId(schemaState.schemaId)
                 const getSchemaId = await getUnqualifiedSchemaId(
                     indySchemaId.namespaceIdentifier,
                     indySchemaId.schemaName,
                     indySchemaId.schemaVersion
                 );
-                if (schemaState.state === 'finished') {
+                if (schemaState.state === CredentialEnum.Finished) {
                     schemaState.schemaId = getSchemaId
                 }
                 return schemaState;
@@ -601,13 +605,17 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const indySchemaId = await parseIndySchemaId(schemaState.schemaId ? schemaState.schemaId : '')
+            if (!schemaState.schemaId) {
+                throw Error('SchemaId not found')
+            }
+
+            const indySchemaId = parseIndySchemaId(schemaState.schemaId)
             const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
                 indySchemaId.namespaceIdentifier,
                 indySchemaId.schemaName,
                 indySchemaId.schemaVersion
             );
-            if (schemaState.state === 'finished' || schemaState.state === 'action') {
+            if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
                 schemaState.schemaId = getSchemaUnqualifiedId
             }
 
@@ -645,13 +653,17 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '');
+            if (!credentialDefinitionState.credentialDefinitionId) {
+                throw Error('Credential Definition Id not found')
+            }
+
+            const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId);
             const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
                 indyCredDefId.namespaceIdentifier,
                 indyCredDefId.schemaSeqNo,
                 indyCredDefId.tag
             );
-            if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
+            if (credentialDefinitionState.state === CredentialEnum.Finished || credentialDefinitionState.state === CredentialEnum.Action) {
 
                 credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
             }
@@ -731,16 +743,16 @@ export class MultiTenancyController extends Controller {
                     },
                     options: {}
                 })
-                if (!credentialDefinitionState?.credentialDefinition) {
-                    throw new Error('')
+                if (!credentialDefinitionState?.credentialDefinitionId) {
+                    throw new Error('Credential Definition Id not found')
                 }
-                const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId ? credentialDefinitionState.credentialDefinitionId : '')
+                const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
                 const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
                     indyCredDefId.namespaceIdentifier,
                     indyCredDefId.schemaSeqNo,
                     indyCredDefId.tag
                 );
-                if (credentialDefinitionState.state === 'finished') {
+                if (credentialDefinitionState.state === CredentialEnum.Finished) {
                     credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
                 }
                 return credentialDefinitionState;
@@ -1214,12 +1226,16 @@ export class MultiTenancyController extends Controller {
             },
         })
 
-        const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
+        if (!schemaState.schemaId) {
+            throw Error('SchemaId not found')
+        }
+
+        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
         const getSchemaId = await getUnqualifiedSchemaId(
             indySchemaId.namespaceIdentifier,
             indySchemaId.schemaName,
             indySchemaId.schemaVersion);
-        if (schemaState.state === 'finished') {
+        if (schemaState.state === CredentialEnum.Finished) {
             schemaState.schemaId = getSchemaId
         }
 
@@ -1252,13 +1268,17 @@ export class MultiTenancyController extends Controller {
             options: {}
         })
 
-        const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+        if (!credentialDefinitionState.credentialDefinitionId) {
+            throw Error('Credential Definition Id not found')
+        }
+
+        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
             indyCredDefId.namespaceIdentifier,
             indyCredDefId.schemaSeqNo,
             indyCredDefId.tag
         );
-        if (credentialDefinitionState.state === 'finished') {
+        if (credentialDefinitionState.state === CredentialEnum.Finished) {
             credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
         }
 
