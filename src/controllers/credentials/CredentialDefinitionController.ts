@@ -86,14 +86,14 @@ export class CredentialDefinitionController extends Controller {
           options: {}
         })
 
-        const indyCredDefId = await parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
           indyCredDefId.namespaceIdentifier,
           indyCredDefId.schemaSeqNo,
           indyCredDefId.tag
         );
 
-        if (credentialDefinitionState.state === 'finished') {
+        if (credentialDefinitionState.state === CredentialEnum.Finished) {
           credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
         }
         return credentialDefinitionState;
