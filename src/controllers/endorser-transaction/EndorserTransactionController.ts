@@ -3,7 +3,7 @@ import { Body, Controller, Post, Res, Route, Tags, TsoaResponse } from "tsoa"
 import { injectable } from "tsyringe"
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from "../types"
 import { SchemaId, Version } from "../examples"
-import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId } from "@aries-framework/anoncreds"
+import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId, parseIndyCredentialDefinitionId, parseIndySchemaId } from "@aries-framework/anoncreds"
 import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions } from "@aries-framework/indy-vdr"
 
 @Tags('EndorserTransaction')
@@ -122,16 +122,14 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, schema.name, schema.version);
-      if (schemaState.state === 'finished' || schemaState.state === 'action') {
-        const indyNamespace = /did:indy:([^:]+:([^:]+))/.exec(issuerId);
-        let schemaId;
-        if (indyNamespace) {
-          schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}:`.length);
-        } else {
-          throw new Error('No indyNameSpace found')
-        }
-        schemaState.schemaId = schemaId
+      const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+      const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+        indySchemaId.namespaceIdentifier,
+        indySchemaId.schemaName,
+        indySchemaId.schemaVersion
+      );
+      if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
+        schemaState.schemaId = getSchemaUnqualifiedId
       }
       return schemaState;
 
@@ -160,19 +158,14 @@ export class EndorserTransactionController extends Controller {
         },
       })
 
-      const schemaDetails = await this.agent.modules.anoncreds.getSchema(credentialDefinition.schemaId)
-      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinition.tag);
-      if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
-
-        const indyNamespaceMatch = /did:indy:([^:]+:([^:]+))/.exec(credentialDefinition.issuerId);
-        let credDefId;
-        if (indyNamespaceMatch) {
-          credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}:`.length);
-        } else {
-          throw new Error('No indyNameSpace found')
-        }
-
-        credentialDefinitionState.credentialDefinitionId = credDefId;
+      const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+        indyCredDefId.namespaceIdentifier,
+        indyCredDefId.schemaSeqNo,
+        indyCredDefId.tag
+      );
+      if (credentialDefinitionState.state === CredentialEnum.Finished || credentialDefinitionState.state === CredentialEnum.Action) {
+        credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
       }
       return credentialDefinitionState;
 

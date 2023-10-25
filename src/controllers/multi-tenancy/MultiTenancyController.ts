@@ -3,7 +3,7 @@ import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
-import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId, AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId, AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol, parseIndyCredentialDefinitionId, parseIndySchemaId } from '@aries-framework/anoncreds'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples';
 import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions, IndyVdrDidCreateResult, IndyVdrModule } from '@aries-framework/indy-vdr'
 import { AnonCredsError } from '@aries-framework/anoncreds'
@@ -504,19 +504,19 @@ export class MultiTenancyController extends Controller {
                         endorserDid: schema.issuerId,
                     },
                 })
-                const getSchemaId = await getUnqualifiedSchemaId(schema.issuerId, schema.name, schema.version);
-                if (schemaState.state === 'finished') {
 
-                    const indyNamespace = /did:indy:([^:]+:([^:]+))/.exec(schema.issuerId);
-                    let schemaId;
+                if (!schemaState.schemaId) {
+                    throw Error('SchemaId not found')
+                }
 
-                    if (indyNamespace) {
-                        schemaId = getSchemaId.substring(`did:indy:${indyNamespace[1]}:`.length);
-                    } else {
-                        throw new Error('No indyNameSpace found')
-                    }
-
-                    schemaState.schemaId = schemaId
+                const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+                const getSchemaId = await getUnqualifiedSchemaId(
+                    indySchemaId.namespaceIdentifier,
+                    indySchemaId.schemaName,
+                    indySchemaId.schemaVersion
+                );
+                if (schemaState.state === CredentialEnum.Finished) {
+                    schemaState.schemaId = getSchemaId
                 }
 
                 await tenantAgent.endSession();
@@ -616,17 +616,18 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(issuerId, name, version);
-            if (schemaState.state === 'finished' || schemaState.state === 'action') {
-                const indyNamespace = /did:indy:([^:]+:([^:]+))/.exec(issuerId);
-                let schemaId;
+            if (!schemaState.schemaId) {
+                throw Error('SchemaId not found')
+            }
 
-                if (indyNamespace) {
-                    schemaId = getSchemaUnqualifiedId.substring(`did:indy:${indyNamespace[1]}:`.length);
-                } else {
-                    throw new Error('No indyNameSpace found')
-                }
-                schemaState.schemaId = schemaId
+            const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+            const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+                indySchemaId.namespaceIdentifier,
+                indySchemaId.schemaName,
+                indySchemaId.schemaVersion
+            );
+            if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
+                schemaState.schemaId = getSchemaUnqualifiedId
             }
 
             await tenantAgent.endSession();
@@ -660,19 +661,19 @@ export class MultiTenancyController extends Controller {
                 },
             })
 
-            const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(schemaId)
-            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
-            if (credentialDefinitionState.state === 'finished' || credentialDefinitionState.state === 'action') {
+            if (!credentialDefinitionState.credentialDefinitionId) {
+                throw Error('Credential Definition Id not found')
+            }
 
-                const indyNamespace = /did:indy:([^:]+:([^:]+))/.exec(issuerId);
-                let credDefId;
-                if (indyNamespace) {
-                    credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}:`.length);
-                } else {
-                    throw new Error('No indyNameSpace found')
-                }
+            const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId);
+            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+                indyCredDefId.namespaceIdentifier,
+                indyCredDefId.schemaSeqNo,
+                indyCredDefId.tag
+            );
+            if (credentialDefinitionState.state === CredentialEnum.Finished || credentialDefinitionState.state === CredentialEnum.Action) {
 
-                credentialDefinitionState.credentialDefinitionId = credDefId;
+                credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
             }
 
             await tenantAgent.endSession();
@@ -747,23 +748,17 @@ export class MultiTenancyController extends Controller {
                     },
                     options: {}
                 })
-                const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
-                if (!credentialDefinitionState?.credentialDefinition) {
-                    throw new Error('')
+                if (!credentialDefinitionState?.credentialDefinitionId) {
+                    throw new Error('Credential Definition Id not found')
                 }
-                const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
-                if (credentialDefinitionState.state === 'finished') {
-
-                    const indyNamespace = /did:indy:([^:]+:([^:]+))/.exec(credentialDefinitionRequest.issuerId);
-
-                    let credDefId;
-                    if (indyNamespace) {
-                        credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespace[1]}:`.length);
-                    } else {
-                        throw new Error('No indyNameSpace found')
-                    }
-
-                    credentialDefinitionState.credentialDefinitionId = credDefId;
+                const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+                const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+                    indyCredDefId.namespaceIdentifier,
+                    indyCredDefId.schemaSeqNo,
+                    indyCredDefId.tag
+                );
+                if (credentialDefinitionState.state === CredentialEnum.Finished) {
+                    credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
                 }
 
                 await tenantAgent.endSession();
@@ -1239,10 +1234,17 @@ export class MultiTenancyController extends Controller {
             },
         })
 
-        const getSchemaId = await getUnqualifiedSchemaId(schemaState.schema.issuerId, name, version);
-        if (schemaState.state === 'finished') {
-            const skippedString = getSchemaId.substring('did:indy:bcovrin:'.length);
-            schemaState.schemaId = skippedString
+        if (!schemaState.schemaId) {
+            throw Error('SchemaId not found')
+        }
+
+        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+        const getSchemaId = await getUnqualifiedSchemaId(
+            indySchemaId.namespaceIdentifier,
+            indySchemaId.schemaName,
+            indySchemaId.schemaVersion);
+        if (schemaState.state === CredentialEnum.Finished) {
+            schemaState.schemaId = getSchemaId
         }
 
         await tenantAgent.endSession();
@@ -1273,11 +1275,19 @@ export class MultiTenancyController extends Controller {
             },
             options: {}
         })
-        const schemaDetails = await tenantAgent.modules.anoncreds.getSchema(schemaId)
-        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, tag);
-        if (credentialDefinitionState.state === 'finished') {
-            const skippedString = getCredentialDefinitionId.substring('did:indy:bcovrin:'.length);
-            credentialDefinitionState.credentialDefinitionId = skippedString
+
+        if (!credentialDefinitionState.credentialDefinitionId) {
+            throw Error('Credential Definition Id not found')
+        }
+
+        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+            indyCredDefId.namespaceIdentifier,
+            indyCredDefId.schemaSeqNo,
+            indyCredDefId.tag
+        );
+        if (credentialDefinitionState.state === CredentialEnum.Finished) {
+            credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
         }
 
         await tenantAgent.endSession();

@@ -1,5 +1,5 @@
 import type { SchemaId } from '../examples'
-import { AnonCredsApi, AnonCredsError, getUnqualifiedCredentialDefinitionId } from '@aries-framework/anoncreds'
+import { AnonCredsApi, AnonCredsError, getUnqualifiedCredentialDefinitionId, parseIndyCredentialDefinitionId } from '@aries-framework/anoncreds'
 // import { error}
 
 // TODO: Chenged IndySdkError to AriesFrameworkError. If approved, the message must be changed too.
@@ -86,19 +86,15 @@ export class CredentialDefinitionController extends Controller {
           options: {}
         })
 
-        const schemaDetails = await this.agent.modules.anoncreds.getSchema(this.agent.context, schemaId)
-        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(credentialDefinitionState.credentialDefinition.issuerId, `${schemaDetails.schemaMetadata.indyLedgerSeqNo}`, credentialDefinitionRequest.tag);
-        if (credentialDefinitionState.state === 'finished') {
+        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+          indyCredDefId.namespaceIdentifier,
+          indyCredDefId.schemaSeqNo,
+          indyCredDefId.tag
+        );
 
-          const indyNamespaceMatch = /did:indy:([^:]+:([^:]+))/.exec(issuerId);
-          let credDefId;
-          if (indyNamespaceMatch) {
-            credDefId = getCredentialDefinitionId.substring(`did:indy:${indyNamespaceMatch[1]}:`.length);
-          } else {
-            throw new Error('No indyNameSpace found')
-          }
-
-          credentialDefinitionState.credentialDefinitionId = credDefId;
+        if (credentialDefinitionState.state === CredentialEnum.Finished) {
+          credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
         }
         return credentialDefinitionState;
       } else {
