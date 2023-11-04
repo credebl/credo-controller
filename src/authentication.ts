@@ -15,16 +15,11 @@ export async function expressAuthentication(
       const providedApiKey = apiKeyHeader as string;
 
       if (providedApiKey === dynamicApiKey) {
-        return Promise.resolve("success");
+        return "success";
       }
     }
-
-    throw Error("unauthorized");
   }
-
-  return Promise.reject("Invalid securityName or secMethod not provided");
 }
-
 
 export function setDynamicApiKey(newApiKey: string) {
   dynamicApiKey = newApiKey;
