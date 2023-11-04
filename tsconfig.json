@@ -9,6 +9,8 @@
     "paths": {
       "@aries-framework/*": ["packages/*/src"]
     },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["jest", "node"]
   },
   "exclude": ["node_modules", "build"]

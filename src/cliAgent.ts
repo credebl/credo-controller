@@ -58,7 +58,8 @@ export interface AriesRestConfig {
   connectionImageUrl?: string
   tenancy?: boolean
   webhookUrl?: string
-  adminPort: number
+  adminPort: number,
+  apiKey: string
 }
 
 export async function readRestConfig(path: string) {
@@ -76,7 +77,7 @@ export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const modules = getModules(networkConfig)
   return {
-    tenants: new TenantsModule<typeof modules>({}),
+    tenants: new TenantsModule<typeof modules>({ sessionAcquireTimeout: Infinity, sessionLimit: Infinity }),
     ...modules
   }
 }
@@ -144,7 +145,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
-  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
+  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, apiKey, ...afjConfig } = restConfig
 
   const logger = new TsLogger(logLevel ?? LogLevel.error)
 
@@ -239,7 +240,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const app = await setupServer(agent, {
     webhookUrl,
     port: adminPort,
-  })
+  },
+    apiKey
+  )
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)
