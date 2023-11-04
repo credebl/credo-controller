@@ -7,6 +7,7 @@ import { Controller, Delete, Get, Route, Tags, Security } from 'tsoa'
 
 @Tags('Agent')
 @Route('/agent')
+@Security('apiKey')
 @injectable()
 export class AgentController extends Controller {
   private agent: Agent

@@ -17,6 +17,7 @@ import { CredentialEnum } from '../../enums/enum';
 
 @Tags("MultiTenancy")
 @Route("/multi-tenancy")
+@Security('apiKey')
 @injectable()
 export class MultiTenancyController extends Controller {
     private readonly agent: Agent<RestMultiTenantAgentModules>;
