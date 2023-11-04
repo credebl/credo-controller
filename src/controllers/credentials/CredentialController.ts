@@ -1,7 +1,7 @@
 import { AutoAcceptCredential, CREDENTIALS_CONTEXT_V1_URL, ConnectionRecord, ConnectionState, CredentialExchangeRecord, CredentialExchangeRecordProps, CredentialFormat, CredentialPreviewAttribute, CredentialProtocolVersionType, CustomConnectionTags, CustomCredentialTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, HandshakeProtocol, JsonCredential, JsonLdCredentialDetailFormat, JsonLdCredentialFormatService, KeyType, ProofsProtocolVersionType, TypedArrayEncoder, V2CredentialPreview, W3cCredentialService, utils } from '@aries-framework/core'
 
 import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query } from 'tsoa'
+import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 import {
   LegacyIndyCredentialFormatService,
@@ -25,6 +25,7 @@ import { RestAgentModules } from '../../cliAgent'
 
 
 @Tags('Credentials')
+@Security('apiKey')
 @Route('/credentials')
 @injectable()
 export class CredentialController extends Controller {

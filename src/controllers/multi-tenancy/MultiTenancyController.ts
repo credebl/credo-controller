@@ -1,6 +1,6 @@
 import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, CacheModule, ConnectionRecordProps, ConnectionRepository, ConnectionsModule, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, CredentialsModule, DidDocumentBuilder, DidExchangeState, DidsModule, HandshakeProtocol, JsonLdCredentialFormatService, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsModule, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, V2CredentialProtocol, V2ProofProtocol, W3cCredentialsModule, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
 import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction } from '../types';
-import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example } from 'tsoa'
+import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example, Security } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
 import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId, AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol, parseIndyCredentialDefinitionId, parseIndySchemaId } from '@aries-framework/anoncreds'
@@ -17,6 +17,7 @@ import { CredentialEnum } from '../../enums/enum';
 
 @Tags("MultiTenancy")
 @Route("/multi-tenancy")
+@Security('apiKey')
 @injectable()
 export class MultiTenancyController extends Controller {
     private readonly agent: Agent<RestMultiTenantAgentModules>;

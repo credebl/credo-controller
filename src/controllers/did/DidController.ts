@@ -235,10 +235,14 @@ export class DidController extends Controller {
 
   @Get('/')
   public async getDids(
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() unauthorized: TsoaResponse<401, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
-    const createdDids = await this.agent.dids.getCreatedDids()
-    return createdDids;
+    try{
+      const createdDids = await this.agent.dids.getCreatedDids()
+      return createdDids;
+
+    } catch(error){
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
   }
 }

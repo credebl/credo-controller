@@ -1,11 +1,12 @@
 import type { AgentInfo } from '../types'
 
 import { Agent, DidCreateOptions, JsonTransformer, KeyType, TypedArrayEncoder } from '@aries-framework/core'
-import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 @Tags('Agent')
 @Route('/agent')
+@Security('apiKey')
 @injectable()
 export class AgentController extends Controller {
   private agent: Agent

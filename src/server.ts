@@ -17,6 +17,7 @@ import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
 import { setDynamicApiKey } from './authentication'
+import { SecurityMiddleware } from './securityMiddleware'
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
@@ -45,6 +46,8 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
 
+  const securityMiddleware = new SecurityMiddleware();
+  app.use(securityMiddleware.use);
   RegisterRoutes(app)
 
   app.use((req, res, next) => {

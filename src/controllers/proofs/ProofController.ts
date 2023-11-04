@@ -23,7 +23,7 @@ import {
 } from '@aries-framework/anoncreds'
 
 import { Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -31,6 +31,7 @@ import { AcceptProofProposal, CreateProofRequestOobOptions, RequestProofOptions,
 
 @Tags('Proofs')
 @Route('/proofs')
+@Security('apiKey')
 @injectable()
 export class ProofController extends Controller {
   private agent: Agent

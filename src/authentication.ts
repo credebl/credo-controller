@@ -1,30 +1,25 @@
 import * as express from "express";
 
-let dynamicApiKey: string = 'default_api_key'; // Initialize with a default value
+let dynamicApiKey: string = 'api_key'; // Initialize with a default value
 
-export function expressAuthentication(
+export async function expressAuthentication(
   request: express.Request,
   securityName: string,
   secMethod?: { [key: string]: any },
   scopes?: string
 ) {
-  if (securityName === 'apiKey') {
-    const apiKeyHeader = request.headers['authorization'];
+  const apiKeyHeader = request.headers['authorization'];
 
+  if (securityName === 'apiKey') {
     if (apiKeyHeader) {
       const providedApiKey = apiKeyHeader as string;
 
       if (providedApiKey === dynamicApiKey) {
-        return Promise.resolve("success");
+        return "success";
       }
     }
-
-    throw Error("unauthorized");
   }
-
-  return Promise.reject("Invalid securityName or secMethod not provided");
 }
-
 
 export function setDynamicApiKey(newApiKey: string) {
   dynamicApiKey = newApiKey;

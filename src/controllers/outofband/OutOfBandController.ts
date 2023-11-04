@@ -9,7 +9,7 @@ import {
 } from '@aries-framework/core'
 
 import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
@@ -18,6 +18,7 @@ import { V1CredentialProtocol } from '@aries-framework/anoncreds'
 // import prepareForAnon
 
 @Tags('Out Of Band')
+@Security('apiKey')
 @Route('/oob')
 @injectable()
 export class OutOfBandController extends Controller {
