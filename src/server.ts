@@ -16,8 +16,9 @@ import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
+import { setDynamicApiKey } from './authentication'
 
-export const setupServer = async (agent: Agent, config: ServerConfig) => {
+export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
 
   const app = config.app ?? express()
@@ -36,6 +37,9 @@ export const setupServer = async (agent: Agent, config: ServerConfig) => {
       extended: true,
     })
   )
+
+  setDynamicApiKey(apiKey ? apiKey : '');
+
   app.use(bodyParser.json())
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(generateHTML(await import('./routes/swagger.json')))

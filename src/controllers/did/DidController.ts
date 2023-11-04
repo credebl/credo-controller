@@ -1,7 +1,7 @@
 import type { DidCreate, DidNymTransaction, DidResolutionResultProps } from '../types'
 import { KeyType, TypedArrayEncoder, KeyDidCreateOptions, DidDocumentBuilder, getEd25519VerificationKey2018, Key, Hasher } from '@aries-framework/core'
 import { Agent } from '@aries-framework/core'
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Security, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 import { Did, DidRecordExample } from '../examples'
 import axios from 'axios';
@@ -11,6 +11,7 @@ import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 
 @Tags('Dids')
 @Route('/dids')
+@Security('apiKey')
 @injectable()
 export class DidController extends Controller {
   private agent: Agent
@@ -27,7 +28,9 @@ export class DidController extends Controller {
    */
   @Example<DidResolutionResultProps>(DidRecordExample)
   @Get('/:did')
-  public async getDidRecordByDid(@Path('did') did: Did) {
+  public async getDidRecordByDid(
+    @Path('did') did: Did
+    ) {
     const resolveResult = await this.agent.dids.resolve(did);
     const importDid = await this.agent.dids.import({
       did,
@@ -231,7 +234,10 @@ export class DidController extends Controller {
 
 
   @Get('/')
-  public async getDids() {
+  public async getDids(
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() unauthorized: TsoaResponse<401, { message: string }>
+  ) {
     const createdDids = await this.agent.dids.getCreatedDids()
     return createdDids;
   }
