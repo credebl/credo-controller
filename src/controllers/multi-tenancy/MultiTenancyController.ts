@@ -940,13 +940,13 @@ export class MultiTenancyController extends Controller {
                     comment: createOfferOptions.comment
                 });
 
-                const credentialMessage = offerOob.message;
-                const outOfBandRecord = await tenantAgent.oob.createInvitation({
-                    label: createOfferOptions.label,
-                    handshakeProtocols: [HandshakeProtocol.Connections],
-                    messages: [credentialMessage],
-                    autoAcceptConnection: true
-                })
+            const credentialMessage = offerOob.message;
+            const outOfBandRecord = await tenantAgent.oob.createInvitation({
+                label: createOfferOptions.label,
+                handshakeProtocols: [HandshakeProtocol.Connections],
+                messages: [credentialMessage],
+                autoAcceptConnection: true
+            })
 
                 createOfferOobRecord = {
                     invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
