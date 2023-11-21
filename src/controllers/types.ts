@@ -123,6 +123,7 @@ export interface CreateOfferOobOptions {
   goalCode?: string;
   parentThreadId?: string;
   willConfirm?: boolean;
+  label?: string;
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord;
@@ -139,6 +140,7 @@ export interface CreateProofRequestOobOptions {
   willConfirm?: boolean;
   autoAcceptProof?: AutoAcceptProof;
   comment?: string;
+  label?: string;
 }
 
 export interface OfferCredentialOptions {
