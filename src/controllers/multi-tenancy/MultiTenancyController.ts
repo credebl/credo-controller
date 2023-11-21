@@ -864,7 +864,7 @@ export class MultiTenancyController extends Controller {
 
             const credentialMessage = offerOob.message;
             const outOfBandRecord = await tenantAgent.oob.createInvitation({
-                label: 'test-connection',
+                label: createOfferOptions.label,
                 handshakeProtocols: [HandshakeProtocol.Connections],
                 messages: [credentialMessage],
                 autoAcceptConnection: true
@@ -1049,7 +1049,7 @@ export class MultiTenancyController extends Controller {
 
             const proofMessage = proof.message;
             const outOfBandRecord = await tenantAgent.oob.createInvitation({
-                label: 'test-connection',
+                label: createRequestOptions.label,
                 handshakeProtocols: [HandshakeProtocol.Connections],
                 messages: [proofMessage],
                 autoAcceptConnection: true
