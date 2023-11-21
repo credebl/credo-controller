@@ -194,7 +194,7 @@ export class ProofController extends Controller {
       });
       const proofMessage = proof.message;
       const outOfBandRecord = await this.agent.oob.createInvitation({
-        label: 'test-connection',
+        label: createRequestOptions.label,
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [proofMessage],
         autoAcceptConnection: true

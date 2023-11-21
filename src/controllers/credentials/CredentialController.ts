@@ -221,7 +221,7 @@ export class CredentialController extends Controller {
 
       const credentialMessage = offerOob.message;
       const outOfBandRecord = await this.agent.oob.createInvitation({
-        label: 'test-connection',
+        label: outOfBandOption.label,
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [credentialMessage],
         autoAcceptConnection: true
