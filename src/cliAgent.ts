@@ -77,7 +77,10 @@ export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const modules = getModules(networkConfig)
   return {
-    tenants: new TenantsModule<typeof modules>({ sessionAcquireTimeout: Infinity, sessionLimit: Infinity }),
+    tenants: new TenantsModule<typeof modules>({
+      sessionAcquireTimeout: Infinity,
+      sessionLimit: Infinity
+    }),
     ...modules
   }
 }
