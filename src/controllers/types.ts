@@ -114,10 +114,10 @@ export interface CreateOfferOobOptions {
   credentialFormats: any
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  goalCode?: string
-  parentThreadId?: string
-  willConfirm?: boolean
-  label?: string
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+  label?: string;
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -127,14 +127,14 @@ export interface CredentialCreateOfferOptions {
 }
 
 export interface CreateProofRequestOobOptions {
-  protocolVersion: string
-  proofFormats: any
-  goalCode?: string
-  parentThreadId?: string
-  willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
-  comment?: string
-  label?: string
+  protocolVersion: string;
+  proofFormats: any;
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+  autoAcceptProof?: AutoAcceptProof;
+  comment?: string;
+  label?: string;
 }
 
 export interface OfferCredentialOptions {
