@@ -1221,7 +1221,7 @@ export class MultiTenancyController extends Controller {
     @Security('apiKey')
     @Get(":tenantId")
     public async getTenantById(
-        @Query("tenantId") tenantId: string,
+        @Path("tenantId") tenantId: string,
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
@@ -1266,7 +1266,7 @@ export class MultiTenancyController extends Controller {
     @Security('apiKey')
     @Delete(":tenantId")
     public async deleteTenantById(
-        @Query("tenantId") tenantId: string,
+        @Path("tenantId") tenantId: string,
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
