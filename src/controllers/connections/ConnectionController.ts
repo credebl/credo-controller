@@ -7,10 +7,11 @@ import {
   AriesFrameworkError,
   RecordNotFoundError,
 } from '@aries-framework/core'
-import { Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, RecordId } from '../examples'
+
+import { Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
 
 @Tags('Connections')
 @Route()
@@ -167,6 +168,7 @@ export class ConnectionController extends Controller {
   public async getInvitation(
     @Path('invitationId') invitationId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     const outOfBandRecord = await this.agent.oob.findByCreatedInvitationId(invitationId)
@@ -175,6 +177,6 @@ export class ConnectionController extends Controller {
       return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
 
     const invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
-    return invitationJson;
+    return invitationJson
   }
 }

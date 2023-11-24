@@ -1,14 +1,19 @@
-import { AutoAcceptCredential, CREDENTIALS_CONTEXT_V1_URL, ConnectionRecord, ConnectionState, CredentialExchangeRecord, CredentialExchangeRecordProps, CredentialFormat, CredentialPreviewAttribute, CredentialProtocolVersionType, CustomConnectionTags, CustomCredentialTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, HandshakeProtocol, JsonCredential, JsonLdCredentialDetailFormat, JsonLdCredentialFormatService, KeyType, ProofsProtocolVersionType, TypedArrayEncoder, V2CredentialPreview, W3cCredentialService, utils } from '@aries-framework/core'
+import type { RestAgentModules } from '../../cliAgent'
+import type { CredentialExchangeRecordProps, CredentialProtocolVersionType } from '@aries-framework/core'
 
-import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query } from 'tsoa'
-import { injectable } from 'tsyringe'
+import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@aries-framework/anoncreds'
 import {
-  LegacyIndyCredentialFormatService,
-  V1CredentialProtocol
-} from '@aries-framework/anoncreds'
+  HandshakeProtocol,
+  W3cCredentialService,
+  CredentialRepository,
+  CredentialState,
+  Agent,
+  RecordNotFoundError,
+} from '@aries-framework/core'
+import { injectable } from 'tsyringe'
 
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
+import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
   AcceptCredentialRequestOptions,
   ProposeCredentialOptions,
@@ -17,19 +22,16 @@ import {
   CreateOfferOptions,
   AcceptCredential,
   CreateOfferOobOptions,
-  CredentialCreateOfferOptions,
 } from '../types'
-import { OutOfBandController } from '../outofband/OutOfBandController'
-import { RestAgentModules } from '../../cliAgent'
 
-
+import { Body, Controller, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query } from 'tsoa'
 
 @Tags('Credentials')
 @Route('/credentials')
 @injectable()
 export class CredentialController extends Controller {
   private agent: Agent<RestAgentModules>
-  private outOfBandController: OutOfBandController;
+  private outOfBandController: OutOfBandController
 
   // private v1CredentialProtocol: V1CredentialProtocol
 
@@ -66,17 +68,13 @@ export class CredentialController extends Controller {
   @Get('/w3c')
   public async getAllW3c() {
     const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-    console.log(await w3cCredentialService.getAllCredentialRecords(this.agent.context))
     return await w3cCredentialService.getAllCredentialRecords(this.agent.context)
   }
 
   @Get('/w3c/:id')
-  public async getW3cById(
-    @Path('id') id: string
-  ) {
+  public async getW3cById(@Path('id') id: string) {
     const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-    // console.log(await w3cCredentialService.getAllCredentialRecords(this.agent.context))
-    return await w3cCredentialService.getCredentialRecordById(this.agent.context, id);
+    return await w3cCredentialService.getCredentialRecordById(this.agent.context, id)
   }
 
   /**
@@ -125,7 +123,7 @@ export class CredentialController extends Controller {
         protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
         credentialFormats: proposeCredentialOptions.credentialFormats,
         autoAcceptCredential: proposeCredentialOptions.autoAcceptCredential,
-        comment: proposeCredentialOptions.comment
+        comment: proposeCredentialOptions.comment,
       })
       return credential
     } catch (error) {
@@ -155,12 +153,11 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialProposal: AcceptCredentialProposalOptions
   ) {
     try {
-
       const credential = await this.agent.credentials.acceptProposal({
         credentialRecordId: acceptCredentialProposal.credentialRecordId,
         credentialFormats: acceptCredentialProposal.credentialFormats,
         autoAcceptCredential: acceptCredentialProposal.autoAcceptCredential,
-        comment: acceptCredentialProposal.comment
+        comment: acceptCredentialProposal.comment,
       })
 
       return credential
@@ -192,10 +189,9 @@ export class CredentialController extends Controller {
         connectionId: createOfferOptions.connectionId,
         protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: createOfferOptions.credentialFormats,
-        autoAcceptCredential: createOfferOptions.autoAcceptCredential
+        autoAcceptCredential: createOfferOptions.autoAcceptCredential,
       })
-      console.log(offer)
-      return offer;
+      return offer
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -215,15 +211,15 @@ export class CredentialController extends Controller {
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: outOfBandOption.credentialFormats,
         autoAcceptCredential: outOfBandOption.autoAcceptCredential,
-        comment: outOfBandOption.comment
-      });
+        comment: outOfBandOption.comment,
+      })
 
-      const credentialMessage = offerOob.message;
+      const credentialMessage = offerOob.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: outOfBandOption.label,
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [credentialMessage],
-        autoAcceptConnection: true
+        autoAcceptConnection: true,
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -255,7 +251,6 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
   ) {
     try {
-
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
@@ -264,7 +259,7 @@ export class CredentialController extends Controller {
         credentialRecordId: acceptCredentialOfferOptions.credentialRecordId,
         credentialFormats: acceptCredentialOfferOptions.credentialFormats,
         autoAcceptCredential: acceptCredentialOfferOptions.autoAcceptCredential,
-        comment: acceptCredentialOfferOptions.comment
+        comment: acceptCredentialOfferOptions.comment,
       })
       return acceptOffer
     } catch (error) {
@@ -293,9 +288,9 @@ export class CredentialController extends Controller {
     @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions
   ) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService()
 
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat })
       const credential = await v1CredentialProtocol.acceptRequest(this.agent.context, acceptCredentialRequestOptions)
       return credential
     } catch (error) {
@@ -323,9 +318,9 @@ export class CredentialController extends Controller {
     @Body() acceptCredential: AcceptCredential
   ) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService();
+      const indyCredentialFormat = new LegacyIndyCredentialFormatService()
 
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat });
+      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat })
       const credential = await v1CredentialProtocol.acceptCredential(this.agent.context, acceptCredential)
       return credential
     } catch (error) {

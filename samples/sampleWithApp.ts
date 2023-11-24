@@ -13,7 +13,6 @@ const run = async () => {
 
   const agent = await setupAgent({
     port: 3001,
-    publicDidSeed: 'testtesttesttesttesttesttesttest',
     endpoints: [endpoint],
     name: 'Aries Test Agent',
   })
@@ -22,7 +21,7 @@ const run = async () => {
   const jsonParser = bodyParser.json()
 
   app.post('/greeting', jsonParser, (req, res) => {
-    const config = agent.injectionContainer.resolve(AgentConfig)
+    const config = agent.dependencyManager.resolve(AgentConfig)
 
     res.send(`Hello, ${config.label}!`)
   })
