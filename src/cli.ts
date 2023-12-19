@@ -11,10 +11,6 @@ const parsed = yargs
     string: true,
     demandOption: true,
   })
-  .option('api-key', {
-    string: true,
-    demandOption: true,
-  })
   .option('wallet-id', {
     string: true,
     demandOption: true,
@@ -196,7 +192,6 @@ export async function runCliServer() {
     connectionImageUrl: parsed['connection-image-url'],
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
-    tenancy: parsed['tenancy'],
-    apiKey: parsed['api-key']
+    tenancy: parsed['tenancy']
   } as AriesRestConfig)
 }
