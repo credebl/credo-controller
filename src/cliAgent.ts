@@ -59,8 +59,7 @@ export interface AriesRestConfig {
   connectionImageUrl?: string
   tenancy?: boolean
   webhookUrl?: string
-  adminPort: number,
-  apiKey: string
+  adminPort: number
 }
 
 export async function readRestConfig(path: string) {
@@ -146,7 +145,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
-  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, apiKey, ...afjConfig } = restConfig
+  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
 
   const logger = new TsLogger(logLevel ?? LogLevel.error)
 
