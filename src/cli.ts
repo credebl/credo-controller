@@ -11,10 +11,6 @@ const parsed = yargs
     string: true,
     demandOption: true,
   })
-  .option('api-key', {
-    string: true,
-    demandOption: true,
-  })
   .option('wallet-id', {
     string: true,
     demandOption: true,
