@@ -9,7 +9,7 @@ import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
 import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
-import { randomUUID } from 'crypto'
+import { randomBytes, randomUUID } from 'crypto'
 import { TenantsModule } from '@aries-framework/tenants'
 import { JsonLdCredentialFormatService } from '@aries-framework/core'
 import { W3cCredentialSchema, W3cCredentialsApi, W3cCredentialService, W3cJsonLdVerifyCredentialOptions } from '@aries-framework/core'
@@ -20,6 +20,7 @@ import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -58,8 +59,7 @@ export interface AriesRestConfig {
   connectionImageUrl?: string
   tenancy?: boolean
   webhookUrl?: string
-  adminPort: number,
-  apiKey: string
+  adminPort: number
 }
 
 export async function readRestConfig(path: string) {
@@ -145,7 +145,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
-  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, apiKey, ...afjConfig } = restConfig
+  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
 
   const logger = new TsLogger(logLevel ?? LogLevel.error)
 
@@ -236,12 +236,50 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }))
   }
 
+  async function generateSecretKey(length: number = 32): Promise<string> {
+    try {
+      // Asynchronously generate a buffer containing random values
+      const buffer: Buffer = await new Promise((resolve, reject) => {
+        randomBytes(length, (error, buf) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(buf);
+          }
+        });
+      });
+
+      // Convert the buffer to a hexadecimal string
+      const secretKey: string = buffer.toString("hex");
+
+      return secretKey;
+    } catch (error) {
+      // Handle any errors that might occur during key generation
+      console.error("Error generating secret key:", error);
+      throw error;
+    }
+  }
+
+  // Call the async function
+  const secretKeyInfo: string = await generateSecretKey();
+  console.log("secretKey", secretKeyInfo);
+
   await agent.initialize()
+
+  const getData = await agent.genericRecords.save({
+    content: {
+      secretKey: secretKeyInfo,
+    },
+  });
+  const getGenericRecord = await agent.genericRecords.findById(getData.id);
+  const secretKey = getGenericRecord?.content.secretKey as string;
+  const token = jwt.sign({ agentInfo: 'agentInfo' }, secretKey);
+
+  console.log("token", token)
   const app = await setupServer(agent, {
     webhookUrl,
     port: adminPort,
-  },
-    apiKey
+  }
   )
 
   app.listen(adminPort, () => {
