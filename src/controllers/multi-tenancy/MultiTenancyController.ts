@@ -17,7 +17,6 @@ import { CredentialEnum } from '../../enums/enum';
 
 @Tags("MultiTenancy")
 @Route("/multi-tenancy")
-@Security('apiKey')
 @injectable()
 export class MultiTenancyController extends Controller {
     private readonly agent: Agent<RestMultiTenantAgentModules>;
@@ -27,6 +26,7 @@ export class MultiTenancyController extends Controller {
         this.agent = agent;
     }
 
+    @Security('apiKey')
     @Post("/create-tenant")
     public async createTenant(
         @Body() createTenantOptions: CreateTenantOptions,
@@ -248,6 +248,7 @@ export class MultiTenancyController extends Controller {
         });
     }
 
+    @Security('apiKey')
     @Post('/transactions/set-endorser-role/:tenantId')
     public async didNymTransaction(
         @Path("tenantId") tenantId: string,
@@ -278,6 +279,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/transactions/endorse/:tenantId')
     public async endorserTransaction(
         @Path("tenantId") tenantId: string,
@@ -308,6 +310,7 @@ export class MultiTenancyController extends Controller {
     }
 
     @Example<ConnectionRecordProps>(ConnectionRecordExample)
+    @Security('apiKey')
     @Get('/connections/:connectionId/:tenantId')
     public async getConnectionById(
         @Path("tenantId") tenantId: string,
@@ -323,7 +326,7 @@ export class MultiTenancyController extends Controller {
         return connection.toJSON()
     }
 
-
+    @Security('apiKey')
     @Post('/create-invitation/:tenantId')
     public async createInvitation(
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
@@ -349,6 +352,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/create-legacy-invitation/:tenantId')
     public async createLegacyInvitation(
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
@@ -376,6 +380,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/receive-invitation/:tenantId')
     public async receiveInvitation(
         @Body() invitationRequest: ReceiveInvitationProps,
@@ -399,6 +404,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/receive-invitation-url/:tenantId')
     public async receiveInvitationFromUrl(
         @Body() invitationRequest: ReceiveInvitationByUrlProps,
@@ -421,6 +427,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get('/oob/:invitationId/:tenantId')
     public async getAllOutOfBandRecords(
         @Path('tenantId') tenantId: string,
@@ -441,6 +448,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get('/connections/:tenantId')
     public async getAllConnections(
         @Path('tenantId') tenantId: string,
@@ -494,6 +502,7 @@ export class MultiTenancyController extends Controller {
         return invitationJson;
     }
 
+    @Security('apiKey')
     @Post('/schema/:tenantId')
     public async createSchema(
         @Body()
@@ -576,6 +585,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/transactions/write/:tenantId')
     public async writeSchemaAndCredDefOnLedger(
         @Path("tenantId") tenantId: string,
@@ -707,6 +717,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get('/schema/:schemaId/:tenantId')
     public async getSchemaById(
         @Path('schemaId') schemaId: SchemaId,
@@ -744,6 +755,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/credential-definition/:tenantId')
     public async createCredentialDefinition(
         @Body()
@@ -816,6 +828,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get('/credential-definition/:credentialDefinitionId/:tenantId')
     public async getCredentialDefinitionById(
         @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
@@ -846,6 +859,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/credentials/create-offer/:tenantId')
     public async createOffer(
         @Body() createOfferOptions: CreateOfferOptions,
@@ -868,6 +882,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/credentials/create-offer-oob/:tenantId')
     public async createOfferOob(
         @Path('tenantId') tenantId: string,
@@ -912,6 +927,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/credentials/accept-offer/:tenantId')
     public async acceptOffer(
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
@@ -945,6 +961,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get('/credentials/:credentialRecordId/:tenantId')
     public async getCredentialById(
         @Path('credentialRecordId') credentialRecordId: RecordId,
@@ -969,6 +986,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get('/credentials/:tenantId')
     public async getAllCredentials(
         @Path('tenantId') tenantId: string,
@@ -989,6 +1007,7 @@ export class MultiTenancyController extends Controller {
         return credentials.map((c: any) => c.toJSON())
     }
 
+    @Security('apiKey')
     @Get('/proofs/:tenantId')
     public async getAllProofs(
         @Path('tenantId') tenantId: string,
@@ -1004,6 +1023,7 @@ export class MultiTenancyController extends Controller {
         return proofs.map((proof: any) => proof.toJSON())
     }
 
+    @Security('apiKey')
     @Get('/form-data/:tenantId/:proofRecordId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async proofFormData(
@@ -1029,6 +1049,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/proofs/request-proof/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async requestProof(
@@ -1060,6 +1081,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/proofs/create-request-oob/:tenantId')
     public async createRequest(
         @Path('tenantId') tenantId: string,
@@ -1102,6 +1124,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/proofs/:proofRecordId/accept-request/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async acceptRequest(
@@ -1143,6 +1166,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post('/proofs/:proofRecordId/accept-presentation/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async acceptPresentation(
@@ -1168,6 +1192,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get('/proofs/:proofRecordId/:tenantId')
     @Example<ProofExchangeRecordProps>(ProofRecordExample)
     public async getProofById(
@@ -1193,6 +1218,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Get(":tenantId")
     public async getTenantById(
         @Query("tenantId") tenantId: string,
@@ -1213,6 +1239,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Post("tenant")
     public async getTenantAgent(
         @Body() tenantAgentOptions: GetTenantAgentOptions,
@@ -1236,6 +1263,7 @@ export class MultiTenancyController extends Controller {
         }
     }
 
+    @Security('apiKey')
     @Delete(":tenantId")
     public async deleteTenantById(
         @Query("tenantId") tenantId: string,

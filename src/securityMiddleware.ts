@@ -12,9 +12,21 @@ export class SecurityMiddleware {
     next: NextFunction
   ) {
     try {
-      const securityName = 'apiKey'; 
+      const securityName = 'apiKey';
 
-      if (securityName) {
+      // Extract route path or controller name from the request
+      const routePath = request.path;
+
+      // List of paths for which authentication should be skipped
+      const pathsToSkipAuthentication = ['/url/', '/multi-tenancy/url/'];
+
+      // Check if authentication should be skipped for this route or controller
+      const skipAuthentication = pathsToSkipAuthentication.some(path => routePath.includes(path));
+
+      if (skipAuthentication) {
+        // Skip authentication for this route or controller
+        next();
+      } else if (securityName) {
         const result = await expressAuthentication(request, securityName);
 
         if (result === 'success') {
@@ -30,3 +42,4 @@ export class SecurityMiddleware {
     }
   }
 }
+
