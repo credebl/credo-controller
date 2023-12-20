@@ -13,7 +13,6 @@ import { injectable } from 'tsyringe'
 import { ConnectionRecordExample, RecordId } from '../examples'
 
 @Tags('Connections')
-@Security('apiKey')
 @Route()
 @injectable()
 export class ConnectionController extends Controller {
