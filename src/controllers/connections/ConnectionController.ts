@@ -14,7 +14,6 @@ import { ConnectionRecordExample, RecordId } from '../examples'
 import { Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 
 @Tags('Connections')
-@Security('apiKey')
 @Route()
 @injectable()
 export class ConnectionController extends Controller {
