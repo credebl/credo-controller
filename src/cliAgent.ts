@@ -279,7 +279,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const app = await setupServer(agent, {
     webhookUrl,
     port: adminPort,
-  }
+  },
+    token
   )
 
   app.listen(adminPort, () => {
