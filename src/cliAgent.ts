@@ -77,7 +77,10 @@ export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const modules = getModules(networkConfig)
   return {
-    tenants: new TenantsModule<typeof modules>({ sessionAcquireTimeout: Infinity, sessionLimit: Infinity }),
+    tenants: new TenantsModule<typeof modules>({
+      sessionAcquireTimeout: 10000,
+      sessionLimit: 1000
+    }),
     ...modules
   }
 }
@@ -177,7 +180,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
     if (ledgerConfig.indyNamespace.includes('indicio')) {
 
-      if (ledgerConfig.indyNamespace === 'indicio:testnet') {
+      if (ledgerConfig.indyNamespace === 'indicio:testnet' || ledgerConfig.indyNamespace === 'indicio:mainnet' ) {
         networkConfig.transactionAuthorAgreement = {
           version: '1.0',
           acceptanceMechanism: 'wallet_agreement',
