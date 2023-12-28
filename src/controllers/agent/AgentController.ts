@@ -6,7 +6,6 @@ import { injectable } from 'tsyringe'
 
 @Tags('Agent')
 @Route('/agent')
-@Security('apiKey')
 @injectable()
 export class AgentController extends Controller {
   private agent: Agent
