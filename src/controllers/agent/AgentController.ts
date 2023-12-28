@@ -6,7 +6,6 @@ import { injectable } from 'tsyringe'
 
 @Tags('Agent')
 @Route('/agent')
-@Security('apiKey')
 @injectable()
 export class AgentController extends Controller {
   private agent: Agent
@@ -32,6 +31,7 @@ export class AgentController extends Controller {
   /**
    * Delete wallet
    */
+  @Security('apiKey')
   @Delete('/wallet')
   public async deleteWallet() {
     const deleteWallet = await this.agent.wallet.delete();
