@@ -84,7 +84,6 @@ export class OutOfBandController extends Controller {
     @Body() config: CreateInvitationOptions // props removed because of issues with serialization
   ) {
     try {
-      console.log(config);
       const outOfBandRecord = await this.agent.oob.createInvitation(config)
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({

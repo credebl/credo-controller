@@ -1070,7 +1070,6 @@ export class MultiTenancyController extends Controller {
                 parentThreadId: requestProofOptions.parentThreadId,
                 willConfirm: requestProofOptions.willConfirm
             }
-            console.log(requestProofPayload);
             const proof = await tenantAgent.proofs.requestProof(requestProofPayload)
 
              
