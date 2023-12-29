@@ -195,7 +195,6 @@ export class CredentialController extends Controller {
         credentialFormats: createOfferOptions.credentialFormats,
         autoAcceptCredential: createOfferOptions.autoAcceptCredential
       })
-      console.log(offer)
       return offer;
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })

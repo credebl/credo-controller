@@ -265,7 +265,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   // Call the async function
   const secretKeyInfo: string = await generateSecretKey();
-  console.log("secretKey", secretKeyInfo);
 
   await agent.initialize()
 
