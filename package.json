@@ -34,6 +34,7 @@
     "@aries-framework/anoncreds": "^0.4.2",
     "@aries-framework/anoncreds-rs": "^0.4.2",
     "@aries-framework/askar": "^0.4.2",
+    "@aries-framework/bbs-signatures": "^0.4.2",
     "@aries-framework/core": "^0.4.2",
     "@aries-framework/indy-vdr": "^0.4.2",
     "@aries-framework/node": "^0.4.2",

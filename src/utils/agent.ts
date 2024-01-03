@@ -5,19 +5,21 @@ import {
   ConnectionInvitationMessage,
   HttpOutboundTransport,
   LogLevel,
+  JsonLdCredentialFormatService,
 } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport, IndySdkPostgresStorageConfig, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin } from '@aries-framework/node'
 import path from 'path'
 
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
-import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { AnonCredsCredentialFormatService, AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { TenantsModule } from '@aries-framework/tenants'
 import { randomUUID } from 'crypto'
 import { AskarModule } from '@aries-framework/askar'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
+import { BbsModule } from '@aries-framework/bbs-signatures'
 
 export const setupAgent = async ({
   name,
@@ -99,9 +101,17 @@ export const setupAgent = async ({
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
           }),
+          new V2CredentialProtocol({
+            credentialFormats:[
+            legacyIndyCredentialFormat,
+            new AnonCredsCredentialFormatService(),
+            new JsonLdCredentialFormatService()
+            ]
+          })
         ],
       }),
-      tenants: new TenantsModule()
+      tenants: new TenantsModule(),
+      // bbs: new BbsModule()
     },
     dependencies: agentDependencies,
   })
