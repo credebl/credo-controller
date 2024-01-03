@@ -1932,7 +1932,6 @@ export class MultiTenancyController extends Controller {
       const did = await tenantAgent.dids.create<KeyDidCreateOptions>({
         method: "key",
         options: {
-          // keyType: KeyType.Bls12381g2,
           keyType: KeyType.Ed25519,
         },
         secret: {
