@@ -27,7 +27,8 @@
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@2060.io/ref-napi": "^3.0.6",
@@ -37,6 +38,7 @@
     "@aries-framework/core": "^0.4.2",
     "@aries-framework/indy-vdr": "^0.4.2",
     "@aries-framework/node": "^0.4.2",
+    "@aries-framework/push-notifications": "^0.6.0",
     "@aries-framework/tenants": "^0.4.2",
     "@hyperledger/anoncreds-nodejs": "^0.1.0",
     "@hyperledger/aries-askar-nodejs": "^0.1.1",
