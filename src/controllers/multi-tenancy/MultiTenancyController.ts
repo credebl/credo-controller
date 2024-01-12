@@ -1421,6 +1421,9 @@ export class MultiTenancyController extends Controller {
       if(!didOptions.keyType){
         throw Error('keyType is required')
       }
+      if(didOptions.keyType !== KeyType.Ed25519  && didOptions.keyType !== KeyType.Bls12381g2 ){
+        throw Error('Only ed25519 and bls12381g2 type supported')
+      }
      const did = `did:${didOptions.method}:${didOptions.domain}`
      let didDocument:any
      const keyId = `${did}#key-1`
