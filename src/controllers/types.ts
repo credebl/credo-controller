@@ -133,7 +133,6 @@ export interface CreateOfferOptions {
 export interface CreateOfferOobOptions {
   protocolVersion: string;
   credentialFormats:CredentialFormatPayload<[LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat], "createOffer"> 
-  // LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat;
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   goalCode?: string;

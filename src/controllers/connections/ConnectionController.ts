@@ -7,7 +7,7 @@ import {
   AriesFrameworkError,
   RecordNotFoundError,
 } from '@aries-framework/core'
-import { Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, RecordId } from '../examples'
@@ -33,6 +33,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord[]
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
+  @Security('apiKey')
   @Get('/connections')
   public async getAllConnections(
     @Query('outOfBandId') outOfBandId?: string,
@@ -75,6 +76,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Security('apiKey')
   @Get('/connections/:connectionId')
   public async getConnectionById(
     @Path('connectionId') connectionId: RecordId,
@@ -93,6 +95,7 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/connections/:connectionId')
+  @Security('apiKey')
   public async deleteConnection(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
@@ -119,6 +122,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Security('apiKey')
   @Post('/connections/:connectionId/accept-request')
   public async acceptRequest(
     @Path('connectionId') connectionId: RecordId,
@@ -146,6 +150,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Security('apiKey')
   @Post('/connections/:connectionId/accept-response')
   public async acceptResponse(
     @Path('connectionId') connectionId: RecordId,

@@ -3,7 +3,7 @@ import { AnonCredsError, AnonCredsApi, getUnqualifiedSchemaId, parseIndySchemaId
 import { Agent, AriesFrameworkError, BaseAgent } from '@aries-framework/core'
 // import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 // import { isIndyError } from '@aries-framework/core/build/utils/indyError'
-import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 import { SchemaId, SchemaExample } from '../examples'
 import { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
@@ -12,6 +12,7 @@ import { CredentialEnum } from '../../enums/enum';
 
 @Tags('Schemas')
 @Route('/schemas')
+@Security('apiKey')
 @injectable()
 export class SchemaController {
   private agent: Agent

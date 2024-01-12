@@ -1577,20 +1577,7 @@ export class MultiTenancyController extends Controller {
         tenantId,
       });
       const proof = await tenantAgent.proofs.createRequest({
-        protocolVersion:
-
-
-
-
-
-
-
-
-
-
-
-        
-          createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
+        protocolVersion:createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
         goalCode: createRequestOptions.goalCode,
         willConfirm: createRequestOptions.willConfirm,

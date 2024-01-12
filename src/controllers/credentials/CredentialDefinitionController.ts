@@ -4,7 +4,7 @@ import { AnonCredsApi, AnonCredsError, getUnqualifiedCredentialDefinitionId, par
 
 // TODO: Chenged IndySdkError to AriesFrameworkError. If approved, the message must be changed too.
 import { Agent, AriesFrameworkError } from '@aries-framework/core'
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 import { IndyVdrAnonCredsRegistry } from '@aries-framework/indy-vdr'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
@@ -12,6 +12,7 @@ import { CredentialEnum } from '../../enums/enum';
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
+@Security('apiKey')
 @injectable()
 export class CredentialDefinitionController extends Controller {
   private agent: Agent

@@ -1,7 +1,7 @@
 import type { AgentInfo } from '../types'
 
 import { Agent, DidCreateOptions, JsonTransformer, KeyType, TypedArrayEncoder } from '@aries-framework/core'
-import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 @Tags('Agent')
@@ -31,6 +31,7 @@ export class AgentController extends Controller {
   /**
    * Delete wallet
    */
+  @Security('apiKey')
   @Delete('/wallet')
   public async deleteWallet() {
     const deleteWallet = await this.agent.wallet.delete();

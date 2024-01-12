@@ -1,5 +1,5 @@
 import { Agent, AriesFrameworkError } from "@aries-framework/core"
-import { Body, Controller, Post, Res, Route, Tags, TsoaResponse } from "tsoa"
+import { Body, Controller, Post, Res, Route, Tags, TsoaResponse, Security } from "tsoa"
 import { injectable } from "tsyringe"
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from "../types"
 import { SchemaId, Version } from "../examples"
@@ -9,6 +9,7 @@ import { CredentialEnum } from '../../enums/enum';
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
+@Security('apiKey')
 @injectable()
 export class EndorserTransactionController extends Controller {
   private agent: Agent
