@@ -36,7 +36,8 @@ import type {
   JsonCredential,
   AgentMessage,
   Routing,
-  Attachment
+  Attachment,
+  KeyType
 } from '@aries-framework/core'
 
 import type {
@@ -47,6 +48,7 @@ import type {
 
 import type { DIDDocument } from 'did-resolver'
 import { Version } from './examples';
+
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
@@ -316,6 +318,7 @@ export interface DidCreate {
   secret?: DidRegistrationSecretOptions;
   endorserDid?: string;
   didDocument?: DidDocument;
+  keyType?:KeyType
 }
 
 export interface CreateTenantOptions {
