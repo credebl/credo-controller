@@ -1,4 +1,4 @@
-import { AutoAcceptCredential, CredentialsModule, DidsModule, InitConfig, KeyDidRegistrar, KeyDidResolver, ProofsModule, V2CredentialProtocol, V2ProofProtocol, WebDidResolver } from '@aries-framework/core'
+import { AutoAcceptCredential, CredentialsModule, DidsModule, InitConfig, JsonLdCredentialFormatService, KeyDidRegistrar, KeyDidResolver, PresentationExchangeProofFormatService, ProofsModule, V2CredentialProtocol, V2ProofProtocol, WebDidResolver } from '@aries-framework/core'
 
 import {
   Agent,
@@ -11,7 +11,7 @@ import path from 'path'
 
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
-import { AnonCredsModule, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
 import { TenantsModule } from '@aries-framework/tenants'
 import { randomUUID } from 'crypto'
 import { AskarModule } from '@aries-framework/askar'
@@ -91,6 +91,13 @@ export const setupAgent = async ({
           new V1ProofProtocol({
             indyProofFormat: legacyIndyProofFormat,
           }),
+          new V2ProofProtocol({
+            proofFormats: [
+              legacyIndyProofFormat,
+              new AnonCredsProofFormatService(),
+              new PresentationExchangeProofFormatService(),
+            ],
+          }),
         ],
       }),
       credentials: new CredentialsModule({
@@ -98,6 +105,13 @@ export const setupAgent = async ({
         credentialProtocols: [
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
+          }),
+          new V2CredentialProtocol({
+            credentialFormats: [
+              legacyIndyCredentialFormat,
+              new JsonLdCredentialFormatService(),
+              new AnonCredsCredentialFormatService(),
+            ],
           }),
         ],
       }),
