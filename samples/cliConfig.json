@@ -42,6 +42,5 @@
   ],
   "autoAcceptMediationRequests": false,
   "adminPort": 4001,
-  "tenancy": true,
-  "apiKey": "apiKey"
+  "tenancy": true
 }
