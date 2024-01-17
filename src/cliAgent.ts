@@ -270,7 +270,15 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       }
     }
 
+    // Call the async function
     const secretKeyInfo: string = await generateSecretKey();
+    // Check if the secretKey already exist in the genericRecords
+
+    // if already exist - then don't generate the secret key again
+    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
+    // instead use the existin JWT token
+    // if JWT token is not found, create/generate a new token and save in genericRecords
+    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
 
     token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo);
 
