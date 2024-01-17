@@ -180,7 +180,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
     if (ledgerConfig.indyNamespace.includes('indicio')) {
 
-      if (ledgerConfig.indyNamespace === 'indicio:testnet' || ledgerConfig.indyNamespace === 'indicio:mainnet' ) {
+      if (ledgerConfig.indyNamespace === 'indicio:testnet' || ledgerConfig.indyNamespace === 'indicio:mainnet') {
         networkConfig.transactionAuthorAgreement = {
           version: '1.0',
           acceptanceMechanism: 'wallet_agreement',
@@ -239,51 +239,59 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }))
   }
 
-  async function generateSecretKey(length: number = 32): Promise<string> {
-    try {
-      // Asynchronously generate a buffer containing random values
-      const buffer: Buffer = await new Promise((resolve, reject) => {
-        randomBytes(length, (error, buf) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(buf);
-          }
-        });
-      });
-
-      // Convert the buffer to a hexadecimal string
-      const secretKey: string = buffer.toString("hex");
-
-      return secretKey;
-    } catch (error) {
-      // Handle any errors that might occur during key generation
-      console.error("Error generating secret key:", error);
-      throw error;
-    }
-  }
-
-  // Call the async function
-  const secretKeyInfo: string = await generateSecretKey();
 
   await agent.initialize()
 
-  const getData = await agent.genericRecords.save({
-    content: {
-      secretKey: secretKeyInfo,
-    },
-  });
-  const getGenericRecord = await agent.genericRecords.findById(getData.id);
-  const secretKey = getGenericRecord?.content.secretKey as string;
-  const token = jwt.sign({ agentInfo: 'agentInfo' }, secretKey);
+  let token: string = '';
+  const genericRecord = await agent.genericRecords.getAll();
+  if (genericRecord.length === 0) {
 
-  console.log("token", token)
+    async function generateSecretKey(length: number = 32): Promise<string> {
+      try {
+        // Asynchronously generate a buffer containing random values
+        const buffer: Buffer = await new Promise((resolve, reject) => {
+          randomBytes(length, (error, buf) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(buf);
+            }
+          });
+        });
+
+        // Convert the buffer to a hexadecimal string
+        const secretKey: string = buffer.toString("hex");
+
+        return secretKey;
+      } catch (error) {
+        // Handle any errors that might occur during key generation
+        logger.error(`Error generating secret key: ${error}`);
+        throw error;
+      }
+    }
+
+    const secretKeyInfo: string = await generateSecretKey();
+
+    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo);
+
+    await agent.genericRecords.save({
+      content: {
+        secretKey: secretKeyInfo,
+        token
+      },
+    });
+  } else {
+    token = genericRecord[0]?.content?.token as string;
+  }
+
   const app = await setupServer(agent, {
     webhookUrl,
     port: adminPort,
   },
     token
   )
+
+  logger.info(`\n*** API Toekn: ${token}`);
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)
