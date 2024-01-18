@@ -1,5 +1,5 @@
 import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, CacheModule, ConnectionRecordProps, ConnectionRepository, ConnectionsModule, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, CredentialsModule, DidDocumentBuilder, DidExchangeState, DidsModule, HandshakeProtocol, JsonLdCredentialFormatService, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsModule, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, V2CredentialProtocol, V2ProofProtocol, W3cCredentialsModule, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
-import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction } from '../types';
+import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidCreate, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example, Security } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
@@ -1404,5 +1404,33 @@ export class MultiTenancyController extends Controller {
 
          
         return ({ CredentialExchangeRecord: acceptOffer });
+    }
+
+    @Post("/did/key:tenantId")
+    public async createDidKey(
+      @Path("tenantId") tenantId: string,
+      @Body() didOptions: DidCreate,
+      @Res() internalServerError: TsoaResponse<500, { message: string }>
+    ) {
+      try {
+        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({
+          tenantId,
+        });
+      
+        const did = await tenantAgent.dids.create<KeyDidCreateOptions>({
+          method: "key",
+          options: {
+            keyType: KeyType.Ed25519,
+          },
+          secret: {
+            privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+          },
+        });
+        return { did: `${did.didState.did}` };
+      } catch (error) {
+        return internalServerError(500, {
+          message: `something went wrong: ${error}`,
+        });
+      }
     }
 }
