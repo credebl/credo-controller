@@ -1,7 +1,7 @@
 {
   "label": "AFJ Rest Agent 1",
-  "walletId": "holderupdated",
-  "walletKey": "holderupdated",
+  "walletId": "sai",
+  "walletKey": "sai",
   "walletType": "postgres",
   "walletUrl": "192.168.1.83:5432",
   "walletAccount": "postgres",
@@ -42,6 +42,5 @@
   ],
   "autoAcceptMediationRequests": false,
   "adminPort": 5001,
-  "tenancy": true,
   "webhookUrl": "http://192.168.1.83:5000/wh/0b3f3fc0-f4b1-47bb-8f6f-9598aa842fcd"
 }
