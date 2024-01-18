@@ -40,6 +40,8 @@ import type {
 } from '@aries-framework/core'
 
 import type {
+  AnonCredsCredentialFormat,
+  LegacyIndyCredentialFormat,
   V1PresentationPreviewAttributeOptions,
   V1PresentationPreviewPredicateOptions,
 } from '@aries-framework/anoncreds'
@@ -130,7 +132,7 @@ export interface CreateOfferOptions {
 
 export interface CreateOfferOobOptions {
   protocolVersion: string;
-  credentialFormats: any;
+  credentialFormats:CredentialFormatPayload<[LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat], "createOffer">;
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   goalCode?: string;
