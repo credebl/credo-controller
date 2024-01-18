@@ -1,4 +1,4 @@
-import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, W3cCredentialsModule, KeyDidRegistrar, KeyDidResolver, CacheModule, InMemoryLruCache, WebDidResolver } from '@aries-framework/core'
+import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, W3cCredentialsModule, KeyDidRegistrar, KeyDidResolver, CacheModule, InMemoryLruCache, WebDidResolver, PresentationExchangeProofFormatService } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
@@ -91,6 +91,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
   const anonCredsCredentialFormatService = new AnonCredsCredentialFormatService()
   const anonCredsProofFormatService = new AnonCredsProofFormatService()
+  const presentationExchangeProofFormatService =  new PresentationExchangeProofFormatService()
   return {
     askar: new AskarModule({
       ariesAskar,
@@ -123,7 +124,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
           indyProofFormat: legacyIndyProofFormat,
         }),
         new V2ProofProtocol({
-          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService],
+          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService, presentationExchangeProofFormatService],
         }),
       ],
     }),
