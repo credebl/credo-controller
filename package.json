@@ -43,7 +43,9 @@
     "@hyperledger/anoncreds-nodejs": "^0.1.0",
     "@hyperledger/aries-askar-nodejs": "^0.1.1",
     "@hyperledger/indy-vdr-nodejs": "^0.1.0",
-    "@sphereon/pex": "^3.0.0",
+    "@sphereon/pex": "^2.2.2",
+    "@sphereon/pex-models": "^2.1.2",
+    "@sphereon/ssi-types": "^0.17.5",
     "@types/node-fetch": "^2.6.4",
     "@types/ref-struct-di": "^1.1.9",
     "@types/ws": "^7.4.7",
@@ -80,7 +82,8 @@
     "supertest": "^6.2.3",
     "ts-jest": "^27.0.7",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.7.3"
+    "typescript": "^4.7.3",
+    "@types/jsonpath":"^0.2.4"
   },
   "resolutions": {
     "ref-napi": "npm:@2060.io/ref-napi"

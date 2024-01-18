@@ -1,13 +1,13 @@
 {
   "label": "AFJ Rest Agent 1",
-  "walletId": "sample",
-  "walletKey": "sample",
+  "walletId": "holderupdated",
+  "walletKey": "holderupdated",
   "walletType": "postgres",
-  "walletUrl": "localhost:5432",
+  "walletUrl": "192.168.1.83:5432",
   "walletAccount": "postgres",
-  "walletPassword": "postgres",
+  "walletPassword": "Password1",
   "walletAdminAccount": "postgres",
-  "walletAdminPassword": "postgres",
+  "walletAdminPassword": "Password1",
   "walletScheme": "DatabasePerWallet",
   "indyLedger": [
     {
@@ -24,7 +24,7 @@
     }
   ],
   "endpoint": [
-    "http://localhost:4002"
+    "http://192.168.1.83:9001"
   ],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
@@ -34,15 +34,14 @@
   "inboundTransport": [
     {
       "transport": "http",
-      "port": 4002
+      "port": 9001
     }
   ],
   "outboundTransport": [
     "http"
   ],
   "autoAcceptMediationRequests": false,
-  "adminPort": 4001,
+  "adminPort": 5001,
   "tenancy": true,
-  "apiKey": "apiKey",
   "webhookUrl": "http://192.168.1.83:5000/wh/0b3f3fc0-f4b1-47bb-8f6f-9598aa842fcd"
 }

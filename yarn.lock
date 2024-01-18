@@ -921,7 +921,7 @@
     nanoid "^3.3.7"
     string.prototype.matchall "^4.0.10"
 
-"@sphereon/ssi-types@0.18.0":
+"@sphereon/ssi-types@0.18.0", "@sphereon/ssi-types@^0.18.0":
   version "0.18.0"
   resolved "https://registry.yarnpkg.com/@sphereon/ssi-types/-/ssi-types-0.18.0.tgz#b4f3a4a9e4e5b28719ce729b679d71d9d220cc26"
   integrity sha512-D2n42NAhHCwpL4K7BqQXO9dYQ8n3st/1eJQrLqokJ18B9r2gury3km4cp+ZdiIxfefUaP9RBCeuWaiRUvjZ94w==
