@@ -1460,13 +1460,13 @@ export class MultiTenancyController extends Controller {
         keyType:didOptions.keyType,
         seed:TypedArrayEncoder.fromString(didOptions.seed)
      })
-     if(didOptions.keyType === "ed25519"){
+     if(didOptions.keyType === KeyType.Ed25519){
      didDocument = new DidDocumentBuilder(did)
      .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
      .addVerificationMethod(getEd25519VerificationKey2018({key,id:keyId,controller:did}))
      .addAuthentication(keyId).build();
      }
-    if(didOptions.keyType === "bls12381g2"){
+    if(didOptions.keyType === KeyType.Bls12381g2){
         didDocument = new DidDocumentBuilder(did)
         .addContext('https://w3id.org/security/bbs/v1')
         .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
