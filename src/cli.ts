@@ -166,9 +166,7 @@ export async function runCliServer() {
         type: parsed['wallet-type'],
         config: {
           host: parsed['wallet-url'],
-          connectTimeout: 10,
-          maxConnections: 1000,
-          idleTimeout: 30000
+          connectTimeout: 10
         },
         credentials: {
           account: parsed["wallet-account"],
