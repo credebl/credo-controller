@@ -21,6 +21,7 @@ import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import { DifPresentationExchangeModule } from '@aries-framework/core/build/modules/dif-presentation-exchange'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -79,7 +80,7 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   return {
     tenants: new TenantsModule<typeof modules>({
       sessionAcquireTimeout: 10000,
-      sessionLimit: 1000
+      sessionLimit: 1000,
     }),
     ...modules
   }
@@ -142,7 +143,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
       cache: new InMemoryLruCache({ limit: Infinity })
-    })
+    }),
   }
 
 }
@@ -218,6 +219,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const agent = new Agent({
     config: agentConfig,
     modules: {
+     
       ...(afjConfig.tenancy
         ? {
           ...tenantModule

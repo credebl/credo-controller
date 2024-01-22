@@ -41,7 +41,7 @@ export class MultiTenancyController extends Controller {
             createTenantOptions.role = createTenantOptions.role || 'endorser';
             createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet';
             const didMethod = `did:indy:${createTenantOptions.method}`;
-
+          
             let result;
 
             if (createTenantOptions.method.includes('bcovrin')) {
@@ -897,7 +897,7 @@ export class MultiTenancyController extends Controller {
             }
 
             const offerOob = await tenantAgent.credentials.createOffer({
-                protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
+                protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
                 credentialFormats: createOfferOptions.credentialFormats,
                 autoAcceptCredential: createOfferOptions.autoAcceptCredential,
                 comment: createOfferOptions.comment
@@ -1405,7 +1405,8 @@ export class MultiTenancyController extends Controller {
          
         return ({ CredentialExchangeRecord: acceptOffer });
     }
-
+    
+    @Security('apiKey')
     @Post("/did/key:tenantId")
     public async createDidKey(
       @Path("tenantId") tenantId: string,

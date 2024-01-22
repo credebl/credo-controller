@@ -978,12 +978,201 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CredentialPreviewAttributeOptions": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"mimeType": {
+						"type": "string"
+					},
+					"value": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"value"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"LinkedAttachment": {
+				"properties": {
+					"attributeName": {
+						"type": "string",
+						"description": "The name that will be used to generate the linked credential"
+					},
+					"attachment": {
+						"$ref": "#/components/schemas/Attachment",
+						"description": "The attachment that needs to be linked to the credential"
+					}
+				},
+				"required": [
+					"attributeName",
+					"attachment"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsOfferCredentialFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.offerCredential\nor CredentialsApi.negotiateProposal",
+				"properties": {
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"credentialDefinitionId",
+					"attributes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"W3cIssuerOptions": {
+				"description": "TODO: check how to support arbitrary data in class",
+				"properties": {
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SingleOrArray_JsonObject_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/JsonObject"
+					},
+					{
+						"items": {
+							"$ref": "#/components/schemas/JsonObject"
+						},
+						"type": "array"
+					}
+				]
+			},
+			"JsonCredential": {
+				"properties": {
+					"@context": {
+						"anyOf": [
+							{
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							{
+								"$ref": "#/components/schemas/JsonObject"
+							}
+						]
+					},
+					"id": {
+						"type": "string"
+					},
+					"type": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"issuer": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"$ref": "#/components/schemas/W3cIssuerOptions"
+							}
+						]
+					},
+					"issuanceDate": {
+						"type": "string"
+					},
+					"expirationDate": {
+						"type": "string"
+					},
+					"credentialSubject": {
+						"$ref": "#/components/schemas/SingleOrArray_JsonObject_"
+					}
+				},
+				"required": [
+					"@context",
+					"type",
+					"issuer",
+					"issuanceDate",
+					"credentialSubject"
+				],
+				"type": "object",
+				"additionalProperties": {}
+			},
+			"JsonLdCredentialDetailFormat": {
+				"description": "Format for creating a jsonld proposal, offer or request.",
+				"properties": {
+					"credential": {
+						"$ref": "#/components/schemas/JsonCredential"
+					},
+					"options": {
+						"properties": {
+							"proofType": {
+								"type": "string"
+							},
+							"proofPurpose": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"proofType",
+							"proofPurpose"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"credential",
+					"options"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_%5BLegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat%5D.createOffer_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
 			"CreateOfferOobOptions": {
 				"properties": {
 					"protocolVersion": {
 						"type": "string"
 					},
-					"credentialFormats": {},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_%5BLegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat%5D.createOffer_"
+					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
 					},
@@ -6155,6 +6344,67 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/GetTenantAgentOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/did/key{tenantId}": {
+			"post": {
+				"operationId": "CreateDidKey",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DidCreate"
 							}
 						}
 					}
