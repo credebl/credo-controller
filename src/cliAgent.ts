@@ -244,6 +244,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   let token: string = '';
   const genericRecord = await agent.genericRecords.getAll();
+  console.log(genericRecord)
   if (genericRecord.length === 0) {
 
     async function generateSecretKey(length: number = 32): Promise<string> {
@@ -299,7 +300,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     token
   )
 
-  logger.info(`\n*** API Toekn: ${token}`);
+  logger.info(`*** API Toekn: ${token}`);
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)
