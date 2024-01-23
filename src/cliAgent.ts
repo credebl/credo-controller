@@ -78,7 +78,6 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
       sessionLimit: Infinity
     }),
     ...modules
@@ -245,7 +244,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   let token: string = '';
   const genericRecord = await agent.genericRecords.getAll();
   console.log(genericRecord)
-  if (genericRecord.length === 0) {
+  if (genericRecord.length === 0 || genericRecord.some(record => record?.content?.token === undefined)) {
 
     async function generateSecretKey(length: number = 32): Promise<string> {
       try {
@@ -280,9 +279,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // instead use the existin JWT token
     // if JWT token is not found, create/generate a new token and save in genericRecords
     // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-
     token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo);
-
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
