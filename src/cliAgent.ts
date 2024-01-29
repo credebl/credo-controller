@@ -200,7 +200,8 @@ async function generateSecretKey(length: number = 32): Promise<string> {
     return secretKey
   } catch (error) {
     // Handle any errors that might occur during key generation
-    logger.error(`Error generating secret key: ${error}`)
+    // eslint-disable-next-line no-console
+    console.log(`Error generating secret key: ${error}`)
     throw error
   }
 }

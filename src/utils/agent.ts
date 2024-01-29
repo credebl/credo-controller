@@ -25,6 +25,7 @@ import {
   Agent,
   ConnectionInvitationMessage,
   HttpOutboundTransport,
+  LogLevel,
 } from '@aries-framework/core'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme } from '@aries-framework/node'
@@ -32,9 +33,12 @@ import { TenantsModule } from '@aries-framework/tenants'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
+import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
+  const logger = new TsLogger(LogLevel.debug)
+
   const storageConfig = {
     type: 'postgres_storage',
     config: {
