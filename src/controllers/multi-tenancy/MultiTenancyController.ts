@@ -68,7 +68,6 @@ export class MultiTenancyController extends Controller {
                     reason: `Tenant not created`,
                 });
             }
-
             return internalServerError(500, { message: `Something went wrong: ${error}` });
         }
     }
@@ -308,7 +307,6 @@ export class MultiTenancyController extends Controller {
                     })
                 }
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -355,7 +353,6 @@ export class MultiTenancyController extends Controller {
                 outOfBandRecord: outOfBandRecord?.toJSON(),
             }
         } catch (error) {
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -607,7 +604,6 @@ export class MultiTenancyController extends Controller {
                     })
                 }
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -778,7 +774,6 @@ export class MultiTenancyController extends Controller {
                 }
             }
 
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -855,7 +850,6 @@ export class MultiTenancyController extends Controller {
                 })
             }
 
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -889,7 +883,6 @@ export class MultiTenancyController extends Controller {
                     })
                 }
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -914,6 +907,7 @@ export class MultiTenancyController extends Controller {
 
             return offer;
         } catch (error) {
+             
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -945,7 +939,8 @@ export class MultiTenancyController extends Controller {
                     label: createOfferOptions.label,
                     handshakeProtocols: [HandshakeProtocol.Connections],
                     messages: [credentialMessage],
-                    autoAcceptConnection: true
+                    autoAcceptConnection: true,
+                    multiUseInvitation: true
                 })
 
                 createOfferOobRecord = {
@@ -995,7 +990,6 @@ export class MultiTenancyController extends Controller {
                     reason: `credential with credential record id "${acceptCredentialOfferOptions.credentialRecordId}" not found.`,
                 })
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1025,7 +1019,6 @@ export class MultiTenancyController extends Controller {
                     reason: `credential with credential record id "${credentialRecordId}" not found.`,
                 })
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1087,7 +1080,6 @@ export class MultiTenancyController extends Controller {
                     reason: `proof with proofRecordId "${proofRecordId}" not found.`,
                 })
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1149,7 +1141,8 @@ export class MultiTenancyController extends Controller {
                     label: createRequestOptions.label,
                     handshakeProtocols: [HandshakeProtocol.Connections],
                     messages: [proofMessage],
-                    autoAcceptConnection: true
+                    autoAcceptConnection: true,
+                    multiUseInvitation: true
                 })
 
                 oobProofRecord = {
@@ -1210,7 +1203,6 @@ export class MultiTenancyController extends Controller {
                     reason: `proof with proofRecordId "${proofRecordId}" not found.`,
                 })
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1237,7 +1229,6 @@ export class MultiTenancyController extends Controller {
                     reason: `proof with proofRecordId "${proofRecordId}" not found.`,
                 })
             }
-
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1318,20 +1309,17 @@ export class MultiTenancyController extends Controller {
             schemaState.schemaId = getSchemaId
         }
 
-
         return schemaState;
     }
 
     async getSchemaWithTenant(tenantAgent: any, schemaId: any) {
         const schema = await tenantAgent.modules.anoncreds.getSchema(schemaId);
 
-
         return schema;
     }
 
     async getCredentialDefinition(tenantAgent: any, credentialDefinitionId: any) {
         const credDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId);
-
 
         return credDef;
     }
@@ -1361,7 +1349,6 @@ export class MultiTenancyController extends Controller {
             credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
         }
 
-
         return credentialDefinitionState;
     }
 
@@ -1370,7 +1357,6 @@ export class MultiTenancyController extends Controller {
             autoAcceptConnection: true,
         }
         const createInvitation = await tenantAgent.oob.createInvitation(config);
-
 
         return ({
             invitationUrl: createInvitation.outOfBandInvitation.toUrl({
@@ -1389,7 +1375,6 @@ export class MultiTenancyController extends Controller {
             invitationUrl,
             remaining
         );
-
 
         return ({
             outOfBandRecord: outOfBandRecord.toJSON(),

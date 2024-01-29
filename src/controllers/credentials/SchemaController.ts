@@ -1,8 +1,6 @@
 import type { Version } from '../examples'
-import { AnonCredsError, AnonCredsApi, getUnqualifiedSchemaId, parseIndySchemaId } from '@aries-framework/anoncreds'
-// import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
-// import { isIndyError } from '@aries-framework/core/build/utils/indyError'
 
+import { AnonCredsError, getUnqualifiedSchemaId, parseIndySchemaId } from '@aries-framework/anoncreds'
 import { Agent, AriesFrameworkError } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
