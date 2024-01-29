@@ -23,9 +23,7 @@
       "indyNamespace": "bcovrin:testnet"
     }
   ],
-  "endpoint": [
-    "http://192.168.1.83:9001"
-  ],
+  "endpoint": ["http://192.168.1.83:9001"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
   "autoAcceptProofs": "contentApproved",
@@ -37,9 +35,7 @@
       "port": 9001
     }
   ],
-  "outboundTransport": [
-    "http"
-  ],
+  "outboundTransport": ["http"],
   "autoAcceptMediationRequests": false,
   "adminPort": 5001,
   "webhookUrl": "http://192.168.1.83:5000/wh/0b3f3fc0-f4b1-47bb-8f6f-9598aa842fcd"

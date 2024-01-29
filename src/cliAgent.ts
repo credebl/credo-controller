@@ -48,7 +48,7 @@ import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
 import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
-import jwt from 'jsonwebtoken'
+import { sign } from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
@@ -326,7 +326,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // if JWT token is not found, create/generate a new token and save in genericRecords
     // next time, the same token should be used - instead of creating a new token on every restart event of the agent
 
-    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
+    token = sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
 
     await agent.genericRecords.save({
       content: {

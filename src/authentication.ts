@@ -1,30 +1,31 @@
-import * as express from "express";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import type { Request } from 'express'
 
-let dynamicApiKey: string = 'api_key'; // Initialize with a default value
+let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
 export async function expressAuthentication(
-  request: express.Request,
+  request: Request,
   securityName: string,
   secMethod?: { [key: string]: any },
   scopes?: string
 ) {
-  const apiKeyHeader = request.headers['authorization'];
+  const apiKeyHeader = request.headers['authorization']
 
   if (securityName === 'apiKey') {
     if (apiKeyHeader) {
-      const providedApiKey = apiKeyHeader as string;
+      const providedApiKey = apiKeyHeader as string
 
       if (providedApiKey === dynamicApiKey) {
-        return "success";
+        return 'success'
       }
     }
   }
 }
 
 export function setDynamicApiKey(newApiKey: string) {
-  dynamicApiKey = newApiKey;
+  dynamicApiKey = newApiKey
 }
 
 export function getDynamicApiKey() {
-  return dynamicApiKey;
+  return dynamicApiKey
 }
