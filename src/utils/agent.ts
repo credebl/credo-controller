@@ -1,37 +1,40 @@
-import { AutoAcceptCredential, CredentialsModule, DidsModule, InitConfig, JsonLdCredentialFormatService, KeyDidRegistrar, KeyDidResolver, PresentationExchangeProofFormatService, ProofsModule, V2CredentialProtocol, V2ProofProtocol, WebDidResolver } from '@aries-framework/core'
+import type { InitConfig } from '@aries-framework/core'
 
 import {
+  AnonCredsModule,
+  LegacyIndyCredentialFormatService,
+  LegacyIndyProofFormatService,
+  V1CredentialProtocol,
+  V1ProofProtocol,
+  AnonCredsCredentialFormatService,
+  AnonCredsProofFormatService,
+} from '@aries-framework/anoncreds'
+import { AskarModule } from '@aries-framework/askar'
+import {
+  AutoAcceptCredential,
+  CredentialsModule,
+  DidsModule,
+  JsonLdCredentialFormatService,
+  KeyDidRegistrar,
+  KeyDidResolver,
+  PresentationExchangeProofFormatService,
+  ProofsModule,
+  V2CredentialProtocol,
+  V2ProofProtocol,
+  WebDidResolver,
   Agent,
   ConnectionInvitationMessage,
   HttpOutboundTransport,
-  LogLevel,
 } from '@aries-framework/core'
-import { agentDependencies, HttpInboundTransport, IndySdkPostgresStorageConfig, IndySdkPostgresWalletScheme, loadIndySdkPostgresPlugin } from '@aries-framework/node'
-import path from 'path'
-
-import { TsLogger } from './logger'
-import { BCOVRIN_TEST_GENESIS } from './util'
-import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
+import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@aries-framework/indy-vdr'
+import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme } from '@aries-framework/node'
 import { TenantsModule } from '@aries-framework/tenants'
-import { randomUUID } from 'crypto'
-import { AskarModule } from '@aries-framework/askar'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
-import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
-export const setupAgent = async ({
-  name,
-  publicDidSeed,
-  endpoints,
-  port,
-}: {
-  name: string
-  publicDidSeed: string
-  endpoints: string[]
-  port: number
-}) => {
-  const logger = new TsLogger(LogLevel.debug)
+import { BCOVRIN_TEST_GENESIS } from './util'
 
+export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const storageConfig = {
     type: 'postgres_storage',
     config: {
@@ -73,7 +76,7 @@ export const setupAgent = async ({
             genesisTransactions: BCOVRIN_TEST_GENESIS,
             connectOnStartup: true,
           },
-        ]
+        ],
       }),
       askar: new AskarModule({
         ariesAskar,
@@ -115,7 +118,7 @@ export const setupAgent = async ({
           }),
         ],
       }),
-      tenants: new TenantsModule()
+      tenants: new TenantsModule(),
     },
     dependencies: agentDependencies,
   })
@@ -147,4 +150,3 @@ export const setupAgent = async ({
 
   return agent
 }
-

@@ -1,23 +1,23 @@
 import 'reflect-metadata'
 import type { ServerConfig } from './utils/ServerConfig'
 import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
-import type { Exception } from 'tsoa'
 
 import { Agent } from '@aries-framework/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 import { serve, generateHTML } from 'swagger-ui-express'
-import { ValidateError } from 'tsoa'
 import { container } from 'tsyringe'
 
+import { setDynamicApiKey } from './authentication'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
-import { setDynamicApiKey } from './authentication'
 import { SecurityMiddleware } from './securityMiddleware'
+
+import { ValidateError, type Exception } from 'tsoa'
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
@@ -39,15 +39,15 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     })
   )
 
-  setDynamicApiKey(apiKey ? apiKey : '');
+  setDynamicApiKey(apiKey ? apiKey : '')
 
   app.use(bodyParser.json())
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
 
-  const securityMiddleware = new SecurityMiddleware();
-  app.use(securityMiddleware.use);
+  const securityMiddleware = new SecurityMiddleware()
+  app.use(securityMiddleware.use)
   RegisterRoutes(app)
 
   app.use((req, res, next) => {

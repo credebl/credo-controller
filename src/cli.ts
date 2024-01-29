@@ -127,7 +127,7 @@ const parsed = yargs
   })
   .option('tenancy', {
     boolean: true,
-    default: false
+    default: false,
   })
   // .option('storage-config', {
   //   array: true,
@@ -150,11 +150,11 @@ const parsed = yargs
   .env('AFJ_REST')
   .parse()
 
+const argv = yargs.argv
+const storageConfig = argv['wallet-type']
 
-const argv = yargs.argv;
-const storageConfig = argv["wallet-type"];
-
-console.log("Storage Config after YARGS::", storageConfig);
+// eslint-disable-next-line no-console
+console.log('Storage Config after YARGS::', storageConfig)
 
 export async function runCliServer() {
   await runRestAgent({
@@ -166,15 +166,15 @@ export async function runCliServer() {
         type: parsed['wallet-type'],
         config: {
           host: parsed['wallet-url'],
-          connectTimeout: 10
+          connectTimeout: 10,
         },
         credentials: {
-          account: parsed["wallet-account"],
-          password: parsed["wallet-password"],
-          adminAccount: parsed["wallet-admin-account"],
-          adminPassword: parsed["wallet-admin-password"],
-        }
-      }
+          account: parsed['wallet-account'],
+          password: parsed['wallet-password'],
+          adminAccount: parsed['wallet-admin-account'],
+          adminPassword: parsed['wallet-admin-password'],
+        },
+      },
     },
     indyLedger: parsed['indy-ledger'],
     // publicDidSeed: parsed['public-did-seed'],
@@ -190,6 +190,6 @@ export async function runCliServer() {
     connectionImageUrl: parsed['connection-image-url'],
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
-    tenancy: parsed['tenancy']
+    tenancy: parsed['tenancy'],
   } as AriesRestConfig)
 }
