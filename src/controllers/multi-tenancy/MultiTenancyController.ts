@@ -961,7 +961,6 @@ export class MultiTenancyController extends Controller {
           })
         }
       }
-
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -981,7 +980,6 @@ export class MultiTenancyController extends Controller {
         credentialFormats: createOfferOptions.credentialFormats,
         autoAcceptCredential: createOfferOptions.autoAcceptCredential,
       })
-
       return offer
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -1059,7 +1057,6 @@ export class MultiTenancyController extends Controller {
           reason: `credential with credential record id "${acceptCredentialOfferOptions.credentialRecordId}" not found.`,
         })
       }
-
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1083,7 +1080,6 @@ export class MultiTenancyController extends Controller {
           reason: `credential with credential record id "${credentialRecordId}" not found.`,
         })
       }
-
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1140,7 +1136,6 @@ export class MultiTenancyController extends Controller {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
-
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1251,7 +1246,6 @@ export class MultiTenancyController extends Controller {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
-
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1276,7 +1270,6 @@ export class MultiTenancyController extends Controller {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
-
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1301,7 +1294,6 @@ export class MultiTenancyController extends Controller {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
-
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1342,7 +1334,6 @@ export class MultiTenancyController extends Controller {
           reason: `Tenant with id: ${tenantAgentOptions.tenantId} not found.`,
         })
       }
-
       return internalServerError(500, { message: `Something went wrong: ${error}` })
     }
   }

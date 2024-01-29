@@ -29,8 +29,6 @@ import {
   Security,
 } from 'tsoa'
 
-// import prepareForAnon
-
 @Tags('Out Of Band')
 @Security('apiKey')
 @Route('/oob')

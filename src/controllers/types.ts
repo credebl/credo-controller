@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/order
 import type { Version } from './examples'
 import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@aries-framework/anoncreds'
 import type {
