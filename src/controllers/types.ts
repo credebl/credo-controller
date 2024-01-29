@@ -25,10 +25,9 @@ import type {
   AgentMessage,
   Routing,
   Attachment,
-  KeyType
+  KeyType,
 } from '@aries-framework/core'
 import type { DIDDocument } from 'did-resolver'
-
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>
@@ -114,10 +113,10 @@ export interface CreateOfferOobOptions {
   credentialFormats: any
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  goalCode?: string;
-  parentThreadId?: string;
-  willConfirm?: boolean;
-  label?: string;
+  goalCode?: string
+  parentThreadId?: string
+  willConfirm?: boolean
+  label?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -127,14 +126,14 @@ export interface CredentialCreateOfferOptions {
 }
 
 export interface CreateProofRequestOobOptions {
-  protocolVersion: string;
-  proofFormats: any;
-  goalCode?: string;
-  parentThreadId?: string;
-  willConfirm?: boolean;
-  autoAcceptProof?: AutoAcceptProof;
-  comment?: string;
-  label?: string;
+  protocolVersion: string
+  proofFormats: any
+  goalCode?: string
+  parentThreadId?: string
+  willConfirm?: boolean
+  autoAcceptProof?: AutoAcceptProof
+  comment?: string
+  label?: string
 }
 
 export interface OfferCredentialOptions {
@@ -288,7 +287,7 @@ export interface ResolvedDid {
 }
 
 export interface DidCreate {
-  keyType?:KeyType
+  keyType?: KeyType
   seed: string
   domain?: string
   method?: string
