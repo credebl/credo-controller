@@ -7,7 +7,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@aries-framework/*": ["packages/*/src"]
+      "afj-controller/*": ["src"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

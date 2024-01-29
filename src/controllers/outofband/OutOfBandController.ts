@@ -1,20 +1,20 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
-import type { AgentMessageType, CreateInvitationOptions } from '../types'
-import {
-  ConnectionRecordProps,
-  CreateOutOfBandInvitationConfig,
-  CreateLegacyInvitationConfig,
-  CreateCredentialOfferOptions,
-  AutoAcceptCredential,
-} from '@aries-framework/core'
+import type { AgentMessageType } from '../types'
+import type { ConnectionRecordProps, CreateLegacyInvitationConfig } from '@aries-framework/core'
 
 import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
-import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
-import { V1CredentialProtocol } from '@aries-framework/anoncreds'
+import {
+  AcceptInvitationConfig,
+  ReceiveInvitationByUrlProps,
+  ReceiveInvitationProps,
+  CreateInvitationOptions,
+} from '../types'
+
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+
 // import prepareForAnon
 
 @Tags('Out Of Band')
@@ -296,5 +296,3 @@ export class OutOfBandController extends Controller {
     }
   }
 }
-
-

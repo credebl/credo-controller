@@ -1,14 +1,13 @@
 import 'reflect-metadata'
 import type { ServerConfig } from './utils/ServerConfig'
 import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
-import type { Exception } from 'tsoa'
+import { ValidateError, type Exception } from 'tsoa'
 
 import { Agent } from '@aries-framework/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 import { serve, generateHTML } from 'swagger-ui-express'
-import { ValidateError } from 'tsoa'
 import { container } from 'tsyringe'
 
 import { basicMessageEvents } from './events/BasicMessageEvents'

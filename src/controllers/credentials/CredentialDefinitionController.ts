@@ -1,14 +1,18 @@
 import type { SchemaId } from '../examples'
-import { AnonCredsApi, AnonCredsError, getUnqualifiedCredentialDefinitionId, parseIndyCredentialDefinitionId } from '@aries-framework/anoncreds'
-// import { error}
 
+import {
+  AnonCredsError,
+  getUnqualifiedCredentialDefinitionId,
+  parseIndyCredentialDefinitionId,
+} from '@aries-framework/anoncreds'
 // TODO: Chenged IndySdkError to AriesFrameworkError. If approved, the message must be changed too.
 import { Agent, AriesFrameworkError } from '@aries-framework/core'
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
-import { IndyVdrAnonCredsRegistry } from '@aries-framework/indy-vdr'
+
+import { CredentialEnum } from '../../enums/enum'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
-import { CredentialEnum } from '../../enums/enum';
+
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
@@ -43,7 +47,7 @@ export class CredentialDefinitionController extends Controller {
           reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
         })
       } else if (error instanceof AnonCredsError && error.cause instanceof AriesFrameworkError) {
-        if (error.cause.cause, 'CommonInvalidStructure') {
+        if ((error.cause.cause, 'CommonInvalidStructure')) {
           return badRequestError(400, {
             reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,
           })
@@ -74,18 +78,17 @@ export class CredentialDefinitionController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-
       const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
       const credentialDefinitionPyload = {
         issuerId,
         schemaId,
         tag,
-        type: 'CL'
+        type: 'CL',
       }
       if (!endorse) {
         const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
           credentialDefinition: credentialDefinitionPyload,
-          options: {}
+          options: {},
         })
 
         const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
@@ -93,14 +96,13 @@ export class CredentialDefinitionController extends Controller {
           indyCredDefId.namespaceIdentifier,
           indyCredDefId.schemaSeqNo,
           indyCredDefId.tag
-        );
+        )
 
         if (credentialDefinitionState.state === CredentialEnum.Finished) {
-          credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
+          credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
         }
-        return credentialDefinitionState;
+        return credentialDefinitionState
       } else {
-
         if (!endorserDid) {
           throw new Error('Please provide the endorser DID')
         }

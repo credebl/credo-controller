@@ -1,14 +1,15 @@
 import type { Version } from '../examples'
 import { AnonCredsError, AnonCredsApi, getUnqualifiedSchemaId, parseIndySchemaId } from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError, BaseAgent } from '@aries-framework/core'
 // import { LedgerError } from '@aries-framework/core/build/modules/ledger/error/LedgerError'
 // import { isIndyError } from '@aries-framework/core/build/utils/indyError'
-import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
-import { injectable } from 'tsyringe'
-import { SchemaId, SchemaExample } from '../examples'
-import { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
-import { CredentialEnum } from '../../enums/enum';
 
+import { Agent, AriesFrameworkError } from '@aries-framework/core'
+import { injectable } from 'tsyringe'
+
+import { CredentialEnum } from '../../enums/enum'
+import { SchemaId, SchemaExample } from '../examples'
+
+import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 
 @Tags('Schemas')
 @Route('/schemas')
@@ -41,17 +42,20 @@ export class SchemaController {
     try {
       return await this.agent.modules.anoncreds.getSchema(schemaId)
     } catch (errorMessage) {
-      if (errorMessage instanceof AnonCredsError && errorMessage.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+      if (
+        errorMessage instanceof AnonCredsError &&
+        errorMessage.message === 'IndyError(LedgerNotFound): LedgerNotFound'
+      ) {
         return notFoundError(404, {
           reason: `schema definition with schemaId "${schemaId}" not found.`,
         })
       } else if (errorMessage instanceof AnonCredsError && errorMessage.cause instanceof AnonCredsError) {
-        if (errorMessage.cause.cause, 'LedgerInvalidTransaction') {
+        if ((errorMessage.cause.cause, 'LedgerInvalidTransaction')) {
           return forbiddenError(403, {
             reason: `schema definition with schemaId "${schemaId}" can not be returned.`,
           })
         }
-        if (errorMessage.cause.cause, 'CommonInvalidStructure') {
+        if ((errorMessage.cause.cause, 'CommonInvalidStructure')) {
           return badRequestError(400, {
             reason: `schemaId "${schemaId}" has invalid structure.`,
           })
@@ -84,14 +88,13 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-
-      const { issuerId, name, version, attributes } = schema;
+      const { issuerId, name, version, attributes } = schema
 
       const schemaPayload = {
         issuerId: issuerId,
         name: name,
         version: version,
-        attrNames: attributes
+        attrNames: attributes,
       }
 
       if (!schema.endorse) {
@@ -108,15 +111,12 @@ export class SchemaController {
           indySchemaId.namespaceIdentifier,
           indySchemaId.schemaName,
           indySchemaId.schemaVersion
-        );
+        )
         if (schemaState.state === CredentialEnum.Finished) {
-          
           schemaState.schemaId = getSchemaUnqualifiedId
         }
-        return schemaState;
-
+        return schemaState
       } else {
-
         if (!schema.endorserDid) {
           throw new Error('Please provide the endorser DID')
         }
@@ -131,7 +131,6 @@ export class SchemaController {
 
         return createSchemaTxResult
       }
-
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
         if (error.message.includes('UnauthorizedClientRequest')) {

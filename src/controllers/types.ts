@@ -1,4 +1,5 @@
 // eslint-disable-next-line import/order
+import type { Version } from './examples'
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -12,48 +13,26 @@ import type {
   ProofExchangeRecord,
   ProofFormatPayload,
   ProofFormat,
-  CreateProofRequestOptions,
   DidRegistrationExtraOptions,
   DidDocument,
   DidRegistrationSecretOptions,
   InitConfig,
   WalletConfig,
-  ModulesMap,
-  DefaultAgentModules,
-  CredentialProtocol,
-  CredentialProtocolVersionType,
-  // ProofAttributeInfo,
-  // ProofPredicateInfo,
-  ProofProtocol,
-  ProofFormatService,
   ConnectionRecord,
-  ExtractProofFormats,
   CredentialExchangeRecord,
   DidResolutionOptions,
-  CreateCredentialOfferOptions,
-  JsonLdCredentialFormat,
-  JsonLdCredentialDetailFormat,
   JsonCredential,
   AgentMessage,
   Routing,
   Attachment,
   KeyType
 } from '@aries-framework/core'
-
-import type {
-  V1PresentationPreviewAttributeOptions,
-  V1PresentationPreviewPredicateOptions,
-} from '@aries-framework/anoncreds'
-
-
 import type { DIDDocument } from 'did-resolver'
-import { Version } from './examples';
 
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
-  walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>;
-};
-
+  walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>
+}
 
 export interface AgentInfo {
   label: string
@@ -86,7 +65,7 @@ export interface ProofRequestMessageResponse {
 type CredentialFormats = [CredentialFormat]
 
 // TODO: added type in protocolVersion
-export interface ProposeCredentialOptions<T = never> {
+export interface ProposeCredentialOptions {
   // protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
   connectionRecord: ConnectionRecord
   credentialFormats: {
@@ -123,7 +102,7 @@ export interface AcceptCredentialProposalOptions {
 
 // TODO: added type in protocolVersion
 export interface CreateOfferOptions {
-  protocolVersion: string;
+  protocolVersion: string
   connectionId: string
   credentialFormats: any
   autoAcceptCredential?: AutoAcceptCredential
@@ -131,31 +110,31 @@ export interface CreateOfferOptions {
 }
 
 export interface CreateOfferOobOptions {
-  protocolVersion: string;
-  credentialFormats: any;
+  protocolVersion: string
+  credentialFormats: any
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  goalCode?: string;
-  parentThreadId?: string;
-  willConfirm?: boolean;
-  label?: string;
+  goalCode?: string
+  parentThreadId?: string
+  willConfirm?: boolean
+  label?: string
 }
 export interface CredentialCreateOfferOptions {
-  credentialRecord: CredentialExchangeRecord;
+  credentialRecord: CredentialExchangeRecord
   credentialFormats: JsonCredential
-  options: any;
-  attachmentId?: string;
+  options: any
+  attachmentId?: string
 }
 
 export interface CreateProofRequestOobOptions {
-  protocolVersion: string;
-  proofFormats: any;
-  goalCode?: string;
-  parentThreadId?: string;
-  willConfirm?: boolean;
-  autoAcceptProof?: AutoAcceptProof;
-  comment?: string;
-  label?: string;
+  protocolVersion: string
+  proofFormats: any
+  goalCode?: string
+  parentThreadId?: string
+  willConfirm?: boolean
+  autoAcceptProof?: AutoAcceptProof
+  comment?: string
+  label?: string
 }
 
 export interface OfferCredentialOptions {
@@ -174,8 +153,8 @@ export interface OfferCredentialOptions {
 }
 
 export interface V2OfferCredentialOptions {
-  protocolVersion: string;
-  connectionId: string;
+  protocolVersion: string
+  connectionId: string
   credentialFormats: {
     indy: {
       credentialDefinitionId: string
@@ -234,7 +213,7 @@ export interface OutOfBandInvitationSchema {
   accept?: string[]
   handshake_protocols?: HandshakeProtocol[]
   services: Array<OutOfBandDidCommService | string>
-  imageUrl?: string,
+  imageUrl?: string
 }
 
 export interface ConnectionInvitationSchema {
@@ -265,9 +244,9 @@ export interface RequestProofOptions {
   proofFormats: any
   comment: string
   autoAcceptProof: AutoAcceptProof
-  goalCode?: string;
-  parentThreadId?: string;
-  willConfirm?: boolean;
+  goalCode?: string
+  parentThreadId?: string
+  willConfirm?: boolean
 }
 
 // TODO: added type in protocolVersion
@@ -277,8 +256,8 @@ export interface RequestProofProposalOptions {
   proofFormats: ProofFormatPayload<[ProofFormat], 'createProposal'>
   goalCode?: string
   parentThreadId?: string
-  autoAcceptProof?: AutoAcceptProof;
-  comment?: string;
+  autoAcceptProof?: AutoAcceptProof
+  comment?: string
 }
 
 export interface AcceptProofProposal {
@@ -286,8 +265,8 @@ export interface AcceptProofProposal {
   proofFormats?: ProofFormatPayload<[ProofFormat], 'acceptProposal'>
   comment?: string
   autoAcceptProof?: AutoAcceptProof
-  goalCode?: string;
-  willConfirm?: boolean;
+  goalCode?: string
+  willConfirm?: boolean
 }
 
 export interface GetTenantAgentOptions {
@@ -295,12 +274,12 @@ export interface GetTenantAgentOptions {
 }
 
 export interface DidCreateOptions {
-  method?: string;
-  did?: string;
-  options?: DidRegistrationExtraOptions;
-  secret?: DidRegistrationSecretOptions;
-  didDocument?: DidDocument;
-  seed?: any;
+  method?: string
+  did?: string
+  options?: DidRegistrationExtraOptions
+  secret?: DidRegistrationSecretOptions
+  didDocument?: DidDocument
+  seed?: any
 }
 
 export interface ResolvedDid {
@@ -309,25 +288,25 @@ export interface ResolvedDid {
 }
 
 export interface DidCreate {
-  seed: string;
-  domain?: string;
-  method?: string;
-  did?: string;
-  role?: string;
-  options?: DidRegistrationExtraOptions;
-  secret?: DidRegistrationSecretOptions;
-  endorserDid?: string;
-  didDocument?: DidDocument;
   keyType?:KeyType
+  seed: string
+  domain?: string
+  method?: string
+  did?: string
+  role?: string
+  options?: DidRegistrationExtraOptions
+  secret?: DidRegistrationSecretOptions
+  endorserDid?: string
+  didDocument?: DidDocument
 }
 
 export interface CreateTenantOptions {
-  config: Omit<TenantConfig, 'walletConfig'>,
-  seed: string;
-  method?: string;
-  role?: string;
-  endorserDid?: string;
-  did?: string;
+  config: Omit<TenantConfig, 'walletConfig'>
+  seed: string
+  method?: string
+  role?: string
+  endorserDid?: string
+  did?: string
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
@@ -335,33 +314,33 @@ export interface CreateTenantOptions {
 // ) => Promise<void>
 
 export interface WithTenantAgentOptions {
-  tenantId: string;
-  method: string;
-  payload?: any;
+  tenantId: string
+  method: string
+  payload?: any
 }
 
 export interface ReceiveConnectionsForTenants {
-  tenantId: string;
-  invitationId?: string;
+  tenantId: string
+  invitationId?: string
 }
 
 export interface CreateInvitationOptions {
-  label?: string;
-  alias?: string;
-  imageUrl?: string;
-  goalCode?: string;
-  goal?: string;
-  handshake?: boolean;
-  handshakeProtocols?: HandshakeProtocol[];
-  messages?: AgentMessage[];
-  multiUseInvitation?: boolean;
-  autoAcceptConnection?: boolean;
-  routing?: Routing;
-  appendedAttachments?: Attachment[];
+  label?: string
+  alias?: string
+  imageUrl?: string
+  goalCode?: string
+  goal?: string
+  handshake?: boolean
+  handshakeProtocols?: HandshakeProtocol[]
+  messages?: AgentMessage[]
+  multiUseInvitation?: boolean
+  autoAcceptConnection?: boolean
+  routing?: Routing
+  appendedAttachments?: Attachment[]
 }
 
 export interface EndorserTransaction {
-  transaction: string | Record<string, unknown>,
+  transaction: string | Record<string, unknown>
   endorserDid: string
 }
 
@@ -378,12 +357,12 @@ export interface WriteTransaction {
     name: string
     version: Version
     attributes: string[]
-  },
+  }
   credentialDefinition?: {
-    schemaId: string,
-    issuerId: string,
-    tag: string,
-    value: unknown,
+    schemaId: string
+    issuerId: string
+    tag: string
+    value: unknown
     type: string
   }
 }

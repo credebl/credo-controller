@@ -1,4 +1,4 @@
 export enum CredentialEnum {
-    Finished = 'finished',
-    Action = 'action'
+  Finished = 'finished',
+  Action = 'action',
 }
