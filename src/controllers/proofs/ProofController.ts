@@ -1,33 +1,21 @@
-import {
-  // AcceptProofPresentationOptions,
+import type {
   AcceptProofRequestOptions,
-  ConnectionRecord,
-  CreateProofRequestOptions,
-  DidExchangeRole,
-  DidExchangeState,
-  HandshakeProtocol,
-  JsonEncoder,
-  ProofExchangeRecord,
-  // IndyProofFormat,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
-  // ProposeProofOptions,
-  // V1ProofService,
-  // V2ProofService,
 } from '@aries-framework/core'
 
-import {
-  LegacyIndyCredentialFormatService,
-  LegacyIndyProofFormatService,
-  V1ProofProtocol
-} from '@aries-framework/anoncreds'
-
-import { Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { HandshakeProtocol, Agent, RecordNotFoundError } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
-import { AcceptProofProposal, CreateProofRequestOobOptions, RequestProofOptions, RequestProofProposalOptions } from '../types'
+import {
+  AcceptProofProposal,
+  CreateProofRequestOobOptions,
+  RequestProofOptions,
+  RequestProofProposalOptions,
+} from '../types'
+
+import { Body, Controller, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse } from 'tsoa'
 
 @Tags('Proofs')
 @Route('/proofs')
@@ -96,9 +84,7 @@ export class ProofController extends Controller {
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
-
     try {
-
       const proof = await this.agent.proofs.proposeProof({
         connectionId: requestProofProposalOptions.connectionId,
         protocolVersion: 'v1' as ProofsProtocolVersionType<[]>,
@@ -106,7 +92,7 @@ export class ProofController extends Controller {
         comment: requestProofProposalOptions.comment,
         autoAcceptProof: requestProofProposalOptions.autoAcceptProof,
         goalCode: requestProofProposalOptions.goalCode,
-        parentThreadId: requestProofProposalOptions.parentThreadId
+        parentThreadId: requestProofProposalOptions.parentThreadId,
       })
 
       return proof
@@ -138,7 +124,7 @@ export class ProofController extends Controller {
     try {
       const proof = await this.agent.proofs.acceptProposal(acceptProposal)
 
-      return proof;
+      return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
@@ -157,7 +143,6 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-
       const requestProofPayload = {
         connectionId: requestProofOptions.connectionId,
         protocolVersion: requestProofOptions.protocolVersion as ProofsProtocolVersionType<[]>,
@@ -166,7 +151,7 @@ export class ProofController extends Controller {
         autoAcceptProof: requestProofOptions.autoAcceptProof,
         goalCode: requestProofOptions.goalCode,
         parentThreadId: requestProofOptions.parentThreadId,
-        willConfirm: requestProofOptions.willConfirm
+        willConfirm: requestProofOptions.willConfirm,
       }
       const proof = await this.agent.proofs.requestProof(requestProofPayload)
 
@@ -189,14 +174,14 @@ export class ProofController extends Controller {
         willConfirm: createRequestOptions.willConfirm,
         parentThreadId: createRequestOptions.parentThreadId,
         autoAcceptProof: createRequestOptions.autoAcceptProof,
-        comment: createRequestOptions.comment
-      });
-      const proofMessage = proof.message;
+        comment: createRequestOptions.comment,
+      })
+      const proofMessage = proof.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: createRequestOptions.label,
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [proofMessage],
-        autoAcceptConnection: true
+        autoAcceptConnection: true,
       })
 
       return {
@@ -235,7 +220,6 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-
       const requestedCredentials = await this.agent.proofs.selectCredentialsForRequest({
         proofRecordId,
       })

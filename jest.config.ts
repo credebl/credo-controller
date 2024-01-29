@@ -4,8 +4,8 @@ import base from './jest.config.base'
 
 const config: Config.InitialOptions = {
   ...base,
-  name: '@aries-framework/rest',
-  displayName: '@aries-framework/rest',
+  name: 'afj-controller',
+  displayName: 'afj-controller',
   testTimeout: 120000,
 }
 
