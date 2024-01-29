@@ -32,6 +32,8 @@
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
     "test": "jest",
+    "lint": "eslint --ignore-path .gitignore .",
+    "validate": "yarn lint && yarn check-types && yarn check-format",
     "postinstall": "patch-package"
   },
   "dependencies": {
