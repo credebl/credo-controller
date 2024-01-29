@@ -1,8 +1,9 @@
 import type { AgentInfo } from '../types'
 
-import { Agent, DidCreateOptions, JsonTransformer, KeyType, TypedArrayEncoder } from '@aries-framework/core'
-import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Agent } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
+
+import { Controller, Delete, Get, Route, Tags } from 'tsoa'
 
 @Tags('Agent')
 @Route('/agent')
@@ -24,7 +25,7 @@ export class AgentController extends Controller {
       label: this.agent.config.label,
       endpoints: this.agent.config.endpoints,
       isInitialized: this.agent.isInitialized,
-      publicDid: undefined
+      publicDid: undefined,
     }
   }
 
@@ -33,7 +34,7 @@ export class AgentController extends Controller {
    */
   @Delete('/wallet')
   public async deleteWallet() {
-    const deleteWallet = await this.agent.wallet.delete();
+    const deleteWallet = await this.agent.wallet.delete()
     return deleteWallet
   }
 }

@@ -19,9 +19,7 @@
       "indyNamespace": "bcovrin:testnet"
     }
   ],
-  "endpoint": [
-    "http://localhost:4002"
-  ],
+  "endpoint": ["http://localhost:4002"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
   "autoAcceptProofs": "contentApproved",
@@ -33,9 +31,7 @@
       "port": 4002
     }
   ],
-  "outboundTransport": [
-    "http"
-  ],
+  "outboundTransport": ["http"],
   "autoAcceptMediationRequests": false,
   "adminPort": 4001,
   "tenancy": true

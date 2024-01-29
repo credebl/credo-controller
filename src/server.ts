@@ -8,7 +8,6 @@ import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 import { serve, generateHTML } from 'swagger-ui-express'
-import { ValidateError } from 'tsoa'
 import { container } from 'tsyringe'
 
 import { basicMessageEvents } from './events/BasicMessageEvents'
@@ -16,6 +15,8 @@ import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
+
+import { ValidateError } from 'tsoa'
 
 export const setupServer = async (agent: Agent, config: ServerConfig) => {
   container.registerInstance(Agent, agent)

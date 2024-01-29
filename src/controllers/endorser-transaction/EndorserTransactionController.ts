@@ -1,11 +1,19 @@
-import { Agent, AriesFrameworkError } from "@aries-framework/core"
-import { Body, Controller, Post, Res, Route, Tags, TsoaResponse } from "tsoa"
-import { injectable } from "tsyringe"
-import { DidNymTransaction, EndorserTransaction, WriteTransaction } from "../types"
-import { SchemaId, Version } from "../examples"
-import { AnonCredsCredentialDefinition, getUnqualifiedCredentialDefinitionId, getUnqualifiedSchemaId, parseIndyCredentialDefinitionId, parseIndySchemaId } from "@aries-framework/anoncreds"
-import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions } from "@aries-framework/indy-vdr"
-import { CredentialEnum } from '../../enums/enum';
+import type { Version } from '../examples'
+import type { IndyVdrDidCreateOptions } from '@aries-framework/indy-vdr'
+
+import {
+  getUnqualifiedCredentialDefinitionId,
+  getUnqualifiedSchemaId,
+  parseIndyCredentialDefinitionId,
+  parseIndySchemaId,
+} from '@aries-framework/anoncreds'
+import { Agent, AriesFrameworkError } from '@aries-framework/core'
+import { injectable } from 'tsyringe'
+
+import { CredentialEnum } from '../../enums/enum'
+import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
+
+import { Body, Controller, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
@@ -30,7 +38,7 @@ export class EndorserTransactionController extends Controller {
         endorserTransaction.endorserDid
       )
 
-      return { signedTransaction };
+      return { signedTransaction }
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
@@ -56,7 +64,7 @@ export class EndorserTransactionController extends Controller {
           endorsedTransaction: {
             nymRequest: didNymTransaction.nymRequest,
           },
-        }
+        },
       })
 
       return didCreateSubmitResult
@@ -74,18 +82,20 @@ export class EndorserTransactionController extends Controller {
   ) {
     try {
       if (writeTransaction.schema) {
-
-        const writeSchema = await this.submitSchemaOnLedger(writeTransaction.schema, writeTransaction.endorsedTransaction);
-        return writeSchema;
+        const writeSchema = await this.submitSchemaOnLedger(
+          writeTransaction.schema,
+          writeTransaction.endorsedTransaction
+        )
+        return writeSchema
       } else if (writeTransaction.credentialDefinition) {
-
-        const writeCredDef = await this.submitCredDefOnLedger(writeTransaction.credentialDefinition, writeTransaction.endorsedTransaction);
-        return writeCredDef;
+        const writeCredDef = await this.submitCredDefOnLedger(
+          writeTransaction.credentialDefinition,
+          writeTransaction.endorsedTransaction
+        )
+        return writeCredDef
       } else {
-
-        throw new Error('Please provide valid schema or credential-def!');
+        throw new Error('Please provide valid schema or credential-def!')
       }
-
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
@@ -105,21 +115,20 @@ export class EndorserTransactionController extends Controller {
       version: Version
       attributes: string[]
     },
-    endorsedTransaction?: string,
+    endorsedTransaction?: string
   ) {
     try {
-
-      const { issuerId, name, version, attributes } = schema;
+      const { issuerId, name, version, attributes } = schema
       const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
         options: {
           endorserMode: 'external',
-          endorsedTransaction
+          endorsedTransaction,
         },
         schema: {
           attrNames: attributes,
           issuerId: issuerId,
           name: name,
-          version: version
+          version: version,
         },
       })
 
@@ -128,12 +137,11 @@ export class EndorserTransactionController extends Controller {
         indySchemaId.namespaceIdentifier,
         indySchemaId.schemaName,
         indySchemaId.schemaVersion
-      );
+      )
       if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
         schemaState.schemaId = getSchemaUnqualifiedId
       }
-      return schemaState;
-
+      return schemaState
     } catch (error) {
       return error
     }
@@ -141,16 +149,15 @@ export class EndorserTransactionController extends Controller {
 
   public async submitCredDefOnLedger(
     credentialDefinition: {
-      schemaId: string,
-      issuerId: string,
-      tag: string,
-      value: unknown,
+      schemaId: string
+      issuerId: string
+      tag: string
+      value: unknown
       type: string
     },
     endorsedTransaction?: string
   ) {
     try {
-
       const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
         credentialDefinition,
         options: {
@@ -164,12 +171,14 @@ export class EndorserTransactionController extends Controller {
         indyCredDefId.namespaceIdentifier,
         indyCredDefId.schemaSeqNo,
         indyCredDefId.tag
-      );
-      if (credentialDefinitionState.state === CredentialEnum.Finished || credentialDefinitionState.state === CredentialEnum.Action) {
-        credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
+      )
+      if (
+        credentialDefinitionState.state === CredentialEnum.Finished ||
+        credentialDefinitionState.state === CredentialEnum.Action
+      ) {
+        credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
       }
-      return credentialDefinitionState;
-
+      return credentialDefinitionState
     } catch (error) {
       return error
     }
