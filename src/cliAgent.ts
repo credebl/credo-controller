@@ -78,7 +78,8 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionLimit: Infinity
+      sessionLimit: 1000,
+      sessionAcquireTimeout: 1000
     }),
     ...modules
   }
@@ -243,8 +244,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   let token: string = '';
   const genericRecord = await agent.genericRecords.getAll();
-  console.log(genericRecord)
-  if (genericRecord.length === 0 || genericRecord.some(record => record?.content?.token === undefined)) {
+
+  const recordsWithToken = genericRecord.some(record => record?.content?.token);
+  if (genericRecord.length === 0 || recordsWithToken === false) {
 
     async function generateSecretKey(length: number = 32): Promise<string> {
       try {
@@ -287,7 +289,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       },
     });
   } else {
-    token = genericRecord[0]?.content?.token as string;
+    const recordWithToken = genericRecord.find(record => record?.content?.token !== undefined);
+    token = recordWithToken?.content.token as string;
   }
 
   const app = await setupServer(agent, {
@@ -303,3 +306,4 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     logger.info(`Successfully started server on port ${adminPort}`)
   })
 }
+  
