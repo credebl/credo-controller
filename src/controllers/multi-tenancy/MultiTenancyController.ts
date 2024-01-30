@@ -1,11 +1,11 @@
-import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, CacheModule, ConnectionRecordProps, ConnectionRepository, ConnectionsModule, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, CredentialsModule, DidDocument, DidDocumentBuilder, DidExchangeState, DidsModule, HandshakeProtocol, JsonLdCredentialFormatService, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, ProofExchangeRecordProps, ProofsModule, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, V2CredentialProtocol, V2ProofProtocol, W3cCredentialsModule, getBls12381G2Key2020, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
+import { AcceptCredentialOfferOptions, AcceptProofRequestOptions, Agent, AriesFrameworkError, Buffer, CacheModule, ConnectionInvitationMessage, ConnectionRecord, ConnectionRecordProps, ConnectionRepository, ConnectionsModule, CreateOutOfBandInvitationConfig, CredentialProtocolVersionType, CredentialRepository, CredentialState, CredentialsModule, DidDocument, DidDocumentBuilder, DidExchangeState, DidsModule, HandshakeProtocol, JsonLdCredentialFormatService, JsonTransformer, KeyDidCreateOptions, KeyType, OutOfBandInvitation, OutOfBandRecord, ProofExchangeRecordProps, ProofsModule, ProofsProtocolVersionType, RecordNotFoundError, TypedArrayEncoder, V2CredentialProtocol, V2ProofProtocol, W3cCredentialsModule, getBls12381G2Key2020, getEd25519VerificationKey2018, injectable } from '@aries-framework/core'
 import { CreateOfferOobOptions, CreateOfferOptions, CreateProofRequestOobOptions, CreateTenantOptions, DidCreate, DidNymTransaction, EndorserTransaction, GetTenantAgentOptions, ReceiveInvitationByUrlProps, ReceiveInvitationProps, WithTenantAgentOptions, WriteTransaction } from '../types';
 import { Body, Controller, Delete, Get, Post, Query, Res, Route, Tags, TsoaResponse, Path, Example, Security } from 'tsoa'
 import axios from 'axios';
 import { TenantRecord } from '@aries-framework/tenants';
 import { getUnqualifiedSchemaId, getUnqualifiedCredentialDefinitionId, AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol, parseIndyCredentialDefinitionId, parseIndySchemaId } from '@aries-framework/anoncreds'
 import { Version, SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples';
-import { IndyVdrAnonCredsRegistry, IndyVdrDidCreateOptions, IndyVdrDidCreateResult, IndyVdrModule } from '@aries-framework/indy-vdr'
+import { IndyVdrDidCreateOptions, IndyVdrDidCreateResult, IndyVdrModule } from '@aries-framework/indy-vdr'
 import { AnonCredsError } from '@aries-framework/anoncreds'
 import { RequestProofOptions } from '../types';
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
@@ -35,40 +35,39 @@ export class MultiTenancyController extends Controller {
     ) {
         const { config } = createTenantOptions;
         const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config });
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id });
+        let didRes;
         try {
+            await this.agent.modules.tenants.withTenantAgent({ tenantId: tenantRecord.id }, async (tenantAgent) => {
+                createTenantOptions.role = createTenantOptions.role || 'endorser';
+                createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet';
+                const didMethod = `did:indy:${createTenantOptions.method}`;
 
-            createTenantOptions.role = createTenantOptions.role || 'endorser';
-            createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet';
-            const didMethod = `did:indy:${createTenantOptions.method}`;
+                let result;
+                if (createTenantOptions.method.includes('bcovrin')) {
 
-            let result;
+                    result = await this.handleBcovrin(createTenantOptions, tenantAgent, didMethod);
+                } else if (createTenantOptions.method.includes('indicio')) {
 
-            if (createTenantOptions.method.includes('bcovrin')) {
+                    result = await this.handleIndicio(createTenantOptions, tenantAgent, didMethod);
+                } else if (createTenantOptions.method === 'key') {
 
-                result = await this.handleBcovrin(createTenantOptions, tenantAgent, didMethod);
-            } else if (createTenantOptions.method.includes('indicio')) {
+                    result = await this.handleKey(createTenantOptions, tenantAgent);
+                } else if (createTenantOptions.method === 'web') {
 
-                result = await this.handleIndicio(createTenantOptions, tenantAgent, didMethod);
-            } else if (createTenantOptions.method === 'key') {
+                    result = await this.handleWeb(createTenantOptions, tenantAgent);
+                } else {
+                    return internalServerError(500, { message: `Invalid method: ${createTenantOptions.method}` });
+                }
+                didRes = { tenantRecord, ...result };
+            })
 
-                result = await this.handleKey(createTenantOptions, tenantAgent);
-            } else if (createTenantOptions.method === 'web') {
-
-                result = await this.handleWeb(createTenantOptions, tenantAgent);
-            } else {
-                return internalServerError(500, { message: `Invalid method: ${createTenantOptions.method}` });
-            }
-
-            await tenantAgent.endSession();
-            return { tenantRecord, ...result };
+            return didRes;
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `Tenant not created`,
                 });
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `Something went wrong: ${error}` });
         }
     }
@@ -255,26 +254,28 @@ export class MultiTenancyController extends Controller {
         @Body() didNymTransaction: DidNymTransaction,
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId });
+        let didCreateSubmitResult;
         try {
-            const didCreateSubmitResult = await tenantAgent.dids.create({
-                did: didNymTransaction.did,
-                options: {
-                    endorserMode: 'external',
-                    endorsedTransaction: {
-                        nymRequest: didNymTransaction.nymRequest,
-                    },
-                }
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                didCreateSubmitResult = await tenantAgent.dids.create({
+                    did: didNymTransaction.did,
+                    options: {
+                        endorserMode: 'external',
+                        endorsedTransaction: {
+                            nymRequest: didNymTransaction.nymRequest,
+                        },
+                    }
+                })
+                await tenantAgent.dids.import({
+                    did: didNymTransaction.did,
+                    overwrite: true
+                });
             })
-            await tenantAgent.dids.import({
-                did: didNymTransaction.did,
-                overwrite: true
-            });
 
-            await tenantAgent.endSession();
+
             return didCreateSubmitResult
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -287,14 +288,16 @@ export class MultiTenancyController extends Controller {
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
         @Res() forbiddenError: TsoaResponse<400, { reason: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let signedTransaction;
         try {
-            const signedTransaction = await tenantAgent.modules.indyVdr.endorseTransaction(
-                endorserTransaction.transaction,
-                endorserTransaction.endorserDid
-            )
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                signedTransaction = await tenantAgent.modules.indyVdr.endorseTransaction(
+                    endorserTransaction.transaction,
+                    endorserTransaction.endorserDid
+                )
+            })
 
-            await tenantAgent.endSession();
+
             return { signedTransaction };
         } catch (error) {
             if (error instanceof AriesFrameworkError) {
@@ -304,7 +307,6 @@ export class MultiTenancyController extends Controller {
                     })
                 }
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -317,13 +319,15 @@ export class MultiTenancyController extends Controller {
         @Path('connectionId') connectionId: RecordId,
         @Res() notFoundError: TsoaResponse<404, { reason: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-        const connection = await tenantAgent.connections.findById(connectionId)
+        let connectionRecord;
+        await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+            const connection = await tenantAgent.connections.findById(connectionId)
 
-        if (!connection) return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+            if (!connection) return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+            connectionRecord = connection.toJSON();
+        })
 
-        await tenantAgent.endSession();
-        return connection.toJSON()
+        return connectionRecord;
     }
 
     @Security('apiKey')
@@ -333,21 +337,22 @@ export class MultiTenancyController extends Controller {
         @Path("tenantId") tenantId: string,
         @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let outOfBandRecord: OutOfBandRecord | undefined;
         try {
-            const outOfBandRecord = await tenantAgent.oob.createInvitation(config);
-            await tenantAgent.endSession();
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                outOfBandRecord = await tenantAgent.oob.createInvitation(config);
+            })
+
             return {
-                invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+                invitationUrl: outOfBandRecord?.outOfBandInvitation.toUrl({
                     domain: this.agent.config.endpoints[0],
                 }),
-                invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+                invitation: outOfBandRecord?.outOfBandInvitation.toJSON({
                     useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
                 }),
-                outOfBandRecord: outOfBandRecord.toJSON(),
+                outOfBandRecord: outOfBandRecord?.toJSON(),
             }
         } catch (error) {
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -359,24 +364,26 @@ export class MultiTenancyController extends Controller {
         @Path("tenantId") tenantId: string,
         @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-        try {
-            const { outOfBandRecord, invitation } = await tenantAgent.oob.createLegacyInvitation(config)
 
-            await tenantAgent.endSession();
-            return {
-                invitationUrl: invitation.toUrl({
-                    domain: this.agent.config.endpoints[0],
-                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-                }),
-                invitation: invitation.toJSON({
-                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-                }),
-                outOfBandRecord: outOfBandRecord.toJSON(),
-            }
+        let getInvitation;
+        try {
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const { outOfBandRecord, invitation } = await tenantAgent.oob.createLegacyInvitation(config);
+                getInvitation = {
+                    invitationUrl: invitation.toUrl({
+                        domain: this.agent.config.endpoints[0],
+                        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                    }),
+                    invitation: invitation.toJSON({
+                        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                    }),
+                    outOfBandRecord: outOfBandRecord.toJSON(),
+                };
+            });
+
+            return getInvitation;
         } catch (error) {
-            await tenantAgent.endSession();
-            return internalServerError(500, { message: `something went wrong: ${error}` })
+            return internalServerError(500, { message: `something went wrong: ${error}` });
         }
     }
 
@@ -387,19 +394,22 @@ export class MultiTenancyController extends Controller {
         @Path("tenantId") tenantId: string,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let receiveInvitationRes;
         try {
-            const { invitation, ...config } = invitationRequest
-            const invite = new OutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols })
-            const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitation(invite, config)
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const { invitation, ...config } = invitationRequest
+                const invite = new OutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols });
+                const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitation(invite, config);
+                receiveInvitationRes = {
+                    outOfBandRecord: outOfBandRecord.toJSON(),
+                    connectionRecord: connectionRecord?.toJSON(),
+                }
+            })
 
-            await tenantAgent.endSession();
-            return {
-                outOfBandRecord: outOfBandRecord.toJSON(),
-                connectionRecord: connectionRecord?.toJSON(),
-            }
+
+            return receiveInvitationRes;
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -411,18 +421,20 @@ export class MultiTenancyController extends Controller {
         @Path("tenantId") tenantId: string,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let receiveInvitationUrl
         try {
-            const { invitationUrl, ...config } = invitationRequest
-            const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(invitationUrl, config)
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const { invitationUrl, ...config } = invitationRequest;
+                const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(invitationUrl, config);
+                receiveInvitationUrl = {
+                    outOfBandRecord: outOfBandRecord.toJSON(),
+                    connectionRecord: connectionRecord?.toJSON(),
+                }
+            })
 
-            await tenantAgent.endSession();
-            return {
-                outOfBandRecord: outOfBandRecord.toJSON(),
-                connectionRecord: connectionRecord?.toJSON(),
-            }
+            return receiveInvitationUrl
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -434,16 +446,21 @@ export class MultiTenancyController extends Controller {
         @Res() internalServerError: TsoaResponse<500, { message: string }>,
         @Path('invitationId') invitationId?: string,
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let outOfBandRecordsRes;
         try {
 
-            let outOfBandRecords = await tenantAgent.oob.getAll()
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                let outOfBandRecords;
+                outOfBandRecords = await tenantAgent.oob.getAll()
 
-            if (invitationId) outOfBandRecords = outOfBandRecords.filter((o: any) => o.outOfBandInvitation.id === invitationId)
-            await tenantAgent.endSession();
-            return outOfBandRecords.map((c: any) => c.toJSON())
+                if (invitationId) outOfBandRecords = outOfBandRecords.filter((o: any) => o.outOfBandInvitation.id === invitationId);
+                outOfBandRecords
+                outOfBandRecordsRes = outOfBandRecords.map((c: any) => c.toJSON())
+            })
+
+            return outOfBandRecordsRes;
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -461,25 +478,29 @@ export class MultiTenancyController extends Controller {
         @Query('theirLabel') theirLabel?: string
     ) {
         let connections
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let connectionRecord;
         try {
-            if (outOfBandId) {
-                connections = await tenantAgent.connections.findAllByOutOfBandId(outOfBandId)
-            } else {
-                const connectionRepository = tenantAgent.dependencyManager.resolve(ConnectionRepository)
 
-                const connections = await connectionRepository.findByQuery(tenantAgent.context, {
-                    alias,
-                    myDid,
-                    theirDid,
-                    theirLabel,
-                    state,
-                })
-                await tenantAgent.endSession();
-                return connections.map((c: any) => c.toJSON())
-            }
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                if (outOfBandId) {
+                    connections = await tenantAgent.connections.findAllByOutOfBandId(outOfBandId)
+                } else {
+                    const connectionRepository = tenantAgent.dependencyManager.resolve(ConnectionRepository)
+
+                    const connections = await connectionRepository.findByQuery(tenantAgent.context, {
+                        alias,
+                        myDid,
+                        theirDid,
+                        theirLabel,
+                        state,
+                    })
+
+                    connectionRecord = connections.map((c: any) => c.toJSON())
+                }
+            })
+            return connectionRecord;
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -490,15 +511,15 @@ export class MultiTenancyController extends Controller {
         @Path('tenantId') tenantId: string,
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-        const outOfBandRecord = await tenantAgent.oob.findByCreatedInvitationId(invitationId)
+        let invitationJson;
+        await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+            const outOfBandRecord = await tenantAgent.oob.findByCreatedInvitationId(invitationId)
 
-        if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
-            return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
+            if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
+                return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
 
-        const invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
-
-        await tenantAgent.endSession();
+            invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true });
+        })
         return invitationJson;
     }
 
@@ -518,60 +539,64 @@ export class MultiTenancyController extends Controller {
         @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let schemaRecord;
         try {
-            if (!schema.endorse) {
-                const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
-                    schema: {
-                        issuerId: schema.issuerId,
-                        name: schema.name,
-                        version: schema.version,
-                        attrNames: schema.attributes
-                    },
-                    options: {
-                        endorserMode: 'internal',
-                        endorserDid: schema.issuerId,
-                    },
-                })
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                if (!schema.endorse) {
+                    const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
+                        schema: {
+                            issuerId: schema.issuerId,
+                            name: schema.name,
+                            version: schema.version,
+                            attrNames: schema.attributes
+                        },
+                        options: {
+                            endorserMode: 'internal',
+                            endorserDid: schema.issuerId,
+                        },
+                    })
 
-                if (!schemaState.schemaId) {
-                    throw Error('SchemaId not found')
+                    if (!schemaState.schemaId) {
+                        throw Error('SchemaId not found')
+                    }
+
+                    const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+                    const getSchemaId = await getUnqualifiedSchemaId(
+                        indySchemaId.namespaceIdentifier,
+                        indySchemaId.schemaName,
+                        indySchemaId.schemaVersion
+                    );
+                    if (schemaState.state === CredentialEnum.Finished) {
+                        schemaState.schemaId = getSchemaId
+                    }
+
+
+                    schemaRecord = schemaState;
+                } else {
+
+                    if (!schema.endorserDid) {
+                        throw new Error('Please provide the endorser DID')
+                    }
+
+                    const createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
+                        options: {
+                            endorserMode: 'external',
+                            endorserDid: schema.endorserDid ? schema.endorserDid : '',
+                        },
+                        schema: {
+                            attrNames: schema.attributes,
+                            issuerId: schema.issuerId,
+                            name: schema.name,
+                            version: schema.version
+                        },
+                    })
+
+
+                    schemaRecord = createSchemaTxResult
                 }
+            })
 
-                const indySchemaId = parseIndySchemaId(schemaState.schemaId)
-                const getSchemaId = await getUnqualifiedSchemaId(
-                    indySchemaId.namespaceIdentifier,
-                    indySchemaId.schemaName,
-                    indySchemaId.schemaVersion
-                );
-                if (schemaState.state === CredentialEnum.Finished) {
-                    schemaState.schemaId = getSchemaId
-                }
-
-                await tenantAgent.endSession();
-                return schemaState;
-            } else {
-
-                if (!schema.endorserDid) {
-                    throw new Error('Please provide the endorser DID')
-                }
-
-                const createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
-                    options: {
-                        endorserMode: 'external',
-                        endorserDid: schema.endorserDid ? schema.endorserDid : '',
-                    },
-                    schema: {
-                        attrNames: schema.attributes,
-                        issuerId: schema.issuerId,
-                        name: schema.name,
-                        version: schema.version
-                    },
-                })
-
-                await tenantAgent.endSession();
-                return createSchemaTxResult
-            }
+            return schemaRecord;
         } catch (error) {
             if (error instanceof AriesFrameworkError) {
                 if (error.message.includes('UnauthorizedClientRequest')) {
@@ -580,7 +605,6 @@ export class MultiTenancyController extends Controller {
                     })
                 }
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -630,43 +654,42 @@ export class MultiTenancyController extends Controller {
         endorsedTransaction: string,
         tenantId: string
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let schemaRecord;
         try {
 
-            const { issuerId, name, version, attributes } = schema;
-            const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
-                options: {
-                    endorserMode: 'external',
-                    endorsedTransaction
-                },
-                schema: {
-                    attrNames: attributes,
-                    issuerId: issuerId,
-                    name: name,
-                    version: version
-                },
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const { issuerId, name, version, attributes } = schema;
+                const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
+                    options: {
+                        endorserMode: 'external',
+                        endorsedTransaction
+                    },
+                    schema: {
+                        attrNames: attributes,
+                        issuerId: issuerId,
+                        name: name,
+                        version: version
+                    },
+                })
+
+                if (!schemaState.schemaId) {
+                    throw Error('SchemaId not found')
+                }
+
+                const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+                const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+                    indySchemaId.namespaceIdentifier,
+                    indySchemaId.schemaName,
+                    indySchemaId.schemaVersion
+                );
+                if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
+                    schemaState.schemaId = getSchemaUnqualifiedId
+                }
+                schemaRecord = schemaState;
             })
-
-            if (!schemaState.schemaId) {
-                throw Error('SchemaId not found')
-            }
-
-            const indySchemaId = parseIndySchemaId(schemaState.schemaId)
-            const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
-                indySchemaId.namespaceIdentifier,
-                indySchemaId.schemaName,
-                indySchemaId.schemaVersion
-            );
-            if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
-                schemaState.schemaId = getSchemaUnqualifiedId
-            }
-
-            await tenantAgent.endSession();
-            return schemaState;
-
+            return schemaRecord;
         } catch (error) {
-            await tenantAgent.endSession();
-            return error
+            throw error
         }
     }
 
@@ -681,39 +704,39 @@ export class MultiTenancyController extends Controller {
         endorsedTransaction: string,
         tenantId: string
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let credentialDefinitionRecord;
         try {
 
-            const { issuerId, schemaId, tag } = credentialDefinition;
-            const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
-                credentialDefinition,
-                options: {
-                    endorserMode: 'external',
-                    endorsedTransaction: endorsedTransaction,
-                },
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+                    credentialDefinition,
+                    options: {
+                        endorserMode: 'external',
+                        endorsedTransaction: endorsedTransaction,
+                    },
+                })
+
+                if (!credentialDefinitionState.credentialDefinitionId) {
+                    throw Error('Credential Definition Id not found')
+                }
+
+                const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId);
+                const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+                    indyCredDefId.namespaceIdentifier,
+                    indyCredDefId.schemaSeqNo,
+                    indyCredDefId.tag
+                );
+                if (credentialDefinitionState.state === CredentialEnum.Finished || credentialDefinitionState.state === CredentialEnum.Action) {
+
+                    credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
+                }
+
+
+                credentialDefinitionRecord = credentialDefinitionState;
             })
-
-            if (!credentialDefinitionState.credentialDefinitionId) {
-                throw Error('Credential Definition Id not found')
-            }
-
-            const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId);
-            const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
-                indyCredDefId.namespaceIdentifier,
-                indyCredDefId.schemaSeqNo,
-                indyCredDefId.tag
-            );
-            if (credentialDefinitionState.state === CredentialEnum.Finished || credentialDefinitionState.state === CredentialEnum.Action) {
-
-                credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
-            }
-
-            await tenantAgent.endSession();
-            return credentialDefinitionState;
-
+            return credentialDefinitionRecord;
         } catch (error) {
-            await tenantAgent.endSession();
-            return error
+            throw error
         }
     }
 
@@ -727,11 +750,13 @@ export class MultiTenancyController extends Controller {
         @Res() badRequestError: TsoaResponse<400, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let getSchema;
         try {
-            const getSchema = await tenantAgent.modules.anoncreds.getSchema(schemaId);
-            await tenantAgent.endSession();
-            return getSchema
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                getSchema = await tenantAgent.modules.anoncreds.getSchema(schemaId);
+            })
+
+            return getSchema;
         } catch (error) {
             if (error instanceof AnonCredsError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
                 return notFoundError(404, {
@@ -750,7 +775,6 @@ export class MultiTenancyController extends Controller {
                 }
             }
 
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -770,52 +794,56 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let credentialDefinitionRecord;
         try {
-            credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse ? credentialDefinitionRequest.endorse : false
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse ? credentialDefinitionRequest.endorse : false
 
-            if (!credentialDefinitionRequest.endorse) {
+                if (!credentialDefinitionRequest.endorse) {
 
-                const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
-                    credentialDefinition: {
-                        issuerId: credentialDefinitionRequest.issuerId,
-                        schemaId: credentialDefinitionRequest.schemaId,
-                        tag: credentialDefinitionRequest.tag
-                    },
-                    options: {}
-                })
-                if (!credentialDefinitionState?.credentialDefinitionId) {
-                    throw new Error('Credential Definition Id not found')
+                    const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+                        credentialDefinition: {
+                            issuerId: credentialDefinitionRequest.issuerId,
+                            schemaId: credentialDefinitionRequest.schemaId,
+                            tag: credentialDefinitionRequest.tag
+                        },
+                        options: {}
+                    })
+                    if (!credentialDefinitionState?.credentialDefinitionId) {
+                        throw new Error('Credential Definition Id not found')
+                    }
+                    const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+                    const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+                        indyCredDefId.namespaceIdentifier,
+                        indyCredDefId.schemaSeqNo,
+                        indyCredDefId.tag
+                    );
+                    if (credentialDefinitionState.state === CredentialEnum.Finished) {
+                        credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
+                    }
+
+
+                    credentialDefinitionRecord = credentialDefinitionState;
+                } else {
+
+                    const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+                        credentialDefinition: {
+                            issuerId: credentialDefinitionRequest.issuerId,
+                            tag: credentialDefinitionRequest.tag,
+                            schemaId: credentialDefinitionRequest.schemaId,
+                            type: 'CL'
+                        },
+                        options: {
+                            endorserMode: 'external',
+                            endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
+                        },
+                    })
+
+                    credentialDefinitionRecord = createCredDefTxResult;
                 }
-                const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
-                const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
-                    indyCredDefId.namespaceIdentifier,
-                    indyCredDefId.schemaSeqNo,
-                    indyCredDefId.tag
-                );
-                if (credentialDefinitionState.state === CredentialEnum.Finished) {
-                    credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId;
-                }
+            })
 
-                await tenantAgent.endSession();
-                return credentialDefinitionState;
-            } else {
-
-                const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
-                    credentialDefinition: {
-                        issuerId: credentialDefinitionRequest.issuerId,
-                        tag: credentialDefinitionRequest.tag,
-                        schemaId: credentialDefinitionRequest.schemaId,
-                        type: 'CL'
-                    },
-                    options: {
-                        endorserMode: 'external',
-                        endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
-                    },
-                })
-                await tenantAgent.endSession();
-                return createCredDefTxResult
-            }
+            return credentialDefinitionRecord;
         } catch (error) {
             if (error instanceof notFoundError) {
                 return notFoundError(404, {
@@ -823,7 +851,6 @@ export class MultiTenancyController extends Controller {
                 })
             }
 
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -837,11 +864,14 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let getCredDef;
         try {
-            const getCredDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
-            await tenantAgent.endSession();
-            return getCredDef
+
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                getCredDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
+            })
+
+            return getCredDef;
         } catch (error) {
             if (error instanceof AriesFrameworkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
                 return notFoundError(404, {
@@ -854,7 +884,6 @@ export class MultiTenancyController extends Controller {
                     })
                 }
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -866,18 +895,19 @@ export class MultiTenancyController extends Controller {
         @Path('tenantId') tenantId: string,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let offer;
         try {
-            const offer = await tenantAgent.credentials.offerCredential({
-                connectionId: createOfferOptions.connectionId,
-                protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
-                credentialFormats: createOfferOptions.credentialFormats,
-                autoAcceptCredential: createOfferOptions.autoAcceptCredential
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                offer = await tenantAgent.credentials.offerCredential({
+                    connectionId: createOfferOptions.connectionId,
+                    protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
+                    credentialFormats: createOfferOptions.credentialFormats,
+                    autoAcceptCredential: createOfferOptions.autoAcceptCredential
+                })
             })
-            await tenantAgent.endSession();
+
             return offer;
         } catch (error) {
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -889,41 +919,42 @@ export class MultiTenancyController extends Controller {
         @Body() createOfferOptions: CreateOfferOobOptions,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let createOfferOobRecord;
         try {
-            const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
-            if (linkSecretIds.length === 0) {
-                await tenantAgent.modules.anoncreds.createLinkSecret()
-            }
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
+                if (linkSecretIds.length === 0) {
+                    await tenantAgent.modules.anoncreds.createLinkSecret()
+                }
 
-            const offerOob = await tenantAgent.credentials.createOffer({
-                protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
-                credentialFormats: createOfferOptions.credentialFormats,
-                autoAcceptCredential: createOfferOptions.autoAcceptCredential,
-                comment: createOfferOptions.comment
-            });
+                const offerOob = await tenantAgent.credentials.createOffer({
+                    protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
+                    credentialFormats: createOfferOptions.credentialFormats,
+                    autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+                    comment: createOfferOptions.comment
+                });
 
-            const credentialMessage = offerOob.message;
-            const outOfBandRecord = await tenantAgent.oob.createInvitation({
-                label: createOfferOptions.label,
-                handshakeProtocols: [HandshakeProtocol.Connections],
-                messages: [credentialMessage],
-                autoAcceptConnection: true,
-                multiUseInvitation: true
+                const credentialMessage = offerOob.message;
+                const outOfBandRecord = await tenantAgent.oob.createInvitation({
+                    label: createOfferOptions.label,
+                    handshakeProtocols: [HandshakeProtocol.Connections],
+                    messages: [credentialMessage],
+                    autoAcceptConnection: true
+                })
+
+                createOfferOobRecord = {
+                    invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+                        domain: this.agent.config.endpoints[0],
+                    }),
+                    invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+                        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                    }),
+                    outOfBandRecord: outOfBandRecord.toJSON(),
+                }
             })
-
-            await tenantAgent.endSession();
-            return {
-                invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-                    domain: this.agent.config.endpoints[0],
-                }),
-                invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-                }),
-                outOfBandRecord: outOfBandRecord.toJSON(),
-            }
+            return createOfferOobRecord;
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -936,28 +967,28 @@ export class MultiTenancyController extends Controller {
         @Path('tenantId') tenantId: string,
         @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let acceptOffer;
         try {
-            const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
-            if (linkSecretIds.length === 0) {
-                await tenantAgent.modules.anoncreds.createLinkSecret()
-            }
-            const acceptOffer = await tenantAgent.credentials.acceptOffer({
-                credentialRecordId: acceptCredentialOfferOptions.credentialRecordId,
-                credentialFormats: acceptCredentialOfferOptions.credentialFormats,
-                autoAcceptCredential: acceptCredentialOfferOptions.autoAcceptCredential,
-                comment: acceptCredentialOfferOptions.comment
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
+                if (linkSecretIds.length === 0) {
+                    await tenantAgent.modules.anoncreds.createLinkSecret()
+                }
+                acceptOffer = await tenantAgent.credentials.acceptOffer({
+                    credentialRecordId: acceptCredentialOfferOptions.credentialRecordId,
+                    credentialFormats: acceptCredentialOfferOptions.credentialFormats,
+                    autoAcceptCredential: acceptCredentialOfferOptions.autoAcceptCredential,
+                    comment: acceptCredentialOfferOptions.comment
+                })
             })
 
-            await tenantAgent.endSession();
-            return acceptOffer
+            return acceptOffer;
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `credential with credential record id "${acceptCredentialOfferOptions.credentialRecordId}" not found.`,
                 })
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -970,19 +1001,21 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let credentialRecord;
         try {
-            const credential = await tenantAgent.credentials.getById(credentialRecordId)
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const credential = await tenantAgent.credentials.getById(credentialRecordId);
+                credentialRecord = credential.toJSON();
+            })
 
-            await tenantAgent.endSession();
-            return credential.toJSON()
+
+            return credentialRecord;
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `credential with credential record id "${credentialRecordId}" not found.`,
                 })
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -995,17 +1028,17 @@ export class MultiTenancyController extends Controller {
         @Query('connectionId') connectionId?: string,
         @Query('state') state?: CredentialState
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-        const credentialRepository = tenantAgent.dependencyManager.resolve(CredentialRepository)
-
-        const credentials = await credentialRepository.findByQuery(tenantAgent.context, {
-            connectionId,
-            threadId,
-            state,
+        let credentialRecord;
+        await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+            const credentialRepository = tenantAgent.dependencyManager.resolve(CredentialRepository)
+            const credentials = await credentialRepository.findByQuery(tenantAgent.context, {
+                connectionId,
+                threadId,
+                state,
+            })
+            credentialRecord = credentials.map((c: any) => c.toJSON())
         })
-
-        await tenantAgent.endSession();
-        return credentials.map((c: any) => c.toJSON())
+        return credentialRecord;
     }
 
     @Security('apiKey')
@@ -1014,14 +1047,13 @@ export class MultiTenancyController extends Controller {
         @Path('tenantId') tenantId: string,
         @Query('threadId') threadId?: string,
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
-
-        let proofs = await tenantAgent.proofs.getAll()
-
-        if (threadId) proofs = proofs.filter((p: any) => p.threadId === threadId)
-
-        await tenantAgent.endSession();
-        return proofs.map((proof: any) => proof.toJSON())
+        let proofRecord;
+        await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+            let proofs = await tenantAgent.proofs.getAll()
+            if (threadId) proofs = proofs.filter((p: any) => p.threadId === threadId)
+            proofRecord = proofs.map((proof: any) => proof.toJSON())
+        })
+        return proofRecord;
     }
 
     @Security('apiKey')
@@ -1033,19 +1065,18 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let proof;
         try {
-            const proof = await tenantAgent.proofs.getFormatData(proofRecordId)
-
-            await tenantAgent.endSession();
-            return proof
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                proof = await tenantAgent.proofs.getFormatData(proofRecordId);
+            })
+            return proof;
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `proof with proofRecordId "${proofRecordId}" not found.`,
                 })
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1059,24 +1090,25 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let proof;
         try {
-            const requestProofPayload = {
-                connectionId: requestProofOptions.connectionId,
-                protocolVersion: requestProofOptions.protocolVersion as ProofsProtocolVersionType<[]>,
-                comment: requestProofOptions.comment,
-                proofFormats: requestProofOptions.proofFormats,
-                autoAcceptProof: requestProofOptions.autoAcceptProof,
-                goalCode: requestProofOptions.goalCode,
-                parentThreadId: requestProofOptions.parentThreadId,
-                willConfirm: requestProofOptions.willConfirm
-            }
-            const proof = await tenantAgent.proofs.requestProof(requestProofPayload)
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const requestProofPayload = {
+                    connectionId: requestProofOptions.connectionId,
+                    protocolVersion: requestProofOptions.protocolVersion as ProofsProtocolVersionType<[]>,
+                    comment: requestProofOptions.comment,
+                    proofFormats: requestProofOptions.proofFormats,
+                    autoAcceptProof: requestProofOptions.autoAcceptProof,
+                    goalCode: requestProofOptions.goalCode,
+                    parentThreadId: requestProofOptions.parentThreadId,
+                    willConfirm: requestProofOptions.willConfirm
+                }
+                proof = await tenantAgent.proofs.requestProof(requestProofPayload);
+            })
 
-            await tenantAgent.endSession();
-            return proof
+            return proof;
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1088,39 +1120,41 @@ export class MultiTenancyController extends Controller {
         @Body() createRequestOptions: CreateProofRequestOobOptions,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let oobProofRecord;
         try {
-            const proof = await tenantAgent.proofs.createRequest({
-                protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
-                proofFormats: createRequestOptions.proofFormats,
-                goalCode: createRequestOptions.goalCode,
-                willConfirm: createRequestOptions.willConfirm,
-                parentThreadId: createRequestOptions.parentThreadId,
-                autoAcceptProof: createRequestOptions.autoAcceptProof,
-                comment: createRequestOptions.comment
-            });
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const proof = await tenantAgent.proofs.createRequest({
+                    protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
+                    proofFormats: createRequestOptions.proofFormats,
+                    goalCode: createRequestOptions.goalCode,
+                    willConfirm: createRequestOptions.willConfirm,
+                    parentThreadId: createRequestOptions.parentThreadId,
+                    autoAcceptProof: createRequestOptions.autoAcceptProof,
+                    comment: createRequestOptions.comment
+                });
 
-            const proofMessage = proof.message;
-            const outOfBandRecord = await tenantAgent.oob.createInvitation({
-                label: createRequestOptions.label,
-                handshakeProtocols: [HandshakeProtocol.Connections],
-                messages: [proofMessage],
-                autoAcceptConnection: true,
-                multiUseInvitation: true
+                const proofMessage = proof.message;
+                const outOfBandRecord = await tenantAgent.oob.createInvitation({
+                    label: createRequestOptions.label,
+                    handshakeProtocols: [HandshakeProtocol.Connections],
+                    messages: [proofMessage],
+                    autoAcceptConnection: true
+                })
+
+                oobProofRecord = {
+                    invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+                        domain: this.agent.config.endpoints[0],
+                    }),
+                    invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+                        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+                    }),
+                    outOfBandRecord: outOfBandRecord.toJSON(),
+                }
             })
 
-            await tenantAgent.endSession();
-            return {
-                invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-                    domain: this.agent.config.endpoints[0],
-                }),
-                invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-                    useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-                }),
-                outOfBandRecord: outOfBandRecord.toJSON(),
-            }
+            return oobProofRecord;
         } catch (error) {
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1140,29 +1174,31 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let proofRecord;
         try {
-            const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
-                proofRecordId,
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
+                    proofRecordId,
+                })
+
+                const acceptProofRequest: AcceptProofRequestOptions = {
+                    proofRecordId,
+                    comment: request.comment,
+                    proofFormats: requestedCredentials.proofFormats,
+                }
+
+                const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
+
+
+                proofRecord = proof.toJSON()
             })
-
-            const acceptProofRequest: AcceptProofRequestOptions = {
-                proofRecordId,
-                comment: request.comment,
-                proofFormats: requestedCredentials.proofFormats,
-            }
-
-            const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
-
-            await tenantAgent.endSession();
-            return proof.toJSON()
+            return proofRecord;
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `proof with proofRecordId "${proofRecordId}" not found.`,
                 })
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1176,19 +1212,19 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let proof;
         try {
-            const proof = await tenantAgent.proofs.acceptPresentation({ proofRecordId })
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                proof = await tenantAgent.proofs.acceptPresentation({ proofRecordId });
+            })
 
-            await tenantAgent.endSession();
-            return proof
+            return proof;
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `proof with proofRecordId "${proofRecordId}" not found.`,
                 })
             }
-            await tenantAgent.endSession();
             return internalServerError(500, { message: `something went wrong: ${error}` })
         }
     }
@@ -1202,65 +1238,21 @@ export class MultiTenancyController extends Controller {
         @Res() notFoundError: TsoaResponse<404, { reason: string }>,
         @Res() internalServerError: TsoaResponse<500, { message: string }>
     ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId });
+        let proofRecord;
         try {
-            const proof = await tenantAgent.proofs.getById(proofRecordId)
-
-            await tenantAgent.endSession();
-            return proof.toJSON()
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                const proof = await tenantAgent.proofs.getById(proofRecordId)
+                proofRecord = proof.toJSON()
+            })
+            return proofRecord;
         } catch (error) {
             if (error instanceof RecordNotFoundError) {
                 return notFoundError(404, {
                     reason: `proof with proofRecordId "${proofRecordId}" not found.`,
                 })
             }
-            await tenantAgent.endSession();
+
             return internalServerError(500, { message: `something went wrong: ${error}` })
-        }
-    }
-
-    @Security('apiKey')
-    @Get(":tenantId")
-    public async getTenantById(
-        @Path("tenantId") tenantId: string,
-        @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-        @Res() internalServerError: TsoaResponse<500, { message: string }>
-    ) {
-        try {
-            const tenantAgent = await this.agent.modules.tenants.getTenantById(tenantId);
-            return tenantAgent
-        }
-        catch (error) {
-            if (error instanceof RecordNotFoundError) {
-                return notFoundError(404, {
-                    reason: `Tenant with id: ${tenantId} not found.`,
-                })
-            }
-            return internalServerError(500, { message: `Something went wrong: ${error}` })
-        }
-    }
-
-    @Security('apiKey')
-    @Post("tenant")
-    public async getTenantAgent(
-        @Body() tenantAgentOptions: GetTenantAgentOptions,
-        @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-        @Res() internalServerError: TsoaResponse<500, { message: string }>
-    ) {
-        const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantAgentOptions.tenantId });
-        try {
-
-            await tenantAgent.endSession();
-            return tenantAgent;
-        }
-        catch (error) {
-            if (error instanceof RecordNotFoundError) {
-                return notFoundError(404, {
-                    reason: `Tenant with id: ${tenantAgentOptions.tenantId} not found.`,
-                })
-            }
-            await tenantAgent.endSession();
-            return internalServerError(500, { message: `Something went wrong: ${error}` })
         }
     }
 
@@ -1313,21 +1305,18 @@ export class MultiTenancyController extends Controller {
             schemaState.schemaId = getSchemaId
         }
 
-        await tenantAgent.endSession();
         return schemaState;
     }
 
     async getSchemaWithTenant(tenantAgent: any, schemaId: any) {
         const schema = await tenantAgent.modules.anoncreds.getSchema(schemaId);
 
-        await tenantAgent.endSession();
         return schema;
     }
 
     async getCredentialDefinition(tenantAgent: any, credentialDefinitionId: any) {
         const credDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId);
 
-        await tenantAgent.endSession();
         return credDef;
     }
 
@@ -1356,7 +1345,6 @@ export class MultiTenancyController extends Controller {
             credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
         }
 
-        await tenantAgent.endSession();
         return credentialDefinitionState;
     }
 
@@ -1366,7 +1354,6 @@ export class MultiTenancyController extends Controller {
         }
         const createInvitation = await tenantAgent.oob.createInvitation(config);
 
-        await tenantAgent.endSession();
         return ({
             invitationUrl: createInvitation.outOfBandInvitation.toUrl({
                 domain: this.agent.config.endpoints[0],
@@ -1385,7 +1372,6 @@ export class MultiTenancyController extends Controller {
             remaining
         );
 
-        await tenantAgent.endSession();
         return ({
             outOfBandRecord: outOfBandRecord.toJSON(),
             connectionRecord: connectionRecord?.toJSON(),
@@ -1404,58 +1390,58 @@ export class MultiTenancyController extends Controller {
             comment
         });
 
-        await tenantAgent.endSession();
         return ({ CredentialExchangeRecord: acceptOffer });
     }
 
-@Security('apiKey')
- @Post("/did/web/:tenantId")
-  public async createDidWeb(
-    @Path("tenantId") tenantId: string,
-    @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    try {
-      const tenantAgent = await this.agent.modules.tenants.getTenantAgent({
-        tenantId,
-      });
-    
-      if(!didOptions.keyType){
-        throw Error('keyType is required')
-      }
-      if(didOptions.keyType !== KeyType.Ed25519  && didOptions.keyType !== KeyType.Bls12381g2 ){
-        throw Error('Only ed25519 and bls12381g2 type supported')
-      }
-     const did = `did:${didOptions.method}:${didOptions.domain}`
-     let didDocument:any
-     const keyId = `${did}#key-1`
-     const key = await tenantAgent.wallet.createKey({
-        keyType:didOptions.keyType,
-        seed:TypedArrayEncoder.fromString(didOptions.seed)
-     })
-     if(didOptions.keyType === "ed25519"){
-     didDocument = new DidDocumentBuilder(did)
-     .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
-     .addVerificationMethod(getEd25519VerificationKey2018({key,id:keyId,controller:did}))
-     .addAuthentication(keyId).build();
-     }
-    if(didOptions.keyType === "bls12381g2"){
-        didDocument = new DidDocumentBuilder(did)
-        .addContext('https://w3id.org/security/bbs/v1')
-        .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
-        .addAuthentication(keyId)
-        .build()
+    @Security('apiKey')
+    @Post("/did/web/:tenantId")
+    public async createDidWeb(
+        @Path("tenantId") tenantId: string,
+        @Body() didOptions: DidCreate,
+        @Res() internalServerError: TsoaResponse<500, { message: string }>
+    ) {
+        try {
+            
+            let didDoc;
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                if (!didOptions.keyType) {
+                    throw Error('keyType is required')
+                }
+                if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
+                    throw Error('Only ed25519 and bls12381g2 type supported')
+                }
+                const did = `did:${didOptions.method}:${didOptions.domain}`
+                let didDocument: any
+                const keyId = `${did}#key-1`
+                const key = await tenantAgent.wallet.createKey({
+                    keyType: didOptions.keyType,
+                    seed: TypedArrayEncoder.fromString(didOptions.seed)
+                })
+                if (didOptions.keyType === "ed25519") {
+                    didDocument = new DidDocumentBuilder(did)
+                        .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
+                        .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
+                        .addAuthentication(keyId).build();
+                }
+                if (didOptions.keyType === "bls12381g2") {
+                    didDocument = new DidDocumentBuilder(did)
+                        .addContext('https://w3id.org/security/bbs/v1')
+                        .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
+                        .addAuthentication(keyId)
+                        .build()
+                }
+
+                didDoc = {
+                    did,
+                    didDocument: didDocument.toJSON()
+                }
+            })
+            return didDoc;
+        } catch (error) {
+            return internalServerError(500, {
+                message: `something went wrong: ${error}`,
+            });
+        }
     }
-   
-     return {
-        did,
-        didDocument:didDocument.toJSON()
-     }
-    } catch (error) {
-      return internalServerError(500, {
-        message: `something went wrong: ${error}`,
-      });
-    }
-  }
 
 }
