@@ -940,14 +940,13 @@ export class MultiTenancyController extends Controller {
                     comment: createOfferOptions.comment
                 });
 
-            const credentialMessage = offerOob.message;
-            const outOfBandRecord = await tenantAgent.oob.createInvitation({
-                label: createOfferOptions.label,
-                handshakeProtocols: [HandshakeProtocol.Connections],
-                messages: [credentialMessage],
-                autoAcceptConnection: true,
-                multiUseInvitation: true
-            })
+                const credentialMessage = offerOob.message;
+                const outOfBandRecord = await tenantAgent.oob.createInvitation({
+                    label: createOfferOptions.label,
+                    handshakeProtocols: [HandshakeProtocol.Connections],
+                    messages: [credentialMessage],
+                    autoAcceptConnection: true
+                })
 
                 createOfferOobRecord = {
                     invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -1015,6 +1014,8 @@ export class MultiTenancyController extends Controller {
                 const credential = await tenantAgent.credentials.getById(credentialRecordId);
                 credentialRecord = credential.toJSON();
             })
+
+
 
 
             return credentialRecord;
@@ -1159,9 +1160,6 @@ export class MultiTenancyController extends Controller {
                         useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
                     }),
                     outOfBandRecord: outOfBandRecord.toJSON(),
-                    proofId: proof.proofRecord.id,
-                    proofThreadId: proof.proofRecord.threadId,
-                    agentId: proof.message.thread?.threadId ? proof.message.thread?.threadId : proof.message.threadId ? proof.message.thread : proof.message.id 
                 }
             })
 
@@ -1415,54 +1413,55 @@ export class MultiTenancyController extends Controller {
         return ({ CredentialExchangeRecord: acceptOffer });
     }
 
-@Security('apiKey')
- @Post("/did/web/:tenantId")
-  public async createDidWeb(
-    @Path("tenantId") tenantId: string,
-    @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    try {
-      const tenantAgent = await this.agent.modules.tenants.getTenantAgent({
-        tenantId,
-      });
-    
-      if(!didOptions.keyType){
-        throw Error('keyType is required')
-      }
-      if(didOptions.keyType !== KeyType.Ed25519  && didOptions.keyType !== KeyType.Bls12381g2 ){
-        throw Error('Only ed25519 and bls12381g2 type supported')
-      }
-     const did = `did:${didOptions.method}:${didOptions.domain}`
-     let didDocument:any
-     const keyId = `${did}#key-1`
-     const key = await tenantAgent.wallet.createKey({
-        keyType:didOptions.keyType,
-        seed:TypedArrayEncoder.fromString(didOptions.seed)
-     })
-     if(didOptions.keyType === "ed25519"){
-     didDocument = new DidDocumentBuilder(did)
-     .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
-     .addVerificationMethod(getEd25519VerificationKey2018({key,id:keyId,controller:did}))
-     .addAuthentication(keyId).build();
-     }
-    if(didOptions.keyType === "bls12381g2"){
-        didDocument = new DidDocumentBuilder(did)
-        .addContext('https://w3id.org/security/bbs/v1')
-        .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
-        .addAuthentication(keyId)
-        .build()
+    @Security('apiKey')
+    @Post("/did/web/:tenantId")
+    public async createDidWeb(
+        @Path("tenantId") tenantId: string,
+        @Body() didOptions: DidCreate,
+        @Res() internalServerError: TsoaResponse<500, { message: string }>
+    ) {
+        try {
+            
+            let didDoc;
+            await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+                if (!didOptions.keyType) {
+                    throw Error('keyType is required')
+                }
+                if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
+                    throw Error('Only ed25519 and bls12381g2 type supported')
+                }
+                const did = `did:${didOptions.method}:${didOptions.domain}`
+                let didDocument: any
+                const keyId = `${did}#key-1`
+                const key = await tenantAgent.wallet.createKey({
+                    keyType: didOptions.keyType,
+                    seed: TypedArrayEncoder.fromString(didOptions.seed)
+                })
+                if (didOptions.keyType === "ed25519") {
+                    didDocument = new DidDocumentBuilder(did)
+                        .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
+                        .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
+                        .addAuthentication(keyId).build();
+                }
+                if (didOptions.keyType === "bls12381g2") {
+                    didDocument = new DidDocumentBuilder(did)
+                        .addContext('https://w3id.org/security/bbs/v1')
+                        .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
+                        .addAuthentication(keyId)
+                        .build()
+                }
+
+                didDoc = {
+                    did,
+                    didDocument: didDocument.toJSON()
+                }
+            })
+            return didDoc;
+        } catch (error) {
+            return internalServerError(500, {
+                message: `something went wrong: ${error}`,
+            });
+        }
     }
-   
-     return {
-        did,
-        didDocument:didDocument.toJSON()
-     }
-    } catch (error) {
-      return internalServerError(500, {
-        message: `something went wrong: ${error}`,
-      });
-    }
-  }
 
 }
