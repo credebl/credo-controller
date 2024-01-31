@@ -454,7 +454,6 @@ export class MultiTenancyController extends Controller {
                 outOfBandRecords = await tenantAgent.oob.getAll()
 
                 if (invitationId) outOfBandRecords = outOfBandRecords.filter((o: any) => o.outOfBandInvitation.id === invitationId);
-                outOfBandRecords
                 outOfBandRecordsRes = outOfBandRecords.map((c: any) => c.toJSON())
             })
 
