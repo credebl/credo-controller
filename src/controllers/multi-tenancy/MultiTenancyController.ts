@@ -945,7 +945,8 @@ export class MultiTenancyController extends Controller {
                 label: createOfferOptions.label,
                 handshakeProtocols: [HandshakeProtocol.Connections],
                 messages: [credentialMessage],
-                autoAcceptConnection: true
+                autoAcceptConnection: true,
+                multiUseInvitation: true
             })
 
                 createOfferOobRecord = {
