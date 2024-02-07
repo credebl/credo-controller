@@ -908,7 +908,8 @@ export class MultiTenancyController extends Controller {
                 label: createOfferOptions.label,
                 handshakeProtocols: [HandshakeProtocol.Connections],
                 messages: [credentialMessage],
-                autoAcceptConnection: true
+                autoAcceptConnection: true,
+                multiUseInvitation: true
             })
 
             await tenantAgent.endSession();
@@ -1104,7 +1105,8 @@ export class MultiTenancyController extends Controller {
                 label: createRequestOptions.label,
                 handshakeProtocols: [HandshakeProtocol.Connections],
                 messages: [proofMessage],
-                autoAcceptConnection: true
+                autoAcceptConnection: true,
+                multiUseInvitation: true
             })
 
             await tenantAgent.endSession();

@@ -1,4 +1,4 @@
-import { AutoAcceptCredential, CREDENTIALS_CONTEXT_V1_URL, ConnectionRecord, ConnectionState, CredentialExchangeRecord, CredentialExchangeRecordProps, CredentialFormat, CredentialPreviewAttribute, CredentialProtocolVersionType, CustomConnectionTags, CustomCredentialTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, HandshakeProtocol, JsonCredential, JsonLdCredentialDetailFormat, JsonLdCredentialFormatService, KeyType, ProofsProtocolVersionType, TypedArrayEncoder, V2CredentialPreview, W3cCredentialService, utils } from '@aries-framework/core'
+import { AutoAcceptCredential, CREDENTIALS_CONTEXT_V1_URL, ConnectionRecord, ConnectionState, CreateOutOfBandInvitationConfig, CredentialExchangeRecord, CredentialExchangeRecordProps, CredentialFormat, CredentialPreviewAttribute, CredentialProtocolVersionType, CustomConnectionTags, CustomCredentialTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, HandshakeProtocol, JsonCredential, JsonLdCredentialDetailFormat, JsonLdCredentialFormatService, KeyType, ProofsProtocolVersionType, TypedArrayEncoder, V2CredentialPreview, W3cCredentialService, utils } from '@aries-framework/core'
 
 import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } from '@aries-framework/core'
 import { Body, Controller, Delete, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query, Security } from 'tsoa'
@@ -223,7 +223,8 @@ export class CredentialController extends Controller {
         label: outOfBandOption.label,
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [credentialMessage],
-        autoAcceptConnection: true
+        autoAcceptConnection: true,
+        multiUseInvitation: true
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({

@@ -197,7 +197,8 @@ export class ProofController extends Controller {
         label: createRequestOptions.label,
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [proofMessage],
-        autoAcceptConnection: true
+        autoAcceptConnection: true,
+        multiUseInvitation: true
       })
 
       return {
