@@ -17,6 +17,7 @@ import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
 import { setDynamicApiKey } from './authentication'
 import { SecurityMiddleware } from './securityMiddleware'
+import { rateLimit } from 'express-rate-limit';
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
@@ -44,6 +45,14 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
+
+  const limiter = rateLimit({
+    windowMs: 1000, // 1 second
+    max: 800, // max 800 requests per second
+  });
+
+  // apply rate limiter to all requests
+  app.use(limiter);
 
   const securityMiddleware = new SecurityMiddleware();
   app.use(securityMiddleware.use);
