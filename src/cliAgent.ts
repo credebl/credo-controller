@@ -277,7 +277,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const genericRecord = await agent.genericRecords.getAll();
 
   const recordsWithToken = genericRecord.some(record => record?.content?.token);
-  if (genericRecord.length === 0 || recordsWithToken === false) {
+  if (!genericRecord.length || !recordsWithToken) {
 
     async function generateSecretKey(length: number = 32): Promise<string> {
       try {
