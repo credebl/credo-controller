@@ -18,6 +18,7 @@ import { RegisterRoutes } from './routes/routes'
 import { setDynamicApiKey } from './authentication'
 import { SecurityMiddleware } from './securityMiddleware'
 import { rateLimit } from 'express-rate-limit';
+import { maxRateLimit, windowMs } from './utils/util'
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
@@ -47,8 +48,8 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   })
 
   const limiter = rateLimit({
-    windowMs: 1000, // 1 second
-    max: 800, // max 800 requests per second
+    windowMs, // 1 second
+    max: maxRateLimit, // max 800 requests per second
   });
 
   // apply rate limiter to all requests
