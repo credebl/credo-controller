@@ -49,6 +49,7 @@
     "@hyperledger/anoncreds-nodejs": "^0.1.0",
     "@hyperledger/aries-askar-nodejs": "^0.1.1",
     "@hyperledger/indy-vdr-nodejs": "^0.1.0",
+    "@tsoa/runtime": "^6.0.0",
     "axios": "^1.4.0",
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",

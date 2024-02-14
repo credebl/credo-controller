@@ -36,10 +36,8 @@ export class DidController extends Controller {
    */
   @Example<DidResolutionResultProps>(DidRecordExample)
   @Get('/:did')
-  public async getDidRecordByDid(
-    @Path('did') did: Did
-    ) {
-    const resolveResult = await this.agent.dids.resolve(did);
+  public async getDidRecordByDid(@Path('did') did: Did) {
+    const resolveResult = await this.agent.dids.resolve(did)
     const importDid = await this.agent.dids.import({
       did,
       overwrite: true,
@@ -237,14 +235,11 @@ export class DidController extends Controller {
   }
 
   @Get('/')
-  public async getDids(
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    try{
+  public async getDids(@Res() internalServerError: TsoaResponse<500, { message: string }>) {
+    try {
       const createdDids = await this.agent.dids.getCreatedDids()
-      return createdDids;
-
-    } catch(error){
+      return createdDids
+    } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }

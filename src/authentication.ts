@@ -1,6 +1,10 @@
-import * as express from "express";
+import type * as express from 'express'
 
-let dynamicApiKey: string = 'api_key'; // Initialize with a default value
+import { LogLevel } from '@aries-framework/core'
+
+import { TsLogger } from './utils/logger'
+
+let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
 export async function expressAuthentication(
   request: express.Request,
@@ -8,23 +12,28 @@ export async function expressAuthentication(
   secMethod?: { [key: string]: any },
   scopes?: string
 ) {
-  const apiKeyHeader = request.headers['authorization'];
+  const logger = new TsLogger(LogLevel.info)
+
+  logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
+  logger.info(`scopes::: ${JSON.stringify(scopes)}`)
+
+  const apiKeyHeader = request.headers['authorization']
 
   if (securityName === 'apiKey') {
     if (apiKeyHeader) {
-      const providedApiKey = apiKeyHeader as string;
+      const providedApiKey = apiKeyHeader as string
 
       if (providedApiKey === dynamicApiKey) {
-        return "success";
+        return 'success'
       }
     }
   }
 }
 
 export function setDynamicApiKey(newApiKey: string) {
-  dynamicApiKey = newApiKey;
+  dynamicApiKey = newApiKey
 }
 
 export function getDynamicApiKey() {
-  return dynamicApiKey;
+  return dynamicApiKey
 }

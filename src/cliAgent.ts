@@ -1,5 +1,18 @@
 import type { InitConfig } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
+import type { IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
+
+import {
+  AnonCredsCredentialFormatService,
+  AnonCredsModule,
+  AnonCredsProofFormatService,
+  LegacyIndyCredentialFormatService,
+  LegacyIndyProofFormatService,
+  V1CredentialProtocol,
+  V1ProofProtocol,
+} from '@aries-framework/anoncreds'
+import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
+import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
 import {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -19,24 +32,26 @@ import {
   WsOutboundTransport,
   LogLevel,
   Agent,
+  JsonLdCredentialFormatService,
 } from '@aries-framework/core'
+import {
+  IndyVdrAnonCredsRegistry,
+  IndyVdrIndyDidResolver,
+  IndyVdrModule,
+  IndyVdrIndyDidRegistrar,
+} from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
+import { TenantsModule } from '@aries-framework/tenants'
+import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
+import axios from 'axios'
+import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
+import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
-import { randomBytes } from 'crypto'
-import { TenantsModule } from '@aries-framework/tenants'
-import { JsonLdCredentialFormatService } from '@aries-framework/core'
-import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
-import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
-import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidResolver, IndyVdrModule, IndyVdrPoolConfig, IndyVdrIndyDidRegistrar } from '@aries-framework/indy-vdr'
-import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { anoncreds } from '@hyperledger/anoncreds-nodejs'
-import axios from 'axios';
-import jwt from 'jsonwebtoken';
 import { BCOVRIN_TEST_GENESIS } from './utils/util'
 
 export type Transports = 'ws' | 'http'
@@ -165,6 +180,24 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   }
 }
 
+async function generateSecretKey(length: number = 32): Promise<string> {
+  // Asynchronously generate a buffer containing random values
+  const buffer: Buffer = await new Promise((resolve, reject) => {
+    randomBytes(length, (error, buf) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(buf)
+      }
+    })
+  })
+
+  // Convert the buffer to a hexadecimal string
+  const secretKey: string = buffer.toString('hex')
+
+  return secretKey
+}
+
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
     logLevel,
@@ -270,41 +303,15 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }))
   }
 
-
   await agent.initialize()
 
-  let token: string = '';
-  const genericRecord = await agent.genericRecords.getAll();
+  let token: string = ''
+  const genericRecord = await agent.genericRecords.getAll()
 
-  const recordsWithToken = genericRecord.some(record => record?.content?.token);
+  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
   if (!genericRecord.length || !recordsWithToken) {
-
-    async function generateSecretKey(length: number = 32): Promise<string> {
-      try {
-        // Asynchronously generate a buffer containing random values
-        const buffer: Buffer = await new Promise((resolve, reject) => {
-          randomBytes(length, (error, buf) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(buf);
-            }
-          });
-        });
-
-        // Convert the buffer to a hexadecimal string
-        const secretKey: string = buffer.toString("hex");
-
-        return secretKey;
-      } catch (error) {
-        // Handle any errors that might occur during key generation
-        logger.error(`Error generating secret key: ${error}`);
-        throw error;
-      }
-    }
-
     // Call the async function
-    const secretKeyInfo: string = await generateSecretKey();
+    const secretKeyInfo: string = await generateSecretKey()
     // Check if the secretKey already exist in the genericRecords
 
     // if already exist - then don't generate the secret key again
@@ -318,29 +325,30 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // instead use the existin JWT token
     // if JWT token is not found, create/generate a new token and save in genericRecords
     // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo);
+    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
-        token
+        token,
       },
-    });
+    })
   } else {
-    const recordWithToken = genericRecord.find(record => record?.content?.token !== undefined);
-    token = recordWithToken?.content.token as string;
+    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+    token = recordWithToken?.content.token as string
   }
 
-  const app = await setupServer(agent, {
-    webhookUrl,
-    port: adminPort,
-  },
+  const app = await setupServer(
+    agent,
+    {
+      webhookUrl,
+      port: adminPort,
+    },
     token
   )
 
-  logger.info(`*** API Toekn: ${token}`);
+  logger.info(`*** API Toekn: ${token}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)
   })
 }
-  

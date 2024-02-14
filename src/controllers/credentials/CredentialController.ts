@@ -1,8 +1,10 @@
 import type { RestAgentModules } from '../../cliAgent'
-import { AutoAcceptCredential, CREDENTIALS_CONTEXT_V1_URL, ConnectionRecord, ConnectionState, CreateOutOfBandInvitationConfig, CredentialExchangeRecord, CredentialExchangeRecordProps, CredentialFormat, CredentialPreviewAttribute, CredentialProtocolVersionType, CustomConnectionTags, CustomCredentialTags, DefaultConnectionTags, DidExchangeRole, DidExchangeState, HandshakeProtocol, JsonCredential, JsonLdCredentialDetailFormat, JsonLdCredentialFormatService, KeyType, ProofsProtocolVersionType, TypedArrayEncoder, V2CredentialPreview, W3cCredentialService, utils } from '@aries-framework/core'
+import type { CredentialExchangeRecordProps, CredentialProtocolVersionType } from '@aries-framework/core'
 
 import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@aries-framework/anoncreds'
 import {
+  HandshakeProtocol,
+  W3cCredentialService,
   CredentialRepository,
   CredentialState,
   Agent,
@@ -190,7 +192,7 @@ export class CredentialController extends Controller {
         credentialFormats: createOfferOptions.credentialFormats,
         autoAcceptCredential: createOfferOptions.autoAcceptCredential,
       })
-      return offer;
+      return offer
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }

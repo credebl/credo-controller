@@ -13,9 +13,21 @@ import {
   CreateInvitationOptions,
 } from '../types'
 
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
-
-// import prepareForAnon
+import {
+  Body,
+  Controller,
+  Delete,
+  Example,
+  Get,
+  Path,
+  Post,
+  Query,
+  Res,
+  Route,
+  Tags,
+  TsoaResponse,
+  Security,
+} from 'tsoa'
 
 @Tags('Out Of Band')
 @Security('apiKey')
