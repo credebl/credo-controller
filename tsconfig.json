@@ -9,6 +9,8 @@
     "paths": {
       "afj-controller/*": ["src"]
     },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["jest", "node"]
   },
   "exclude": ["node_modules", "build"]

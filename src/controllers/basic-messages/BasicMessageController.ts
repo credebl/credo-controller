@@ -5,10 +5,11 @@ import { injectable } from 'tsyringe'
 
 import { BasicMessageRecordExample, RecordId } from '../examples'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
+@Security('apiKey')
 @injectable()
 export class BasicMessageController extends Controller {
   private agent: Agent
@@ -41,7 +42,7 @@ export class BasicMessageController extends Controller {
     @Path('connectionId') connectionId: RecordId,
     @Body() request: Record<'content', string>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       this.setStatus(204)
