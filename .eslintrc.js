@@ -1,7 +1,6 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   ignorePatterns: ['**/tests/*'],
-  plugins: ['prettier'],
   extends: [
     'eslint:recommended',
     'plugin:import/recommended',
