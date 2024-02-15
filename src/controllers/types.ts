@@ -25,6 +25,7 @@ import type {
   AgentMessage,
   Routing,
   Attachment,
+  KeyType,
 } from '@aries-framework/core'
 import type { DIDDocument } from 'did-resolver'
 
@@ -286,6 +287,7 @@ export interface ResolvedDid {
 }
 
 export interface DidCreate {
+  keyType?: KeyType
   seed: string
   domain?: string
   method?: string
