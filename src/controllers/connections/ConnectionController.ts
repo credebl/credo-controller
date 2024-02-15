@@ -42,7 +42,7 @@ export class ConnectionController extends Controller {
     @Query('state') state?: DidExchangeState,
     @Query('myDid') myDid?: string,
     @Query('theirDid') theirDid?: string,
-    @Query('theirLabel') theirLabel?: string
+    @Query('theirLabel') theirLabel?: string,
   ) {
     let connections
 
@@ -81,7 +81,7 @@ export class ConnectionController extends Controller {
   @Get('/connections/:connectionId')
   public async getConnectionById(
     @Path('connectionId') connectionId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
   ) {
     const connection = await this.agent.connections.findById(connectionId)
 
@@ -100,7 +100,7 @@ export class ConnectionController extends Controller {
   public async deleteConnection(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       this.setStatus(204)
@@ -128,7 +128,7 @@ export class ConnectionController extends Controller {
   public async acceptRequest(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const connection = await this.agent.connections.acceptRequest(connectionId)
@@ -156,7 +156,7 @@ export class ConnectionController extends Controller {
   public async acceptResponse(
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const connection = await this.agent.connections.acceptResponse(connectionId)
@@ -174,7 +174,7 @@ export class ConnectionController extends Controller {
     @Path('invitationId') invitationId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     const outOfBandRecord = await this.agent.oob.findByCreatedInvitationId(invitationId)
 

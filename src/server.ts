@@ -38,7 +38,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   app.use(
     bodyParser.urlencoded({
       extended: true,
-    })
+    }),
   )
 
   setDynamicApiKey(apiKey ? apiKey : '')

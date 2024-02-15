@@ -55,7 +55,7 @@ export class ProofController extends Controller {
   public async getProofById(
     @Path('proofRecordId') proofRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const proof = await this.agent.proofs.getById(proofRecordId)
@@ -83,7 +83,7 @@ export class ProofController extends Controller {
   public async proposeProof(
     @Body() requestProofProposalOptions: RequestProofProposalOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const proof = await this.agent.proofs.proposeProof({
@@ -120,7 +120,7 @@ export class ProofController extends Controller {
   public async acceptProposal(
     @Body() acceptProposal: AcceptProofProposal,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const proof = await this.agent.proofs.acceptProposal(acceptProposal)
@@ -141,7 +141,7 @@ export class ProofController extends Controller {
   public async requestProof(
     @Body() requestProofOptions: RequestProofOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const requestProofPayload = {
@@ -165,7 +165,7 @@ export class ProofController extends Controller {
   @Post('create-request-oob')
   public async createRequest(
     @Body() createRequestOptions: CreateProofRequestOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const proof = await this.agent.proofs.createRequest({
@@ -218,7 +218,7 @@ export class ProofController extends Controller {
       comment?: string
     },
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const requestedCredentials = await this.agent.proofs.selectCredentialsForRequest({
@@ -256,7 +256,7 @@ export class ProofController extends Controller {
   public async acceptPresentation(
     @Path('proofRecordId') proofRecordId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
@@ -276,7 +276,7 @@ export class ProofController extends Controller {
   public async proofFormData(
     @Path('proofRecordId') proofRecordId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const proof = await this.agent.proofs.getFormatData(proofRecordId)

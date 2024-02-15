@@ -35,7 +35,7 @@ export class SchemaController {
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() forbiddenError: TsoaResponse<403, { reason: string }>,
     @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       return await this.agent.modules.anoncreds.getSchema(schemaId)
@@ -83,7 +83,7 @@ export class SchemaController {
       endorserDid?: string
     },
     @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const { issuerId, name, version, attributes } = schema
@@ -108,7 +108,7 @@ export class SchemaController {
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
           indySchemaId.namespaceIdentifier,
           indySchemaId.schemaName,
-          indySchemaId.schemaVersion
+          indySchemaId.schemaVersion,
         )
         if (schemaState.state === CredentialEnum.Finished) {
           schemaState.schemaId = getSchemaUnqualifiedId

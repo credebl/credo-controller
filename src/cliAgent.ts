@@ -343,7 +343,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       webhookUrl,
       port: adminPort,
     },
-    token
+    token,
   )
 
   logger.info(`*** API Toekn: ${token}`)

@@ -65,7 +65,7 @@ export class OutOfBandController extends Controller {
   @Get('/:outOfBandId')
   public async getOutOfBandRecordById(
     @Path('outOfBandId') outOfBandId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
   ) {
     const outOfBandRecord = await this.agent.oob.findById(outOfBandId)
 
@@ -93,7 +93,7 @@ export class OutOfBandController extends Controller {
   @Post('/create-invitation')
   public async createInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() config: CreateInvitationOptions // props removed because of issues with serialization
+    @Body() config: CreateInvitationOptions, // props removed because of issues with serialization
   ) {
     try {
       const outOfBandRecord = await this.agent.oob.createInvitation(config)
@@ -126,7 +126,7 @@ export class OutOfBandController extends Controller {
   @Post('/create-legacy-invitation')
   public async createLegacyInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> // routing prop removed because of issues with public key serialization
+    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'>, // routing prop removed because of issues with public key serialization
   ) {
     try {
       const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation(config)
@@ -168,7 +168,7 @@ export class OutOfBandController extends Controller {
       domain: string
     },
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const agentMessage = JsonTransformer.fromJSON(config.message, AgentMessage)
@@ -200,7 +200,7 @@ export class OutOfBandController extends Controller {
   @Post('/receive-invitation')
   public async receiveInvitation(
     @Body() invitationRequest: ReceiveInvitationProps,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     const { invitation, ...config } = invitationRequest
 
@@ -232,7 +232,7 @@ export class OutOfBandController extends Controller {
   @Post('/receive-invitation-url')
   public async receiveInvitationFromUrl(
     @Body() invitationRequest: ReceiveInvitationByUrlProps,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     const { invitationUrl, ...config } = invitationRequest
 
@@ -264,12 +264,12 @@ export class OutOfBandController extends Controller {
     @Path('outOfBandId') outOfBandId: RecordId,
     @Body() acceptInvitationConfig: AcceptInvitationConfig,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const { outOfBandRecord, connectionRecord } = await this.agent.oob.acceptInvitation(
         outOfBandId,
-        acceptInvitationConfig
+        acceptInvitationConfig,
       )
 
       return {
@@ -295,7 +295,7 @@ export class OutOfBandController extends Controller {
   public async deleteOutOfBandRecord(
     @Path('outOfBandId') outOfBandId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       this.setStatus(204)
