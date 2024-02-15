@@ -15,10 +15,11 @@ import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 
 @Tags('Dids')
 @Route('/dids')
+@Security('apiKey')
 @injectable()
 export class DidController extends Controller {
   private agent: Agent
@@ -173,7 +174,7 @@ export class DidController extends Controller {
   @Post('/did/key')
   public async createDidKey(
     @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const did = await this.agent.dids.create<KeyDidCreateOptions>({
@@ -204,7 +205,7 @@ export class DidController extends Controller {
   @Post('/did/web')
   public async createDidWeb(
     @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const domain = didOptions.domain ? didOptions.domain : 'credebl.github.io'
@@ -234,8 +235,12 @@ export class DidController extends Controller {
   }
 
   @Get('/')
-  public async getDids() {
-    const createdDids = await this.agent.dids.getCreatedDids()
-    return createdDids
+  public async getDids(@Res() internalServerError: TsoaResponse<500, { message: string }>) {
+    try {
+      const createdDids = await this.agent.dids.getCreatedDids()
+      return createdDids
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
   }
 }

@@ -15,6 +15,10 @@
       "indyNamespace": "indicio:testnet"
     },
     {
+      "genesisTransactions": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_demonet_genesis",
+      "indyNamespace": "indicio:demonet"
+    },
+    {
       "genesisTransactions": "http://test.bcovrin.vonx.io/genesis",
       "indyNamespace": "bcovrin:testnet"
     }
