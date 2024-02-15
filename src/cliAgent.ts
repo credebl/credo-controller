@@ -46,7 +46,9 @@ import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
+import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
+import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
@@ -178,6 +180,24 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   }
 }
 
+async function generateSecretKey(length: number = 32): Promise<string> {
+  // Asynchronously generate a buffer containing random values
+  const buffer: Buffer = await new Promise((resolve, reject) => {
+    randomBytes(length, (error, buf) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(buf)
+      }
+    })
+  })
+
+  // Convert the buffer to a hexadecimal string
+  const secretKey: string = buffer.toString('hex')
+
+  return secretKey
+}
+
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
     logLevel,
@@ -284,10 +304,49 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   }
 
   await agent.initialize()
-  const app = await setupServer(agent, {
-    webhookUrl,
-    port: adminPort,
-  })
+
+  let token: string = ''
+  const genericRecord = await agent.genericRecords.getAll()
+
+  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
+  if (!genericRecord.length || !recordsWithToken) {
+    // Call the async function
+    const secretKeyInfo: string = await generateSecretKey()
+    // Check if the secretKey already exist in the genericRecords
+
+    // if already exist - then don't generate the secret key again
+    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
+    // instead use the existin JWT token
+    // if JWT token is not found, create/generate a new token and save in genericRecords
+    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
+
+    // if already exist - then don't generate the secret key again
+    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
+    // instead use the existin JWT token
+    // if JWT token is not found, create/generate a new token and save in genericRecords
+    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
+    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
+    await agent.genericRecords.save({
+      content: {
+        secretKey: secretKeyInfo,
+        token,
+      },
+    })
+  } else {
+    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+    token = recordWithToken?.content.token as string
+  }
+
+  const app = await setupServer(
+    agent,
+    {
+      webhookUrl,
+      port: adminPort,
+    },
+    token,
+  )
+
+  logger.info(`*** API Toekn: ${token}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)

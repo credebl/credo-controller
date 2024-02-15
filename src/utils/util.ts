@@ -154,3 +154,6 @@ export const SOVRIN_STAGING_NET = `{"reqSignature":{},"txn":{"data":{"data":{"al
 const protocol = `http`
 export const BCOVRIN_REGISTER_URL = `${protocol}://test.bcovrin.vonx.io/register`
 export const INDICIO_NYM_URL = 'https://selfserve.indiciotech.io/nym'
+
+export const windowMs = 1000
+export const maxRateLimit = 800

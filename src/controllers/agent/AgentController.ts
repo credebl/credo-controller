@@ -3,7 +3,7 @@ import type { AgentInfo } from '../types'
 import { Agent } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
-import { Controller, Delete, Get, Route, Tags } from 'tsoa'
+import { Controller, Delete, Get, Route, Tags, Security } from 'tsoa'
 
 @Tags('Agent')
 @Route('/agent')
@@ -32,6 +32,7 @@ export class AgentController extends Controller {
   /**
    * Delete wallet
    */
+  @Security('apiKey')
   @Delete('/wallet')
   public async deleteWallet() {
     const deleteWallet = await this.agent.wallet.delete()
