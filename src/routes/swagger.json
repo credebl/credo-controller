@@ -97,11 +97,15 @@
 							}
 						},
 						"type": "object"
+					},
+					"messageType": {
+						"type": "string"
 					}
 				},
 				"required": [
 					"@type",
-					"@id"
+					"@id",
+					"messageType"
 				],
 				"type": "object",
 				"additionalProperties": {}
@@ -118,7 +122,8 @@
 					"x25519",
 					"p256",
 					"p384",
-					"p521"
+					"p521",
+					"k256"
 				],
 				"type": "string"
 			},
@@ -167,6 +172,40 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"JsonValue": {
+				"anyOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "number",
+						"format": "double"
+					},
+					{
+						"type": "boolean"
+					},
+					{
+						"$ref": "#/components/schemas/JsonObject"
+					},
+					{
+						"$ref": "#/components/schemas/JsonArray"
+					}
+				],
+				"nullable": true
+			},
+			"JsonObject": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": {
+					"$ref": "#/components/schemas/JsonValue"
+				}
+			},
+			"JsonArray": {
+				"items": {
+					"$ref": "#/components/schemas/JsonValue"
+				},
+				"type": "array"
 			},
 			"Pick_JwsGeneralFormat.Exclude_keyofJwsGeneralFormat.payload__": {
 				"properties": {
@@ -221,7 +260,7 @@
 						"description": "Base64-encoded data, when representing arbitrary content inline instead of via links. Optional."
 					},
 					"json": {
-						"$ref": "#/components/schemas/Record_string.unknown_",
+						"$ref": "#/components/schemas/JsonValue",
 						"description": "Directly embedded JSON data, when representing content inline instead of via links, and when the content is natively conveyable as JSON. Optional."
 					},
 					"links": {
@@ -502,10 +541,6 @@
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
-			"Omit_ReceiveOutOfBandInvitationConfig.routing_": {
-				"$ref": "#/components/schemas/Pick_ReceiveOutOfBandInvitationConfig.Exclude_keyofReceiveOutOfBandInvitationConfig.routing__",
-				"description": "Construct a type with the properties of T except for those in type K."
-			},
 			"ReceiveInvitationProps": {
 				"properties": {
 					"alias": {
@@ -684,6 +719,9 @@
 			},
 			"DidCreate": {
 				"properties": {
+					"keyType": {
+						"$ref": "#/components/schemas/KeyType"
+					},
 					"seed": {
 						"type": "string"
 					},
@@ -717,9 +755,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"DidRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
 				"properties": {
@@ -1098,18 +1133,6 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"GetTenantAgentOptions": {
-				"properties": {
-					"tenantId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"tenantId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"ProofFormatPayload_%5BProofFormat%5D.createProposal_": {
 				"properties": {},
 				"type": "object",
@@ -1330,7 +1353,13 @@
 				"additionalProperties": false
 			}
 		},
-		"securitySchemes": {}
+		"securitySchemes": {
+			"apiKey": {
+				"type": "apiKey",
+				"name": "Authorization",
+				"in": "header"
+			}
+		}
 	},
 	"info": {
 		"title": "@aries-framework/rest",
@@ -1378,7 +1407,11 @@
 				"tags": [
 					"Agent"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -1422,7 +1455,11 @@
 				"tags": [
 					"Basic Messages"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Connection identifier",
@@ -1487,7 +1524,11 @@
 				"tags": [
 					"Basic Messages"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Connection identifier",
@@ -1549,7 +1590,11 @@
 				"tags": [
 					"Connections"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "query",
@@ -1661,7 +1706,11 @@
 				"tags": [
 					"Connections"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Connection identifier",
@@ -1726,7 +1775,11 @@
 				"tags": [
 					"Connections"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Connection identifier",
@@ -1812,7 +1865,11 @@
 				"tags": [
 					"Connections"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Connection identifier",
@@ -1898,7 +1955,11 @@
 				"tags": [
 					"Connections"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Connection identifier",
@@ -2043,7 +2104,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "invitation identifier",
@@ -2134,7 +2199,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -2198,7 +2267,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Record identifier",
@@ -2316,7 +2389,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"description": "configuration of how out-of-band invitation should be created",
@@ -2435,7 +2512,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"description": "configuration of how a invitation should be created",
@@ -2515,7 +2596,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"description": "configuration of how a connection invitation should be created",
@@ -2641,7 +2726,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -2749,7 +2838,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -2875,7 +2968,11 @@
 				"tags": [
 					"Out Of Band"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -3005,7 +3102,11 @@
 				"tags": [
 					"Credential Definitions"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -3107,7 +3208,11 @@
 				"tags": [
 					"Credential Definitions"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -3246,7 +3351,11 @@
 				"tags": [
 					"Schemas"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -3326,7 +3435,11 @@
 				"tags": [
 					"Schemas"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -3464,7 +3577,11 @@
 				"tags": [
 					"Dids"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"description": "Decentralized Identifier",
@@ -3513,7 +3630,11 @@
 				"tags": [
 					"Dids"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -3561,7 +3682,11 @@
 				"tags": [
 					"Dids"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -3609,7 +3734,11 @@
 				"tags": [
 					"Dids"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -3631,11 +3760,24 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/DidRecord"
+									"properties": {
+										"message": {
+											"type": "string"
+										}
 									},
-									"type": "array"
+									"required": [
+										"message"
+									],
+									"type": "object"
 								}
 							}
 						}
@@ -3644,7 +3786,11 @@
 				"tags": [
 					"Dids"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -3700,7 +3846,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -3748,7 +3898,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -3823,7 +3977,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -3899,7 +4057,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -3954,7 +4116,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4011,7 +4177,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4068,7 +4238,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4125,7 +4299,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4156,9 +4334,24 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
 								"schema": {
-									"items": {},
-									"type": "array"
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
 								}
 							}
 						}
@@ -4167,7 +4360,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4196,11 +4393,24 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/Record_string.any_"
+									"properties": {
+										"message": {
+											"type": "string"
+										}
 									},
-									"type": "array"
+									"required": [
+										"message"
+									],
+									"type": "object"
 								}
 							}
 						}
@@ -4209,7 +4419,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4377,7 +4591,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4481,7 +4699,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4592,7 +4814,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4665,7 +4891,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4780,7 +5010,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4835,7 +5069,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4892,7 +5130,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -4967,7 +5209,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5042,7 +5288,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5071,10 +5321,7 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {
-									"items": {},
-									"type": "array"
-								}
+								"schema": {}
 							}
 						}
 					}
@@ -5082,7 +5329,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5127,10 +5378,7 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {
-									"items": {},
-									"type": "array"
-								}
+								"schema": {}
 							}
 						}
 					}
@@ -5138,7 +5386,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5223,7 +5475,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5308,7 +5564,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5365,7 +5625,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5452,7 +5716,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5558,7 +5826,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5643,7 +5915,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5665,69 +5941,6 @@
 			}
 		},
 		"/multi-tenancy/{tenantId}": {
-			"get": {
-				"operationId": "GetTenantById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			},
 			"delete": {
 				"operationId": "DeleteTenantById",
 				"responses": {
@@ -5779,7 +5992,11 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -5792,33 +6009,15 @@
 				]
 			}
 		},
-		"/multi-tenancy/tenant": {
+		"/multi-tenancy/did/web/{tenantId}": {
 			"post": {
-				"operationId": "GetTenantAgent",
+				"operationId": "CreateDidWeb",
 				"responses": {
 					"200": {
 						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
 							}
 						}
 					},
@@ -5844,14 +6043,27 @@
 				"tags": [
 					"MultiTenancy"
 				],
-				"security": [],
-				"parameters": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/GetTenantAgentOptions"
+								"$ref": "#/components/schemas/DidCreate"
 							}
 						}
 					}
@@ -5894,7 +6106,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "query",
@@ -5972,7 +6188,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -6050,7 +6270,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -6129,7 +6353,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -6207,7 +6435,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -6255,7 +6487,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -6334,7 +6570,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -6433,7 +6673,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -6510,7 +6754,11 @@
 				"tags": [
 					"Proofs"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -6575,7 +6823,11 @@
 				"tags": [
 					"EndorserTransaction"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -6623,7 +6875,11 @@
 				"tags": [
 					"EndorserTransaction"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -6689,7 +6945,11 @@
 				"tags": [
 					"EndorserTransaction"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -6751,7 +7011,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "query",
@@ -6801,7 +7065,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -6823,7 +7091,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -6913,7 +7185,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -7003,7 +7279,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -7094,7 +7374,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -7167,7 +7451,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -7215,7 +7503,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -7306,7 +7598,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -7397,7 +7693,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -7488,7 +7788,11 @@
 				"tags": [
 					"Credentials"
 				],
-				"security": [],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
