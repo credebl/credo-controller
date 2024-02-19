@@ -173,7 +173,7 @@ export class DidController extends Controller {
   @Post('/did/key')
   public async createDidKey(
     @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const did = await this.agent.dids.create<KeyDidCreateOptions>({
@@ -204,7 +204,7 @@ export class DidController extends Controller {
   @Post('/did/web')
   public async createDidWeb(
     @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const domain = didOptions.domain ? didOptions.domain : 'credebl.github.io'
