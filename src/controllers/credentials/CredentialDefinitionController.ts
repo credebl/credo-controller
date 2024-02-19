@@ -37,7 +37,7 @@ export class CredentialDefinitionController extends Controller {
     @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
     @Res() badRequestError: TsoaResponse<400, { reason: string }>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       return await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
@@ -75,7 +75,7 @@ export class CredentialDefinitionController extends Controller {
       endorserDid?: string
     },
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
@@ -95,7 +95,7 @@ export class CredentialDefinitionController extends Controller {
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
           indyCredDefId.namespaceIdentifier,
           indyCredDefId.schemaSeqNo,
-          indyCredDefId.tag,
+          indyCredDefId.tag
         )
 
         if (credentialDefinitionState.state === CredentialEnum.Finished) {
