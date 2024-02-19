@@ -53,7 +53,7 @@ export class CredentialController extends Controller {
   public async getAllCredentials(
     @Query('threadId') threadId?: string,
     @Query('connectionId') connectionId?: string,
-    @Query('state') state?: CredentialState,
+    @Query('state') state?: CredentialState
   ) {
     const credentialRepository = this.agent.dependencyManager.resolve(CredentialRepository)
 
@@ -89,7 +89,7 @@ export class CredentialController extends Controller {
   public async getCredentialById(
     @Path('credentialRecordId') credentialRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const credential = await this.agent.credentials.getById(credentialRecordId)
@@ -116,7 +116,7 @@ export class CredentialController extends Controller {
   public async proposeCredential(
     @Body() proposeCredentialOptions: ProposeCredentialOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const credential = await this.agent.credentials.proposeCredential({
@@ -151,7 +151,7 @@ export class CredentialController extends Controller {
     // @Path('credentialRecordId') credentialRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredentialProposal: AcceptCredentialProposalOptions,
+    @Body() acceptCredentialProposal: AcceptCredentialProposalOptions
   ) {
     try {
       const credential = await this.agent.credentials.acceptProposal({
@@ -183,7 +183,7 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(
     @Body() createOfferOptions: CreateOfferOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const offer = await this.agent.credentials.offerCredential({
@@ -201,7 +201,7 @@ export class CredentialController extends Controller {
   @Post('/create-offer-oob')
   public async createOfferOob(
     @Body() outOfBandOption: CreateOfferOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
@@ -249,7 +249,7 @@ export class CredentialController extends Controller {
   public async acceptOffer(
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions,
+    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
   ) {
     try {
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
@@ -286,7 +286,7 @@ export class CredentialController extends Controller {
   public async acceptRequest(
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions,
+    @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions
   ) {
     try {
       const indyCredentialFormat = new LegacyIndyCredentialFormatService()
@@ -316,7 +316,7 @@ export class CredentialController extends Controller {
   public async acceptCredential(
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredential: AcceptCredential,
+    @Body() acceptCredential: AcceptCredential
   ) {
     try {
       const indyCredentialFormat = new LegacyIndyCredentialFormatService()
