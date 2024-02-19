@@ -1145,8 +1145,7 @@ export class MultiTenancyController extends Controller {
             useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
-          credentialRecordId: offerOob.credentialRecord.id,
-          credentialThId: offerOob.credentialRecord.threadId,
+          credentialRecordThId: offerOob.credentialRecord.threadId,
           credentialMessageId: offerOob.message.thread?.threadId
             ? offerOob.message.thread?.threadId
             : offerOob.message.threadId
@@ -1348,8 +1347,7 @@ export class MultiTenancyController extends Controller {
             useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
-          proofId: proof.proofRecord.id,
-          proofThreadId: proof.proofRecord.threadId,
+          proofRecordThId: proof.proofRecord.threadId,
           proofMessageId: proof.message.thread?.threadId
             ? proof.message.thread?.threadId
             : proof.message.threadId
