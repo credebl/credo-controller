@@ -1,25 +1,58 @@
-
-import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, W3cCredentialsModule, KeyDidRegistrar, KeyDidResolver, CacheModule, InMemoryLruCache, WebDidResolver ,PresentationExchangeProofFormatService} from '@aries-framework/core'
+import type { InitConfig } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
+import type { IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
 
-import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
+import {
+  AnonCredsCredentialFormatService,
+  AnonCredsModule,
+  AnonCredsProofFormatService,
+  LegacyIndyCredentialFormatService,
+  LegacyIndyProofFormatService,
+  V1CredentialProtocol,
+  V1ProofProtocol,
+} from '@aries-framework/anoncreds'
+import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
+import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
+import {
+  AutoAcceptCredential,
+  AutoAcceptProof,
+  DidsModule,
+  ProofsModule,
+  V2ProofProtocol,
+  CredentialsModule,
+  V2CredentialProtocol,
+  ConnectionsModule,
+  W3cCredentialsModule,
+  KeyDidRegistrar,
+  KeyDidResolver,
+  CacheModule,
+  InMemoryLruCache,
+  WebDidResolver,
+  PresentationExchangeProofFormatService,
+  HttpOutboundTransport,
+  WsOutboundTransport,
+  LogLevel,
+  Agent,
+  JsonLdCredentialFormatService,
+} from '@aries-framework/core'
+import {
+  IndyVdrAnonCredsRegistry,
+  IndyVdrIndyDidResolver,
+  IndyVdrModule,
+  IndyVdrIndyDidRegistrar,
+} from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
+import { TenantsModule } from '@aries-framework/tenants'
+import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
+import axios from 'axios'
+import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
+import jwt from 'jsonwebtoken'
+
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
-import { randomBytes, randomUUID } from 'crypto'
-import { TenantsModule } from '@aries-framework/tenants'
-import { JsonLdCredentialFormatService } from '@aries-framework/core'
-import { W3cCredentialSchema, W3cCredentialsApi, W3cCredentialService, W3cJsonLdVerifyCredentialOptions } from '@aries-framework/core'
-import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
-import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
-import { IndyVdrAnonCredsRegistry, IndyVdrIndyDidResolver, IndyVdrModule, IndyVdrPoolConfig, IndyVdrIndyDidRegistrar } from '@aries-framework/indy-vdr'
-import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { anoncreds } from '@hyperledger/anoncreds-nodejs'
-import axios from 'axios';
-import jwt from 'jsonwebtoken';
 import { BCOVRIN_TEST_GENESIS } from './utils/util'
 
 export type Transports = 'ws' | 'http'
@@ -73,17 +106,6 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
-
-const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
-  const modules = getModules(networkConfig)
-  return {
-    tenants: new TenantsModule<typeof modules>({
-      sessionLimit: Infinity
-    }),
-    ...modules
-  }
-}
-
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
@@ -99,7 +121,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     indyVdr: new IndyVdrModule({
       indyVdr,
-      networks: networkConfig
+      networks: networkConfig,
     }),
 
     dids: new DidsModule({
@@ -134,16 +156,29 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
           indyCredentialFormat: legacyIndyCredentialFormat,
         }),
         new V2CredentialProtocol({
-          credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService, anonCredsCredentialFormatService],
+          credentialFormats: [
+            legacyIndyCredentialFormat,
+            jsonLdCredentialFormatService,
+            anonCredsCredentialFormatService,
+          ],
         }),
       ],
     }),
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
-      cache: new InMemoryLruCache({ limit: Infinity })
-    })
+      cache: new InMemoryLruCache({ limit: Infinity }),
+    }),
   }
+}
 
+const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+  const modules = getModules(networkConfig)
+  return {
+    tenants: new TenantsModule<typeof modules>({
+      sessionLimit: Infinity,
+    }),
+    ...modules,
+  }
 }
 
 async function generateSecretKey(length: number = 32): Promise<string> {
@@ -165,7 +200,15 @@ async function generateSecretKey(length: number = 32): Promise<string> {
 }
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
-  const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
+  const {
+    logLevel,
+    inboundTransports = [],
+    outboundTransports = [],
+    webhookUrl,
+    adminPort,
+    walletConfig,
+    ...afjConfig
+  } = restConfig
 
   const logger = new TsLogger(logLevel ?? LogLevel.error)
 
@@ -173,51 +216,53 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     walletConfig: {
       id: walletConfig.id,
       key: walletConfig.key,
-      storage: walletConfig.storage
+      storage: walletConfig.storage,
     },
     ...afjConfig,
-    logger
-  };
+    logger,
+  }
 
   async function fetchLedgerData(ledgerConfig: any): Promise<IndyVdrPoolConfig> {
-    const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
+    const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/
 
     if (!urlPattern.test(ledgerConfig.genesisTransactions)) {
-      throw new Error('Not a valid URL');
+      throw new Error('Not a valid URL')
     }
 
-    const genesisTransactions = await axios.get(ledgerConfig.genesisTransactions);
+    const genesisTransactions = await axios.get(ledgerConfig.genesisTransactions)
 
     const networkConfig: IndyVdrPoolConfig = {
       genesisTransactions: genesisTransactions.data,
       indyNamespace: ledgerConfig.indyNamespace,
       isProduction: false,
       connectOnStartup: true,
-    };
+    }
 
     if (ledgerConfig.indyNamespace.includes('indicio')) {
-
       if (ledgerConfig.indyNamespace === 'indicio:testnet' || ledgerConfig.indyNamespace === 'indicio:mainnet') {
         networkConfig.transactionAuthorAgreement = {
           version: '1.0',
           acceptanceMechanism: 'wallet_agreement',
-        };
+        }
       } else {
         networkConfig.transactionAuthorAgreement = {
           version: '1.3',
           acceptanceMechanism: 'wallet_agreement',
-        };
+        }
       }
     }
 
-    return networkConfig;
+    return networkConfig
   }
 
-  let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]];
+  let networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]
 
-  const parseIndyLedger = afjConfig?.indyLedger;
+  const parseIndyLedger = afjConfig?.indyLedger
   if (parseIndyLedger.length !== 0) {
-    networkConfig = [await fetchLedgerData(parseIndyLedger[0]), ...await Promise.all(parseIndyLedger.slice(1).map(fetchLedgerData))];
+    networkConfig = [
+      await fetchLedgerData(parseIndyLedger[0]),
+      ...(await Promise.all(parseIndyLedger.slice(1).map(fetchLedgerData))),
+    ]
   } else {
     networkConfig = [
       {
@@ -226,7 +271,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         isProduction: false,
         connectOnStartup: true,
       },
-    ];
+    ]
   }
 
   const tenantModule = await getWithTenantModules(networkConfig)
@@ -236,13 +281,13 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     modules: {
       ...(afjConfig.tenancy
         ? {
-          ...tenantModule
-        }
+            ...tenantModule,
+          }
         : {}),
       ...modules,
     },
     dependencies: agentDependencies,
-  });
+  })
 
   // Register outbound transports
   for (const outboundTransport of outboundTransports) {
@@ -255,7 +300,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     const InboundTransport = inboundTransportMapping[inboundTransport.transport]
     agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }))
   }
-
 
   await agent.initialize()
 
