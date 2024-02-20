@@ -15,7 +15,7 @@ import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Security, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
 
 @Tags('Dids')
 @Route('/dids')

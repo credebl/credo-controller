@@ -38,6 +38,8 @@ WORKDIR /www
 COPY bin ./bin
 COPY patches ./patches
 COPY package.json ./package.json
+COPY patches ./patches
+
 RUN yarn install --production
 
 COPY build ./build

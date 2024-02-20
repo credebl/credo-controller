@@ -1,4 +1,4 @@
-import type { RestMultiTenantAgentModules, RestAgentModules } from '../../cliAgent'
+import type { RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
 import type {
   AnonCredsCredentialFormatService,
@@ -23,6 +23,7 @@ import type {
   DidsModule,
   JsonLdCredentialFormatService,
   KeyDidCreateOptions,
+  OutOfBandRecord,
   ProofExchangeRecordProps,
   ProofsModule,
   ProofsProtocolVersionType,
@@ -49,7 +50,6 @@ import {
   CredentialRepository,
   CredentialState,
   DidDocumentBuilder,
-  DidDocumentService,
   DidExchangeState,
   HandshakeProtocol,
   JsonTransformer,
@@ -75,7 +75,6 @@ import {
   DidCreate,
   DidNymTransaction,
   EndorserTransaction,
-  GetTenantAgentOptions,
   ReceiveInvitationByUrlProps,
   ReceiveInvitationProps,
   WriteTransaction,
@@ -113,31 +112,33 @@ export class MultiTenancyController extends Controller {
   public async createTenant(
     @Body() createTenantOptions: CreateTenantOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     const { config } = createTenantOptions
     const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config })
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantRecord.id })
+    let didRes
     try {
-      createTenantOptions.role = createTenantOptions.role || 'endorser'
-      createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet'
-      const didMethod = `did:indy:${createTenantOptions.method}`
+      await this.agent.modules.tenants.withTenantAgent({ tenantId: tenantRecord.id }, async (tenantAgent) => {
+        createTenantOptions.role = createTenantOptions.role || 'endorser'
+        createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet'
+        const didMethod = `did:indy:${createTenantOptions.method}`
 
-      let result
+        let result
+        if (createTenantOptions.method.includes('bcovrin')) {
+          result = await this.handleBcovrin(createTenantOptions, tenantAgent, didMethod)
+        } else if (createTenantOptions.method.includes('indicio')) {
+          result = await this.handleIndicio(createTenantOptions, tenantAgent, didMethod)
+        } else if (createTenantOptions.method === 'key') {
+          result = await this.handleKey(createTenantOptions)
+        } else if (createTenantOptions.method === 'web') {
+          result = await this.handleWeb(createTenantOptions)
+        } else {
+          return internalServerError(500, { message: `Invalid method: ${createTenantOptions.method}` })
+        }
+        didRes = { tenantRecord, ...result }
+      })
 
-      if (createTenantOptions.method.includes('bcovrin')) {
-        result = await this.handleBcovrin(createTenantOptions, tenantAgent, didMethod)
-      } else if (createTenantOptions.method.includes('indicio')) {
-        result = await this.handleIndicio(createTenantOptions, tenantAgent, didMethod)
-      } else if (createTenantOptions.method === 'key') {
-        result = await this.handleKey(createTenantOptions)
-      } else if (createTenantOptions.method === 'web') {
-        result = await this.handleWeb(createTenantOptions)
-      } else {
-        return internalServerError(500, { message: `Invalid method: ${createTenantOptions.method}` })
-      }
-
-      return { tenantRecord, ...result }
+      return didRes
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
@@ -151,8 +152,28 @@ export class MultiTenancyController extends Controller {
 
   private async handleBcovrin(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<RestAgentModules>,
-    didMethod: string
+    tenantAgent: TenantAgent<{
+      askar: AskarModule
+      indyVdr: IndyVdrModule
+      dids: DidsModule
+      anoncreds: AnonCredsModule
+      _anoncreds: AnonCredsRsModule
+      connections: ConnectionsModule
+      proofs: ProofsModule<
+        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
+      >
+      credentials: CredentialsModule<
+        (
+          | V1CredentialProtocol
+          | V2CredentialProtocol<
+              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
+            >
+        )[]
+      >
+      w3cCredentials: W3cCredentialsModule
+      cache: CacheModule
+    }>,
+    didMethod: string,
   ) {
     if (createTenantOptions.did) {
       await this.importDid(didMethod, createTenantOptions.did, createTenantOptions.seed, tenantAgent)
@@ -196,8 +217,28 @@ export class MultiTenancyController extends Controller {
 
   private async handleIndicio(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<RestAgentModules>,
-    didMethod: string
+    tenantAgent: TenantAgent<{
+      askar: AskarModule
+      indyVdr: IndyVdrModule
+      dids: DidsModule
+      anoncreds: AnonCredsModule
+      _anoncreds: AnonCredsRsModule
+      connections: ConnectionsModule
+      proofs: ProofsModule<
+        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
+      >
+      credentials: CredentialsModule<
+        (
+          | V1CredentialProtocol
+          | V2CredentialProtocol<
+              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
+            >
+        )[]
+      >
+      w3cCredentials: W3cCredentialsModule
+      cache: CacheModule
+    }>,
+    didMethod: string,
   ) {
     if (createTenantOptions.did) {
       return await this.handleDidCreation(createTenantOptions, tenantAgent, didMethod)
@@ -233,7 +274,7 @@ export class MultiTenancyController extends Controller {
       w3cCredentials: W3cCredentialsModule
       cache: CacheModule
     }>,
-    didMethod: string
+    didMethod: string,
   ) {
     await this.importDid(didMethod, createTenantOptions?.did as string, createTenantOptions.seed, tenantAgent)
     const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createTenantOptions.did}`)
@@ -246,8 +287,28 @@ export class MultiTenancyController extends Controller {
 
   private async handleEndorserCreation(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<RestAgentModules>,
-    didMethod: string
+    tenantAgent: TenantAgent<{
+      askar: AskarModule
+      indyVdr: IndyVdrModule
+      dids: DidsModule
+      anoncreds: AnonCredsModule
+      _anoncreds: AnonCredsRsModule
+      connections: ConnectionsModule
+      proofs: ProofsModule<
+        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
+      >
+      credentials: CredentialsModule<
+        (
+          | V1CredentialProtocol
+          | V2CredentialProtocol<
+              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
+            >
+        )[]
+      >
+      w3cCredentials: W3cCredentialsModule
+      cache: CacheModule
+    }>,
+    didMethod: string,
   ) {
     const key = await this.agent.wallet.createKey({
       privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
@@ -284,7 +345,27 @@ export class MultiTenancyController extends Controller {
 
   private async handleIndyDidCreation(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<RestAgentModules>
+    tenantAgent: TenantAgent<{
+      askar: AskarModule
+      indyVdr: IndyVdrModule
+      dids: DidsModule
+      anoncreds: AnonCredsModule
+      _anoncreds: AnonCredsRsModule
+      connections: ConnectionsModule
+      proofs: ProofsModule<
+        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
+      >
+      credentials: CredentialsModule<
+        (
+          | V1CredentialProtocol
+          | V2CredentialProtocol<
+              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
+            >
+        )[]
+      >
+      w3cCredentials: W3cCredentialsModule
+      cache: CacheModule
+    }>,
   ) {
     const didCreateTxResult = await tenantAgent.dids.create({
       method: 'indy',
@@ -362,7 +443,7 @@ export class MultiTenancyController extends Controller {
           privateKeys: { keyType: KeyType; privateKey: Buffer }[]
         }) => any
       }
-    }
+    },
   ) {
     await tenantAgent.dids.import({
       did: `${didMethod}:${did}`,
@@ -381,22 +462,24 @@ export class MultiTenancyController extends Controller {
   public async didNymTransaction(
     @Path('tenantId') tenantId: string,
     @Body() didNymTransaction: DidNymTransaction,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantId })
+    let didCreateSubmitResult
     try {
-      const didCreateSubmitResult = await tenantAgent.dids.create({
-        did: didNymTransaction.did,
-        options: {
-          endorserMode: 'external',
-          endorsedTransaction: {
-            nymRequest: didNymTransaction.nymRequest,
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        didCreateSubmitResult = await tenantAgent.dids.create({
+          did: didNymTransaction.did,
+          options: {
+            endorserMode: 'external',
+            endorsedTransaction: {
+              nymRequest: didNymTransaction.nymRequest,
+            },
           },
-        },
-      })
-      await tenantAgent.dids.import({
-        did: didNymTransaction.did,
-        overwrite: true,
+        })
+        await tenantAgent.dids.import({
+          did: didNymTransaction.did,
+          overwrite: true,
+        })
       })
 
       return didCreateSubmitResult
@@ -411,14 +494,16 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Body() endorserTransaction: EndorserTransaction,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>
+    @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let signedTransaction
     try {
-      const signedTransaction = await tenantAgent.modules.indyVdr.endorseTransaction(
-        endorserTransaction.transaction,
-        endorserTransaction.endorserDid
-      )
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        signedTransaction = await tenantAgent.modules.indyVdr.endorseTransaction(
+          endorserTransaction.transaction,
+          endorserTransaction.endorserDid,
+        )
+      })
 
       return { signedTransaction }
     } catch (error) {
@@ -440,14 +525,18 @@ export class MultiTenancyController extends Controller {
   public async getConnectionById(
     @Path('tenantId') tenantId: string,
     @Path('connectionId') connectionId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
-    const connection = await tenantAgent.connections.findById(connectionId)
+    let connectionRecord
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      const connection = await tenantAgent.connections.findById(connectionId)
 
-    if (!connection) return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+      if (!connection)
+        return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+      connectionRecord = connection.toJSON()
+    })
 
-    return connection.toJSON()
+    return connectionRecord
   }
 
   @Security('apiKey')
@@ -455,20 +544,22 @@ export class MultiTenancyController extends Controller {
   public async createInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
-    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
+    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'>, // props removed because of issues with serialization
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let outOfBandRecord: OutOfBandRecord | undefined
     try {
-      const outOfBandRecord = await tenantAgent.oob.createInvitation(config)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        outOfBandRecord = await tenantAgent.oob.createInvitation(config)
+      })
 
       return {
-        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+        invitationUrl: outOfBandRecord?.outOfBandInvitation.toUrl({
           domain: this.agent.config.endpoints[0],
         }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+        invitation: outOfBandRecord?.outOfBandInvitation.toJSON({
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
+        outOfBandRecord: outOfBandRecord?.toJSON(),
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -480,22 +571,25 @@ export class MultiTenancyController extends Controller {
   public async createLegacyInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
-    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
+    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'>, // props removed because of issues with serialization
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let getInvitation
     try {
-      const { outOfBandRecord, invitation } = await tenantAgent.oob.createLegacyInvitation(config)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const { outOfBandRecord, invitation } = await tenantAgent.oob.createLegacyInvitation(config)
+        getInvitation = {
+          invitationUrl: invitation.toUrl({
+            domain: this.agent.config.endpoints[0],
+            useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          }),
+          invitation: invitation.toJSON({
+            useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          }),
+          outOfBandRecord: outOfBandRecord.toJSON(),
+        }
+      })
 
-      return {
-        invitationUrl: invitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        invitation: invitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-      }
+      return getInvitation
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -506,18 +600,21 @@ export class MultiTenancyController extends Controller {
   public async receiveInvitation(
     @Body() invitationRequest: ReceiveInvitationProps,
     @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let receiveInvitationRes
     try {
-      const { invitation, ...config } = invitationRequest
-      const invite = new OutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols })
-      const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitation(invite, config)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const { invitation, ...config } = invitationRequest
+        const invite = new OutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols })
+        const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitation(invite, config)
+        receiveInvitationRes = {
+          outOfBandRecord: outOfBandRecord.toJSON(),
+          connectionRecord: connectionRecord?.toJSON(),
+        }
+      })
 
-      return {
-        outOfBandRecord: outOfBandRecord.toJSON(),
-        connectionRecord: connectionRecord?.toJSON(),
-      }
+      return receiveInvitationRes
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -528,20 +625,23 @@ export class MultiTenancyController extends Controller {
   public async receiveInvitationFromUrl(
     @Body() invitationRequest: ReceiveInvitationByUrlProps,
     @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let receiveInvitationUrl
     try {
-      const { invitationUrl, ...config } = invitationRequest
-      const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(
-        invitationUrl,
-        config
-      )
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const { invitationUrl, ...config } = invitationRequest
+        const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(
+          invitationUrl,
+          config,
+        )
+        receiveInvitationUrl = {
+          outOfBandRecord: outOfBandRecord.toJSON(),
+          connectionRecord: connectionRecord?.toJSON(),
+        }
+      })
 
-      return {
-        outOfBandRecord: outOfBandRecord.toJSON(),
-        connectionRecord: connectionRecord?.toJSON(),
-      }
+      return receiveInvitationUrl
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -552,16 +652,20 @@ export class MultiTenancyController extends Controller {
   public async getAllOutOfBandRecords(
     @Path('tenantId') tenantId: string,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Path('invitationId') invitationId?: string
+    @Path('invitationId') invitationId?: string,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let outOfBandRecordsRes
     try {
-      let outOfBandRecords = await tenantAgent.oob.getAll()
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        let outOfBandRecords
+        outOfBandRecords = await tenantAgent.oob.getAll()
 
-      if (invitationId)
-        outOfBandRecords = outOfBandRecords.filter((o: any) => o.outOfBandInvitation.id === invitationId)
+        if (invitationId)
+          outOfBandRecords = outOfBandRecords.filter((o: any) => o.outOfBandInvitation.id === invitationId)
+        outOfBandRecordsRes = outOfBandRecords.map((c: any) => c.toJSON())
+      })
 
-      return outOfBandRecords.map((c: any) => c.toJSON())
+      return outOfBandRecordsRes
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -577,26 +681,28 @@ export class MultiTenancyController extends Controller {
     @Query('state') state?: DidExchangeState,
     @Query('myDid') myDid?: string,
     @Query('theirDid') theirDid?: string,
-    @Query('theirLabel') theirLabel?: string
+    @Query('theirLabel') theirLabel?: string,
   ) {
-    let connections
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let connectionRecord
     try {
-      if (outOfBandId) {
-        connections = await tenantAgent.connections.findAllByOutOfBandId(outOfBandId)
-      } else {
-        const connectionRepository = tenantAgent.dependencyManager.resolve(ConnectionRepository)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if (outOfBandId) {
+          connectionRecord = await tenantAgent.connections.findAllByOutOfBandId(outOfBandId)
+        } else {
+          const connectionRepository = tenantAgent.dependencyManager.resolve(ConnectionRepository)
 
-        connections = await connectionRepository.findByQuery(tenantAgent.context, {
-          alias,
-          myDid,
-          theirDid,
-          theirLabel,
-          state,
-        })
+          const connections = await connectionRepository.findByQuery(tenantAgent.context, {
+            alias,
+            myDid,
+            theirDid,
+            theirLabel,
+            state,
+          })
 
-        return connections.map((c: any) => c.toJSON())
-      }
+          connectionRecord = connections.map((c: any) => c.toJSON())
+        }
+      })
+      return connectionRecord
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -606,16 +712,17 @@ export class MultiTenancyController extends Controller {
   public async getInvitation(
     @Path('invitationId') invitationId: string,
     @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
-    const outOfBandRecord = await tenantAgent.oob.findByCreatedInvitationId(invitationId)
+    let invitationJson
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      const outOfBandRecord = await tenantAgent.oob.findByCreatedInvitationId(invitationId)
 
-    if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
-      return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
+      if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
+        return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
 
-    const invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
-
+      invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
+    })
     return invitationJson
   }
 
@@ -633,59 +740,63 @@ export class MultiTenancyController extends Controller {
     },
     @Path('tenantId') tenantId: string,
     @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let schemaRecord
     try {
-      if (!schema.endorse) {
-        const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
-          schema: {
-            issuerId: schema.issuerId,
-            name: schema.name,
-            version: schema.version,
-            attrNames: schema.attributes,
-          },
-          options: {
-            endorserMode: 'internal',
-            endorserDid: schema.issuerId,
-          },
-        })
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if (!schema.endorse) {
+          const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
+            schema: {
+              issuerId: schema.issuerId,
+              name: schema.name,
+              version: schema.version,
+              attrNames: schema.attributes,
+            },
+            options: {
+              endorserMode: 'internal',
+              endorserDid: schema.issuerId,
+            },
+          })
 
-        if (!schemaState.schemaId) {
-          throw Error('SchemaId not found')
+          if (!schemaState.schemaId) {
+            throw Error('SchemaId not found')
+          }
+
+          const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+          const getSchemaId = await getUnqualifiedSchemaId(
+            indySchemaId.namespaceIdentifier,
+            indySchemaId.schemaName,
+            indySchemaId.schemaVersion,
+          )
+          if (schemaState.state === CredentialEnum.Finished) {
+            schemaState.schemaId = getSchemaId
+          }
+
+          schemaRecord = schemaState
+        } else {
+          if (!schema.endorserDid) {
+            throw new Error('Please provide the endorser DID')
+          }
+
+          const createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
+            options: {
+              endorserMode: 'external',
+              endorserDid: schema.endorserDid ? schema.endorserDid : '',
+            },
+            schema: {
+              attrNames: schema.attributes,
+              issuerId: schema.issuerId,
+              name: schema.name,
+              version: schema.version,
+            },
+          })
+
+          schemaRecord = createSchemaTxResult
         }
+      })
 
-        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
-        const getSchemaId = await getUnqualifiedSchemaId(
-          indySchemaId.namespaceIdentifier,
-          indySchemaId.schemaName,
-          indySchemaId.schemaVersion
-        )
-        if (schemaState.state === CredentialEnum.Finished) {
-          schemaState.schemaId = getSchemaId
-        }
-
-        return schemaState
-      } else {
-        if (!schema.endorserDid) {
-          throw new Error('Please provide the endorser DID')
-        }
-
-        const createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
-          options: {
-            endorserMode: 'external',
-            endorserDid: schema.endorserDid ? schema.endorserDid : '',
-          },
-          schema: {
-            attrNames: schema.attributes,
-            issuerId: schema.issuerId,
-            name: schema.name,
-            version: schema.version,
-          },
-        })
-
-        return createSchemaTxResult
-      }
+      return schemaRecord
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
@@ -706,21 +817,21 @@ export class MultiTenancyController extends Controller {
     @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body()
-    writeTransaction: WriteTransaction
+    writeTransaction: WriteTransaction,
   ) {
     try {
       if (writeTransaction.schema) {
         const writeSchema = await this.submitSchemaOnLedger(
           writeTransaction.schema,
           writeTransaction.endorsedTransaction,
-          tenantId
+          tenantId,
         )
         return writeSchema
       } else if (writeTransaction.credentialDefinition) {
         const writeCredDef = await this.submitCredDefOnLedger(
           writeTransaction.credentialDefinition,
           writeTransaction.endorsedTransaction,
-          tenantId
+          tenantId,
         )
         return writeCredDef
       } else {
@@ -746,10 +857,10 @@ export class MultiTenancyController extends Controller {
       attributes: string[]
     },
     endorsedTransaction: string,
-    tenantId: string
+    tenantId: string,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
-    try {
+    let schemaRecord
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
       const { issuerId, name, version, attributes } = schema
       const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
         options: {
@@ -772,16 +883,14 @@ export class MultiTenancyController extends Controller {
       const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
         indySchemaId.namespaceIdentifier,
         indySchemaId.schemaName,
-        indySchemaId.schemaVersion
+        indySchemaId.schemaVersion,
       )
       if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
         schemaState.schemaId = getSchemaUnqualifiedId
       }
-
-      return schemaState
-    } catch (error) {
-      return error
-    }
+      schemaRecord = schemaState
+    })
+    return schemaRecord
   }
 
   public async submitCredDefOnLedger(
@@ -793,10 +902,10 @@ export class MultiTenancyController extends Controller {
       type: string
     },
     endorsedTransaction: string,
-    tenantId: string
+    tenantId: string,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
-    try {
+    let credentialDefinitionRecord
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
       const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
         credentialDefinition,
         options: {
@@ -813,7 +922,7 @@ export class MultiTenancyController extends Controller {
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
         indyCredDefId.namespaceIdentifier,
         indyCredDefId.schemaSeqNo,
-        indyCredDefId.tag
+        indyCredDefId.tag,
       )
       if (
         credentialDefinitionState.state === CredentialEnum.Finished ||
@@ -822,10 +931,9 @@ export class MultiTenancyController extends Controller {
         credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
       }
 
-      return credentialDefinitionState
-    } catch (error) {
-      return error
-    }
+      credentialDefinitionRecord = credentialDefinitionState
+    })
+    return credentialDefinitionRecord
   }
 
   @Security('apiKey')
@@ -836,11 +944,13 @@ export class MultiTenancyController extends Controller {
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() forbiddenError: TsoaResponse<403, { reason: string }>,
     @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let getSchema
     try {
-      const getSchema = await tenantAgent.modules.anoncreds.getSchema(schemaId)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        getSchema = await tenantAgent.modules.anoncreds.getSchema(schemaId)
+      })
 
       return getSchema
     } catch (error) {
@@ -878,53 +988,57 @@ export class MultiTenancyController extends Controller {
     },
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let credentialDefinitionRecord
     try {
-      credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse
-        ? credentialDefinitionRequest.endorse
-        : false
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse
+          ? credentialDefinitionRequest.endorse
+          : false
 
-      if (!credentialDefinitionRequest.endorse) {
-        const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
-          credentialDefinition: {
-            issuerId: credentialDefinitionRequest.issuerId,
-            schemaId: credentialDefinitionRequest.schemaId,
-            tag: credentialDefinitionRequest.tag,
-          },
-          options: {},
-        })
-        if (!credentialDefinitionState?.credentialDefinitionId) {
-          throw new Error('Credential Definition Id not found')
+        if (!credentialDefinitionRequest.endorse) {
+          const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+            credentialDefinition: {
+              issuerId: credentialDefinitionRequest.issuerId,
+              schemaId: credentialDefinitionRequest.schemaId,
+              tag: credentialDefinitionRequest.tag,
+            },
+            options: {},
+          })
+          if (!credentialDefinitionState?.credentialDefinitionId) {
+            throw new Error('Credential Definition Id not found')
+          }
+          const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+          const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+            indyCredDefId.namespaceIdentifier,
+            indyCredDefId.schemaSeqNo,
+            indyCredDefId.tag,
+          )
+          if (credentialDefinitionState.state === CredentialEnum.Finished) {
+            credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
+          }
+
+          credentialDefinitionRecord = credentialDefinitionState
+        } else {
+          const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
+            credentialDefinition: {
+              issuerId: credentialDefinitionRequest.issuerId,
+              tag: credentialDefinitionRequest.tag,
+              schemaId: credentialDefinitionRequest.schemaId,
+              type: 'CL',
+            },
+            options: {
+              endorserMode: 'external',
+              endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
+            },
+          })
+
+          credentialDefinitionRecord = createCredDefTxResult
         }
-        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
-        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
-          indyCredDefId.namespaceIdentifier,
-          indyCredDefId.schemaSeqNo,
-          indyCredDefId.tag
-        )
-        if (credentialDefinitionState.state === CredentialEnum.Finished) {
-          credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
-        }
+      })
 
-        return credentialDefinitionState
-      } else {
-        const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
-          credentialDefinition: {
-            issuerId: credentialDefinitionRequest.issuerId,
-            tag: credentialDefinitionRequest.tag,
-            schemaId: credentialDefinitionRequest.schemaId,
-            type: 'CL',
-          },
-          options: {
-            endorserMode: 'external',
-            endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
-          },
-        })
-
-        return createCredDefTxResult
-      }
+      return credentialDefinitionRecord
     } catch (error) {
       if (error instanceof notFoundError) {
         return notFoundError(404, {
@@ -943,11 +1057,13 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Res() badRequestError: TsoaResponse<400, { reason: string }>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let getCredDef
     try {
-      const getCredDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        getCredDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
+      })
 
       return getCredDef
     } catch (error) {
@@ -962,6 +1078,7 @@ export class MultiTenancyController extends Controller {
           })
         }
       }
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -971,16 +1088,19 @@ export class MultiTenancyController extends Controller {
   public async createOffer(
     @Body() createOfferOptions: CreateOfferOptions,
     @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let offer
     try {
-      const offer = await tenantAgent.credentials.offerCredential({
-        connectionId: createOfferOptions.connectionId,
-        protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
-        credentialFormats: createOfferOptions.credentialFormats,
-        autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        offer = await tenantAgent.credentials.offerCredential({
+          connectionId: createOfferOptions.connectionId,
+          protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
+          credentialFormats: createOfferOptions.credentialFormats,
+          autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+        })
       })
+
       return offer
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -992,39 +1112,48 @@ export class MultiTenancyController extends Controller {
   public async createOfferOob(
     @Path('tenantId') tenantId: string,
     @Body() createOfferOptions: CreateOfferOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let createOfferOobRecord
     try {
-      const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
-      if (linkSecretIds.length === 0) {
-        await tenantAgent.modules.anoncreds.createLinkSecret()
-      }
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
+        if (linkSecretIds.length === 0) {
+          await tenantAgent.modules.anoncreds.createLinkSecret()
+        }
 
-      const offerOob = await tenantAgent.credentials.createOffer({
-        protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
-        credentialFormats: createOfferOptions.credentialFormats,
-        autoAcceptCredential: createOfferOptions.autoAcceptCredential,
-        comment: createOfferOptions.comment,
+        const offerOob = await tenantAgent.credentials.createOffer({
+          protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
+          credentialFormats: createOfferOptions.credentialFormats,
+          autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+          comment: createOfferOptions.comment,
+        })
+
+        const credentialMessage = offerOob.message
+        const outOfBandRecord = await tenantAgent.oob.createInvitation({
+          label: createOfferOptions.label,
+          handshakeProtocols: [HandshakeProtocol.Connections],
+          messages: [credentialMessage],
+          autoAcceptConnection: true,
+        })
+
+        createOfferOobRecord = {
+          invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+            domain: this.agent.config.endpoints[0],
+          }),
+          invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+            useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          }),
+          outOfBandRecord: outOfBandRecord.toJSON(),
+          credentialRecordThId: offerOob.credentialRecord.threadId,
+          credentialMessageId: offerOob.message.thread?.threadId
+            ? offerOob.message.thread?.threadId
+            : offerOob.message.threadId
+              ? offerOob.message.thread
+              : offerOob.message.id,
+        }
       })
-
-      const credentialMessage = offerOob.message
-      const outOfBandRecord = await tenantAgent.oob.createInvitation({
-        label: createOfferOptions.label,
-        handshakeProtocols: [HandshakeProtocol.Connections],
-        messages: [credentialMessage],
-        autoAcceptConnection: true,
-      })
-
-      return {
-        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-        }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-      }
+      return createOfferOobRecord
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -1036,19 +1165,21 @@ export class MultiTenancyController extends Controller {
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
-    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
+    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let acceptOffer
     try {
-      const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
-      if (linkSecretIds.length === 0) {
-        await tenantAgent.modules.anoncreds.createLinkSecret()
-      }
-      const acceptOffer = await tenantAgent.credentials.acceptOffer({
-        credentialRecordId: acceptCredentialOfferOptions.credentialRecordId,
-        credentialFormats: acceptCredentialOfferOptions.credentialFormats,
-        autoAcceptCredential: acceptCredentialOfferOptions.autoAcceptCredential,
-        comment: acceptCredentialOfferOptions.comment,
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
+        if (linkSecretIds.length === 0) {
+          await tenantAgent.modules.anoncreds.createLinkSecret()
+        }
+        acceptOffer = await tenantAgent.credentials.acceptOffer({
+          credentialRecordId: acceptCredentialOfferOptions.credentialRecordId,
+          credentialFormats: acceptCredentialOfferOptions.credentialFormats,
+          autoAcceptCredential: acceptCredentialOfferOptions.autoAcceptCredential,
+          comment: acceptCredentialOfferOptions.comment,
+        })
       })
 
       return acceptOffer
@@ -1058,6 +1189,7 @@ export class MultiTenancyController extends Controller {
           reason: `credential with credential record id "${acceptCredentialOfferOptions.credentialRecordId}" not found.`,
         })
       }
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1068,19 +1200,23 @@ export class MultiTenancyController extends Controller {
     @Path('credentialRecordId') credentialRecordId: RecordId,
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let credentialRecord
     try {
-      const credential = await tenantAgent.credentials.getById(credentialRecordId)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const credential = await tenantAgent.credentials.getById(credentialRecordId)
+        credentialRecord = credential.toJSON()
+      })
 
-      return credential.toJSON()
+      return credentialRecord
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
           reason: `credential with credential record id "${credentialRecordId}" not found.`,
         })
       }
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1091,30 +1227,31 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Query('threadId') threadId?: string,
     @Query('connectionId') connectionId?: string,
-    @Query('state') state?: CredentialState
+    @Query('state') state?: CredentialState,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
-    const credentialRepository = tenantAgent.dependencyManager.resolve(CredentialRepository)
-
-    const credentials = await credentialRepository.findByQuery(tenantAgent.context, {
-      connectionId,
-      threadId,
-      state,
+    let credentialRecord
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      const credentialRepository = tenantAgent.dependencyManager.resolve(CredentialRepository)
+      const credentials = await credentialRepository.findByQuery(tenantAgent.context, {
+        connectionId,
+        threadId,
+        state,
+      })
+      credentialRecord = credentials.map((c: any) => c.toJSON())
     })
-
-    return credentials.map((c: any) => c.toJSON())
+    return credentialRecord
   }
 
   @Security('apiKey')
   @Get('/proofs/:tenantId')
   public async getAllProofs(@Path('tenantId') tenantId: string, @Query('threadId') threadId?: string) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
-
-    let proofs = await tenantAgent.proofs.getAll()
-
-    if (threadId) proofs = proofs.filter((p: any) => p.threadId === threadId)
-
-    return proofs.map((proof: any) => proof.toJSON())
+    let proofRecord
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      let proofs = await tenantAgent.proofs.getAll()
+      if (threadId) proofs = proofs.filter((p: any) => p.threadId === threadId)
+      proofRecord = proofs.map((proof: any) => proof.toJSON())
+    })
+    return proofRecord
   }
 
   @Security('apiKey')
@@ -1124,12 +1261,13 @@ export class MultiTenancyController extends Controller {
     @Path('proofRecordId') proofRecordId: string,
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let proof
     try {
-      const proof = await tenantAgent.proofs.getFormatData(proofRecordId)
-
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        proof = await tenantAgent.proofs.getFormatData(proofRecordId)
+      })
       return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -1137,6 +1275,7 @@ export class MultiTenancyController extends Controller {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1148,21 +1287,23 @@ export class MultiTenancyController extends Controller {
     @Body() requestProofOptions: RequestProofOptions,
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let proof
     try {
-      const requestProofPayload = {
-        connectionId: requestProofOptions.connectionId,
-        protocolVersion: requestProofOptions.protocolVersion as ProofsProtocolVersionType<[]>,
-        comment: requestProofOptions.comment,
-        proofFormats: requestProofOptions.proofFormats,
-        autoAcceptProof: requestProofOptions.autoAcceptProof,
-        goalCode: requestProofOptions.goalCode,
-        parentThreadId: requestProofOptions.parentThreadId,
-        willConfirm: requestProofOptions.willConfirm,
-      }
-      const proof = await tenantAgent.proofs.requestProof(requestProofPayload)
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const requestProofPayload = {
+          connectionId: requestProofOptions.connectionId,
+          protocolVersion: requestProofOptions.protocolVersion as ProofsProtocolVersionType<[]>,
+          comment: requestProofOptions.comment,
+          proofFormats: requestProofOptions.proofFormats,
+          autoAcceptProof: requestProofOptions.autoAcceptProof,
+          goalCode: requestProofOptions.goalCode,
+          parentThreadId: requestProofOptions.parentThreadId,
+          willConfirm: requestProofOptions.willConfirm,
+        }
+        proof = await tenantAgent.proofs.requestProof(requestProofPayload)
+      })
 
       return proof
     } catch (error) {
@@ -1175,37 +1316,47 @@ export class MultiTenancyController extends Controller {
   public async createRequest(
     @Path('tenantId') tenantId: string,
     @Body() createRequestOptions: CreateProofRequestOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let oobProofRecord
     try {
-      const proof = await tenantAgent.proofs.createRequest({
-        protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
-        proofFormats: createRequestOptions.proofFormats,
-        goalCode: createRequestOptions.goalCode,
-        willConfirm: createRequestOptions.willConfirm,
-        parentThreadId: createRequestOptions.parentThreadId,
-        autoAcceptProof: createRequestOptions.autoAcceptProof,
-        comment: createRequestOptions.comment,
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const proof = await tenantAgent.proofs.createRequest({
+          protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
+          proofFormats: createRequestOptions.proofFormats,
+          goalCode: createRequestOptions.goalCode,
+          willConfirm: createRequestOptions.willConfirm,
+          parentThreadId: createRequestOptions.parentThreadId,
+          autoAcceptProof: createRequestOptions.autoAcceptProof,
+          comment: createRequestOptions.comment,
+        })
+
+        const proofMessage = proof.message
+        const outOfBandRecord = await tenantAgent.oob.createInvitation({
+          label: createRequestOptions.label,
+          handshakeProtocols: [HandshakeProtocol.Connections],
+          messages: [proofMessage],
+          autoAcceptConnection: true,
+        })
+
+        oobProofRecord = {
+          invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+            domain: this.agent.config.endpoints[0],
+          }),
+          invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+            useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          }),
+          outOfBandRecord: outOfBandRecord.toJSON(),
+          proofRecordThId: proof.proofRecord.threadId,
+          proofMessageId: proof.message.thread?.threadId
+            ? proof.message.thread?.threadId
+            : proof.message.threadId
+              ? proof.message.thread
+              : proof.message.id,
+        }
       })
 
-      const proofMessage = proof.message
-      const outOfBandRecord = await tenantAgent.oob.createInvitation({
-        label: createRequestOptions.label,
-        handshakeProtocols: [HandshakeProtocol.Connections],
-        messages: [proofMessage],
-        autoAcceptConnection: true,
-      })
-
-      return {
-        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-        }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-      }
+      return oobProofRecord
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -1224,29 +1375,33 @@ export class MultiTenancyController extends Controller {
       comment?: string
     },
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let proofRecord
     try {
-      const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
-        proofRecordId,
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
+          proofRecordId,
+        })
+
+        const acceptProofRequest: AcceptProofRequestOptions = {
+          proofRecordId,
+          comment: request.comment,
+          proofFormats: requestedCredentials.proofFormats,
+        }
+
+        const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
+
+        proofRecord = proof.toJSON()
       })
-
-      const acceptProofRequest: AcceptProofRequestOptions = {
-        proofRecordId,
-        comment: request.comment,
-        proofFormats: requestedCredentials.proofFormats,
-      }
-
-      const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
-
-      return proof.toJSON()
+      return proofRecord
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1258,11 +1413,13 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Path('proofRecordId') proofRecordId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let proof
     try {
-      const proof = await tenantAgent.proofs.acceptPresentation({ proofRecordId })
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        proof = await tenantAgent.proofs.acceptPresentation({ proofRecordId })
+      })
 
       return proof
     } catch (error) {
@@ -1271,6 +1428,7 @@ export class MultiTenancyController extends Controller {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1282,60 +1440,23 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Path('proofRecordId') proofRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId })
+    let proofRecord
     try {
-      const proof = await tenantAgent.proofs.getById(proofRecordId)
-
-      return proof.toJSON()
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const proof = await tenantAgent.proofs.getById(proofRecordId)
+        proofRecord = proof.toJSON()
+      })
+      return proofRecord
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
           reason: `proof with proofRecordId "${proofRecordId}" not found.`,
         })
       }
+
       return internalServerError(500, { message: `something went wrong: ${error}` })
-    }
-  }
-
-  @Security('apiKey')
-  @Get(':tenantId')
-  public async getTenantById(
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    try {
-      const tenantAgent = await this.agent.modules.tenants.getTenantById(tenantId)
-      return tenantAgent
-    } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `Tenant with id: ${tenantId} not found.`,
-        })
-      }
-      return internalServerError(500, { message: `Something went wrong: ${error}` })
-    }
-  }
-
-  @Security('apiKey')
-  @Post('tenant')
-  public async getTenantAgent(
-    @Body() tenantAgentOptions: GetTenantAgentOptions,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    const tenantAgent = await this.agent.modules.tenants.getTenantAgent({ tenantId: tenantAgentOptions.tenantId })
-    try {
-      return tenantAgent
-    } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `Tenant with id: ${tenantAgentOptions.tenantId} not found.`,
-        })
-      }
-      return internalServerError(500, { message: `Something went wrong: ${error}` })
     }
   }
 
@@ -1344,7 +1465,7 @@ export class MultiTenancyController extends Controller {
   public async deleteTenantById(
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const deleteTenant = await this.agent.modules.tenants.deleteTenantById(tenantId)
@@ -1360,27 +1481,49 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
-  @Post('/did/key:tenantId')
-  public async createDidKey(
+  @Post('/did/web/:tenantId')
+  public async createDidWeb(
     @Path('tenantId') tenantId: string,
     @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
-      const tenantAgent = await this.agent.modules.tenants.getTenantAgent({
-        tenantId,
-      })
+      let didDoc
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if (!didOptions.keyType) {
+          throw Error('keyType is required')
+        }
+        if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
+          throw Error('Only ed25519 and bls12381g2 type supported')
+        }
+        const did = `did:${didOptions.method}:${didOptions.domain}`
+        let didDocument: any
+        const keyId = `${did}#key-1`
+        const key = await tenantAgent.wallet.createKey({
+          keyType: didOptions.keyType,
+          seed: TypedArrayEncoder.fromString(didOptions.seed),
+        })
+        if (didOptions.keyType === 'ed25519') {
+          didDocument = new DidDocumentBuilder(did)
+            .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
+            .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
+            .addAuthentication(keyId)
+            .build()
+        }
+        if (didOptions.keyType === 'bls12381g2') {
+          didDocument = new DidDocumentBuilder(did)
+            .addContext('https://w3id.org/security/bbs/v1')
+            .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
+            .addAuthentication(keyId)
+            .build()
+        }
 
-      const did = await tenantAgent.dids.create<KeyDidCreateOptions>({
-        method: 'key',
-        options: {
-          keyType: KeyType.Ed25519,
-        },
-        secret: {
-          privateKey: TypedArrayEncoder.fromString(didOptions.seed),
-        },
+        didDoc = {
+          did,
+          didDocument: didDocument.toJSON(),
+        }
       })
-      return { did: `${did.didState.did}` }
+      return didDoc
     } catch (error) {
       return internalServerError(500, {
         message: `something went wrong: ${error}`,
@@ -1389,63 +1532,26 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
-  @Post('/did/web/:tenantId')
-  public async createDidWeb(
+  @Post('/did/key:tenantId')
+  public async createDidKey(
     @Path('tenantId') tenantId: string,
     @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
-      const tenantAgent = await this.agent.modules.tenants.getTenantAgent({
-        tenantId,
+      let didCreateResponse
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        didCreateResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
+          method: 'key',
+          options: {
+            keyType: KeyType.Ed25519,
+          },
+          secret: {
+            privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+          },
+        })
       })
-
-      if (!didOptions.keyType) {
-        throw Error('keyType is required')
-      }
-      if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
-        throw Error('Only ed25519 and bls12381g2 type supported')
-      }
-      const did = `did:${didOptions.method}:${didOptions.domain}`
-      let didDocument: any
-      const keyId = `${did}#key-1`
-      const key = await tenantAgent.wallet.createKey({
-        keyType: didOptions.keyType,
-        seed: TypedArrayEncoder.fromString(didOptions.seed),
-      })
-      if (didOptions.keyType === KeyType.Ed25519) {
-        didDocument = new DidDocumentBuilder(did)
-          .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
-          .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
-          .addAuthentication(keyId)
-          .addService(
-            new DidDocumentService({
-              id: 'did:web:pallavighule.github.io',
-              type: 'DIDCommMessaging',
-              serviceEndpoint: 'https://dev-agent.credebl.id/docs/',
-            })
-          )
-          .build()
-      }
-      if (didOptions.keyType === KeyType.Bls12381g2) {
-        didDocument = new DidDocumentBuilder(did)
-          .addContext('https://w3id.org/security/bbs/v1')
-          .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
-          .addAuthentication(keyId)
-          .addService(
-            new DidDocumentService({
-              id: 'did:web:pallavighule.github.io',
-              type: 'DIDCommMessaging',
-              serviceEndpoint: 'https://dev-agent.credebl.id/docs/',
-            })
-          )
-          .build()
-      }
-
-      return {
-        did,
-        didDocument: didDocument.toJSON(),
-      }
+      return didCreateResponse
     } catch (error) {
       return internalServerError(500, {
         message: `something went wrong: ${error}`,

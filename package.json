@@ -32,9 +32,9 @@
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
     "test": "jest",
+    "postinstall": "patch-package",
     "lint": "eslint --ignore-path .gitignore .",
-    "validate": "yarn lint && yarn check-types && yarn check-format",
-    "postinstall": "patch-package"
+    "validate": "yarn lint && yarn check-types && yarn check-format"
   },
   "dependencies": {
     "@2060.io/ref-napi": "^3.0.6",
@@ -55,11 +55,13 @@
     "@types/node-fetch": "^2.6.4",
     "@types/ref-struct-di": "^1.1.9",
     "@types/ws": "^7.4.7",
+    "@tsoa/runtime": "^6.0.0",
     "axios": "^1.4.0",
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
     "express": "^4.18.1",
     "jsonpath": "^1.1.1",
+    "express-rate-limit": "^7.1.5",
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^2.6.7",
     "patch-package": "^8.0.0",

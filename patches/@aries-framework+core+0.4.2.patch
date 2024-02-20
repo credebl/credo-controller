@@ -62,8 +62,8 @@ index 12261a9..0cdb7b3 100644
 @@ -39,6 +40,7 @@ let EnvelopeService = class EnvelopeService {
              });
              recipientKeysBase58 = [routingKeyBase58];
-             this.logger.debug('Forward message created', forwardMessage);
 +            forwardMessage["messageType"] = message['@type'];
+             this.logger.debug('Forward message created', forwardMessage);
              const forwardJson = forwardMessage.toJSON({
                  useDidSovPrefixWhereAllowed: agentContext.config.useDidSovPrefixWhereAllowed,
              });

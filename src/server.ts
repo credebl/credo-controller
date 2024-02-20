@@ -6,6 +6,7 @@ import { Agent } from '@aries-framework/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
+import { rateLimit } from 'express-rate-limit'
 import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
@@ -16,6 +17,7 @@ import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
+import { maxRateLimit, windowMs } from './utils/util'
 
 import { ValidateError, type Exception } from 'tsoa'
 
@@ -45,6 +47,14 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
+
+  const limiter = rateLimit({
+    windowMs, // 1 second
+    max: maxRateLimit, // max 800 requests per second
+  })
+
+  // apply rate limiter to all requests
+  app.use(limiter)
 
   const securityMiddleware = new SecurityMiddleware()
   app.use(securityMiddleware.use)

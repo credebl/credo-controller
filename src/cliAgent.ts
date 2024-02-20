@@ -1,12 +1,10 @@
-/* eslint-disable import/order */
+
 import { InitConfig, AutoAcceptCredential, AutoAcceptProof, DidsModule, ProofsModule, V2ProofProtocol, CredentialsModule, V2CredentialProtocol, ConnectionsModule, W3cCredentialsModule, KeyDidRegistrar, KeyDidResolver, CacheModule, InMemoryLruCache, WebDidResolver ,PresentationExchangeProofFormatService} from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
 
 import { HttpOutboundTransport, WsOutboundTransport, LogLevel, Agent } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
 import { readFile } from 'fs/promises'
-import { BCOVRIN_TEST_GENESIS, INDICIO_TEST_GENESIS } from './utils/util'
-
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
 import { AnonCredsCredentialFormatService, AnonCredsModule, AnonCredsProofFormatService, LegacyIndyCredentialFormatService, LegacyIndyProofFormatService, V1CredentialProtocol, V1ProofProtocol } from '@aries-framework/anoncreds'
@@ -22,6 +20,7 @@ import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import { BCOVRIN_TEST_GENESIS } from './utils/util'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -147,6 +146,23 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
 }
 
+async function generateSecretKey(length: number = 32): Promise<string> {
+  // Asynchronously generate a buffer containing random values
+  const buffer: Buffer = await new Promise((resolve, reject) => {
+    randomBytes(length, (error, buf) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(buf)
+      }
+    })
+  })
+
+  // Convert the buffer to a hexadecimal string
+  const secretKey: string = buffer.toString('hex')
+
+  return secretKey
+}
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const { logLevel, inboundTransports = [], outboundTransports = [], webhookUrl, adminPort, walletConfig, ...afjConfig } = restConfig
@@ -243,37 +259,13 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  let token: string = '';
-  const genericRecord = await agent.genericRecords.getAll();
-  console.log(genericRecord)
-  if (genericRecord.length === 0 || genericRecord.some(record => record?.content?.token === undefined)) {
+  let token: string = ''
+  const genericRecord = await agent.genericRecords.getAll()
 
-    async function generateSecretKey(length: number = 32): Promise<string> {
-      try {
-        // Asynchronously generate a buffer containing random values
-        const buffer: Buffer = await new Promise((resolve, reject) => {
-          randomBytes(length, (error, buf) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(buf);
-            }
-          });
-        });
-
-        // Convert the buffer to a hexadecimal string
-        const secretKey: string = buffer.toString("hex");
-
-        return secretKey;
-      } catch (error) {
-        // Handle any errors that might occur during key generation
-        logger.error(`Error generating secret key: ${error}`);
-        throw error;
-      }
-    }
-
+  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
+  if (!genericRecord.length || !recordsWithToken) {
     // Call the async function
-    const secretKeyInfo: string = await generateSecretKey();
+    const secretKeyInfo: string = await generateSecretKey()
     // Check if the secretKey already exist in the genericRecords
 
     // if already exist - then don't generate the secret key again
@@ -281,25 +273,34 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // instead use the existin JWT token
     // if JWT token is not found, create/generate a new token and save in genericRecords
     // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo);
+
+    // if already exist - then don't generate the secret key again
+    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
+    // instead use the existin JWT token
+    // if JWT token is not found, create/generate a new token and save in genericRecords
+    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
+    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
-        token
+        token,
       },
-    });
+    })
   } else {
-    token = genericRecord[0]?.content?.token as string;
+    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+    token = recordWithToken?.content.token as string
   }
 
-  const app = await setupServer(agent, {
-    webhookUrl,
-    port: adminPort,
-  },
+  const app = await setupServer(
+    agent,
+    {
+      webhookUrl,
+      port: adminPort,
+    },
     token
   )
 
-  logger.info(`*** API Toekn: ${token}`);
+  logger.info(`*** API Toekn: ${token}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)

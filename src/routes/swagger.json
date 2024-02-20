@@ -719,6 +719,9 @@
 			},
 			"DidCreate": {
 				"properties": {
+					"keyType": {
+						"$ref": "#/components/schemas/KeyType"
+					},
 					"seed": {
 						"type": "string"
 					},
@@ -1318,18 +1321,6 @@
 				"required": [
 					"protocolVersion",
 					"proofFormats"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"GetTenantAgentOptions": {
-				"properties": {
-					"tenantId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"tenantId"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -5522,10 +5513,7 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {
-									"items": {},
-									"type": "array"
-								}
+								"schema": {}
 							}
 						}
 					}
@@ -5582,10 +5570,7 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {
-									"items": {},
-									"type": "array"
-								}
+								"schema": {}
 							}
 						}
 					}
@@ -6148,73 +6133,6 @@
 			}
 		},
 		"/multi-tenancy/{tenantId}": {
-			"get": {
-				"operationId": "GetTenantById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			},
 			"delete": {
 				"operationId": "DeleteTenantById",
 				"responses": {
@@ -6283,33 +6201,15 @@
 				]
 			}
 		},
-		"/multi-tenancy/tenant": {
+		"/multi-tenancy/did/web/{tenantId}": {
 			"post": {
-				"operationId": "GetTenantAgent",
+				"operationId": "CreateDidWeb",
 				"responses": {
 					"200": {
 						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
 							}
 						}
 					},
@@ -6340,13 +6240,22 @@
 						"apiKey": []
 					}
 				],
-				"parameters": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/GetTenantAgentOptions"
+								"$ref": "#/components/schemas/DidCreate"
 							}
 						}
 					}

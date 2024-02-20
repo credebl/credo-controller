@@ -1,14 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import type { Request } from 'express'
+import type * as express from 'express'
+
+import { LogLevel } from '@aries-framework/core'
+
+import { TsLogger } from './utils/logger'
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
 export async function expressAuthentication(
-  request: Request,
+  request: express.Request,
   securityName: string,
   secMethod?: { [key: string]: any },
   scopes?: string
 ) {
+  const logger = new TsLogger(LogLevel.info)
+
+  logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
+  logger.info(`scopes::: ${JSON.stringify(scopes)}`)
+
   const apiKeyHeader = request.headers['authorization']
 
   if (securityName === 'apiKey') {

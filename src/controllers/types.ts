@@ -291,6 +291,7 @@ export interface ResolvedDid {
 }
 
 export interface DidCreate {
+  keyType?: KeyType
   seed: string
   domain?: string
   method?: string
@@ -300,7 +301,6 @@ export interface DidCreate {
   secret?: DidRegistrationSecretOptions
   endorserDid?: string
   didDocument?: DidDocument
-  keyType?: KeyType
 }
 
 export interface CreateTenantOptions {
