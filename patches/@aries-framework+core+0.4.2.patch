@@ -1,8 +1,8 @@
 diff --git a/node_modules/@aries-framework/core/build/agent/EnvelopeService.js b/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
-index 12261a9..0cdb7b3 100644
+index 12261a9..0238d59 100644
 --- a/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
 +++ b/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
-@@ -32,6 +32,7 @@ let EnvelopeService = class EnvelopeService {
+@@ -32,12 +32,14 @@ let EnvelopeService = class EnvelopeService {
          let encryptedMessage = await agentContext.wallet.pack(message, recipientKeysBase58, senderKeyBase58 !== null && senderKeyBase58 !== void 0 ? senderKeyBase58 : undefined);
          // If the message has routing keys (mediator) pack for each mediator
          for (const routingKeyBase58 of routingKeysBase58) {
@@ -10,14 +10,13 @@ index 12261a9..0cdb7b3 100644
              const forwardMessage = new messages_1.ForwardMessage({
                  // Forward to first recipient key
                  to: recipientKeysBase58[0],
-@@ -39,6 +40,7 @@ let EnvelopeService = class EnvelopeService {
+                 message: encryptedMessage,
              });
              recipientKeysBase58 = [routingKeyBase58];
-             this.logger.debug('Forward message created', forwardMessage);
 +            forwardMessage["messageType"] = message['@type'];
+             this.logger.debug('Forward message created', forwardMessage);
              const forwardJson = forwardMessage.toJSON({
                  useDidSovPrefixWhereAllowed: agentContext.config.useDidSovPrefixWhereAllowed,
-             });
 diff --git a/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts b/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
 index 4f8577b..396f78a 100644
 --- a/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
