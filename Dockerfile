@@ -36,7 +36,6 @@ RUN yarn global add patch-package
 WORKDIR /www
 
 COPY bin ./bin
-COPY patches ./patches
 COPY package.json ./package.json
 COPY patches ./patches
 

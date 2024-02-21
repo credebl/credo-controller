@@ -181,6 +181,7 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
+      sessionAcquireTimeout: Infinity,
       sessionLimit: Infinity,
     }),
     ...modules,
@@ -228,7 +229,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     logger,
   }
 
-  async function fetchLedgerData(ledgerConfig: any): Promise<IndyVdrPoolConfig> {
+  async function fetchLedgerData(ledgerConfig: {
+    genesisTransactions: string
+    indyNamespace: string
+  }): Promise<IndyVdrPoolConfig> {
     const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/
 
     if (!urlPattern.test(ledgerConfig.genesisTransactions)) {

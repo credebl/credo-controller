@@ -1,7 +1,7 @@
 {
   "label": "AFJ Rest Agent 1",
-  "walletId": "Tipu",
-  "walletKey": "Tipu",
+  "walletId": "sample",
+  "walletKey": "sample",
   "walletType": "postgres",
   "walletUrl": "localhost:5432",
   "walletAccount": "postgres",
