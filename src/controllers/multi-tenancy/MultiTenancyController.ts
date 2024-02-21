@@ -63,7 +63,7 @@ import {
 } from '@aries-framework/core'
 import axios from 'axios'
 
-import { CredentialEnum } from '../../enums/enum'
+import { CredentialEnum, DidMethod, Network, Role } from '../../enums/enum'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
 import {
@@ -107,6 +107,7 @@ export class MultiTenancyController extends Controller {
     this.agent = agent
   }
 
+  //create wallet
   @Security('apiKey')
   @Post('/create-tenant')
   public async createTenant(
@@ -115,28 +116,54 @@ export class MultiTenancyController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     const { config } = createTenantOptions
-    const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config })
-    let didRes
     try {
-      await this.agent.modules.tenants.withTenantAgent({ tenantId: tenantRecord.id }, async (tenantAgent) => {
-        createTenantOptions.role = createTenantOptions.role || 'endorser'
-        createTenantOptions.method = createTenantOptions.method ?? 'bcovrin:testnet'
-        const didMethod = `did:indy:${createTenantOptions.method}`
+      const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config })
+      return tenantRecord
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, {
+          reason: `Tenant not created`,
+        })
+      }
 
-        let result
-        if (createTenantOptions.method.includes('bcovrin')) {
-          result = await this.handleBcovrin(createTenantOptions, tenantAgent, didMethod)
-        } else if (createTenantOptions.method.includes('indicio')) {
-          result = await this.handleIndicio(createTenantOptions, tenantAgent, didMethod)
-        } else if (createTenantOptions.method === 'key') {
-          result = await this.handleKey(createTenantOptions)
-        } else if (createTenantOptions.method === 'web') {
-          result = await this.handleWeb(createTenantOptions)
-        } else {
-          return internalServerError(500, { message: `Invalid method: ${createTenantOptions.method}` })
-        }
-        didRes = { tenantRecord, ...result }
-      })
+      return internalServerError(500, { message: `Something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/create-did/:tenantId')
+  public async createDid(
+    @Body() createDidOptions: DidCreate,
+    @Path('tenantId') tenantId: string,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+  ) {
+    let didRes
+
+    try {
+      if (!createDidOptions.method) {
+        throw Error('Method is required')
+      }
+
+      let result
+      switch (createDidOptions.method) {
+        case DidMethod.Indy:
+          result = await this.handleIndy(createDidOptions, tenantId)
+          break
+
+        case DidMethod.Key:
+          result = await this.handleKey(createDidOptions, tenantId)
+          break
+
+        case DidMethod.Web:
+          result = await this.handleWeb(createDidOptions, tenantId)
+          break
+
+        default:
+          return internalServerError(500, { message: `Invalid method: ${createDidOptions.method}` })
+      }
+
+      didRes = { ...result }
 
       return didRes
     } catch (error) {
@@ -150,8 +177,52 @@ export class MultiTenancyController extends Controller {
     }
   }
 
+  private async handleIndy(createDidOptions: DidCreate, tenantId: string) {
+    let result
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      if (!createDidOptions.keyType) {
+        throw Error('keyType is required')
+      }
+
+      if (!createDidOptions.role) {
+        throw Error('For indy method role is required')
+      }
+
+      if (!createDidOptions.network) {
+        throw Error('For indy method network is required')
+      }
+
+      if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
+        throw Error('Only ed25519 and bls12381g2 type supported')
+      }
+
+      switch (createDidOptions.network && createDidOptions.network.toLowerCase()) {
+        case Network.Bcovrin_Testnet.toLowerCase():
+          result = await this.handleBcovrin(
+            createDidOptions,
+            tenantAgent,
+            `did:${createDidOptions.method}:${createDidOptions.network}`,
+          )
+          break
+
+        case Network.Indicio_Demonet.toLowerCase():
+        case Network.Indicio_Testnet.toLowerCase():
+          result = await this.handleIndicio(
+            createDidOptions,
+            tenantAgent,
+            `did:${createDidOptions.method}:${createDidOptions.network}`,
+          )
+          break
+
+        default:
+          throw new Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
+      }
+    })
+    return result
+  }
+
   private async handleBcovrin(
-    createTenantOptions: CreateTenantOptions,
+    createDidOptions: DidCreate,
     tenantAgent: TenantAgent<{
       askar: AskarModule
       indyVdr: IndyVdrModule
@@ -175,48 +246,54 @@ export class MultiTenancyController extends Controller {
     }>,
     didMethod: string,
   ) {
-    if (createTenantOptions.did) {
-      await this.importDid(didMethod, createTenantOptions.did, createTenantOptions.seed, tenantAgent)
-      const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createTenantOptions.did}`)
-      let verkey
-      if (resolveResult.didDocument?.verificationMethod) {
-        verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58
+    if (createDidOptions.did) {
+      await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed, tenantAgent)
+      const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createDidOptions.did}`)
+      return {
+        did: `${didMethod}:${createDidOptions.did}`,
+        didDocument: resolveResult.didDocument,
       }
-      return { did: `${didMethod}:${createTenantOptions.did}`, verkey }
     } else {
-      if (createTenantOptions?.role?.toLowerCase() === 'endorser') {
+      if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
+        await tenantAgent.wallet.createKey({
+          privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
+          keyType: KeyType.Ed25519,
+        })
+
         const body = {
           role: 'ENDORSER',
           alias: 'Alias',
-          seed: createTenantOptions.seed,
+          seed: createDidOptions.seed,
         }
-        const res = await axios.post(BCOVRIN_REGISTER_URL, body)
 
+        const res = await axios.post(BCOVRIN_REGISTER_URL, body)
         if (res) {
           const { did } = res?.data || {}
-          await this.importDid(didMethod, did, createTenantOptions.seed, tenantAgent)
+          await this.importDid(didMethod, did, createDidOptions.seed, tenantAgent)
           const resolveResult = await this.agent.dids.resolve(`${didMethod}:${res.data.did}`)
-          let verkey
-          if (resolveResult.didDocument?.verificationMethod) {
-            verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58
+          return {
+            did: `${didMethod}:${res.data.did}`,
+            didDocument: resolveResult.didDocument,
           }
-          return { did: `${didMethod}:${res.data.did}`, verkey }
         }
       } else {
+        if (!createDidOptions.endorserDid) {
+          throw Error('endorserDid or role is required')
+        }
         const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
-          method: 'indy',
+          method: DidMethod.Indy,
           options: {
             endorserMode: 'external',
-            endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
+            endorserDid: createDidOptions.endorserDid ? createDidOptions.endorserDid : '',
           },
         })) as IndyVdrDidCreateResult
-        return { did: didCreateTxResult.didState.did }
+        return { did: didCreateTxResult.didState.did, didDocument: didCreateTxResult.didState.didDocument }
       }
     }
   }
 
   private async handleIndicio(
-    createTenantOptions: CreateTenantOptions,
+    createDidOptions: DidCreate,
     tenantAgent: TenantAgent<{
       askar: AskarModule
       indyVdr: IndyVdrModule
@@ -240,53 +317,21 @@ export class MultiTenancyController extends Controller {
     }>,
     didMethod: string,
   ) {
-    if (createTenantOptions.did) {
-      return await this.handleDidCreation(createTenantOptions, tenantAgent, didMethod)
+    if (createDidOptions.did) {
+      await this.importDid(didMethod, createDidOptions?.did, createDidOptions.seed, tenantAgent)
+      const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createDidOptions.did}`)
+      return { did: `${didMethod}:${createDidOptions.did}`, didDocument: resolveResult.didDocument }
     } else {
-      if (createTenantOptions?.role?.toLowerCase() === 'endorser') {
-        return await this.handleEndorserCreation(createTenantOptions, tenantAgent, didMethod)
+      if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
+        return await this.handleEndorserCreation(createDidOptions, tenantAgent, didMethod)
       } else {
-        return await this.handleIndyDidCreation(createTenantOptions, tenantAgent)
+        return await this.handleIndyDidCreation(createDidOptions, tenantAgent)
       }
     }
   }
 
-  private async handleDidCreation(
-    createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<{
-      askar: AskarModule
-      indyVdr: IndyVdrModule
-      dids: DidsModule
-      anoncreds: AnonCredsModule
-      _anoncreds: AnonCredsRsModule
-      connections: ConnectionsModule
-      proofs: ProofsModule<
-        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
-      >
-      credentials: CredentialsModule<
-        (
-          | V1CredentialProtocol
-          | V2CredentialProtocol<
-              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
-            >
-        )[]
-      >
-      w3cCredentials: W3cCredentialsModule
-      cache: CacheModule
-    }>,
-    didMethod: string,
-  ) {
-    await this.importDid(didMethod, createTenantOptions?.did as string, createTenantOptions.seed, tenantAgent)
-    const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createTenantOptions.did}`)
-    let verkey
-    if (resolveResult.didDocument?.verificationMethod) {
-      verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58
-    }
-    return { did: `${didMethod}:${createTenantOptions.did}`, verkey }
-  }
-
   private async handleEndorserCreation(
-    createTenantOptions: CreateTenantOptions,
+    createDidOptions: DidCreate,
     tenantAgent: TenantAgent<{
       askar: AskarModule
       indyVdr: IndyVdrModule
@@ -310,20 +355,22 @@ export class MultiTenancyController extends Controller {
     }>,
     didMethod: string,
   ) {
-    const key = await this.agent.wallet.createKey({
-      privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
+    const key = await tenantAgent.wallet.createKey({
+      privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
       keyType: KeyType.Ed25519,
     })
     const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58)
+
     const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16))
+
     let body
-    if (createTenantOptions.method === 'indicio:testnet') {
+    if (createDidOptions.network === Network.Indicio_Testnet) {
       body = {
         network: 'testnet',
         did,
         verkey: TypedArrayEncoder.toBase58(buffer),
       }
-    } else if (createTenantOptions.method === 'indicio:demonet') {
+    } else if (createDidOptions.network === Network.Indicio_Demonet) {
       body = {
         network: 'demonet',
         did,
@@ -331,20 +378,15 @@ export class MultiTenancyController extends Controller {
       }
     }
     const res = await axios.post(INDICIO_NYM_URL, body)
-
     if (res.data.statusCode === 200) {
-      await this.importDid(didMethod, did, createTenantOptions.seed, tenantAgent)
-      const resolveResult = await this.agent.dids.resolve(`${didMethod}:${did}`)
-      let verkey
-      if (resolveResult.didDocument?.verificationMethod) {
-        verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58
-      }
-      return { did: `${didMethod}:${body?.did}`, verkey }
+      await this.importDid(didMethod, did, createDidOptions.seed, tenantAgent)
+      const resolveResult = await tenantAgent.dids.resolve(`${didMethod}:${did}`)
+      return { did: `${didMethod}:${body?.did}`, didDocument: resolveResult.didDocument }
     }
   }
 
   private async handleIndyDidCreation(
-    createTenantOptions: CreateTenantOptions,
+    createDidOptions: DidCreate,
     tenantAgent: TenantAgent<{
       askar: AskarModule
       indyVdr: IndyVdrModule
@@ -367,68 +409,113 @@ export class MultiTenancyController extends Controller {
       cache: CacheModule
     }>,
   ) {
+    if (!createDidOptions.endorserDid) {
+      throw Error('endorserDid or role is required')
+    }
+
     const didCreateTxResult = await tenantAgent.dids.create({
-      method: 'indy',
+      method: DidMethod.Indy,
       options: {
         endorserMode: 'external',
-        endorserDid: createTenantOptions.endorserDid ? createTenantOptions.endorserDid : '',
+        endorserDid: createDidOptions.endorserDid ? createDidOptions.endorserDid : '',
       },
     })
-    return { didTx: didCreateTxResult }
+    return { didTx: didCreateTxResult.didState.did }
   }
 
-  private async handleKey(createTenantOptions: CreateTenantOptions) {
-    const did = await this.agent.dids.create<KeyDidCreateOptions>({
-      method: 'key',
-      options: {
-        keyType: KeyType.Ed25519,
-      },
-      secret: {
-        privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
-      },
-    })
-    await this.agent.dids.import({
-      did: `${did.didState.did}`,
-      overwrite: true,
-      privateKeys: [
-        {
+  private async handleKey(createDidOptions: DidCreate, tenantId: string) {
+    let didResponse
+    let did
+    let didDocument: any
+
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      if (!createDidOptions.keyType) {
+        throw Error('keyType is required')
+      }
+
+      if (!createDidOptions.method) {
+        throw Error('method is required')
+      }
+
+      if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
+        throw Error('Only ed25519 and bls12381g2 type supported')
+      }
+
+      await tenantAgent.wallet.createKey({
+        keyType: createDidOptions.keyType,
+        seed: TypedArrayEncoder.fromString(createDidOptions.seed),
+      })
+
+      const didWebResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
+        method: DidMethod.Key,
+        options: {
           keyType: KeyType.Ed25519,
-          privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
         },
-      ],
+        secret: {
+          privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
+        },
+      })
+
+      did = `${didWebResponse.didState.did}`
+      ;(didDocument = didWebResponse.didState.didDocument),
+        await tenantAgent.dids.import({
+          did,
+          overwrite: true,
+          didDocument,
+        })
+
+      didResponse = {
+        did,
+        didDocument,
+      }
     })
-    const resolveResult = await this.agent.dids.resolve(`did:key:${did}`)
-    let verkey
-    if (resolveResult.didDocument?.verificationMethod) {
-      verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58
-    }
-    return { did, verkey }
+    return didResponse
   }
 
-  private async handleWeb(createTenantOptions: CreateTenantOptions) {
-    const domain = 'credebl.github.io'
-    const did = `did:web:${domain}`
-    const keyId = `${did}#key-1`
-    const key = await this.agent.wallet.createKey({
-      keyType: KeyType.Ed25519,
-      privateKey: TypedArrayEncoder.fromString(createTenantOptions.seed),
+  private async handleWeb(createDidOptions: DidCreate, tenantId: string) {
+    let did
+    let didDocument: any
+
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      if (!createDidOptions.keyType) {
+        throw Error('keyType is required')
+      }
+
+      if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
+        throw Error('Only ed25519 and bls12381g2 type supported')
+      }
+
+      if (!createDidOptions.domain) {
+        throw Error('domain is required')
+      }
+      did = `did:${createDidOptions.method}:${createDidOptions.domain}`
+      const keyId = `${did}#key-1`
+      const key = await tenantAgent.wallet.createKey({
+        keyType: createDidOptions.keyType,
+        seed: TypedArrayEncoder.fromString(createDidOptions.seed),
+      })
+      if (createDidOptions.keyType === KeyType.Ed25519) {
+        didDocument = new DidDocumentBuilder(did)
+          .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
+          .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
+          .addAuthentication(keyId)
+          .build()
+      }
+      if (createDidOptions.keyType === KeyType.Bls12381g2) {
+        didDocument = new DidDocumentBuilder(did)
+          .addContext('https://w3id.org/security/bbs/v1')
+          .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
+          .addAuthentication(keyId)
+          .build()
+      }
+
+      await tenantAgent.dids.import({
+        did,
+        overwrite: true,
+        didDocument,
+      })
     })
-    const didDocument = new DidDocumentBuilder(did)
-      .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
-      .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
-      .addAuthentication(keyId)
-      .build()
-    await this.agent.dids.import({
-      did,
-      overwrite: true,
-      didDocument,
-    })
-    const resolveResult = await this.agent.dids.resolve(did)
-    let verkey
-    if (resolveResult.didDocument?.verificationMethod) {
-      verkey = resolveResult.didDocument.verificationMethod[0].publicKeyBase58
-    }
-    return { did, verkey }
+    return { did, didDocument }
   }
 
   private async importDid(
