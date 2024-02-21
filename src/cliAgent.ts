@@ -42,6 +42,7 @@ import {
   IndyVdrIndyDidRegistrar,
 } from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
+import { QuestionAnswerModule } from '@aries-framework/question-answer'
 import { TenantsModule } from '@aries-framework/tenants'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
@@ -128,13 +129,16 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
       resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
     }),
+
     anoncreds: new AnonCredsModule({
       registries: [new IndyVdrAnonCredsRegistry()],
     }),
+
     // Use anoncreds-rs as anoncreds backend
-    _anoncreds: new AnonCredsRsModule({
+    anoncredsRs: new AnonCredsRsModule({
       anoncreds,
     }),
+
     connections: new ConnectionsModule({
       autoAcceptConnections: true,
     }),
@@ -168,6 +172,8 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     cache: new CacheModule({
       cache: new InMemoryLruCache({ limit: Infinity }),
     }),
+
+    questionAnswer: new QuestionAnswerModule(),
   }
 }
 
@@ -344,7 +350,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     token
   )
 
-  logger.info(`*** API Toekn: ${token}`)
+  logger.info(`*** API Token: ${token}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)

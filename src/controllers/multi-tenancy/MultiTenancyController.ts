@@ -1,37 +1,18 @@
-import type { RestMultiTenantAgentModules } from '../../cliAgent'
+import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type {
-  AnonCredsCredentialFormatService,
-  AnonCredsModule,
-  AnonCredsProofFormatService,
-  LegacyIndyCredentialFormatService,
-  LegacyIndyProofFormatService,
-  V1CredentialProtocol,
-  V1ProofProtocol,
-} from '@aries-framework/anoncreds'
-import type { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import type { AskarModule } from '@aries-framework/askar'
 import type {
   AcceptProofRequestOptions,
   Buffer,
-  CacheModule,
   ConnectionRecordProps,
-  ConnectionsModule,
   CreateOutOfBandInvitationConfig,
   CredentialProtocolVersionType,
-  CredentialsModule,
-  DidsModule,
-  JsonLdCredentialFormatService,
   KeyDidCreateOptions,
   OutOfBandRecord,
   ProofExchangeRecordProps,
-  ProofsModule,
   ProofsProtocolVersionType,
-  V2CredentialProtocol,
-  V2ProofProtocol,
-  W3cCredentialsModule,
 } from '@aries-framework/core'
-import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult, IndyVdrModule } from '@aries-framework/indy-vdr'
+import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
+import type { QuestionAnswerRecord, ValidResponse } from '@aries-framework/question-answer'
 import type { TenantRecord } from '@aries-framework/tenants'
 import type { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
 
@@ -61,6 +42,7 @@ import {
   getEd25519VerificationKey2018,
   injectable,
 } from '@aries-framework/core'
+import { QuestionAnswerRole, QuestionAnswerState } from '@aries-framework/question-answer'
 import axios from 'axios'
 
 import { CredentialEnum } from '../../enums/enum'
@@ -152,27 +134,7 @@ export class MultiTenancyController extends Controller {
 
   private async handleBcovrin(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<{
-      askar: AskarModule
-      indyVdr: IndyVdrModule
-      dids: DidsModule
-      anoncreds: AnonCredsModule
-      _anoncreds: AnonCredsRsModule
-      connections: ConnectionsModule
-      proofs: ProofsModule<
-        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
-      >
-      credentials: CredentialsModule<
-        (
-          | V1CredentialProtocol
-          | V2CredentialProtocol<
-              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
-            >
-        )[]
-      >
-      w3cCredentials: W3cCredentialsModule
-      cache: CacheModule
-    }>,
+    tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
     if (createTenantOptions.did) {
@@ -217,27 +179,7 @@ export class MultiTenancyController extends Controller {
 
   private async handleIndicio(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<{
-      askar: AskarModule
-      indyVdr: IndyVdrModule
-      dids: DidsModule
-      anoncreds: AnonCredsModule
-      _anoncreds: AnonCredsRsModule
-      connections: ConnectionsModule
-      proofs: ProofsModule<
-        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
-      >
-      credentials: CredentialsModule<
-        (
-          | V1CredentialProtocol
-          | V2CredentialProtocol<
-              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
-            >
-        )[]
-      >
-      w3cCredentials: W3cCredentialsModule
-      cache: CacheModule
-    }>,
+    tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
     if (createTenantOptions.did) {
@@ -253,27 +195,7 @@ export class MultiTenancyController extends Controller {
 
   private async handleDidCreation(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<{
-      askar: AskarModule
-      indyVdr: IndyVdrModule
-      dids: DidsModule
-      anoncreds: AnonCredsModule
-      _anoncreds: AnonCredsRsModule
-      connections: ConnectionsModule
-      proofs: ProofsModule<
-        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
-      >
-      credentials: CredentialsModule<
-        (
-          | V1CredentialProtocol
-          | V2CredentialProtocol<
-              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
-            >
-        )[]
-      >
-      w3cCredentials: W3cCredentialsModule
-      cache: CacheModule
-    }>,
+    tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
     await this.importDid(didMethod, createTenantOptions?.did as string, createTenantOptions.seed, tenantAgent)
@@ -287,27 +209,7 @@ export class MultiTenancyController extends Controller {
 
   private async handleEndorserCreation(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<{
-      askar: AskarModule
-      indyVdr: IndyVdrModule
-      dids: DidsModule
-      anoncreds: AnonCredsModule
-      _anoncreds: AnonCredsRsModule
-      connections: ConnectionsModule
-      proofs: ProofsModule<
-        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
-      >
-      credentials: CredentialsModule<
-        (
-          | V1CredentialProtocol
-          | V2CredentialProtocol<
-              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
-            >
-        )[]
-      >
-      w3cCredentials: W3cCredentialsModule
-      cache: CacheModule
-    }>,
+    tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
     const key = await this.agent.wallet.createKey({
@@ -345,27 +247,7 @@ export class MultiTenancyController extends Controller {
 
   private async handleIndyDidCreation(
     createTenantOptions: CreateTenantOptions,
-    tenantAgent: TenantAgent<{
-      askar: AskarModule
-      indyVdr: IndyVdrModule
-      dids: DidsModule
-      anoncreds: AnonCredsModule
-      _anoncreds: AnonCredsRsModule
-      connections: ConnectionsModule
-      proofs: ProofsModule<
-        (V1ProofProtocol | V2ProofProtocol<(LegacyIndyProofFormatService | AnonCredsProofFormatService)[]>)[]
-      >
-      credentials: CredentialsModule<
-        (
-          | V1CredentialProtocol
-          | V2CredentialProtocol<
-              (LegacyIndyCredentialFormatService | JsonLdCredentialFormatService | AnonCredsCredentialFormatService)[]
-            >
-        )[]
-      >
-      w3cCredentials: W3cCredentialsModule
-      cache: CacheModule
-    }>
+    tenantAgent: TenantAgent<RestAgentModules>
   ) {
     const didCreateTxResult = await tenantAgent.dids.create({
       method: 'indy',
@@ -1557,5 +1439,138 @@ export class MultiTenancyController extends Controller {
         message: `something went wrong: ${error}`,
       })
     }
+  }
+
+  /**
+   * Retrieve question and answer records by query
+   *
+   * @param tenantId Tenant identifier
+   * @param connectionId Connection identifier
+   * @param role Role of the question
+   * @param state State of the question
+   * @param threadId Thread identifier
+   * @returns QuestionAnswerRecord[]
+   */
+  @Security('apiKey')
+  @Get('/question-answer/:tenantId')
+  public async getQuestionAnswerRecords(
+    @Path('tenantId') tenantId: string,
+    @Query('connectionId') connectionId?: string,
+    @Query('role') role?: QuestionAnswerRole,
+    @Query('state') state?: QuestionAnswerState,
+    @Query('threadId') threadId?: string
+  ) {
+    let questionAnswerRecords: QuestionAnswerRecord[] = []
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      questionAnswerRecords = await tenantAgent.modules.questionAnswer.findAllByQuery({
+        connectionId,
+        role,
+        state,
+        threadId,
+      })
+    })
+    return questionAnswerRecords.map((record) => record.toJSON())
+  }
+
+  /**
+   * Send a question to a connection
+   *
+   * @param tenantId Tenant identifier
+   * @param connectionId Connection identifier
+   * @param content The content of the message
+   */
+  @Security('apiKey')
+  @Post('/question-answer/question/:connectionId/:tenantId')
+  public async sendQuestion(
+    @Path('connectionId') connectionId: RecordId,
+    @Path('tenantId') tenantId: string,
+    @Body()
+    config: {
+      question: string
+      validResponses: ValidResponse[]
+      detail?: string
+    },
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const { question, validResponses, detail } = config
+      let questionAnswerRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        questionAnswerRecord = await tenantAgent.modules.questionAnswer.sendQuestion(connectionId, {
+          question,
+          validResponses,
+          detail,
+        })
+        questionAnswerRecord = questionAnswerRecord?.toJSON()
+      })
+
+      return questionAnswerRecord
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  /**
+   * Send a answer to question
+   *
+   * @param tenantId Tenant identifier
+   * @param id Question Answer Record identifier
+   * @param response The response of the question
+   */
+  @Security('apiKey')
+  @Post('/question-answer/answer/:id/:tenantId')
+  public async sendAnswer(
+    @Path('id') id: RecordId,
+    @Path('tenantId') tenantId: string,
+    @Body() request: Record<'response', string>,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      let questionAnswerRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const record = await tenantAgent.modules.questionAnswer.sendAnswer(id, request.response)
+        questionAnswerRecord = record.toJSON()
+      })
+      return questionAnswerRecord
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, { reason: `record with connection id "${id}" not found.` })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  /**
+   * Retrieve question answer record by id
+   *
+   * @param id Question Answer Record identifier
+   * @param tenantId Tenant identifier
+   * @returns ConnectionRecord
+   */
+  @Security('apiKey')
+  @Get('/question-answer/:id/:tenantId')
+  public async getQuestionAnswerRecordById(
+    @Path('id') id: RecordId,
+    @Path('tenantId') tenantId: string,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>
+  ) {
+    let questionAnswerRecord
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      const record = await tenantAgent.modules.questionAnswer.findById(id)
+      questionAnswerRecord = record
+    })
+
+    if (!questionAnswerRecord) {
+      return notFoundError(404, {
+        reason: `Question Answer Record with id "${id}" not found.`,
+      })
+    }
+
+    return questionAnswerRecord
   }
 }
