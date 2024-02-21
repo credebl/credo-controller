@@ -748,9 +748,6 @@
 					},
 					"didDocument": {
 						"$ref": "#/components/schemas/DidDocument"
-					},
-					"keyType": {
-						"$ref": "#/components/schemas/KeyType"
 					}
 				},
 				"required": [
@@ -6265,67 +6262,6 @@
 		"/multi-tenancy/did/key{tenantId}": {
 			"post": {
 				"operationId": "CreateDidKey",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/DidCreate"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/did/web/{tenantId}": {
-			"post": {
-				"operationId": "CreateDidWeb",
 				"responses": {
 					"200": {
 						"description": "Ok",
