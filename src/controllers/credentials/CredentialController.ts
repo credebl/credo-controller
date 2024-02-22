@@ -18,7 +18,7 @@ import {
   AcceptCredentialRequestOptions,
   ProposeCredentialOptions,
   AcceptCredentialProposalOptions,
-  AcceptCredentialOfferOptions,
+  CredentialOfferOptions,
   CreateOfferOptions,
   AcceptCredential,
   CreateOfferOobOptions,
@@ -249,7 +249,7 @@ export class CredentialController extends Controller {
   public async acceptOffer(
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
+    @Body() acceptCredentialOfferOptions: CredentialOfferOptions
   ) {
     try {
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
