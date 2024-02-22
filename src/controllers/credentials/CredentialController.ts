@@ -3,12 +3,12 @@ import type { CredentialExchangeRecordProps, CredentialProtocolVersionType } fro
 
 import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@aries-framework/anoncreds'
 import {
-  HandshakeProtocol,
-  W3cCredentialService,
   CredentialRepository,
   CredentialState,
   Agent,
   RecordNotFoundError,
+  HandshakeProtocol,
+  W3cCredentialService,
 } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 

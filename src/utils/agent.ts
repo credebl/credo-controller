@@ -6,15 +6,21 @@ import {
   LegacyIndyProofFormatService,
   V1CredentialProtocol,
   V1ProofProtocol,
+  AnonCredsCredentialFormatService,
+  AnonCredsProofFormatService,
 } from '@aries-framework/anoncreds'
 import { AskarModule } from '@aries-framework/askar'
 import {
   AutoAcceptCredential,
   CredentialsModule,
   DidsModule,
+  JsonLdCredentialFormatService,
   KeyDidRegistrar,
   KeyDidResolver,
+  PresentationExchangeProofFormatService,
   ProofsModule,
+  V2CredentialProtocol,
+  V2ProofProtocol,
   WebDidResolver,
   Agent,
   ConnectionInvitationMessage,
@@ -92,6 +98,13 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
           new V1ProofProtocol({
             indyProofFormat: legacyIndyProofFormat,
           }),
+          new V2ProofProtocol({
+            proofFormats: [
+              legacyIndyProofFormat,
+              new AnonCredsProofFormatService(),
+              new PresentationExchangeProofFormatService(),
+            ],
+          }),
         ],
       }),
       credentials: new CredentialsModule({
@@ -99,6 +112,13 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
         credentialProtocols: [
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
+          }),
+          new V2CredentialProtocol({
+            credentialFormats: [
+              legacyIndyCredentialFormat,
+              new JsonLdCredentialFormatService(),
+              new AnonCredsCredentialFormatService(),
+            ],
           }),
         ],
       }),
