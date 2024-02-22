@@ -5,7 +5,6 @@ import {
   getUnqualifiedCredentialDefinitionId,
   parseIndyCredentialDefinitionId,
 } from '@aries-framework/anoncreds'
-// TODO: Chenged IndySdkError to AriesFrameworkError. If approved, the message must be changed too.
 import { Agent, AriesFrameworkError } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
