@@ -1,5 +1,5 @@
-// eslint-disable-next-line import/order
 import type { Version } from './examples'
+import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@aries-framework/anoncreds'
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -26,6 +26,7 @@ import type {
   Routing,
   Attachment,
   KeyType,
+  JsonLdCredentialFormat,
 } from '@aries-framework/core'
 import type { DIDDocument } from 'did-resolver'
 
@@ -110,7 +111,10 @@ export interface CreateOfferOptions {
 
 export interface CreateOfferOobOptions {
   protocolVersion: string
-  credentialFormats: any
+  credentialFormats: CredentialFormatPayload<
+    [LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat],
+    'createOffer'
+  >
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   goalCode?: string

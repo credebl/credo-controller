@@ -1105,7 +1105,7 @@ export class MultiTenancyController extends Controller {
         }
 
         const offerOob = await tenantAgent.credentials.createOffer({
-          protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
+          protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
           credentialFormats: createOfferOptions.credentialFormats,
           autoAcceptCredential: createOfferOptions.autoAcceptCredential,
           comment: createOfferOptions.comment,
@@ -1506,6 +1506,34 @@ export class MultiTenancyController extends Controller {
         }
       })
       return didDoc
+    } catch (error) {
+      return internalServerError(500, {
+        message: `something went wrong: ${error}`,
+      })
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/did/key:tenantId')
+  public async createDidKey(
+    @Path('tenantId') tenantId: string,
+    @Body() didOptions: DidCreate,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      let didCreateResponse
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        didCreateResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
+          method: 'key',
+          options: {
+            keyType: KeyType.Ed25519,
+          },
+          secret: {
+            privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+          },
+        })
+      })
+      return didCreateResponse
     } catch (error) {
       return internalServerError(500, {
         message: `something went wrong: ${error}`,
