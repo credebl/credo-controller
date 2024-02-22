@@ -151,7 +151,7 @@ export class MultiTenancyController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `Tenant not created`,
+          reason: `Did not created`,
         })
       }
 
@@ -238,6 +238,7 @@ export class MultiTenancyController extends Controller {
         if (!createDidOptions.endorserDid) {
           throw Error('endorserDid or role is required')
         }
+
         const didCreateTxResult = (await this.agent.dids.create<IndyVdrDidCreateOptions>({
           method: DidMethod.Indy,
           options: {
@@ -352,12 +353,12 @@ export class MultiTenancyController extends Controller {
       })
 
       did = `${didWebResponse.didState.did}`
-      ;(didDocument = didWebResponse.didState.didDocument),
-        await tenantAgent.dids.import({
-          did,
-          overwrite: true,
-          didDocument,
-        })
+      didDocument = didWebResponse.didState.didDocument
+      await tenantAgent.dids.import({
+        did,
+        overwrite: true,
+        didDocument,
+      })
 
       didResponse = {
         did,
