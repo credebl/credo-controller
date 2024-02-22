@@ -62,7 +62,7 @@ export class DidController extends Controller {
   @Post('/write')
   public async writeDid(
     @Body() createDidOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     let didRes
 
@@ -103,10 +103,6 @@ export class DidController extends Controller {
       throw Error('keyType is required')
     }
 
-    if (!createDidOptions.role) {
-      throw Error('For indy method role is required')
-    }
-
     if (!createDidOptions.network) {
       throw Error('For indy method network is required')
     }
@@ -119,21 +115,21 @@ export class DidController extends Controller {
       case Network.Bcovrin_Testnet.toLowerCase():
         result = await this.handleBcovrin(
           createDidOptions,
-          `did:${createDidOptions.method}:${createDidOptions.network}`,
+          `did:${createDidOptions.method}:${createDidOptions.network}`
         )
         break
 
       case Network.Indicio_Demonet.toLowerCase():
         result = await this.handleIndicio(
           createDidOptions,
-          `did:${createDidOptions.method}:${createDidOptions.network}`,
+          `did:${createDidOptions.method}:${createDidOptions.network}`
         )
         break
 
       case Network.Indicio_Testnet.toLowerCase():
         result = await this.handleIndicio(
           createDidOptions,
-          `did:${createDidOptions.method}:${createDidOptions.network}`,
+          `did:${createDidOptions.method}:${createDidOptions.network}`
         )
         break
 
@@ -162,7 +158,7 @@ export class DidController extends Controller {
       }
     } else {
       if (!createDidOptions.endorserDid) {
-        throw new Error('Please provide the endorser DID')
+        throw new Error('Please provide the endorser DID or role')
       }
       const didCreateTxResult = await this.createEndorserDid(createDidOptions.endorserDid)
       return { did: didCreateTxResult.didState.did, didDocument: didCreateTxResult.didState.didDocument }
@@ -186,7 +182,7 @@ export class DidController extends Controller {
       }
     } else {
       if (!createDidOptions.endorserDid) {
-        throw new Error('Please provide the endorser DID')
+        throw new Error('Please provide the endorser DID or role')
       }
       const didCreateTxResult = await this.createEndorserDid(createDidOptions.endorserDid)
       return didCreateTxResult
