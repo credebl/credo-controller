@@ -111,7 +111,7 @@ export class DidController extends Controller {
       throw Error('Only ed25519 and bls12381g2 type supported')
     }
 
-    switch (createDidOptions.network && createDidOptions.network.toLowerCase()) {
+    switch (createDidOptions?.network?.toLowerCase()) {
       case Network.Bcovrin_Testnet.toLowerCase():
         result = await this.handleBcovrin(
           createDidOptions,
@@ -120,12 +120,6 @@ export class DidController extends Controller {
         break
 
       case Network.Indicio_Demonet.toLowerCase():
-        result = await this.handleIndicio(
-          createDidOptions,
-          `did:${createDidOptions.method}:${createDidOptions.network}`
-        )
-        break
-
       case Network.Indicio_Testnet.toLowerCase():
         result = await this.handleIndicio(
           createDidOptions,

@@ -174,7 +174,7 @@ export class MultiTenancyController extends Controller {
         throw Error('Only ed25519 and bls12381g2 type supported')
       }
 
-      switch (createDidOptions.network && createDidOptions.network.toLowerCase()) {
+      switch (createDidOptions?.network?.toLowerCase()) {
         case Network.Bcovrin_Testnet.toLowerCase():
           result = await this.handleBcovrin(
             createDidOptions,
