@@ -4,7 +4,7 @@ import type {
   ProofsProtocolVersionType,
 } from '@aries-framework/core'
 
-import { HandshakeProtocol, Agent, RecordNotFoundError } from '@aries-framework/core'
+import { Agent, HandshakeProtocol, RecordNotFoundError } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
