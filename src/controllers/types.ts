@@ -291,10 +291,10 @@ export interface ResolvedDid {
 }
 
 export interface DidCreate {
-  keyType?: KeyType
+  keyType: KeyType
   seed: string
   domain?: string
-  method?: string
+  method: string
   network?: string
   did?: string
   role?: string

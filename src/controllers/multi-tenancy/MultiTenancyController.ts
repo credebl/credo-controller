@@ -170,12 +170,12 @@ export class MultiTenancyController extends Controller {
         throw Error('For indy method network is required')
       }
 
-      if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
-        throw Error('Only ed25519 and bls12381g2 type supported')
+      if (createDidOptions.keyType !== KeyType.Ed25519) {
+        throw Error('Only ed25519 type supported')
       }
 
       switch (createDidOptions?.network?.toLowerCase()) {
-        case Network.Bcovrin_Testnet.toLowerCase():
+        case Network.Bcovrin_Testnet:
           result = await this.handleBcovrin(
             createDidOptions,
             tenantAgent,
@@ -183,8 +183,8 @@ export class MultiTenancyController extends Controller {
           )
           break
 
-        case Network.Indicio_Demonet.toLowerCase():
-        case Network.Indicio_Testnet.toLowerCase():
+        case Network.Indicio_Demonet:
+        case Network.Indicio_Testnet:
           result = await this.handleIndicio(
             createDidOptions,
             tenantAgent,
