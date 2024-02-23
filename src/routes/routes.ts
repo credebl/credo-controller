@@ -530,7 +530,7 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CredentialFormatPayload_any.createOffer_": {
+    "CredentialFormatPayload_CredentialFormatType-Array.createOffer_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"indy":{"ref":"AnonCredsOfferCredentialFormat"},"jsonld":{"ref":"JsonLdCredentialDetailFormat"},"anoncreds":{"ref":"AnonCredsOfferCredentialFormat"}},"validators":{}},
     },
@@ -539,7 +539,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "protocolVersion": {"dataType":"string","required":true},
-            "credentialFormats": {"ref":"CredentialFormatPayload_any.createOffer_","required":true},
+            "credentialFormats": {"ref":"CredentialFormatPayload_CredentialFormatType-Array.createOffer_","required":true},
             "autoAcceptCredential": {"ref":"AutoAcceptCredential"},
             "comment": {"dataType":"string"},
             "goalCode": {"dataType":"string"},
@@ -629,16 +629,21 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"response":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ProofFormatPayload_any.createProposal_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
+    "ProofFormat": {
+        "dataType": "refObject",
+        "properties": {
+            "formatKey": {"dataType":"string","required":true},
+            "proofFormats": {"dataType":"nestedObjectLiteral","nestedProperties":{"selectCredentialsForRequest":{"dataType":"nestedObjectLiteral","nestedProperties":{"output":{"dataType":"any","required":true},"input":{"dataType":"any","required":true}},"required":true},"getCredentialsForRequest":{"dataType":"nestedObjectLiteral","nestedProperties":{"output":{"dataType":"any","required":true},"input":{"dataType":"any","required":true}},"required":true},"acceptRequest":{"dataType":"any","required":true},"createRequest":{"dataType":"any","required":true},"acceptProposal":{"dataType":"any","required":true},"createProposal":{"dataType":"any","required":true}},"required":true},
+            "formatData": {"dataType":"nestedObjectLiteral","nestedProperties":{"presentation":{"dataType":"any","required":true},"request":{"dataType":"any","required":true},"proposal":{"dataType":"any","required":true}},"required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "RequestProofProposalOptions": {
         "dataType": "refObject",
         "properties": {
             "connectionId": {"dataType":"string","required":true},
-            "proofFormats": {"ref":"ProofFormatPayload_any.createProposal_","required":true},
+            "proofFormats": {"dataType":"nestedObjectLiteral","nestedProperties":{"action":{"dataType":"enum","enums":["createProposal"],"required":true},"formats":{"dataType":"array","array":{"dataType":"refObject","ref":"ProofFormat"},"required":true}},"required":true},
             "goalCode": {"dataType":"string"},
             "parentThreadId": {"dataType":"string"},
             "autoAcceptProof": {"ref":"AutoAcceptProof"},
@@ -647,16 +652,11 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ProofFormatPayload_any.acceptProposal_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AcceptProofProposal": {
         "dataType": "refObject",
         "properties": {
             "proofRecordId": {"dataType":"string","required":true},
-            "proofFormats": {"ref":"ProofFormatPayload_any.acceptProposal_"},
+            "proofFormats": {"dataType":"nestedObjectLiteral","nestedProperties":{"action":{"dataType":"enum","enums":["acceptProposal"],"required":true},"formats":{"dataType":"array","array":{"dataType":"refObject","ref":"ProofFormat"},"required":true}},"required":true},
             "comment": {"dataType":"string"},
             "autoAcceptProof": {"ref":"AutoAcceptProof"},
             "goalCode": {"dataType":"string"},
@@ -1662,6 +1662,38 @@ export function RegisterRoutes(app: Router) {
 
 
               const promise = controller.createDid.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/multi-tenancy/dids/:tenantId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getDids)),
+
+            async function MultiTenancyController_getDids(request: any, response: any, next: any) {
+            const args = {
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getDids.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);

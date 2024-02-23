@@ -1167,7 +1167,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_any.createOffer_": {
+			"CredentialFormatPayload_CredentialFormatType-Array.createOffer_": {
 				"properties": {
 					"indy": {
 						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
@@ -1188,7 +1188,7 @@
 						"type": "string"
 					},
 					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_any.createOffer_"
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormatType-Array.createOffer_"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -1377,11 +1377,71 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
-			"ProofFormatPayload_any.createProposal_": {
-				"properties": {},
-				"additionalProperties": {},
+			"ProofFormat": {
+				"properties": {
+					"formatKey": {
+						"type": "string"
+					},
+					"proofFormats": {
+						"properties": {
+							"selectCredentialsForRequest": {
+								"properties": {
+									"output": {},
+									"input": {}
+								},
+								"required": [
+									"output",
+									"input"
+								],
+								"type": "object"
+							},
+							"getCredentialsForRequest": {
+								"properties": {
+									"output": {},
+									"input": {}
+								},
+								"required": [
+									"output",
+									"input"
+								],
+								"type": "object"
+							},
+							"acceptRequest": {},
+							"createRequest": {},
+							"acceptProposal": {},
+							"createProposal": {}
+						},
+						"required": [
+							"selectCredentialsForRequest",
+							"getCredentialsForRequest",
+							"acceptRequest",
+							"createRequest",
+							"acceptProposal",
+							"createProposal"
+						],
+						"type": "object"
+					},
+					"formatData": {
+						"properties": {
+							"presentation": {},
+							"request": {},
+							"proposal": {}
+						},
+						"required": [
+							"presentation",
+							"request",
+							"proposal"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"formatKey",
+					"proofFormats",
+					"formatData"
+				],
 				"type": "object",
-				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
+				"additionalProperties": false
 			},
 			"RequestProofProposalOptions": {
 				"properties": {
@@ -1389,7 +1449,26 @@
 						"type": "string"
 					},
 					"proofFormats": {
-						"$ref": "#/components/schemas/ProofFormatPayload_any.createProposal_"
+						"properties": {
+							"action": {
+								"type": "string",
+								"enum": [
+									"createProposal"
+								],
+								"nullable": false
+							},
+							"formats": {
+								"items": {
+									"$ref": "#/components/schemas/ProofFormat"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"action",
+							"formats"
+						],
+						"type": "object"
 					},
 					"goalCode": {
 						"type": "string"
@@ -1411,19 +1490,32 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ProofFormatPayload_any.acceptProposal_": {
-				"properties": {},
-				"additionalProperties": {},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
-			},
 			"AcceptProofProposal": {
 				"properties": {
 					"proofRecordId": {
 						"type": "string"
 					},
 					"proofFormats": {
-						"$ref": "#/components/schemas/ProofFormatPayload_any.acceptProposal_"
+						"properties": {
+							"action": {
+								"type": "string",
+								"enum": [
+									"acceptProposal"
+								],
+								"nullable": false
+							},
+							"formats": {
+								"items": {
+									"$ref": "#/components/schemas/ProofFormat"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"action",
+							"formats"
+						],
+						"type": "object"
 					},
 					"comment": {
 						"type": "string"
@@ -1439,7 +1531,8 @@
 					}
 				},
 				"required": [
-					"proofRecordId"
+					"proofRecordId",
+					"proofFormats"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -4111,6 +4204,57 @@
 						}
 					}
 				}
+			}
+		},
+		"/multi-tenancy/dids/{tenantId}": {
+			"get": {
+				"operationId": "GetDids",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/multi-tenancy/transactions/set-endorser-role/{tenantId}": {
