@@ -470,6 +470,23 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Get('/dids/:tenantId')
+  public async getDids(
+    @Path('tenantId') tenantId: string,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      let getDids
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        getDids = await tenantAgent.dids.getCreatedDids()
+      })
+      return getDids
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
   @Post('/transactions/set-endorser-role/:tenantId')
   public async didNymTransaction(
     @Path('tenantId') tenantId: string,
