@@ -1,4 +1,5 @@
 {
+	"openapi": "3.0.0",
 	"components": {
 		"examples": {},
 		"headers": {},
@@ -33,6 +34,7 @@
 			},
 			"Record_string.unknown_": {
 				"properties": {},
+				"additionalProperties": {},
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
@@ -49,6 +51,9 @@
 						"type": "string"
 					}
 				},
+				"required": [
+					"content"
+				],
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
@@ -66,11 +71,6 @@
 					"completed"
 				],
 				"type": "string"
-			},
-			"Record_string.any_": {
-				"properties": {},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
 			},
 			"HandshakeProtocol": {
 				"enum": [
@@ -381,10 +381,10 @@
 			},
 			"Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__": {
 				"properties": {
-					"alias": {
+					"label": {
 						"type": "string"
 					},
-					"label": {
+					"alias": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -515,10 +515,10 @@
 			},
 			"Pick_ReceiveOutOfBandInvitationConfig.Exclude_keyofReceiveOutOfBandInvitationConfig.routing__": {
 				"properties": {
-					"alias": {
+					"label": {
 						"type": "string"
 					},
-					"label": {
+					"alias": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -541,12 +541,16 @@
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
+			"Omit_ReceiveOutOfBandInvitationConfig.routing_": {
+				"$ref": "#/components/schemas/Pick_ReceiveOutOfBandInvitationConfig.Exclude_keyofReceiveOutOfBandInvitationConfig.routing__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
 			"ReceiveInvitationProps": {
 				"properties": {
-					"alias": {
+					"label": {
 						"type": "string"
 					},
-					"label": {
+					"alias": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -577,10 +581,10 @@
 			},
 			"ReceiveInvitationByUrlProps": {
 				"properties": {
-					"alias": {
+					"label": {
 						"type": "string"
 					},
-					"label": {
+					"alias": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -644,6 +648,11 @@
 			"Version": {
 				"type": "string",
 				"example": "1.0.0"
+			},
+			"Record_string.any_": {
+				"properties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
 			},
 			"DidResolutionMetadata": {
 				"properties": {
@@ -849,10 +858,10 @@
 			},
 			"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages__": {
 				"properties": {
-					"alias": {
+					"label": {
 						"type": "string"
 					},
-					"label": {
+					"alias": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -1158,7 +1167,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_%5BLegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat%5D.createOffer_": {
+			"CredentialFormatPayload_any.createOffer_": {
 				"properties": {
 					"indy": {
 						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
@@ -1179,7 +1188,7 @@
 						"type": "string"
 					},
 					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_%5BLegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat%5D.createOffer_"
+						"$ref": "#/components/schemas/CredentialFormatPayload_any.createOffer_"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -1362,11 +1371,15 @@
 						"type": "string"
 					}
 				},
+				"required": [
+					"response"
+				],
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
-			"ProofFormatPayload_%5BProofFormat%5D.createProposal_": {
+			"ProofFormatPayload_any.createProposal_": {
 				"properties": {},
+				"additionalProperties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
 			},
@@ -1376,7 +1389,7 @@
 						"type": "string"
 					},
 					"proofFormats": {
-						"$ref": "#/components/schemas/ProofFormatPayload_%5BProofFormat%5D.createProposal_"
+						"$ref": "#/components/schemas/ProofFormatPayload_any.createProposal_"
 					},
 					"goalCode": {
 						"type": "string"
@@ -1398,8 +1411,9 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ProofFormatPayload_%5BProofFormat%5D.acceptProposal_": {
+			"ProofFormatPayload_any.acceptProposal_": {
 				"properties": {},
+				"additionalProperties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
 			},
@@ -1409,7 +1423,7 @@
 						"type": "string"
 					},
 					"proofFormats": {
-						"$ref": "#/components/schemas/ProofFormatPayload_%5BProofFormat%5D.acceptProposal_"
+						"$ref": "#/components/schemas/ProofFormatPayload_any.acceptProposal_"
 					},
 					"comment": {
 						"type": "string"
@@ -1519,6 +1533,7 @@
 			},
 			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
 				"properties": {},
+				"additionalProperties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
@@ -1543,11 +1558,39 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CredentialFormatPayload_CredentialFormats.acceptOffer_": {
+				"properties": {},
+				"additionalProperties": {},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"CredentialOfferOptions": {
+				"properties": {
+					"credentialRecordId": {
+						"type": "string"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
+					},
+					"autoAcceptCredential": {
+						"$ref": "#/components/schemas/AutoAcceptCredential"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"credentialRecordId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialExchangeRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
 				"properties": {},
+				"additionalProperties": {},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
@@ -1602,7 +1645,6 @@
 		},
 		"contact": {}
 	},
-	"openapi": "3.0.0",
 	"paths": {
 		"/agent": {
 			"get": {
@@ -2280,7 +2322,7 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/Record_string.any_"
+										"$ref": "#/components/schemas/Record_string.unknown_"
 									},
 									"type": "array"
 								},
@@ -6348,7 +6390,7 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/Record_string.any_"
+										"$ref": "#/components/schemas/Record_string.unknown_"
 									},
 									"type": "array"
 								}
@@ -6684,7 +6726,7 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/Record_string.any_"
+										"$ref": "#/components/schemas/Record_string.unknown_"
 									},
 									"type": "array"
 								},
@@ -7567,305 +7609,6 @@
 				}
 			}
 		},
-		"/question-answer": {
-			"get": {
-				"operationId": "GetQuestionAnswerRecords",
-				"responses": {
-					"200": {
-						"description": "QuestionAnswerRecord[]",
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/Record_string.any_"
-									},
-									"type": "array"
-								}
-							}
-						}
-					}
-				},
-				"description": "Retrieve question and answer records by query",
-				"tags": [
-					"Question Answer"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "query",
-						"name": "connectionId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Role of the question",
-						"in": "query",
-						"name": "role",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/QuestionAnswerRole"
-						}
-					},
-					{
-						"description": "State of the question",
-						"in": "query",
-						"name": "state",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/QuestionAnswerState"
-						}
-					},
-					{
-						"description": "Thread identifier",
-						"in": "query",
-						"name": "threadId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/question-answer/question/{connectionId}": {
-			"post": {
-				"operationId": "SendQuestion",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Send a question to a connection",
-				"tags": [
-					"Question Answer"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"detail": {
-										"type": "string"
-									},
-									"validResponses": {
-										"items": {
-											"$ref": "#/components/schemas/ValidResponse"
-										},
-										"type": "array"
-									},
-									"question": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"validResponses",
-									"question"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/question-answer/answer/{id}": {
-			"post": {
-				"operationId": "SendAnswer",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Send a answer to question",
-				"tags": [
-					"Question Answer"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "The id of the question answer record",
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/Record_response.string_"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/question-answer/{id}": {
-			"get": {
-				"operationId": "GetQuestionAnswerRecordById",
-				"responses": {
-					"200": {
-						"description": "ConnectionRecord",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Retrieve question answer record by id",
-				"tags": [
-					"Question Answer"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
-			}
-		},
 		"/credentials": {
 			"get": {
 				"operationId": "GetAllCredentials",
@@ -7876,7 +7619,7 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/Record_string.any_"
+										"$ref": "#/components/schemas/Record_string.unknown_"
 									},
 									"type": "array"
 								},
@@ -8512,7 +8255,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/AcceptCredentialOfferOptions"
+								"$ref": "#/components/schemas/CredentialOfferOptions"
 							}
 						}
 					}
@@ -8707,6 +8450,305 @@
 						}
 					}
 				}
+			}
+		},
+		"/question-answer": {
+			"get": {
+				"operationId": "GetQuestionAnswerRecords",
+				"responses": {
+					"200": {
+						"description": "QuestionAnswerRecord[]",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Record_string.unknown_"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieve question and answer records by query",
+				"tags": [
+					"Question Answer"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Connection identifier",
+						"in": "query",
+						"name": "connectionId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Role of the question",
+						"in": "query",
+						"name": "role",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/QuestionAnswerRole"
+						}
+					},
+					{
+						"description": "State of the question",
+						"in": "query",
+						"name": "state",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/QuestionAnswerState"
+						}
+					},
+					{
+						"description": "Thread identifier",
+						"in": "query",
+						"name": "threadId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/question-answer/question/{connectionId}": {
+			"post": {
+				"operationId": "SendQuestion",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Send a question to a connection",
+				"tags": [
+					"Question Answer"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Connection identifier",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/RecordId"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"detail": {
+										"type": "string"
+									},
+									"validResponses": {
+										"items": {
+											"$ref": "#/components/schemas/ValidResponse"
+										},
+										"type": "array"
+									},
+									"question": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"validResponses",
+									"question"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/question-answer/answer/{id}": {
+			"post": {
+				"operationId": "SendAnswer",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Send a answer to question",
+				"tags": [
+					"Question Answer"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "The id of the question answer record",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/RecordId"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Record_response.string_"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/question-answer/{id}": {
+			"get": {
+				"operationId": "GetQuestionAnswerRecordById",
+				"responses": {
+					"200": {
+						"description": "ConnectionRecord",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieve question answer record by id",
+				"tags": [
+					"Question Answer"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/RecordId"
+						}
+					}
+				]
 			}
 		}
 	},
