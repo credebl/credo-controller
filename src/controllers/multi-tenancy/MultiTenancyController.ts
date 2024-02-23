@@ -2,7 +2,6 @@ import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAge
 import type { Version } from '../examples'
 import type {
   AcceptProofRequestOptions,
-  Buffer,
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
   CredentialProtocolVersionType,
@@ -175,7 +174,11 @@ export class MultiTenancyController extends Controller {
       }
 
       if (createDidOptions.keyType !== KeyType.Ed25519) {
-        throw Error('Only ed25519 type supported')
+        throw Error('Only ed25519 key type supported')
+      }
+
+      if (!Network.Bcovrin_Testnet && !Network.Indicio_Demonet && !Network.Indicio_Testnet) {
+        throw Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
       }
 
       switch (createDidOptions?.network?.toLowerCase()) {
@@ -208,12 +211,20 @@ export class MultiTenancyController extends Controller {
     tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
+    let didDocument
     if (createDidOptions.did) {
       await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed, tenantAgent)
-      const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createDidOptions.did}`)
+      const getDid = await tenantAgent.dids.getCreatedDids({
+        method: didMethod,
+        did: createDidOptions.did,
+      })
+      if (getDid.length > 0) {
+        didDocument = getDid[0].didDocument
+      }
+
       return {
         did: `${didMethod}:${createDidOptions.did}`,
-        didDocument: resolveResult.didDocument,
+        didDocument: didDocument,
       }
     } else {
       if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
@@ -232,10 +243,18 @@ export class MultiTenancyController extends Controller {
         if (res) {
           const { did } = res?.data || {}
           await this.importDid(didMethod, did, createDidOptions.seed, tenantAgent)
-          const resolveResult = await this.agent.dids.resolve(`${didMethod}:${res.data.did}`)
+          const didRecord = await tenantAgent.dids.getCreatedDids({
+            method: DidMethod.Indy,
+            did: `did:${DidMethod.Indy}:${Network.Bcovrin_Testnet}:${res.data.did}`,
+          })
+
+          if (didRecord.length > 0) {
+            didDocument = didRecord[0].didDocument
+          }
+
           return {
             did: `${didMethod}:${res.data.did}`,
-            didDocument: resolveResult.didDocument,
+            didDocument: didDocument,
           }
         }
       } else {
@@ -260,10 +279,22 @@ export class MultiTenancyController extends Controller {
     tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
+    let didDocument
+
     if (createDidOptions.did) {
       await this.importDid(didMethod, createDidOptions?.did, createDidOptions.seed, tenantAgent)
-      const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createDidOptions.did}`)
-      return { did: `${didMethod}:${createDidOptions.did}`, didDocument: resolveResult.didDocument }
+      const getDid = await tenantAgent.dids.getCreatedDids({
+        method: didMethod,
+        did: createDidOptions.did,
+      })
+      if (getDid.length > 0) {
+        didDocument = getDid[0].didDocument
+      }
+
+      return {
+        did: `${didMethod}:${createDidOptions.did}`,
+        didDocument: didDocument,
+      }
     } else {
       if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
         return await this.handleEndorserCreation(createDidOptions, tenantAgent, didMethod)
@@ -278,6 +309,7 @@ export class MultiTenancyController extends Controller {
     tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
+    let didDocument
     const key = await tenantAgent.wallet.createKey({
       privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
       keyType: KeyType.Ed25519,
@@ -303,8 +335,18 @@ export class MultiTenancyController extends Controller {
     const res = await axios.post(INDICIO_NYM_URL, body)
     if (res.data.statusCode === 200) {
       await this.importDid(didMethod, did, createDidOptions.seed, tenantAgent)
-      const resolveResult = await tenantAgent.dids.resolve(`${didMethod}:${did}`)
-      return { did: `${didMethod}:${body?.did}`, didDocument: resolveResult.didDocument }
+      const didRecord = await tenantAgent.dids.getCreatedDids({
+        method: DidMethod.Indy,
+        did: `${didMethod}:${body?.did}`,
+      })
+      if (didRecord.length > 0) {
+        didDocument = didRecord[0].didDocument
+      }
+
+      return {
+        did: `${didMethod}:${body?.did}`,
+        didDocument: didDocument,
+      }
     }
   }
 
@@ -341,7 +383,7 @@ export class MultiTenancyController extends Controller {
       }
 
       if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
-        throw Error('Only ed25519 and bls12381g2 type supported')
+        throw Error('Only ed25519 and bls12381g2 key type supported')
       }
 
       await tenantAgent.wallet.createKey({
@@ -385,7 +427,7 @@ export class MultiTenancyController extends Controller {
       }
 
       if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
-        throw Error('Only ed25519 and bls12381g2 type supported')
+        throw Error('Only ed25519 and bls12381g2 key type supported')
       }
 
       if (!createDidOptions.domain) {
@@ -421,20 +463,7 @@ export class MultiTenancyController extends Controller {
     return { did, didDocument }
   }
 
-  private async importDid(
-    didMethod: string,
-    did: string,
-    seed: string,
-    tenantAgent: {
-      dids: {
-        import: (arg0: {
-          did: string
-          overwrite: boolean
-          privateKeys: { keyType: KeyType; privateKey: Buffer }[]
-        }) => any
-      }
-    }
-  ) {
+  private async importDid(didMethod: string, did: string, seed: string, tenantAgent: TenantAgent<RestAgentModules>) {
     await tenantAgent.dids.import({
       did: `${didMethod}:${did}`,
       overwrite: true,
@@ -1484,7 +1513,7 @@ export class MultiTenancyController extends Controller {
           throw Error('keyType is required')
         }
         if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
-          throw Error('Only ed25519 and bls12381g2 type supported')
+          throw Error('Only ed25519 and bls12381g2 key type supported')
         }
         const did = `did:${didOptions.method}:${didOptions.domain}`
         let didDocument: any

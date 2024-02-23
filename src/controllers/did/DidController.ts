@@ -112,7 +112,11 @@ export class DidController extends Controller {
     }
 
     if (createDidOptions.keyType !== KeyType.Ed25519) {
-      throw Error('Only ed25519 type supported')
+      throw Error('Only ed25519 key type supported')
+    }
+
+    if (!Network.Bcovrin_Testnet && !Network.Indicio_Demonet && !Network.Indicio_Testnet) {
+      throw Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
     }
 
     switch (createDidOptions?.network?.toLowerCase()) {
@@ -132,17 +136,28 @@ export class DidController extends Controller {
         break
 
       default:
-        throw new Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
+        throw new Error(`Network does not exists`)
     }
     return result
   }
 
   private async handleBcovrin(createDidOptions: DidCreate, didMethod: string) {
+    let didDocument
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
-        const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createDidOptions.did}`)
-        return { did: `${didMethod}:${createDidOptions.did}`, didDocument: resolveResult.didDocument }
+        const getDid = await this.agent.dids.getCreatedDids({
+          method: didMethod,
+          did: createDidOptions.did,
+        })
+        if (getDid.length > 0) {
+          didDocument = getDid[0].didDocument
+        }
+
+        return {
+          did: `${didMethod}:${createDidOptions.did}`,
+          didDocument: didDocument,
+        }
       } else {
         const res = await axios.post(BCOVRIN_REGISTER_URL, {
           role: 'ENDORSER',
@@ -151,8 +166,19 @@ export class DidController extends Controller {
         })
         const { did } = res?.data || {}
         await this.importDid(didMethod, did, createDidOptions.seed)
-        const resolveResult = await this.agent.dids.resolve(`${didMethod}:${did}`)
-        return { did: `${didMethod}:${did}`, didDocument: resolveResult.didDocument }
+        const didRecord = await this.agent.dids.getCreatedDids({
+          method: DidMethod.Indy,
+          did: `did:${DidMethod.Indy}:${Network.Bcovrin_Testnet}:${res.data.did}`,
+        })
+
+        if (didRecord.length > 0) {
+          didDocument = didRecord[0].didDocument
+        }
+
+        return {
+          did: `${didMethod}:${res.data.did}`,
+          didDocument: didDocument,
+        }
       }
     } else {
       if (!createDidOptions.endorserDid) {
@@ -164,18 +190,41 @@ export class DidController extends Controller {
   }
 
   private async handleIndicio(createDidOptions: DidCreate, didMethod: string) {
+    let didDocument
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
-        const resolveResult = await this.agent.dids.resolve(`${didMethod}:${createDidOptions.did}`)
-        return { did: `${didMethod}:${createDidOptions.did}`, didDocument: resolveResult.didDocument }
+        const didRecord = await this.agent.dids.getCreatedDids({
+          method: DidMethod.Indy,
+          did: `${didMethod}:${createDidOptions.did}`,
+        })
+
+        if (didRecord.length > 0) {
+          didDocument = didRecord[0].didDocument
+        }
+
+        return {
+          did: `${didMethod}:${createDidOptions.did}`,
+          didDocument: didDocument,
+        }
       } else {
         const key = await this.createIndicioKey(createDidOptions)
         const res = await axios.post(INDICIO_NYM_URL, key)
         if (res.data.statusCode === 200) {
           await this.importDid(didMethod, key.did, createDidOptions.seed)
-          const resolveResult = await this.agent.dids.resolve(`${didMethod}:${key.did}`)
-          return { did: `${didMethod}:${key.did}`, didDocument: resolveResult.didDocument }
+          const didRecord = await this.agent.dids.getCreatedDids({
+            method: DidMethod.Indy,
+            did: `${didMethod}:${key.did}`,
+          })
+
+          if (didRecord.length > 0) {
+            didDocument = didRecord[0].didDocument
+          }
+
+          return {
+            did: `${didMethod}:${key.did}`,
+            didDocument: didDocument,
+          }
         }
       }
     } else {
@@ -271,7 +320,7 @@ export class DidController extends Controller {
     }
 
     if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
-      throw Error('Only ed25519 and bls12381g2 type supported')
+      throw Error('Only ed25519 and bls12381g2 key type supported')
     }
 
     if (!didOptions.domain) {
