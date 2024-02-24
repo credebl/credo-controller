@@ -12,7 +12,7 @@ export const questionAnswerEvents = async (agent: Agent, config: ServerConfig) =
     QuestionAnswerEventTypes.QuestionAnswerStateChanged,
     async (event: QuestionAnswerStateChangedEvent) => {
       const record = event.payload.questionAnswerRecord
-      const body = record.toJSON()
+      const body = { ...record.toJSON(), ...event.metadata }
 
       // Only send webhook if webhook url is configured
       if (config.webhookUrl) {
@@ -25,7 +25,7 @@ export const questionAnswerEvents = async (agent: Agent, config: ServerConfig) =
           ...event,
           payload: {
             message: event.payload.questionAnswerRecord.toJSON(),
-            basicMessageRecord: body,
+            questionAnswerRecord: body,
           },
         })
       }
