@@ -183,6 +183,7 @@ export class ProofController extends Controller {
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [proofMessage],
         autoAcceptConnection: true,
+        imageUrl: createRequestOptions?.imageUrl,
       })
 
       return {
