@@ -221,6 +221,7 @@ export class CredentialController extends Controller {
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [credentialMessage],
         autoAcceptConnection: true,
+        imageUrl: outOfBandOption?.imageUrl,
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({

@@ -119,6 +119,7 @@ export interface CreateOfferOobOptions {
   parentThreadId?: string
   willConfirm?: boolean
   label?: string
+  imageUrl?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -136,6 +137,7 @@ export interface CreateProofRequestOobOptions {
   autoAcceptProof?: AutoAcceptProof
   comment?: string
   label?: string
+  imageUrl?: string
 }
 
 export interface OfferCredentialOptions {

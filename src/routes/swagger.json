@@ -1212,6 +1212,9 @@
 					},
 					"label": {
 						"type": "string"
+					},
+					"imageUrl": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -1331,6 +1334,9 @@
 						"type": "string"
 					},
 					"label": {
+						"type": "string"
+					},
+					"imageUrl": {
 						"type": "string"
 					}
 				},
