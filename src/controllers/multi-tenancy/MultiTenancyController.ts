@@ -49,9 +49,7 @@ import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
 import {
   RequestProofOptions,
-  CreateOfferOobOptions,
   CreateOfferOptions,
-  CreateProofRequestOobOptions,
   CreateTenantOptions,
   DidCreate,
   DidNymTransaction,
@@ -59,6 +57,8 @@ import {
   ReceiveInvitationByUrlProps,
   ReceiveInvitationProps,
   WriteTransaction,
+  CreateProofRequestOobOptions,
+  CreateOfferOobOptions,
 } from '../types'
 
 import {
@@ -1035,6 +1035,7 @@ export class MultiTenancyController extends Controller {
             },
             options: {},
           })
+
           if (!credentialDefinitionState?.credentialDefinitionId) {
             throw new Error('Credential Definition Id not found')
           }
@@ -1164,6 +1165,7 @@ export class MultiTenancyController extends Controller {
           handshakeProtocols: [HandshakeProtocol.Connections],
           messages: [credentialMessage],
           autoAcceptConnection: true,
+          imageUrl: createOfferOptions?.imageUrl,
         })
 
         createOfferOobRecord = {
@@ -1366,6 +1368,7 @@ export class MultiTenancyController extends Controller {
           handshakeProtocols: [HandshakeProtocol.Connections],
           messages: [proofMessage],
           autoAcceptConnection: true,
+          imageUrl: createRequestOptions?.imageUrl,
         })
 
         oobProofRecord = {
