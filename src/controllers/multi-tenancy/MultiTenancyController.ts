@@ -127,6 +127,10 @@ export class MultiTenancyController extends Controller {
         throw Error('Method is required')
       }
 
+      if (!createDidOptions.seed) {
+        throw Error('Seed is required')
+      }
+
       let result
       switch (createDidOptions.method) {
         case DidMethod.Indy:
