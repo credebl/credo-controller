@@ -303,15 +303,13 @@ export interface DidCreate {
   network?: string
   did?: string
   role?: string
-  options?: DidRegistrationExtraOptions
-  secret?: DidRegistrationSecretOptions
   endorserDid?: string
   didDocument?: DidDocument
 }
 
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>
-  seed: string
+  seed?: string
   method?: string
   role?: string
   endorserDid?: string
