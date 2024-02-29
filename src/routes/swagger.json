@@ -717,12 +717,6 @@
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
-			"DidRegistrationExtraOptions": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"DidRegistrationSecretOptions": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
 			"DidDocument": {
 				"$ref": "#/components/schemas/Record_string.any_"
 			},
@@ -748,12 +742,6 @@
 					},
 					"role": {
 						"type": "string"
-					},
-					"options": {
-						"$ref": "#/components/schemas/DidRegistrationExtraOptions"
-					},
-					"secret": {
-						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
 					},
 					"endorserDid": {
 						"type": "string"
@@ -816,8 +804,7 @@
 					}
 				},
 				"required": [
-					"config",
-					"seed"
+					"config"
 				],
 				"type": "object",
 				"additionalProperties": false

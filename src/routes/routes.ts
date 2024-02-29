@@ -355,16 +355,6 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"string","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidRegistrationExtraOptions": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidRegistrationSecretOptions": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidDocument": {
         "dataType": "refAlias",
         "type": {"ref":"Record_string.any_","validators":{}},
@@ -380,8 +370,6 @@ const models: TsoaRoute.Models = {
             "network": {"dataType":"string"},
             "did": {"dataType":"string"},
             "role": {"dataType":"string"},
-            "options": {"ref":"DidRegistrationExtraOptions"},
-            "secret": {"ref":"DidRegistrationSecretOptions"},
             "endorserDid": {"dataType":"string"},
             "didDocument": {"ref":"DidDocument"},
             "privatekey": {"dataType":"string"},
@@ -404,7 +392,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "config": {"ref":"Omit_TenantConfig.walletConfig_","required":true},
-            "seed": {"dataType":"string","required":true},
+            "seed": {"dataType":"string"},
             "method": {"dataType":"string"},
             "role": {"dataType":"string"},
             "endorserDid": {"dataType":"string"},
