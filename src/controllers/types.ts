@@ -304,7 +304,6 @@ export interface DidCreate {
   did?: string
   role?: string
   endorserDid?: string
-  didDocument?: DidDocument
 }
 
 export interface CreateTenantOptions {

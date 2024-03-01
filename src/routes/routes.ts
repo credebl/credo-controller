@@ -353,11 +353,6 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"string","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidDocument": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.any_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidCreate": {
         "dataType": "refObject",
         "properties": {
@@ -369,7 +364,6 @@ const models: TsoaRoute.Models = {
             "did": {"dataType":"string"},
             "role": {"dataType":"string"},
             "endorserDid": {"dataType":"string"},
-            "didDocument": {"ref":"DidDocument"},
         },
         "additionalProperties": false,
     },
