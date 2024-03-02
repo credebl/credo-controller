@@ -17,7 +17,6 @@ import {
   JsonLdCredentialFormatService,
   KeyDidRegistrar,
   KeyDidResolver,
-  PresentationExchangeProofFormatService,
   ProofsModule,
   V2CredentialProtocol,
   V2ProofProtocol,
@@ -99,11 +98,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
             indyProofFormat: legacyIndyProofFormat,
           }),
           new V2ProofProtocol({
-            proofFormats: [
-              legacyIndyProofFormat,
-              new AnonCredsProofFormatService(),
-              new PresentationExchangeProofFormatService(),
-            ],
+            proofFormats: [legacyIndyProofFormat, new AnonCredsProofFormatService()],
           }),
         ],
       }),

@@ -97,15 +97,11 @@
 							}
 						},
 						"type": "object"
-					},
-					"messageType": {
-						"type": "string"
 					}
 				},
 				"required": [
 					"@type",
-					"@id",
-					"messageType"
+					"@id"
 				],
 				"type": "object",
 				"additionalProperties": {}
@@ -122,8 +118,7 @@
 					"x25519",
 					"p256",
 					"p384",
-					"p521",
-					"k256"
+					"p521"
 				],
 				"type": "string"
 			},
@@ -172,40 +167,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"JsonValue": {
-				"anyOf": [
-					{
-						"type": "string"
-					},
-					{
-						"type": "number",
-						"format": "double"
-					},
-					{
-						"type": "boolean"
-					},
-					{
-						"$ref": "#/components/schemas/JsonObject"
-					},
-					{
-						"$ref": "#/components/schemas/JsonArray"
-					}
-				],
-				"nullable": true
-			},
-			"JsonObject": {
-				"properties": {},
-				"type": "object",
-				"additionalProperties": {
-					"$ref": "#/components/schemas/JsonValue"
-				}
-			},
-			"JsonArray": {
-				"items": {
-					"$ref": "#/components/schemas/JsonValue"
-				},
-				"type": "array"
 			},
 			"Pick_JwsGeneralFormat.Exclude_keyofJwsGeneralFormat.payload__": {
 				"properties": {
@@ -260,7 +221,7 @@
 						"description": "Base64-encoded data, when representing arbitrary content inline instead of via links. Optional."
 					},
 					"json": {
-						"$ref": "#/components/schemas/JsonValue",
+						"$ref": "#/components/schemas/Record_string.unknown_",
 						"description": "Directly embedded JSON data, when representing content inline instead of via links, and when the content is natively conveyable as JSON. Optional."
 					},
 					"links": {
@@ -1052,6 +1013,40 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"JsonObject": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": {
+					"$ref": "#/components/schemas/JsonValue"
+				}
+			},
+			"JsonValue": {
+				"anyOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "number",
+						"format": "double"
+					},
+					{
+						"type": "boolean"
+					},
+					{
+						"$ref": "#/components/schemas/JsonObject"
+					},
+					{
+						"$ref": "#/components/schemas/JsonArray"
+					}
+				],
+				"nullable": true
+			},
+			"JsonArray": {
+				"items": {
+					"$ref": "#/components/schemas/JsonValue"
+				},
+				"type": "array"
 			},
 			"W3cIssuerOptions": {
 				"description": "TODO: check how to support arbitrary data in class",

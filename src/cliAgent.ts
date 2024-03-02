@@ -28,7 +28,6 @@ import {
   CacheModule,
   InMemoryLruCache,
   WebDidResolver,
-  PresentationExchangeProofFormatService,
   HttpOutboundTransport,
   WsOutboundTransport,
   LogLevel,
@@ -113,7 +112,6 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
   const anonCredsCredentialFormatService = new AnonCredsCredentialFormatService()
   const anonCredsProofFormatService = new AnonCredsProofFormatService()
-  const presentationExchangeProofFormatService = new PresentationExchangeProofFormatService()
   return {
     askar: new AskarModule({
       ariesAskar,
@@ -149,7 +147,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
           indyProofFormat: legacyIndyProofFormat,
         }),
         new V2ProofProtocol({
-          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService, presentationExchangeProofFormatService],
+          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService],
         }),
       ],
     }),
