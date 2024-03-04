@@ -12,6 +12,7 @@ export enum DidMethod {
   Indy = 'indy',
   Key = 'key',
   Web = 'web',
+  Polygon = 'polygon',
 }
 
 export enum Network {

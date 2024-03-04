@@ -30,6 +30,7 @@ import {
 import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme } from '@aries-framework/node'
 import { TenantsModule } from '@aries-framework/tenants'
+import { PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
@@ -123,6 +124,13 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
         ],
       }),
       tenants: new TenantsModule(),
+      polygon: new PolygonModule({
+        didContractAddress: '0x12513116875BB3E4F098Ce74624739Ee51bAf023',
+        schemaManagerContractAddress: '0x552992e9f14b15bBd76488cD4c38c89B80259f37',
+        fileServerToken: '',
+        rpcUrl: '',
+        serverUrl: '',
+      }),
     },
     dependencies: agentDependencies,
   })

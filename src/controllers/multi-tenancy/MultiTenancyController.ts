@@ -14,6 +14,7 @@ import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-fra
 import type { QuestionAnswerRecord, ValidResponse } from '@aries-framework/question-answer'
 import type { TenantRecord } from '@aries-framework/tenants'
 import type { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
+import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 
 import {
   getUnqualifiedSchemaId,
@@ -140,6 +141,10 @@ export class MultiTenancyController extends Controller {
           result = await this.handleWeb(createDidOptions, tenantId)
           break
 
+        case DidMethod.Polygon:
+          result = await this.handlePolygon(createDidOptions, tenantId)
+          break
+
         default:
           return internalServerError(500, { message: `Invalid method: ${createDidOptions.method}` })
       }
@@ -208,6 +213,9 @@ export class MultiTenancyController extends Controller {
     didMethod: string
   ) {
     let didDocument
+    if (!createDidOptions.seed) {
+      throw Error('Seed is required')
+    }
     if (createDidOptions.did) {
       await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed, tenantAgent)
       const getDid = await tenantAgent.dids.getCreatedDids({
@@ -276,6 +284,9 @@ export class MultiTenancyController extends Controller {
     didMethod: string
   ) {
     let didDocument
+    if (!createDidOptions.seed) {
+      throw Error('Seed is required')
+    }
 
     if (createDidOptions.did) {
       await this.importDid(didMethod, createDidOptions?.did, createDidOptions.seed, tenantAgent)
@@ -306,6 +317,9 @@ export class MultiTenancyController extends Controller {
     didMethod: string
   ) {
     let didDocument
+    if (!createDidOptions.seed) {
+      throw Error('Seed is required')
+    }
     const key = await tenantAgent.wallet.createKey({
       privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
       keyType: KeyType.Ed25519,
@@ -367,6 +381,9 @@ export class MultiTenancyController extends Controller {
     let didDocument: any
 
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      if (!createDidOptions.seed) {
+        throw Error('Seed is required')
+      }
       if (!createDidOptions.keyType) {
         throw Error('keyType is required')
       }
@@ -415,6 +432,9 @@ export class MultiTenancyController extends Controller {
     let didDocument: any
 
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      if (!createDidOptions.seed) {
+        throw Error('Seed is required')
+      }
       if (!createDidOptions.keyType) {
         throw Error('keyType is required')
       }
@@ -454,6 +474,32 @@ export class MultiTenancyController extends Controller {
       })
     })
     return { did, didDocument }
+  }
+
+  public async handlePolygon(createDidOptions: DidCreate, tenantId: string) {
+    let createDidResponse
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      // need to discuss try catch logic
+      const { endpoint, network, privatekey } = createDidOptions
+      if (network !== 'mainnet' && network !== 'testnet') {
+        throw Error('Invalid network type')
+      }
+      if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
+        throw Error('Invalid private key or not supported')
+      }
+
+      createDidResponse = await tenantAgent.dids.create<PolygonDidCreateOptions>({
+        method: 'polygon',
+        options: {
+          network,
+          endpoint,
+        },
+        secret: {
+          privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
+        },
+      })
+    })
+    return createDidResponse
   }
 
   private async importDid(didMethod: string, did: string, seed: string, tenantAgent: TenantAgent<RestAgentModules>) {
@@ -835,6 +881,69 @@ export class MultiTenancyController extends Controller {
         }
       }
 
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/polygon-wc3/schema/:tenantId')
+  public async createPolygonW3CSchema(
+    @Body()
+    createSchemaRequest: {
+      did: string
+      schemaName: string
+      schema: object
+    },
+    @Path('tenantId') tenantId: string,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ): Promise<unknown> {
+    try {
+      let schemaResponse
+      const { did, schemaName, schema } = createSchemaRequest
+      if (!did || !schemaName || !schema) {
+        throw Error('One or more parameters are empty or undefined.')
+      }
+
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        //need to add the return type after adding the scham URL
+        schemaResponse = await tenantAgent.modules.polygon.createSchema({
+          did,
+          schemaName,
+          schema,
+        })
+      })
+      return schemaResponse
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
+  @Get('polygon-wc3/schema/:did/:schemaId/:tenantId')
+  public async getPolygonW3CSchemaById(
+    @Path('tenantId') tenantId: string,
+    @Path('did') did: string,
+    @Path('schemaId') schemaId: string,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
+    @Res() forbiddenError: TsoaResponse<401, { reason: string }>
+  ): Promise<unknown> {
+    if (!tenantId || !did || !schemaId) {
+      return badRequestError(400, { reason: 'Missing or invalid parameters.' })
+    }
+
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        return tenantAgent.modules.polygon.getSchemaById(did, schemaId)
+      })
+    } catch (error) {
+      if (error instanceof AriesFrameworkError) {
+        if (error.message.includes('UnauthorizedClientRequest')) {
+          return forbiddenError(401, {
+            reason: 'this action is not allowed.',
+          })
+        }
+      }
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
@@ -1519,6 +1628,9 @@ export class MultiTenancyController extends Controller {
     try {
       let didDoc
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if (!didOptions.seed) {
+          throw Error('Seed is required')
+        }
         if (!didOptions.keyType) {
           throw Error('keyType is required')
         }
@@ -1570,6 +1682,9 @@ export class MultiTenancyController extends Controller {
     try {
       let didCreateResponse
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if (!didOptions.seed) {
+          throw Error('Seed is required')
+        }
         didCreateResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
           method: 'key',
           options: {
