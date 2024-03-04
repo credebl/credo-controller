@@ -119,6 +119,7 @@ export interface CreateOfferOobOptions {
   parentThreadId?: string
   willConfirm?: boolean
   label?: string
+  imageUrl?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -136,6 +137,7 @@ export interface CreateProofRequestOobOptions {
   autoAcceptProof?: AutoAcceptProof
   comment?: string
   label?: string
+  imageUrl?: string
 }
 
 export interface OfferCredentialOptions {
@@ -301,8 +303,6 @@ export interface DidCreate {
   network?: string
   did?: string
   role?: string
-  options?: DidRegistrationExtraOptions
-  secret?: DidRegistrationSecretOptions
   endorserDid?: string
   didDocument?: DidDocument
   privatekey?: string
@@ -311,7 +311,7 @@ export interface DidCreate {
 
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>
-  seed: string
+  seed?: string
   method?: string
   role?: string
   endorserDid?: string
