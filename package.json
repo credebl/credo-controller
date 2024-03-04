@@ -67,7 +67,6 @@
     "node-fetch": "^2.6.7",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0",
-    "ref-napi": "^3.0.3",
     "reflect-metadata": "^0.1.13",
     "swagger-ui-express": "^4.4.0",
     "tslog": "^3.3.3",
