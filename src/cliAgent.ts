@@ -44,6 +44,7 @@ import {
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
 import { QuestionAnswerModule } from '@aries-framework/question-answer'
 import { TenantsModule } from '@aries-framework/tenants'
+import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
@@ -126,8 +127,8 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
 
     dids: new DidsModule({
-      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
-      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
+      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar(), new PolygonDidRegistrar()],
+      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver(), new PolygonDidResolver()],
     }),
 
     anoncreds: new AnonCredsModule({
@@ -174,6 +175,13 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
 
     questionAnswer: new QuestionAnswerModule(),
+    polygon: new PolygonModule({
+      didContractAddress: '0x12513116875BB3E4F098Ce74624739Ee51bAf023',
+      schemaManagerContractAddress: '0x552992e9f14b15bBd76488cD4c38c89B80259f37',
+      fileServerToken: '',
+      rpcUrl: 'https://polygon-mumbai.infura.io/v3/0579d305568d404e996e49695e9272a3',
+      serverUrl: '',
+    }),
   }
 }
 

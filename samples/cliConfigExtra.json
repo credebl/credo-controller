@@ -1,7 +1,7 @@
 {
-  "label": "AFJ Rest Agent 1",
-  "walletId": "sample",
-  "walletKey": "sample",
+  "label": "AFJ Rest Agent 2",
+  "walletId": "sampleextra",
+  "walletKey": "sampleextra",
   "walletType": "postgres",
   "walletUrl": "localhost:5432",
   "walletAccount": "postgres",
@@ -23,7 +23,7 @@
       "indyNamespace": "bcovrin:testnet"
     }
   ],
-  "endpoint": ["http://localhost:4002"],
+  "endpoint": ["http://localhost:4004"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
   "autoAcceptProofs": "contentApproved",
@@ -32,12 +32,12 @@
   "inboundTransport": [
     {
       "transport": "http",
-      "port": 4002
+      "port": 4004
     }
   ],
   "outboundTransport": ["http"],
   "autoAcceptMediationRequests": false,
-  "adminPort": 4001,
+  "adminPort": 4003,
   "tenancy": false,
   "webhookUrl": "http://192.168.1.68:5000/wh/0b3f3fc0-f4b1-47bb-8f6f-9598aa842fcd"
 }

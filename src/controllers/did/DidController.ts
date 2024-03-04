@@ -1,5 +1,6 @@
 import type { DidResolutionResultProps } from '../types'
 import type { KeyDidCreateOptions } from '@aries-framework/core'
+import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 
 import {
   KeyType,
@@ -85,6 +86,10 @@ export class DidController extends Controller {
           result = await this.handleWeb(createDidOptions)
           break
 
+        case DidMethod.Polygon:
+          result = await this.handlePolygon(createDidOptions)
+          break
+
         default:
           return internalServerError(500, { message: `Invalid method: ${createDidOptions.method}` })
       }
@@ -143,6 +148,9 @@ export class DidController extends Controller {
 
   private async handleBcovrin(createDidOptions: DidCreate, didMethod: string) {
     let didDocument
+    if (!createDidOptions.seed) {
+      throw Error('Seed is required')
+    }
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
@@ -191,6 +199,9 @@ export class DidController extends Controller {
 
   private async handleIndicio(createDidOptions: DidCreate, didMethod: string) {
     let didDocument
+    if (!createDidOptions.seed) {
+      throw Error('Seed is required')
+    }
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
@@ -247,6 +258,9 @@ export class DidController extends Controller {
   }
 
   private async createIndicioKey(createDidOptions: DidCreate) {
+    if (!createDidOptions.seed) {
+      throw Error('Seed is required')
+    }
     const key = await this.agent.wallet.createKey({
       privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
       keyType: KeyType.Ed25519,
@@ -288,6 +302,9 @@ export class DidController extends Controller {
   }
 
   public async handleKey(didOptions: DidCreate) {
+    if (!didOptions.seed) {
+      throw Error('Seed is required')
+    }
     const didWebResponse = await this.agent.dids.create<KeyDidCreateOptions>({
       method: DidMethod.Key,
       options: {
@@ -313,6 +330,9 @@ export class DidController extends Controller {
   }
 
   public async handleWeb(didOptions: DidCreate) {
+    if (!didOptions.seed) {
+      throw Error('Seed is required')
+    }
     let didDocument: any
 
     if (!didOptions.keyType) {
@@ -357,6 +377,28 @@ export class DidController extends Controller {
       didDocument,
     })
     return { did, didDocument }
+  }
+
+  public async handlePolygon(createDidOptions: DidCreate) {
+    // need to discuss try catch logic
+    const { endpoint, network, privatekey } = createDidOptions
+    if (network !== 'mainnet' && network !== 'testnet') {
+      throw Error('Invalid network type')
+    }
+    if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
+      throw Error('Invalid private key or not supported')
+    }
+
+    return this.agent.dids.create<PolygonDidCreateOptions>({
+      method: 'polygon',
+      options: {
+        network,
+        endpoint,
+      },
+      secret: {
+        privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
+      },
+    })
   }
 
   @Get('/')
