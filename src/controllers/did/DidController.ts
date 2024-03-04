@@ -152,11 +152,6 @@ export class DidController extends Controller {
       throw Error('Seed is required')
     }
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
-      await this.agent.wallet.createKey({
-        privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
-        keyType: KeyType.Ed25519,
-      })
-
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
         const getDid = await this.agent.dids.getCreatedDids({
