@@ -46,7 +46,7 @@
     "@aries-framework/push-notifications": "^0.6.0",
     "@aries-framework/question-answer": "^0.4.2",
     "@aries-framework/tenants": "^0.4.2",
-    "@ayanworks/credo-polygon-w3c-module": "^0.0.1",
+    "@ayanworks/credo-polygon-w3c-module": "0.0.2-alpha.0",
     "@hyperledger/anoncreds-nodejs": "^0.1.0",
     "@hyperledger/aries-askar-nodejs": "^0.1.1",
     "@hyperledger/indy-vdr-nodejs": "^0.1.0",

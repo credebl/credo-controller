@@ -127,10 +127,6 @@ export class MultiTenancyController extends Controller {
         throw Error('Method is required')
       }
 
-      if (!createDidOptions.seed) {
-        throw Error('Seed is required')
-      }
-
       let result
       switch (createDidOptions.method) {
         case DidMethod.Indy:
@@ -174,6 +170,10 @@ export class MultiTenancyController extends Controller {
         throw Error('keyType is required')
       }
 
+      if (!createDidOptions.seed) {
+        throw Error('Seed is required')
+      }
+
       if (!createDidOptions.network) {
         throw Error('For indy method network is required')
       }
@@ -185,7 +185,6 @@ export class MultiTenancyController extends Controller {
       if (!Network.Bcovrin_Testnet && !Network.Indicio_Demonet && !Network.Indicio_Testnet) {
         throw Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
       }
-
       switch (createDidOptions?.network?.toLowerCase()) {
         case Network.Bcovrin_Testnet:
           result = await this.handleBcovrin(
@@ -484,8 +483,12 @@ export class MultiTenancyController extends Controller {
     let createDidResponse
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
       // need to discuss try catch logic
-      const { endpoint, network, privatekey } = createDidOptions
-      if (network !== 'mainnet' && network !== 'testnet') {
+
+      const networkDetails = createDidOptions.network
+      const networkName = networkDetails?.split(':')[1]
+
+      const { endpoint, privatekey } = createDidOptions
+      if (networkName !== 'mainnet' && networkName !== 'testnet') {
         throw Error('Invalid network type')
       }
       if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
@@ -493,9 +496,9 @@ export class MultiTenancyController extends Controller {
       }
 
       createDidResponse = await tenantAgent.dids.create<PolygonDidCreateOptions>({
-        method: 'polygon',
+        method: DidMethod.Polygon,
         options: {
-          network,
+          network: networkName,
           endpoint,
         },
         secret: {
