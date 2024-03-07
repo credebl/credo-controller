@@ -484,6 +484,7 @@ export class MultiTenancyController extends Controller {
 
   public async handlePolygon(createDidOptions: DidCreate, tenantId: string) {
     let createDidResponse
+    let didResponse
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
       // need to discuss try catch logic
 
@@ -508,8 +509,12 @@ export class MultiTenancyController extends Controller {
           privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
         },
       })
+      didResponse = {
+        did: createDidResponse?.didState?.did,
+        didDoc: createDidResponse?.didState?.didDocument,
+      }
     })
-    return createDidResponse
+    return didResponse
   }
 
   private async importDid(didMethod: string, did: string, seed: string, tenantAgent: TenantAgent<RestAgentModules>) {
