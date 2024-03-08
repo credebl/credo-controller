@@ -151,8 +151,8 @@ export class DidController extends Controller {
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
         const getDid = await this.agent.dids.getCreatedDids({
-          method: didMethod,
-          did: createDidOptions.did,
+          method: createDidOptions.method,
+          did: `did:${createDidOptions.method}:${createDidOptions.network}:${createDidOptions.did}`,
         })
         if (getDid.length > 0) {
           didDocument = getDid[0].didDocument
@@ -202,8 +202,8 @@ export class DidController extends Controller {
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
         const didRecord = await this.agent.dids.getCreatedDids({
-          method: DidMethod.Indy,
-          did: `${didMethod}:${createDidOptions.did}`,
+          method: createDidOptions.method,
+          did: `did:${createDidOptions.method}:${createDidOptions.network}:${createDidOptions.did}`,
         })
 
         if (didRecord.length > 0) {
@@ -298,41 +298,72 @@ export class DidController extends Controller {
   }
 
   public async handleKey(didOptions: DidCreate) {
+    let did
+    let didResponse
+    let didDocument
+
     if (!didOptions.seed) {
       throw Error('Seed is required')
     }
     if (!didOptions.keyType) {
       throw Error('keyType is required')
     }
+    if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
+      throw Error('Only ed25519 and bls12381g2 key type supported')
+    }
 
-    await this.agent.wallet.createKey({
-      keyType: didOptions.keyType,
-      seed: TypedArrayEncoder.fromString(didOptions.seed),
-    })
+    if (!didOptions.did) {
+      await this.agent.wallet.createKey({
+        keyType: didOptions.keyType,
+        seed: TypedArrayEncoder.fromString(didOptions.seed),
+      })
 
-    const didWebResponse = await this.agent.dids.create<KeyDidCreateOptions>({
-      method: DidMethod.Key,
-      options: {
-        keyType: KeyType.Ed25519,
-      },
-      secret: {
-        privateKey: TypedArrayEncoder.fromString(didOptions.seed),
-      },
-    })
+      didResponse = await this.agent.dids.create<KeyDidCreateOptions>({
+        method: DidMethod.Key,
+        options: {
+          keyType: KeyType.Ed25519,
+        },
+        secret: {
+          privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+        },
+      })
+      did = `${didResponse.didState.did}`
+      didDocument = didResponse.didState.didDocument
+    } else {
+      did = didOptions.did
+      const createdDid = await this.agent.dids.getCreatedDids({
+        method: DidMethod.Key,
+        did: didOptions.did,
+      })
+      didDocument = createdDid[0]?.didDocument
+    }
 
     await this.agent.dids.import({
-      did: `${didWebResponse.didState.did}`,
+      did,
       overwrite: true,
-      didDocument: didWebResponse.didState.didDocument,
+      didDocument,
     })
-    return { did: `${didWebResponse.didState.did}`, didDocument: didWebResponse.didState.didDocument }
+    return { did: did, didDocument: didDocument }
+  }
+
+  private async isValidUrl(url: string) {
+    const pattern = /^(www\.)?[a-zA-Z0-9]+([-.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/.*)?$/
+    return pattern.test(url)
   }
 
   public async handleWeb(didOptions: DidCreate) {
+    let didDocument: any
+    if (!didOptions.domain) {
+      throw Error('domain is required')
+    }
+
+    if (didOptions?.domain && (await this.isValidUrl(didOptions?.domain)) === false) {
+      throw Error('Invalid domain')
+    }
+
     if (!didOptions.seed) {
       throw Error('Seed is required')
     }
-    let didDocument: any
 
     if (!didOptions.keyType) {
       throw Error('keyType is required')
@@ -340,10 +371,6 @@ export class DidController extends Controller {
 
     if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
       throw Error('Only ed25519 and bls12381g2 key type supported')
-    }
-
-    if (!didOptions.domain) {
-      throw Error('domain is required')
     }
 
     const domain = didOptions.domain
