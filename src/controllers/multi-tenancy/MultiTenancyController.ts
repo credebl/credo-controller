@@ -222,13 +222,12 @@ export class MultiTenancyController extends Controller {
     if (createDidOptions.did) {
       await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed, tenantAgent)
       const getDid = await tenantAgent.dids.getCreatedDids({
-        method: didMethod,
-        did: createDidOptions.did,
+        method: createDidOptions.method,
+        did: `did:${createDidOptions.method}:${createDidOptions.network}:${createDidOptions.did}`,
       })
       if (getDid.length > 0) {
         didDocument = getDid[0].didDocument
       }
-
       return {
         did: `${didMethod}:${createDidOptions.did}`,
         didDocument: didDocument,
@@ -294,8 +293,8 @@ export class MultiTenancyController extends Controller {
     if (createDidOptions.did) {
       await this.importDid(didMethod, createDidOptions?.did, createDidOptions.seed, tenantAgent)
       const getDid = await tenantAgent.dids.getCreatedDids({
-        method: didMethod,
-        did: createDidOptions.did,
+        method: createDidOptions.method,
+        did: `did:${createDidOptions.method}:${createDidOptions.network}:${createDidOptions.did}`,
       })
       if (getDid.length > 0) {
         didDocument = getDid[0].didDocument
@@ -383,7 +382,7 @@ export class MultiTenancyController extends Controller {
 
   private async handleKey(createDidOptions: DidCreate, tenantId: string) {
     let didResponse
-    let did
+    let did: string
     let didDocument: any
 
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -394,31 +393,35 @@ export class MultiTenancyController extends Controller {
         throw Error('keyType is required')
       }
 
-      if (!createDidOptions.method) {
-        throw Error('method is required')
-      }
-
       if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
         throw Error('Only ed25519 and bls12381g2 key type supported')
       }
 
-      await tenantAgent.wallet.createKey({
-        keyType: createDidOptions.keyType,
-        seed: TypedArrayEncoder.fromString(createDidOptions.seed),
-      })
+      if (!createDidOptions.did) {
+        await tenantAgent.wallet.createKey({
+          keyType: createDidOptions.keyType,
+          seed: TypedArrayEncoder.fromString(createDidOptions.seed),
+        })
+        const didKeyResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
+          method: DidMethod.Key,
+          options: {
+            keyType: KeyType.Ed25519,
+          },
+          secret: {
+            privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
+          },
+        })
+        did = `${didKeyResponse.didState.did}`
+        didDocument = didKeyResponse.didState.didDocument
+      } else {
+        did = createDidOptions.did
+        const createdDid = await tenantAgent.dids.getCreatedDids({
+          did: createDidOptions.did,
+          method: DidMethod.Key,
+        })
+        didDocument = createdDid[0]?.didDocument
+      }
 
-      const didWebResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
-        method: DidMethod.Key,
-        options: {
-          keyType: KeyType.Ed25519,
-        },
-        secret: {
-          privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
-        },
-      })
-
-      did = `${didWebResponse.didState.did}`
-      didDocument = didWebResponse.didState.didDocument
       await tenantAgent.dids.import({
         did,
         overwrite: true,
@@ -437,21 +440,27 @@ export class MultiTenancyController extends Controller {
     let did
     let didDocument: any
 
+    if (!createDidOptions.domain) {
+      throw Error('For web method domain is required')
+    }
+
+    if (createDidOptions?.domain && (await this.isValidUrl(createDidOptions?.domain)) === false) {
+      throw Error('Invalid domain')
+    }
+
+    if (!createDidOptions.keyType) {
+      throw Error('keyType is required')
+    }
+
+    if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
+      throw Error('Only ed25519 and bls12381g2 key type supported')
+    }
+
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
       if (!createDidOptions.seed) {
         throw Error('Seed is required')
       }
-      if (!createDidOptions.keyType) {
-        throw Error('keyType is required')
-      }
 
-      if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
-        throw Error('Only ed25519 and bls12381g2 key type supported')
-      }
-
-      if (!createDidOptions.domain) {
-        throw Error('domain is required')
-      }
       did = `did:${createDidOptions.method}:${createDidOptions.domain}`
       const keyId = `${did}#key-1`
       const key = await tenantAgent.wallet.createKey({
@@ -480,6 +489,11 @@ export class MultiTenancyController extends Controller {
       })
     })
     return { did, didDocument }
+  }
+
+  private async isValidUrl(url: string) {
+    const pattern = /^(www\.)?[a-zA-Z0-9]+([-.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/.*)?$/
+    return pattern.test(url)
   }
 
   public async handlePolygon(createDidOptions: DidCreate, tenantId: string) {
