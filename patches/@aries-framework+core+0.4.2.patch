@@ -1,53 +1,3 @@
-diff --git a/node_modules/@aries-framework/core/build/agent/EnvelopeService.js b/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
-index 12261a9..0238d59 100644
---- a/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
-+++ b/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
-@@ -32,12 +32,14 @@ let EnvelopeService = class EnvelopeService {
-         let encryptedMessage = await agentContext.wallet.pack(message, recipientKeysBase58, senderKeyBase58 !== null && senderKeyBase58 !== void 0 ? senderKeyBase58 : undefined);
-         // If the message has routing keys (mediator) pack for each mediator
-         for (const routingKeyBase58 of routingKeysBase58) {
-+            console.log(`message['@type']`, JSON.stringify(message['@type']))
-             const forwardMessage = new messages_1.ForwardMessage({
-                 // Forward to first recipient key
-                 to: recipientKeysBase58[0],
-                 message: encryptedMessage,
-             });
-             recipientKeysBase58 = [routingKeyBase58];
-+            forwardMessage["messageType"] = message['@type'];
-             this.logger.debug('Forward message created', forwardMessage);
-             const forwardJson = forwardMessage.toJSON({
-                 useDidSovPrefixWhereAllowed: agentContext.config.useDidSovPrefixWhereAllowed,
-diff --git a/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts b/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
-index 4f8577b..396f78a 100644
---- a/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
-+++ b/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
-@@ -3,6 +3,7 @@ import { EncryptedMessage } from '../../../types';
- export interface ForwardMessageOptions {
-     id?: string;
-     to: string;
-+    messageType: string;
-     message: EncryptedMessage;
- }
- /**
-@@ -19,5 +20,6 @@ export declare class ForwardMessage extends AgentMessage {
-     readonly type: string;
-     static readonly type: import("../../../utils/messageType").ParsedMessageType;
-     to: string;
-+    messageType: string;
-     message: EncryptedMessage;
- }
-diff --git a/node_modules/@aries-framework/core/build/types.d.ts b/node_modules/@aries-framework/core/build/types.d.ts
-index c3e854d..f029ab7 100644
---- a/node_modules/@aries-framework/core/build/types.d.ts
-+++ b/node_modules/@aries-framework/core/build/types.d.ts
-@@ -80,6 +80,7 @@ export interface PlaintextMessage {
-         thid?: string;
-         pthid?: string;
-     };
-+    messageType: string;
-     [key: string]: unknown;
- }
- export interface OutboundPackage {
 diff --git a/node_modules/@aries-framework/core/build/agent/AgentModules.d.ts b/node_modules/@aries-framework/core/build/agent/AgentModules.d.ts
 index 973ad00..fc56f3d 100644
 --- a/node_modules/@aries-framework/core/build/agent/AgentModules.d.ts
@@ -97,6 +47,25 @@ index 766ca70..6ea2ae3 100644
 \ No newline at end of file
 +{"version":3,"file":"AgentModules.js","sourceRoot":"","sources":["../../src/agent/AgentModules.ts"],"names":[],"mappings":";;;AAIA,8DAA+D;AAC/D,4CAA8C;AAC9C,wDAA0D;AAC1D,wDAA0D;AAC1D,0CAA4C;AAC5C,oFAAoF;AACpF,oEAAqE;AACrE,gEAAiE;AACjE,mEAA+D;AAC/D,wCAAgD;AAChD,8CAAgD;AAChD,gDAA6E;AAC7E,sCAAoD;AACpD,sCAAwC;AAiGxC;;;GAGG;AACH,SAAS,sBAAsB;IAC7B,OAAO;QACL,WAAW,EAAE,GAAG,EAAE,CAAC,IAAI,+BAAiB,EAAE;QAC1C,WAAW,EAAE,GAAG,EAAE,CAAC,IAAI,+BAAiB,EAAE;QAC1C,MAAM,EAAE,GAAG,EAAE,CAAC,IAAI,qBAAY,EAAE;QAChC,QAAQ,EAAE,GAAG,EAAE,CAAC,IAAI,wBAAc,EAAE;QACpC,kBAAkB,EAAE,GAAG,EAAE,CAAC,IAAI,kCAAwB,EAAE;QACxD,aAAa,EAAE,GAAG,EAAE,CAAC,IAAI,oCAAmB,EAAE;QAC9C,aAAa,EAAE,GAAG,EAAE,CAAC,IAAI,oCAAmB,EAAE;QAC9C,cAAc,EAAE,GAAG,EAAE,CAAC,IAAI,sCAAoB,EAAE;QAChD,SAAS,EAAE,GAAG,EAAE,CAAC,IAAI,0CAAsB,EAAE;QAC7C,IAAI,EAAE,GAAG,EAAE,CAAC,IAAI,iBAAU,EAAE;QAC5B,MAAM,EAAE,GAAG,EAAE,CAAC,IAAI,qBAAY,EAAE;QAChC,GAAG,EAAE,GAAG,EAAE,CAAC,IAAI,qBAAe,EAAE;QAChC,cAAc,EAAE,GAAG,EAAE,CAAC,IAAI,yBAAoB,EAAE;QAChD,KAAK,EAAE,GAAG,EAAE,CAAC,IAAI,mBAAW,EAAE;QAC9B,GAAG,EAAE,GAAG,EAAE,CAAC,IAAI,yDAA6B,EAAE;KACtC,CAAA;AACZ,CAAC;AAED;;;;;GAKG;AACH,SAAgB,+BAA+B,CAC7C,OAAsB;IAEtB,MAAM,eAAe,qBAAgC,OAAO,CAAE,CAAA;IAC9D,MAAM,mBAAmB,GAAG,sBAAsB,EAAE,CAAA;IAEpD,sDAAsD;IACtD,KAAK,MAAM,CAAC,SAAS,EAAE,mBAAmB,CAAC,IAAI,MAAM,CAAC,OAAO,CAAC,mBAAmB,CAAC,EAAE;QAClF,uDAAuD;QACvD,IAAI,OAAO,IAAI,OAAO,CAAC,SAAS,CAAC;YAAE,SAAQ;QAE3C,eAAe,CAAC,SAAS,CAAC,GAAG,mBAAmB,EAAE,CAAA;KACnD;IAED,OAAO,eAAqD,CAAA;AAC9D,CAAC;AAfD,0EAeC;AAED;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GAiCG;AACH,SAAgB,WAAW,CACzB,iBAAoC,EACpC,eAA0B,EAAE;IAE5B,yFAAyF;IACzF,oCAAoC;IACpC,MAAM,GAAG,GAAG,MAAM,CAAC,OAAO,CAAC,iBAAiB,CAAC,iBAAiB,CAAC,CAAC,MAAM,CAAC,CAAC,GAAG,EAAE,CAAC,SAAS,EAAE,MAAM,CAAC,EAAE,EAAE;QAClG,oBAAoB;QACpB,IAAI,CAAC,MAAM,CAAC,GAAG;YAAE,OAAO,GAAG,CAAA;QAE3B,MAAM,WAAW,GAAG,iBAAiB,CAAC,OAAO,CAAC,MAAM,CAAC,GAAG,CAAC,CAAA;QAEzD,kBAAkB;QAClB,IAAI,YAAY,CAAC,QAAQ,CAAC,WAAW,CAAC;YAAE,OAAO,GAAG,CAAA;QAClD,uCAAY,GAAG,KAAE,CAAC,SAAS,CAAC,EAAE,WAAW,IAAE;IAC7C,CAAC,EAAE,EAAE,CAA2B,CAAA;IAEhC,OAAO,GAAG,CAAA;AACZ,CAAC;AAlBD,kCAkBC"}
 \ No newline at end of file
+diff --git a/node_modules/@aries-framework/core/build/agent/EnvelopeService.js b/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
+index 12261a9..0238d59 100644
+--- a/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
++++ b/node_modules/@aries-framework/core/build/agent/EnvelopeService.js
+@@ -32,12 +32,14 @@ let EnvelopeService = class EnvelopeService {
+         let encryptedMessage = await agentContext.wallet.pack(message, recipientKeysBase58, senderKeyBase58 !== null && senderKeyBase58 !== void 0 ? senderKeyBase58 : undefined);
+         // If the message has routing keys (mediator) pack for each mediator
+         for (const routingKeyBase58 of routingKeysBase58) {
++            console.log(`message['@type']`, JSON.stringify(message['@type']))
+             const forwardMessage = new messages_1.ForwardMessage({
+                 // Forward to first recipient key
+                 to: recipientKeysBase58[0],
+                 message: encryptedMessage,
+             });
+             recipientKeysBase58 = [routingKeyBase58];
++            forwardMessage["messageType"] = message['@type'];
+             this.logger.debug('Forward message created', forwardMessage);
+             const forwardJson = forwardMessage.toJSON({
+                 useDidSovPrefixWhereAllowed: agentContext.config.useDidSovPrefixWhereAllowed,
 diff --git a/node_modules/@aries-framework/core/build/constants.d.ts b/node_modules/@aries-framework/core/build/constants.d.ts
 index b33a121..48ef47a 100644
 --- a/node_modules/@aries-framework/core/build/constants.d.ts
@@ -1710,10 +1679,10 @@ index 0000000..48bee05
 +}
 diff --git a/node_modules/@aries-framework/core/build/modules/proofs/formats/dif-presentation-exchange/DifPresentationExchangeProofFormatService.js b/node_modules/@aries-framework/core/build/modules/proofs/formats/dif-presentation-exchange/DifPresentationExchangeProofFormatService.js
 new file mode 100644
-index 0000000..7cf9991
+index 0000000..2994bb5
 --- /dev/null
 +++ b/node_modules/@aries-framework/core/build/modules/proofs/formats/dif-presentation-exchange/DifPresentationExchangeProofFormatService.js
-@@ -0,0 +1,238 @@
+@@ -0,0 +1,235 @@
 +"use strict";
 +Object.defineProperty(exports, "__esModule", { value: true });
 +exports.PresentationExchangeProofFormatService = void 0;
@@ -2033,6 +2002,25 @@ index 6164f1c..af2da36 100644
 \ No newline at end of file
 +{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../../src/modules/proofs/formats/index.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAAA,gDAA6B;AAC7B,uDAAoC;AACpC,8DAA2C;AAE3C,8DAA2C;AAE3C,uFAAwE;AAE/D,8DAAyB"}
 \ No newline at end of file
+diff --git a/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts b/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
+index 4f8577b..396f78a 100644
+--- a/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
++++ b/node_modules/@aries-framework/core/build/modules/routing/messages/ForwardMessage.d.ts
+@@ -3,6 +3,7 @@ import { EncryptedMessage } from '../../../types';
+ export interface ForwardMessageOptions {
+     id?: string;
+     to: string;
++    messageType: string;
+     message: EncryptedMessage;
+ }
+ /**
+@@ -19,5 +20,6 @@ export declare class ForwardMessage extends AgentMessage {
+     readonly type: string;
+     static readonly type: import("../../../utils/messageType").ParsedMessageType;
+     to: string;
++    messageType: string;
+     message: EncryptedMessage;
+ }
 diff --git a/node_modules/@aries-framework/core/build/modules/vc/index.d.ts b/node_modules/@aries-framework/core/build/modules/vc/index.d.ts
 index c0162b1..c9a3600 100644
 --- a/node_modules/@aries-framework/core/build/modules/vc/index.d.ts
@@ -2132,3 +2120,15 @@ index 91e4a29..9782198 100644
 \ No newline at end of file
 +{"version":3,"file":"W3cPresentation.js","sourceRoot":"","sources":["../../../../../src/modules/vc/models/presentation/W3cPresentation.ts"],"names":[],"mappings":";;;;;;;;;;;;AAMA,yDAA0C;AAC1C,qDAAsF;AAEtF,6CAAmD;AAEnD,6DAAkF;AAClF,+CAA0F;AAC1F,6GAAyG;AACzG,wFAAoF;AACpF,iDAA4D;AAC5D,mFAA0F;AAE1F,2CAA0E;AAU1E,MAAa,eAAe;IAC1B,YAAmB,OAA+B;;QAChD,IAAI,OAAO,EAAE;YACX,IAAI,CAAC,EAAE,GAAG,OAAO,CAAC,EAAE,CAAA;YACpB,IAAI,CAAC,OAAO,GAAG,MAAA,OAAO,CAAC,OAAO,mCAAI,CAAC,sCAA0B,CAAC,CAAA;YAC9D,IAAI,CAAC,IAAI,GAAG,MAAA,OAAO,CAAC,IAAI,mCAAI,CAAC,wCAA4B,CAAC,CAAA;YAC1D,IAAI,CAAC,oBAAoB,GAAG,OAAO,CAAC,oBAAoB,CAAA;YAExD,IAAI,OAAO,CAAC,MAAM,EAAE;gBAClB,IAAI,CAAC,MAAM,GAAG,OAAO,OAAO,CAAC,MAAM,KAAK,QAAQ,CAAC,CAAC,CAAC,OAAO,CAAC,MAAM,CAAC,CAAC,CAAC,IAAI,qBAAS,CAAC,OAAO,CAAC,MAAM,CAAC,CAAA;aAClG;SACF;IACH,CAAC;IAuBD,IAAW,QAAQ;QACjB,IAAI,CAAC,IAAI,CAAC,MAAM;YAAE,OAAO,IAAI,CAAA;QAE7B,OAAO,IAAI,CAAC,MAAM,YAAY,qBAAS,CAAC,CAAC,CAAC,IAAI,CAAC,MAAM,CAAC,EAAE,CAAC,CAAC,CAAC,IAAI,CAAC,MAAM,CAAA;IACxE,CAAC;IAEM,MAAM;QACX,OAAO,uBAAe,CAAC,MAAM,CAAC,IAAI,CAAwB,CAAA;IAC5D,CAAC;CACF;AA9BC;IAAC,IAAA,0BAAM,EAAC,EAAE,IAAI,EAAE,UAAU,EAAE,CAAC;IAC5B,IAAA,sCAAyB,GAAE;8BACX,KAAK;gDAAqB;AAE3C;IAAC,IAAA,4BAAU,GAAE;IACZ,IAAA,kBAAK,GAAE;;2CACU;AAElB;IAAC,4BAA4B,EAAE;8BACjB,KAAK;6CAAQ;AAE3B;IAAC,IAAA,gCAAoB,GAAE;IACtB,IAAA,uBAAW,GAAE;IACb,IAAA,4BAAU,GAAE;;+CACqB;AAElC;IAAC,IAAA,4DAAkC,GAAE;IACpC,IAAA,yCAA4B,EAAC,EAAE,SAAS,EAAE,CAAC,6DAA6B,EAAE,uDAA0B,CAAC,EAAE,CAAC;IACxG,IAAA,gCAAc,EAAC,EAAE,IAAI,EAAE,IAAI,EAAE,CAAC;;6DACqC;AAjCtE,0CA4CC;AAED,oBAAoB;AAEpB,SAAgB,4BAA4B,CAAC,iBAAqC;IAChF,OAAO,IAAA,4BAAU,EACf;QACE,IAAI,EAAE,8BAA8B;QACpC,SAAS,EAAE;YACT,QAAQ,EAAE,CAAC,KAAK,EAAW,EAAE;gBAC3B,IAAI,KAAK,CAAC,OAAO,CAAC,KAAK,CAAC,EAAE;oBACxB,OAAO,KAAK,CAAC,QAAQ,CAAC,wCAA4B,CAAC,CAAA;iBACpD;gBACD,OAAO,KAAK,CAAA;YACd,CAAC;YACD,cAAc,EAAE,IAAA,8BAAY,EAC1B,CAAC,UAAU,EAAE,EAAE,CAAC,UAAU,GAAG,+EAA+E,EAC5G,iBAAiB,CAClB;SACF;KACF,EACD,iBAAiB,CAClB,CAAA;AACH,CAAC;AAnBD,oEAmBC"}
 \ No newline at end of file
+diff --git a/node_modules/@aries-framework/core/build/types.d.ts b/node_modules/@aries-framework/core/build/types.d.ts
+index c3e854d..f029ab7 100644
+--- a/node_modules/@aries-framework/core/build/types.d.ts
++++ b/node_modules/@aries-framework/core/build/types.d.ts
+@@ -80,6 +80,7 @@ export interface PlaintextMessage {
+         thid?: string;
+         pthid?: string;
+     };
++    messageType: string;
+     [key: string]: unknown;
+ }
+ export interface OutboundPackage {
