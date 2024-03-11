@@ -35,7 +35,7 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
 import { TsLogger } from './logger'
-import { BCOVRIN_TEST_GENESIS } from './util'
+import { BCOVRIN_TEST_GENESIS, DID_CONTRACT_ADDRESS, RPC_URL, SCHEMA_MANAGER_CONTRACT_ADDRESS } from './util'
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const logger = new TsLogger(LogLevel.debug)
@@ -125,10 +125,10 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       }),
       tenants: new TenantsModule(),
       polygon: new PolygonModule({
-        didContractAddress: '0x12513116875BB3E4F098Ce74624739Ee51bAf023',
-        schemaManagerContractAddress: '0x552992e9f14b15bBd76488cD4c38c89B80259f37',
+        didContractAddress: DID_CONTRACT_ADDRESS,
+        schemaManagerContractAddress: SCHEMA_MANAGER_CONTRACT_ADDRESS,
         fileServerToken: '',
-        rpcUrl: 'https://rpc-mumbai.maticvigil.com',
+        rpcUrl: RPC_URL,
         serverUrl: '',
       }),
     },
