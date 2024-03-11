@@ -2,7 +2,6 @@ import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAge
 import type { Version } from '../examples'
 import type {
   AcceptProofRequestOptions,
-  Buffer,
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
   CredentialProtocolVersionType,
@@ -119,7 +118,7 @@ export class MultiTenancyController extends Controller {
     @Body() createDidOptions: DidCreate,
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     let didRes
 
@@ -191,7 +190,7 @@ export class MultiTenancyController extends Controller {
           result = await this.handleBcovrin(
             createDidOptions,
             tenantAgent,
-            `did:${createDidOptions.method}:${createDidOptions.network}`,
+            `did:${createDidOptions.method}:${createDidOptions.network}`
           )
           break
 
@@ -200,7 +199,7 @@ export class MultiTenancyController extends Controller {
           result = await this.handleIndicio(
             createDidOptions,
             tenantAgent,
-            `did:${createDidOptions.method}:${createDidOptions.network}`,
+            `did:${createDidOptions.method}:${createDidOptions.network}`
           )
           break
 
