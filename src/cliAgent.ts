@@ -55,7 +55,7 @@ import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { BCOVRIN_TEST_GENESIS } from './utils/util'
+import { BCOVRIN_TEST_GENESIS, DID_CONTRACT_ADDRESS, RPC_URL, SCHEMA_MANAGER_CONTRACT_ADDRESS } from './utils/util'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -176,10 +176,10 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: '0x12513116875BB3E4F098Ce74624739Ee51bAf023',
-      schemaManagerContractAddress: '0x552992e9f14b15bBd76488cD4c38c89B80259f37',
+      didContractAddress: DID_CONTRACT_ADDRESS,
+      schemaManagerContractAddress: SCHEMA_MANAGER_CONTRACT_ADDRESS,
       fileServerToken: '',
-      rpcUrl: 'https://rpc-mumbai.maticvigil.com',
+      rpcUrl: RPC_URL,
       serverUrl: '',
     }),
   }
