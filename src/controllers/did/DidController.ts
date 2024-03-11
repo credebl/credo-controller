@@ -152,6 +152,11 @@ export class DidController extends Controller {
       throw Error('Seed is required')
     }
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
+      await this.agent.wallet.createKey({
+        privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
+        keyType: KeyType.Ed25519,
+      })
+
       if (createDidOptions.did) {
         await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed)
         const getDid = await this.agent.dids.getCreatedDids({
@@ -305,6 +310,15 @@ export class DidController extends Controller {
     if (!didOptions.seed) {
       throw Error('Seed is required')
     }
+    if (!didOptions.keyType) {
+      throw Error('keyType is required')
+    }
+
+    await this.agent.wallet.createKey({
+      keyType: didOptions.keyType,
+      seed: TypedArrayEncoder.fromString(didOptions.seed),
+    })
+
     const didWebResponse = await this.agent.dids.create<KeyDidCreateOptions>({
       method: DidMethod.Key,
       options: {
@@ -319,12 +333,6 @@ export class DidController extends Controller {
       did: `${didWebResponse.didState.did}`,
       overwrite: true,
       didDocument: didWebResponse.didState.didDocument,
-      privateKeys: [
-        {
-          keyType: KeyType.Ed25519,
-          privateKey: TypedArrayEncoder.fromString(didOptions.seed),
-        },
-      ],
     })
     return { did: `${didWebResponse.didState.did}`, didDocument: didWebResponse.didState.didDocument }
   }
