@@ -44,6 +44,7 @@ import {
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
 import { QuestionAnswerModule } from '@aries-framework/question-answer'
 import { TenantsModule } from '@aries-framework/tenants'
+import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
@@ -54,7 +55,7 @@ import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { BCOVRIN_TEST_GENESIS } from './utils/util'
+import { BCOVRIN_TEST_GENESIS, DID_CONTRACT_ADDRESS, RPC_URL, SCHEMA_MANAGER_CONTRACT_ADDRESS } from './utils/util'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -126,8 +127,8 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
 
     dids: new DidsModule({
-      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
-      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
+      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar(), new PolygonDidRegistrar()],
+      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver(), new PolygonDidResolver()],
     }),
 
     anoncreds: new AnonCredsModule({
@@ -174,6 +175,13 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
 
     questionAnswer: new QuestionAnswerModule(),
+    polygon: new PolygonModule({
+      didContractAddress: DID_CONTRACT_ADDRESS,
+      schemaManagerContractAddress: SCHEMA_MANAGER_CONTRACT_ADDRESS,
+      fileServerToken: '',
+      rpcUrl: RPC_URL,
+      serverUrl: '',
+    }),
   }
 }
 

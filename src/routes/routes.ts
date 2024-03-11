@@ -25,6 +25,8 @@ import { EndorserTransactionController } from './../controllers/endorser-transac
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { CredentialController } from './../controllers/credentials/CredentialController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { Polygon } from './../controllers/polygon/PolygonController';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { QuestionAnswerController } from './../controllers/question-answer/QuestionAnswerController';
 import { expressAuthentication } from './../authentication';
 // @ts-ignore - no great way to install types from subpackage
@@ -82,7 +84,6 @@ const models: TsoaRoute.Models = {
             "@type": {"dataType":"string","required":true},
             "@id": {"dataType":"string","required":true},
             "~thread": {"dataType":"nestedObjectLiteral","nestedProperties":{"pthid":{"dataType":"string"},"thid":{"dataType":"string"}}},
-            "messageType": {"dataType":"string","required":true},
         },
         "additionalProperties": {"dataType":"any"},
     },
@@ -94,7 +95,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "KeyType": {
         "dataType": "refEnum",
-        "enums": ["ed25519","bls12381g1g2","bls12381g1","bls12381g2","x25519","p256","p384","p521","k256"],
+        "enums": ["ed25519","bls12381g1g2","bls12381g1","bls12381g2","x25519","p256","p384","p521"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Key": {
@@ -115,23 +116,6 @@ const models: TsoaRoute.Models = {
             "mediatorId": {"dataType":"string"},
         },
         "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "JsonValue": {
-        "dataType": "refAlias",
-        "type": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"},{"dataType":"boolean"},{"dataType":"enum","enums":[null]},{"ref":"JsonObject"},{"ref":"JsonArray"}],"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "JsonObject": {
-        "dataType": "refObject",
-        "properties": {
-        },
-        "additionalProperties": {"ref":"JsonValue"},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "JsonArray": {
-        "dataType": "refAlias",
-        "type": {"dataType":"array","array":{"dataType":"refAlias","ref":"JsonValue"},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Pick_JwsGeneralFormat.Exclude_keyofJwsGeneralFormat.payload__": {
@@ -161,7 +145,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "base64": {"dataType":"string"},
-            "json": {"ref":"JsonValue"},
+            "json": {"ref":"Record_string.unknown_"},
             "links": {"dataType":"array","array":{"dataType":"string"}},
             "jws": {"dataType":"union","subSchemas":[{"ref":"JwsDetachedFormat"},{"ref":"JwsFlattenedDetachedFormat"}]},
             "sha256": {"dataType":"string"},
@@ -353,16 +337,6 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"string","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidRegistrationExtraOptions": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidRegistrationSecretOptions": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidDocument": {
         "dataType": "refAlias",
         "type": {"ref":"Record_string.any_","validators":{}},
@@ -371,16 +345,17 @@ const models: TsoaRoute.Models = {
     "DidCreate": {
         "dataType": "refObject",
         "properties": {
-            "keyType": {"ref":"KeyType"},
-            "seed": {"dataType":"string","required":true},
+            "keyType": {"ref":"KeyType","required":true},
+            "seed": {"dataType":"string"},
             "domain": {"dataType":"string"},
-            "method": {"dataType":"string"},
+            "method": {"dataType":"string","required":true},
+            "network": {"dataType":"string"},
             "did": {"dataType":"string"},
             "role": {"dataType":"string"},
-            "options": {"ref":"DidRegistrationExtraOptions"},
-            "secret": {"ref":"DidRegistrationSecretOptions"},
             "endorserDid": {"dataType":"string"},
             "didDocument": {"ref":"DidDocument"},
+            "privatekey": {"dataType":"string"},
+            "endpoint": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -399,7 +374,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "config": {"ref":"Omit_TenantConfig.walletConfig_","required":true},
-            "seed": {"dataType":"string","required":true},
+            "seed": {"dataType":"string"},
             "method": {"dataType":"string"},
             "role": {"dataType":"string"},
             "endorserDid": {"dataType":"string"},
@@ -493,6 +468,23 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JsonObject": {
+        "dataType": "refObject",
+        "properties": {
+        },
+        "additionalProperties": {"ref":"JsonValue"},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JsonValue": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"},{"dataType":"boolean"},{"dataType":"enum","enums":[null]},{"ref":"JsonObject"},{"ref":"JsonArray"}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JsonArray": {
+        "dataType": "refAlias",
+        "type": {"dataType":"array","array":{"dataType":"refAlias","ref":"JsonValue"},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "W3cIssuerOptions": {
         "dataType": "refObject",
         "properties": {
@@ -529,7 +521,7 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CredentialFormatPayload_any.createOffer_": {
+    "CredentialFormatPayload_CredentialFormatType-Array.createOffer_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"indy":{"ref":"AnonCredsOfferCredentialFormat"},"jsonld":{"ref":"JsonLdCredentialDetailFormat"},"anoncreds":{"ref":"AnonCredsOfferCredentialFormat"}},"validators":{}},
     },
@@ -538,7 +530,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "protocolVersion": {"dataType":"string","required":true},
-            "credentialFormats": {"ref":"CredentialFormatPayload_any.createOffer_","required":true},
+            "credentialFormats": {"ref":"CredentialFormatPayload_CredentialFormatType-Array.createOffer_","required":true},
             "autoAcceptCredential": {"ref":"AutoAcceptCredential"},
             "comment": {"dataType":"string"},
             "goalCode": {"dataType":"string"},
@@ -630,16 +622,21 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"response":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ProofFormatPayload_any.createProposal_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
+    "ProofFormat": {
+        "dataType": "refObject",
+        "properties": {
+            "formatKey": {"dataType":"string","required":true},
+            "proofFormats": {"dataType":"nestedObjectLiteral","nestedProperties":{"selectCredentialsForRequest":{"dataType":"nestedObjectLiteral","nestedProperties":{"output":{"dataType":"any","required":true},"input":{"dataType":"any","required":true}},"required":true},"getCredentialsForRequest":{"dataType":"nestedObjectLiteral","nestedProperties":{"output":{"dataType":"any","required":true},"input":{"dataType":"any","required":true}},"required":true},"acceptRequest":{"dataType":"any","required":true},"createRequest":{"dataType":"any","required":true},"acceptProposal":{"dataType":"any","required":true},"createProposal":{"dataType":"any","required":true}},"required":true},
+            "formatData": {"dataType":"nestedObjectLiteral","nestedProperties":{"presentation":{"dataType":"any","required":true},"request":{"dataType":"any","required":true},"proposal":{"dataType":"any","required":true}},"required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "RequestProofProposalOptions": {
         "dataType": "refObject",
         "properties": {
             "connectionId": {"dataType":"string","required":true},
-            "proofFormats": {"ref":"ProofFormatPayload_any.createProposal_","required":true},
+            "proofFormats": {"dataType":"nestedObjectLiteral","nestedProperties":{"action":{"dataType":"enum","enums":["createProposal"],"required":true},"formats":{"dataType":"array","array":{"dataType":"refObject","ref":"ProofFormat"},"required":true}},"required":true},
             "goalCode": {"dataType":"string"},
             "parentThreadId": {"dataType":"string"},
             "autoAcceptProof": {"ref":"AutoAcceptProof"},
@@ -648,16 +645,11 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ProofFormatPayload_any.acceptProposal_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AcceptProofProposal": {
         "dataType": "refObject",
         "properties": {
             "proofRecordId": {"dataType":"string","required":true},
-            "proofFormats": {"ref":"ProofFormatPayload_any.acceptProposal_"},
+            "proofFormats": {"dataType":"nestedObjectLiteral","nestedProperties":{"action":{"dataType":"enum","enums":["acceptProposal"],"required":true},"formats":{"dataType":"array","array":{"dataType":"refObject","ref":"ProofFormat"},"required":true}},"required":true},
             "comment": {"dataType":"string"},
             "autoAcceptProof": {"ref":"AutoAcceptProof"},
             "goalCode": {"dataType":"string"},
@@ -1546,7 +1538,7 @@ export function RegisterRoutes(app: Router) {
 
             async function DidController_writeDid(request: any, response: any, next: any) {
             const args = {
-                    data: {"in":"body","name":"data","required":true,"ref":"DidCreate"},
+                    createDidOptions: {"in":"body","name":"createDidOptions","required":true,"ref":"DidCreate"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 
@@ -1565,70 +1557,6 @@ export function RegisterRoutes(app: Router) {
 
 
               const promise = controller.writeDid.apply(controller, validatedArgs as any);
-              promiseHandler(controller, promise, response, undefined, next);
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/dids/did/key',
-            authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(DidController)),
-            ...(fetchMiddlewares<RequestHandler>(DidController.prototype.createDidKey)),
-
-            async function DidController_createDidKey(request: any, response: any, next: any) {
-            const args = {
-                    didOptions: {"in":"body","name":"didOptions","required":true,"ref":"DidCreate"},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = getValidatedArgs(args, request, response);
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<DidController>(DidController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-
-              const promise = controller.createDidKey.apply(controller, validatedArgs as any);
-              promiseHandler(controller, promise, response, undefined, next);
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/dids/did/web',
-            authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(DidController)),
-            ...(fetchMiddlewares<RequestHandler>(DidController.prototype.createDidWeb)),
-
-            async function DidController_createDidWeb(request: any, response: any, next: any) {
-            const args = {
-                    didOptions: {"in":"body","name":"didOptions","required":true,"ref":"DidCreate"},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = getValidatedArgs(args, request, response);
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<DidController>(DidController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-
-              const promise = controller.createDidWeb.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
@@ -1693,6 +1621,72 @@ export function RegisterRoutes(app: Router) {
 
 
               const promise = controller.createTenant.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/multi-tenancy/create-did/:tenantId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.createDid)),
+
+            async function MultiTenancyController_createDid(request: any, response: any, next: any) {
+            const args = {
+                    createDidOptions: {"in":"body","name":"createDidOptions","required":true,"ref":"DidCreate"},
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.createDid.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/multi-tenancy/dids/:tenantId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getDids)),
+
+            async function MultiTenancyController_getDids(request: any, response: any, next: any) {
+            const args = {
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getDids.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
@@ -2062,6 +2056,75 @@ export function RegisterRoutes(app: Router) {
 
 
               const promise = controller.createSchema.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/multi-tenancy/polygon-wc3/schema/:tenantId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.createPolygonW3CSchema)),
+
+            async function MultiTenancyController_createPolygonW3CSchema(request: any, response: any, next: any) {
+            const args = {
+                    createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"object","required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.createPolygonW3CSchema.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/multi-tenancy/polygon-wc3/schema/:did/:schemaId/:tenantId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getPolygonW3CSchemaById)),
+
+            async function MultiTenancyController_getPolygonW3CSchemaById(request: any, response: any, next: any) {
+            const args = {
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    did: {"in":"path","name":"did","required":true,"dataType":"string"},
+                    schemaId: {"in":"path","name":"schemaId","required":true,"dataType":"string"},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                    badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    forbiddenError: {"in":"res","name":"401","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getPolygonW3CSchemaById.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
@@ -3591,6 +3654,137 @@ export function RegisterRoutes(app: Router) {
 
 
               const promise = controller.acceptCredential.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/polygon/create-keys',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createKeyPair)),
+
+            async function Polygon_createKeyPair(request: any, response: any, next: any) {
+            const args = {
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<Polygon>(Polygon);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.createKeyPair.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/polygon/create-schema',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createSchema)),
+
+            async function Polygon_createSchema(request: any, response: any, next: any) {
+            const args = {
+                    createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"object","required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                    badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<Polygon>(Polygon);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.createSchema.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/polygon/estimate-transaction',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.estimateTransaction)),
+
+            async function Polygon_estimateTransaction(request: any, response: any, next: any) {
+            const args = {
+                    estimateTransactionRequest: {"in":"body","name":"estimateTransactionRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"transaction":{"dataType":"any","required":true},"operation":{"dataType":"any","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                    badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<Polygon>(Polygon);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.estimateTransaction.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/polygon/:did/:schemaId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.getSchemaById)),
+
+            async function Polygon_getSchemaById(request: any, response: any, next: any) {
+            const args = {
+                    did: {"in":"path","name":"did","required":true,"dataType":"string"},
+                    schemaId: {"in":"path","name":"schemaId","required":true,"dataType":"string"},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                    forbiddenError: {"in":"res","name":"401","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<Polygon>(Polygon);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getSchemaById.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
