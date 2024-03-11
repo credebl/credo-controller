@@ -97,11 +97,15 @@
 							}
 						},
 						"type": "object"
+					},
+					"messageType": {
+						"type": "string"
 					}
 				},
 				"required": [
 					"@type",
-					"@id"
+					"@id",
+					"messageType"
 				],
 				"type": "object",
 				"additionalProperties": {}
@@ -118,7 +122,8 @@
 					"x25519",
 					"p256",
 					"p384",
-					"p521"
+					"p521",
+					"k256"
 				],
 				"type": "string"
 			},
@@ -167,6 +172,40 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"JsonValue": {
+				"anyOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "number",
+						"format": "double"
+					},
+					{
+						"type": "boolean"
+					},
+					{
+						"$ref": "#/components/schemas/JsonObject"
+					},
+					{
+						"$ref": "#/components/schemas/JsonArray"
+					}
+				],
+				"nullable": true
+			},
+			"JsonObject": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": {
+					"$ref": "#/components/schemas/JsonValue"
+				}
+			},
+			"JsonArray": {
+				"items": {
+					"$ref": "#/components/schemas/JsonValue"
+				},
+				"type": "array"
 			},
 			"Pick_JwsGeneralFormat.Exclude_keyofJwsGeneralFormat.payload__": {
 				"properties": {
@@ -221,7 +260,7 @@
 						"description": "Base64-encoded data, when representing arbitrary content inline instead of via links. Optional."
 					},
 					"json": {
-						"$ref": "#/components/schemas/Record_string.unknown_",
+						"$ref": "#/components/schemas/JsonValue",
 						"description": "Directly embedded JSON data, when representing content inline instead of via links, and when the content is natively conveyable as JSON. Optional."
 					},
 					"links": {
@@ -1010,40 +1049,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"JsonObject": {
-				"properties": {},
-				"type": "object",
-				"additionalProperties": {
-					"$ref": "#/components/schemas/JsonValue"
-				}
-			},
-			"JsonValue": {
-				"anyOf": [
-					{
-						"type": "string"
-					},
-					{
-						"type": "number",
-						"format": "double"
-					},
-					{
-						"type": "boolean"
-					},
-					{
-						"$ref": "#/components/schemas/JsonObject"
-					},
-					{
-						"$ref": "#/components/schemas/JsonArray"
-					}
-				],
-				"nullable": true
-			},
-			"JsonArray": {
-				"items": {
-					"$ref": "#/components/schemas/JsonValue"
-				},
-				"type": "array"
 			},
 			"W3cIssuerOptions": {
 				"description": "TODO: check how to support arbitrary data in class",
@@ -8773,312 +8778,6 @@
 		"/polygon/create-keys": {
 			"post": {
 				"operationId": "CreateKeyPair",
-				"responses": {
-					"200": {
-						"description": "Secp256k1KeyPair",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"address": {
-											"type": "string"
-										},
-										"publicKeyBase58": {
-											"type": "string"
-										},
-										"privateKey": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"address",
-										"publicKeyBase58",
-										"privateKey"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Create Secp256k1 key pair for polygon DID",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/polygon/create-schema": {
-			"post": {
-				"operationId": "CreateSchema",
-				"responses": {
-					"200": {
-						"description": "Schema JSON",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Create polygon based W3C schema",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"schema": {
-										"additionalProperties": false,
-										"type": "object"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"did": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"schema",
-									"schemaName",
-									"did"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/polygon/estimate-transaction": {
-			"post": {
-				"operationId": "EstimateTransaction",
-				"responses": {
-					"200": {
-						"description": "Transaction Object",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Estimate transaction",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"transaction": {},
-									"operation": {}
-								},
-								"required": [
-									"transaction",
-									"operation"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/polygon/{did}/{schemaId}": {
-			"get": {
-				"operationId": "GetSchemaById",
-				"responses": {
-					"200": {
-						"description": "Schema Object",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"401": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Fetch schema details",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "did",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "schemaId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/question-answer": {
-			"get": {
-				"operationId": "GetQuestionAnswerRecords",
 				"responses": {
 					"200": {
 						"description": "Secp256k1KeyPair",

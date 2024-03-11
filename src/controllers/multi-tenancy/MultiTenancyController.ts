@@ -362,10 +362,7 @@ export class MultiTenancyController extends Controller {
     }
   }
 
-  private async handleIndyDidCreation(
-    createDidOptions: DidCreate,
-    tenantAgent: TenantAgent<RestAgentModules>
-  ) {
+  private async handleIndyDidCreation(createDidOptions: DidCreate, tenantAgent: TenantAgent<RestAgentModules>) {
     if (!createDidOptions.endorserDid) {
       throw Error('endorserDid or role is required')
     }
