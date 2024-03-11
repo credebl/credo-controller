@@ -1731,9 +1731,6 @@ index 0000000..7cf9991
 +        this.formatKey = 'presentationExchange';
 +    }
 +    presentationExchangeService(agentContext) {
-+        if (!agentContext.dependencyManager.isRegistered(dif_presentation_exchange_1.DifPresentationExchangeService)) {
-+            throw new error_1.AriesFrameworkError('DifPresentationExchangeService is not registered on the Agent. Please provide the PresentationExchangeModule as a module on the agent');
-+        }
 +        return agentContext.dependencyManager.resolve(dif_presentation_exchange_1.DifPresentationExchangeService);
 +    }
 +    supportsFormat(formatIdentifier) {
