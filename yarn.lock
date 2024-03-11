@@ -144,10 +144,10 @@
   dependencies:
     static-eval "2.0.2"
 
-"@ayanworks/credo-polygon-w3c-module@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@ayanworks/credo-polygon-w3c-module/-/credo-polygon-w3c-module-0.0.1.tgz#c914184e43c5e05e228a187950e2d70514f7e0f7"
-  integrity sha512-HDkyHbiphP0gEGdFRRf29A85n2uNxm2gsOdLbPiTsmV05ZfMnPH5ycDU7eBtIu3MJD5dC8xUCvJmiZjtQ6rQVw==
+"@ayanworks/credo-polygon-w3c-module@0.0.2-alpha.0":
+  version "0.0.2-alpha.0"
+  resolved "https://registry.yarnpkg.com/@ayanworks/credo-polygon-w3c-module/-/credo-polygon-w3c-module-0.0.2-alpha.0.tgz#df88263a0f5bd7bb91392b69fdfbd567414a5e66"
+  integrity sha512-grmNIzLRE2gF2Kh5oeIyNz923jzoZ4PIE0EqhXCNonbPHducrIG/oaZuzffFb5++Hq0eHoNDOnT2WUMYezpSxw==
   dependencies:
     "@aries-framework/askar" "0.4.2"
     "@aries-framework/core" "0.4.2"

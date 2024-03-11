@@ -717,6 +717,9 @@
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
+			"DidDocument": {
+				"$ref": "#/components/schemas/Record_string.any_"
+			},
 			"DidCreate": {
 				"properties": {
 					"keyType": {
