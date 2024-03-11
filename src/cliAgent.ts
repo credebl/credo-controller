@@ -179,7 +179,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       didContractAddress: '0x12513116875BB3E4F098Ce74624739Ee51bAf023',
       schemaManagerContractAddress: '0x552992e9f14b15bBd76488cD4c38c89B80259f37',
       fileServerToken: '',
-      rpcUrl: 'https://polygon-mumbai.infura.io/v3/0579d305568d404e996e49695e9272a3',
+      rpcUrl: 'https://rpc-mumbai.maticvigil.com',
       serverUrl: '',
     }),
   }

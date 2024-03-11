@@ -38,6 +38,5 @@
   "outboundTransport": ["http"],
   "autoAcceptMediationRequests": false,
   "adminPort": 4001,
-  "tenancy": false,
-  "webhookUrl": "http://192.168.1.68:5000/wh/0b3f3fc0-f4b1-47bb-8f6f-9598aa842fcd"
+  "tenancy": true
 }
