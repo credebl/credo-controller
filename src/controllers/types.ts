@@ -11,6 +11,7 @@ import type {
   DidResolutionMetadata,
   DidDocumentMetadata,
   ProofExchangeRecord,
+  ProofFormatPayload,
   ProofFormat,
   DidRegistrationExtraOptions,
   DidDocument,
@@ -108,11 +109,12 @@ export interface CreateOfferOptions {
   comment?: string
 }
 
-type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
-
 export interface CreateOfferOobOptions {
   protocolVersion: string
-  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>
+  credentialFormats: CredentialFormatPayload<
+    [LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat],
+    'createOffer'
+  >
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   goalCode?: string
@@ -255,10 +257,8 @@ export interface RequestProofOptions {
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
   connectionId: string
-  proofFormats: {
-    formats: ProofFormat[]
-    action: 'createProposal'
-  }
+  // TODO: added indy proof formate
+  proofFormats: ProofFormatPayload<[ProofFormat], 'createProposal'>
   goalCode?: string
   parentThreadId?: string
   autoAcceptProof?: AutoAcceptProof
@@ -267,10 +267,7 @@ export interface RequestProofProposalOptions {
 
 export interface AcceptProofProposal {
   proofRecordId: string
-  proofFormats: {
-    formats: ProofFormat[]
-    action: 'acceptProposal'
-  }
+  proofFormats?: ProofFormatPayload<[ProofFormat], 'acceptProposal'>
   comment?: string
   autoAcceptProof?: AutoAcceptProof
   goalCode?: string
@@ -296,22 +293,21 @@ export interface ResolvedDid {
 }
 
 export interface DidCreate {
-  keyType: KeyType
-  seed?: string
+  keyType?: KeyType
+  seed: string
   domain?: string
-  method: string
-  network?: string
+  method?: string
   did?: string
   role?: string
+  options?: DidRegistrationExtraOptions
+  secret?: DidRegistrationSecretOptions
   endorserDid?: string
   didDocument?: DidDocument
-  privatekey?: string
-  endpoint?: string
 }
 
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>
-  seed?: string
+  seed: string
   method?: string
   role?: string
   endorserDid?: string
