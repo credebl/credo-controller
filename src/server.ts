@@ -15,6 +15,7 @@ import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
+import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
 import { maxRateLimit, windowMs } from './utils/util'
@@ -28,6 +29,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   if (config.cors) app.use(cors())
 
   if (config.socketServer || config.webhookUrl) {
+    questionAnswerEvents(agent, config)
     basicMessageEvents(agent, config)
     connectionEvents(agent, config)
     credentialEvents(agent, config)
