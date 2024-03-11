@@ -2,6 +2,7 @@ import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAge
 import type { Version } from '../examples'
 import type {
   AcceptProofRequestOptions,
+  Buffer,
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
   CredentialProtocolVersionType,
@@ -444,10 +445,6 @@ export class MultiTenancyController extends Controller {
       throw Error('For web method domain is required')
     }
 
-    if (createDidOptions?.domain && (await this.isValidUrl(createDidOptions?.domain)) === false) {
-      throw Error('Invalid domain')
-    }
-
     if (!createDidOptions.keyType) {
       throw Error('keyType is required')
     }
@@ -489,11 +486,6 @@ export class MultiTenancyController extends Controller {
       })
     })
     return { did, didDocument }
-  }
-
-  private async isValidUrl(url: string) {
-    const pattern = /^(www\.)?[a-zA-Z0-9]+([-.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/.*)?$/
-    return pattern.test(url)
   }
 
   public async handlePolygon(createDidOptions: DidCreate, tenantId: string) {

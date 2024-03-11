@@ -350,19 +350,10 @@ export class DidController extends Controller {
     return { did: did, didDocument: didDocument }
   }
 
-  private async isValidUrl(url: string) {
-    const pattern = /^(www\.)?[a-zA-Z0-9]+([-.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/.*)?$/
-    return pattern.test(url)
-  }
-
   public async handleWeb(didOptions: DidCreate) {
     let didDocument: any
     if (!didOptions.domain) {
       throw Error('domain is required')
-    }
-
-    if (didOptions?.domain && (await this.isValidUrl(didOptions?.domain)) === false) {
-      throw Error('Invalid domain')
     }
 
     if (!didOptions.seed) {
