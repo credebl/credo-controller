@@ -1,8 +1,16 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 import type { AgentMessageType } from '../types'
-import type { ConnectionRecordProps, CreateLegacyInvitationConfig } from '@aries-framework/core'
+import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
 
-import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFoundError } from '@aries-framework/core'
+import {
+  AgentMessage,
+  JsonTransformer,
+  OutOfBandInvitation,
+  Agent,
+  RecordNotFoundError,
+  Key,
+  KeyType,
+} from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
@@ -129,8 +137,21 @@ export class OutOfBandController extends Controller {
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> // routing prop removed because of issues with public key serialization
   ) {
     try {
-      const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation(config)
-
+      let routing: Routing
+      if (config?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+      }
+      const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation({
+        ...config,
+        routing,
+      })
       return {
         invitationUrl: invitation.toUrl({
           domain: this.agent.config.endpoints[0],
@@ -140,6 +161,7 @@ export class OutOfBandController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })

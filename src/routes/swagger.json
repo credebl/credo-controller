@@ -395,6 +395,9 @@
 					},
 					"autoAcceptConnection": {
 						"type": "boolean"
+					},
+					"recipientKey": {
+						"type": "string"
 					}
 				},
 				"type": "object",
@@ -868,6 +871,9 @@
 					"autoAcceptConnection": {
 						"type": "boolean"
 					},
+					"recipientKey": {
+						"type": "string"
+					},
 					"goalCode": {
 						"type": "string"
 					},
@@ -1205,6 +1211,9 @@
 					},
 					"imageUrl": {
 						"type": "string"
+					},
+					"recipientKey": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -1327,6 +1336,9 @@
 						"type": "string"
 					},
 					"imageUrl": {
+						"type": "string"
+					},
+					"recipientKey": {
 						"type": "string"
 					}
 				},
