@@ -35,7 +35,7 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
 import { TsLogger } from './logger'
-import { BCOVRIN_TEST_GENESIS, DID_CONTRACT_ADDRESS, RPC_URL, SCHEMA_MANAGER_CONTRACT_ADDRESS } from './util'
+import { BCOVRIN_TEST_GENESIS } from './util'
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const logger = new TsLogger(LogLevel.debug)
@@ -125,10 +125,10 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       }),
       tenants: new TenantsModule(),
       polygon: new PolygonModule({
-        didContractAddress: DID_CONTRACT_ADDRESS,
-        schemaManagerContractAddress: SCHEMA_MANAGER_CONTRACT_ADDRESS,
+        didContractAddress: '',
+        schemaManagerContractAddress: '',
         fileServerToken: '',
-        rpcUrl: RPC_URL,
+        rpcUrl: '',
         serverUrl: '',
       }),
     },
