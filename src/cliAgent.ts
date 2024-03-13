@@ -181,8 +181,8 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]], 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: config.didRegistryContractAddress,
-      schemaManagerContractAddress: config.schemaManagerContractAddress,
+      didContractAddress: '0x12513116875BB3E4F098Ce74624739Ee51bAf023',
+      schemaManagerContractAddress: '0x552992e9f14b15bBd76488cD4c38c89B80259f37',
       fileServerToken: config.fileServerToken,
       rpcUrl: config.rpcUrl,
       serverUrl: config.fileServerUrl,
