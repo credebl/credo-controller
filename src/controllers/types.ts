@@ -377,3 +377,6 @@ export interface WriteTransaction {
     type: string
   }
 }
+export interface RecipientKeyOption {
+  recipientKey?: string
+}
