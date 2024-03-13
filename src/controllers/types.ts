@@ -120,6 +120,7 @@ export interface CreateOfferOobOptions {
   willConfirm?: boolean
   label?: string
   imageUrl?: string
+  recipientKey?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -138,6 +139,7 @@ export interface CreateProofRequestOobOptions {
   comment?: string
   label?: string
   imageUrl?: string
+  recipientKey?: string
 }
 
 export interface OfferCredentialOptions {
@@ -374,4 +376,7 @@ export interface WriteTransaction {
     value: unknown
     type: string
   }
+}
+export interface RecipientKeyOption {
+  recipientKey?: string
 }

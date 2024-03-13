@@ -1,5 +1,6 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
+import type { RecipientKeyOption } from '../types'
 import type {
   AcceptProofRequestOptions,
   ConnectionRecordProps,
@@ -9,6 +10,7 @@ import type {
   OutOfBandRecord,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
+  Routing,
 } from '@aries-framework/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@aries-framework/question-answer'
@@ -34,6 +36,7 @@ import {
   DidExchangeState,
   HandshakeProtocol,
   JsonTransformer,
+  Key,
   KeyType,
   OutOfBandInvitation,
   RecordNotFoundError,
@@ -663,12 +666,24 @@ export class MultiTenancyController extends Controller {
   public async createLegacyInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
-    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
+    @Body()
+    config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> & RecipientKeyOption // props removed because of issues with serialization
   ) {
     let getInvitation
     try {
+      let routing: Routing
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        const { outOfBandRecord, invitation } = await tenantAgent.oob.createLegacyInvitation(config)
+        if (config?.recipientKey) {
+          routing = {
+            endpoints: tenantAgent.config.endpoints,
+            routingKeys: [],
+            recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+            mediatorId: undefined,
+          }
+        } else {
+          routing = await tenantAgent.mediationRecipient.getRouting({})
+        }
+        const { outOfBandRecord, invitation } = await tenantAgent.oob.createLegacyInvitation({ ...config, routing })
         getInvitation = {
           invitationUrl: invitation.toUrl({
             domain: this.agent.config.endpoints[0],
@@ -678,6 +693,7 @@ export class MultiTenancyController extends Controller {
             useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
+          ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
         }
       })
 
@@ -1271,11 +1287,24 @@ export class MultiTenancyController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     let createOfferOobRecord
+
     try {
+      let routing: Routing
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
         if (linkSecretIds.length === 0) {
           await tenantAgent.modules.anoncreds.createLinkSecret()
+        }
+
+        if (createOfferOptions?.recipientKey) {
+          routing = {
+            endpoints: tenantAgent.config.endpoints,
+            routingKeys: [],
+            recipientKey: Key.fromPublicKeyBase58(createOfferOptions.recipientKey, KeyType.Ed25519),
+            mediatorId: undefined,
+          }
+        } else {
+          routing = await tenantAgent.mediationRecipient.getRouting({})
         }
 
         const offerOob = await tenantAgent.credentials.createOffer({
@@ -1292,6 +1321,8 @@ export class MultiTenancyController extends Controller {
           messages: [credentialMessage],
           autoAcceptConnection: true,
           imageUrl: createOfferOptions?.imageUrl,
+          goalCode: createOfferOptions?.goalCode,
+          routing,
         })
 
         createOfferOobRecord = {
@@ -1308,6 +1339,7 @@ export class MultiTenancyController extends Controller {
             : offerOob.message.threadId
             ? offerOob.message.thread
             : offerOob.message.id,
+          recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
         }
       })
       return createOfferOobRecord
@@ -1477,7 +1509,18 @@ export class MultiTenancyController extends Controller {
   ) {
     let oobProofRecord
     try {
+      let routing: Routing
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if (createRequestOptions?.recipientKey) {
+          routing = {
+            endpoints: tenantAgent.config.endpoints,
+            routingKeys: [],
+            recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
+            mediatorId: undefined,
+          }
+        } else {
+          routing = await tenantAgent.mediationRecipient.getRouting({})
+        }
         const proof = await tenantAgent.proofs.createRequest({
           protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
           proofFormats: createRequestOptions.proofFormats,
@@ -1495,6 +1538,8 @@ export class MultiTenancyController extends Controller {
           messages: [proofMessage],
           autoAcceptConnection: true,
           imageUrl: createRequestOptions?.imageUrl,
+          routing,
+          goalCode: createRequestOptions?.goalCode,
         })
 
         oobProofRecord = {
@@ -1511,6 +1556,9 @@ export class MultiTenancyController extends Controller {
             : proof.message.threadId
             ? proof.message.thread
             : proof.message.id,
+          recipientKey: createRequestOptions?.recipientKey
+            ? {}
+            : { recipientKey: routing.recipientKey.publicKeyBase58 },
         }
       })
 

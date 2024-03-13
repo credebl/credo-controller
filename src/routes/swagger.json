@@ -404,6 +404,15 @@
 				"$ref": "#/components/schemas/Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__",
 				"description": "Construct a type with the properties of T except for those in type K."
 			},
+			"RecipientKeyOption": {
+				"properties": {
+					"recipientKey": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
 			"AgentMessageType": {
 				"properties": {
 					"@id": {
@@ -1202,6 +1211,9 @@
 					},
 					"imageUrl": {
 						"type": "string"
+					},
+					"recipientKey": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -1324,6 +1336,9 @@
 						"type": "string"
 					},
 					"imageUrl": {
+						"type": "string"
+					},
+					"recipientKey": {
 						"type": "string"
 					}
 				},
@@ -2889,7 +2904,14 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/Omit_CreateLegacyInvitationConfig.routing_",
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/Omit_CreateLegacyInvitationConfig.routing_"
+									},
+									{
+										"$ref": "#/components/schemas/RecipientKeyOption"
+									}
+								],
 								"description": "configuration of how a invitation should be created"
 							}
 						}
@@ -4588,7 +4610,14 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_"
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_"
+									},
+									{
+										"$ref": "#/components/schemas/RecipientKeyOption"
+									}
+								]
 							}
 						}
 					}
