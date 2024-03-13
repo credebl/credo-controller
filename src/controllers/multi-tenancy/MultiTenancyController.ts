@@ -1319,6 +1319,7 @@ export class MultiTenancyController extends Controller {
           messages: [credentialMessage],
           autoAcceptConnection: true,
           imageUrl: createOfferOptions?.imageUrl,
+          goalCode: createOfferOptions?.goalCode,
           routing,
         })
 
@@ -1536,6 +1537,7 @@ export class MultiTenancyController extends Controller {
           autoAcceptConnection: true,
           imageUrl: createRequestOptions?.imageUrl,
           routing,
+          goalCode: createRequestOptions?.goalCode,
         })
 
         oobProofRecord = {
