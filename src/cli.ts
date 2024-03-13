@@ -193,5 +193,10 @@ export async function runCliServer() {
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
     tenancy: parsed['tenancy'],
-  } as AriesRestConfig)
+    didRegistryContractAddress: parsed['didRegistryContractAddress'],
+    schemaManagerContractAddress: parsed['schemaManagerContractAddress'],
+    rpcUrl: parsed['rpcUrl'],
+    fileServerUrl: parsed['fileServerUrl'],
+    fileServerToken: parsed['fileServerToken'],
+  } as unknown as AriesRestConfig)
 }
