@@ -404,6 +404,15 @@
 				"$ref": "#/components/schemas/Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__",
 				"description": "Construct a type with the properties of T except for those in type K."
 			},
+			"RecipientKeyOption": {
+				"properties": {
+					"recipientKey": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
 			"AgentMessageType": {
 				"properties": {
 					"@id": {
@@ -1202,6 +1211,9 @@
 					},
 					"imageUrl": {
 						"type": "string"
+					},
+					"recipientKey": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -1324,6 +1336,9 @@
 						"type": "string"
 					},
 					"imageUrl": {
+						"type": "string"
+					},
+					"recipientKey": {
 						"type": "string"
 					}
 				},
@@ -2889,7 +2904,14 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/Omit_CreateLegacyInvitationConfig.routing_",
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/Omit_CreateLegacyInvitationConfig.routing_"
+									},
+									{
+										"$ref": "#/components/schemas/RecipientKeyOption"
+									}
+								],
 								"description": "configuration of how a invitation should be created"
 							}
 						}
@@ -4588,7 +4610,14 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_"
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_"
+									},
+									{
+										"$ref": "#/components/schemas/RecipientKeyOption"
+									}
+								]
 							}
 						}
 					}
@@ -5119,6 +5148,188 @@
 		"/multi-tenancy/polygon-wc3/schema/{did}/{schemaId}/{tenantId}": {
 			"get": {
 				"operationId": "GetPolygonW3CSchemaById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "did",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "schemaId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/multi-tenancy/transactions/write/{tenantId}": {
+			"post": {
+				"operationId": "WriteSchemaAndCredDefOnLedger",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/WriteTransaction"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/schema/{schemaId}/{tenantId}": {
+			"get": {
+				"operationId": "GetSchemaById",
 				"responses": {
 					"200": {
 						"description": "Ok",
