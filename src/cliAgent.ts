@@ -95,6 +95,11 @@ export interface AriesRestConfig {
   tenancy?: boolean
   webhookUrl?: string
   adminPort: number
+  didRegistryContractAddress: string
+  schemaManagerContractAddress: string
+  rpcUrl: string
+  fileServerUrl: string
+  fileServerToken: string
 }
 
 export async function readRestConfig(path: string) {
@@ -108,7 +113,7 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
-const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]], config: Partial<AriesRestConfig>) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
@@ -176,17 +181,20 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: DID_CONTRACT_ADDRESS,
-      schemaManagerContractAddress: SCHEMA_MANAGER_CONTRACT_ADDRESS,
-      fileServerToken: '',
-      rpcUrl: RPC_URL,
-      serverUrl: '',
+      didContractAddress: config.didRegistryContractAddress,
+      schemaManagerContractAddress: config.schemaManagerContractAddress,
+      fileServerToken: config.fileServerToken,
+      rpcUrl: config.rpcUrl,
+      serverUrl: config.fileServerUrl,
     }),
   }
 }
 
-const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
-  const modules = getModules(networkConfig)
+const getWithTenantModules = (
+  networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]],
+  config: Partial<AriesRestConfig>
+) => {
+  const modules = getModules(networkConfig, config)
   return {
     tenants: new TenantsModule<typeof modules>({
       sessionAcquireTimeout: Infinity,
@@ -292,8 +300,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ]
   }
 
-  const tenantModule = await getWithTenantModules(networkConfig)
-  const modules = getModules(networkConfig)
+  const tenantModule = await getWithTenantModules(networkConfig, afjConfig)
+  const modules = getModules(networkConfig, afjConfig)
   const agent = new Agent({
     config: agentConfig,
     modules: {
