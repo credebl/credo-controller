@@ -55,7 +55,7 @@ import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { BCOVRIN_TEST_GENESIS, DID_CONTRACT_ADDRESS, RPC_URL, SCHEMA_MANAGER_CONTRACT_ADDRESS } from './utils/util'
+import { BCOVRIN_TEST_GENESIS } from './utils/util'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
