@@ -1,10 +1,6 @@
-import type {
-  AcceptProofRequestOptions,
-  ProofExchangeRecordProps,
-  ProofsProtocolVersionType,
-} from '@aries-framework/core'
+import type { AcceptProofRequestOptions, ProofExchangeRecordProps, ProofsProtocolVersionType } from '@credo-ts/core'
 
-import { Agent, HandshakeProtocol, RecordNotFoundError } from '@aries-framework/core'
+import { Agent, HandshakeProtocol, RecordNotFoundError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'

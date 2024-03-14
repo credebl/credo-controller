@@ -1,7 +1,7 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { CredentialExchangeRecordProps, CredentialProtocolVersionType } from '@aries-framework/core'
+import type { CredentialExchangeRecordProps, CredentialProtocolVersionType } from '@credo-ts/core'
 
-import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@aries-framework/anoncreds'
+import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@credo-ts/anoncreds'
 import {
   CredentialRepository,
   CredentialState,
@@ -9,7 +9,7 @@ import {
   RecordNotFoundError,
   HandshakeProtocol,
   W3cCredentialService,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialExchangeRecordExample, RecordId } from '../examples'

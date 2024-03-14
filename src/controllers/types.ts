@@ -1,5 +1,5 @@
 import type { Version } from './examples'
-import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@aries-framework/anoncreds'
+import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -26,7 +26,7 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import type { DIDDocument } from 'did-resolver'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
