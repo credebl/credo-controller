@@ -112,7 +112,7 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
-const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]], config: Partial<AriesRestConfig>) => {
+const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
@@ -178,18 +178,16 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]], 
     polygon: new PolygonModule({
       didContractAddress: '0x12513116875BB3E4F098Ce74624739Ee51bAf023',
       schemaManagerContractAddress: '0x552992e9f14b15bBd76488cD4c38c89B80259f37',
-      fileServerToken: config.fileServerToken,
-      rpcUrl: config.rpcUrl,
-      serverUrl: config.fileServerUrl,
+      fileServerToken:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
+      rpcUrl: 'https://polygon-mumbai.infura.io/v3/0579d305568d404e996e49695e9272a3',
+      serverUrl: 'https://schema.credebl.id/',
     }),
   }
 }
 
-const getWithTenantModules = (
-  networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]],
-  config: Partial<AriesRestConfig>
-) => {
-  const modules = getModules(networkConfig, config)
+const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+  const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
       sessionAcquireTimeout: Infinity,
@@ -295,8 +293,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ]
   }
 
-  const tenantModule = await getWithTenantModules(networkConfig, afjConfig)
-  const modules = getModules(networkConfig, afjConfig)
+  const tenantModule = await getWithTenantModules(networkConfig)
+  const modules = getModules(networkConfig)
   const agent = new Agent({
     config: agentConfig,
     modules: {
