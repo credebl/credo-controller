@@ -1302,7 +1302,7 @@ export class MultiTenancyController extends Controller {
             useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
-          outOfBandRecordId: outOfBandRecord.id
+          outOfBandRecordId: outOfBandRecord.id,
         }
       })
       return createOfferOobRecord
