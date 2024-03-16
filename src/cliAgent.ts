@@ -236,6 +236,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     },
     ...afjConfig,
     logger,
+    autoUpdateStorageOnStartup: true,
+    // As backup is only supported for sqlite storage
+    // we need to manually take backup of the storage before updating the storage
+    backupBeforeStorageUpdate: false,
   }
 
   async function fetchLedgerData(ledgerConfig: {
