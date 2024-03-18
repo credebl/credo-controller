@@ -1341,12 +1341,7 @@ export class MultiTenancyController extends Controller {
             useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
-          credentialRecordThId: offerOob.credentialRecord.threadId,
-          credentialMessageId: offerOob.message.thread?.threadId
-            ? offerOob.message.thread?.threadId
-            : offerOob.message.threadId
-            ? offerOob.message.thread
-            : offerOob.message.id,
+          outOfBandRecordId: outOfBandRecord.id,
           recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
         }
       })
