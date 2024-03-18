@@ -36,7 +36,7 @@ COPY patches ./patches
 
 RUN yarn install --production
 
-# COPY build ./build
+COPY build ./build
 # COPY libindy_vdr.so /usr/lib/
 # COPY libindy_vdr.so /usr/local/lib/
 
