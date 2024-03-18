@@ -1431,7 +1431,7 @@ export class MultiTenancyController extends Controller {
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
-          invitationDid: createOfferOptions?.invitationDid ? '' : invitationDid,
+          recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
         }
       })
       return createOfferOobRecord

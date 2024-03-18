@@ -1,5 +1,5 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@credo-ts/core'
+import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@aries-framework/core'
 
 import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@credo-ts/anoncreds'
 import {
@@ -10,7 +10,7 @@ import {
   W3cCredentialService,
   Key,
   KeyType,
-} from '@credo-ts/core'
+} from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
