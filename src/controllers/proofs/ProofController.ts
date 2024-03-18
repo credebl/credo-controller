@@ -2,9 +2,10 @@ import type {
   AcceptProofRequestOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
+  Routing,
 } from '@aries-framework/core'
 
-import { Agent, HandshakeProtocol, RecordNotFoundError } from '@aries-framework/core'
+import { Agent, HandshakeProtocol, Key, KeyType, RecordNotFoundError } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -168,6 +169,17 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
+      let routing: Routing
+      if (createRequestOptions?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+      }
       const proof = await this.agent.proofs.createRequest({
         protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
@@ -184,6 +196,7 @@ export class ProofController extends Controller {
         messages: [proofMessage],
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
+        routing,
       })
 
       return {
@@ -194,6 +207,7 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
