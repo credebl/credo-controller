@@ -2596,7 +2596,8 @@
 							"schema": {
 								"properties": {
 									"schema": {
-										"additionalProperties": false,
+										"properties": {},
+										"additionalProperties": {},
 										"type": "object"
 									},
 									"schemaName": {
@@ -4785,7 +4786,8 @@
 							"schema": {
 								"properties": {
 									"schema": {
-										"additionalProperties": false,
+										"properties": {},
+										"additionalProperties": {},
 										"type": "object"
 									},
 									"schemaName": {

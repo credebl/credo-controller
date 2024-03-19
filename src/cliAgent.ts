@@ -181,7 +181,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       fileServerToken:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
       rpcUrl: 'https://polygon-mumbai.infura.io/v3/0579d305568d404e996e49695e9272a3',
-      serverUrl: 'https://schema.credebl.id/',
+      serverUrl: 'https://schema.credebl.id',
     }),
   }
 }

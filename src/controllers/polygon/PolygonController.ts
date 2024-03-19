@@ -49,7 +49,7 @@ export class Polygon extends Controller {
     createSchemaRequest: {
       did: string
       schemaName: string
-      schema: object
+      schema: { [key: string]: any }
     },
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Res() badRequestError: TsoaResponse<400, { reason: string }>

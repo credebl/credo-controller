@@ -925,7 +925,7 @@ export class MultiTenancyController extends Controller {
     createSchemaRequest: {
       did: string
       schemaName: string
-      schema: object
+      schema: { [key: string]: any }
     },
     @Path('tenantId') tenantId: string,
     @Res() internalServerError: TsoaResponse<500, { message: string }>

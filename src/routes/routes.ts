@@ -1099,7 +1099,7 @@ export function RegisterRoutes(app: Router) {
 
             async function Polygon_createSchema(request: any, response: any, next: any) {
             const args = {
-                    createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"object","required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
+                    createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
                     badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
             };
@@ -1958,7 +1958,7 @@ export function RegisterRoutes(app: Router) {
 
             async function MultiTenancyController_createPolygonW3CSchema(request: any, response: any, next: any) {
             const args = {
-                    createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"object","required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
+                    createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
                     tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
