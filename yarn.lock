@@ -603,6 +603,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+<<<<<<< HEAD
 "@credo-ts/anoncreds@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/anoncreds/-/anoncreds-0.5.3.tgz#3e6775b461fc34e377bebe2c0ca53c34ee630a26"
@@ -610,33 +611,59 @@
   dependencies:
     "@astronautlabs/jsonpath" "^1.1.2"
     "@credo-ts/core" "0.5.3"
+=======
+"@credo-ts/anoncreds@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@credo-ts/anoncreds/-/anoncreds-0.5.0.tgz#74bcaec9b3e5f75fd03924efc2e8bd67b905b035"
+  integrity sha512-fYPYxGV2S99dTCb0LHcHnJrVL3FLgrON5tFiv6U7By6aR9paT70Gwep/Lyp0WNzssg2vZ+a4gEf2gKjQiBE8pA==
+  dependencies:
+    "@astronautlabs/jsonpath" "^1.1.2"
+    "@credo-ts/core" "0.5.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     big-integer "^1.6.51"
     bn.js "^5.2.1"
     class-transformer "0.5.1"
     class-validator "0.14.1"
     reflect-metadata "^0.1.13"
 
+<<<<<<< HEAD
 "@credo-ts/askar@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/askar/-/askar-0.5.3.tgz#53eaddd6247bbf0aabea436e722d646a0a603e2b"
   integrity sha512-AegnSygDAiY77cgidxNAb/ROeGtCNFo2L0nvxXs5MqBIGreT/+llslc5+/FIHDsDfUNB70Y/KK2qsLTVU3MtRg==
   dependencies:
     "@credo-ts/core" "0.5.3"
+=======
+"@credo-ts/askar@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@credo-ts/askar/-/askar-0.5.0.tgz#5fa2e6443fe3ae1b15c8b66eb73e63beb5c096a1"
+  integrity sha512-84wxDU6GbucBTe4HV7gUbCieFdhXVX19q8o6dNK8a3zl87yiV3OVwPwtnzghjh47vv14Xr+gWRvqbRvZrhRsaA==
+  dependencies:
+    "@credo-ts/core" "0.5.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     bn.js "^5.2.1"
     class-transformer "0.5.1"
     class-validator "0.14.1"
     rxjs "^7.8.0"
     tsyringe "^4.8.0"
 
+<<<<<<< HEAD
 "@credo-ts/core@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/core/-/core-0.5.3.tgz#cccbce993acbe7651fb397e7a0933ffde3246027"
   integrity sha512-bM9iNhhXWiJ4YdH5uqaIfK3XhZ6GjuzF0AwE1vMy586sZz05J1ZLQvIYzRpm/p3Buxj9rimnLrc4jcYNit0VUw==
+=======
+"@credo-ts/core@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@credo-ts/core/-/core-0.5.0.tgz#a6366df4b176a492f4f45b7e2f45b8c905e1eeca"
+  integrity sha512-7SJBgs1yd2gpwv8BnCO+U63Uu06v6Cxzg+ypWpqyNkkG4nTsQZSI8r0oSQ+DgbiqwN/AZKsn9HuNISFftf5yKQ==
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
   dependencies:
     "@digitalcredentials/jsonld" "^6.0.0"
     "@digitalcredentials/jsonld-signatures" "^9.4.0"
     "@digitalcredentials/vc" "^6.0.1"
     "@multiformats/base-x" "^4.0.1"
+<<<<<<< HEAD
     "@sd-jwt/core" "^0.6.1"
     "@sd-jwt/decode" "^0.6.1"
     "@sd-jwt/types" "^0.6.1"
@@ -644,6 +671,13 @@
     "@sphereon/pex" "^3.3.2"
     "@sphereon/pex-models" "^2.2.4"
     "@sphereon/ssi-types" "^0.23.0"
+=======
+    "@sd-jwt/core" "^0.2.1"
+    "@sd-jwt/decode" "^0.2.1"
+    "@sphereon/pex" "3.3.0"
+    "@sphereon/pex-models" "^2.2.2"
+    "@sphereon/ssi-types" "^0.18.1"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     "@stablelib/ed25519" "^1.0.2"
     "@stablelib/sha256" "^1.0.1"
     "@types/ws" "^8.5.4"
@@ -667,6 +701,7 @@
     varint "^6.0.0"
     web-did-resolver "^2.0.21"
 
+<<<<<<< HEAD
 "@credo-ts/indy-vdr@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/indy-vdr/-/indy-vdr-0.5.3.tgz#14c1fbe77b77f7214ee66807e4011a5e3c813819"
@@ -683,6 +718,24 @@
     "@2060.io/ffi-napi" "^4.0.9"
     "@2060.io/ref-napi" "^3.0.6"
     "@credo-ts/core" "0.5.3"
+=======
+"@credo-ts/indy-vdr@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@credo-ts/indy-vdr/-/indy-vdr-0.5.0.tgz#1799b2a90599d000a43c5dc59e7bd1e1eda68fe1"
+  integrity sha512-hW7xDdL6fVIgTIclmJRfVz3mlpo87Cwk6hCiRY1/lWV62bsKs6RHGLv6RUp+WPwTIpPpbBs6T1Dm85ditBbxpA==
+  dependencies:
+    "@credo-ts/anoncreds" "0.5.0"
+    "@credo-ts/core" "0.5.0"
+
+"@credo-ts/node@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@credo-ts/node/-/node-0.5.0.tgz#d28ed5040f9925777a65f66f55abed7c2d2e53de"
+  integrity sha512-/44SrgmjuRDE4Sjb6QDMvquPTUsH5DkIp8pbN7csLe0GEDDzPOUvzCaf4yI7TRnuSZN9Nh9/f6C2UGn0JuQ0Sg==
+  dependencies:
+    "@2060.io/ffi-napi" "^4.0.8"
+    "@2060.io/ref-napi" "^3.0.6"
+    "@credo-ts/core" "0.5.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     "@types/express" "^4.17.15"
     express "^4.17.1"
     ws "^8.13.0"
@@ -696,22 +749,40 @@
     class-validator "0.14.1"
     tsyringe "^4.6.0"
 
+<<<<<<< HEAD
 "@credo-ts/question-answer@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/question-answer/-/question-answer-0.5.3.tgz#dfe52999279df3016ad1ef8319bb9a14de3ca4ff"
   integrity sha512-xdclXz08iDbQX5KnlBPbMNaVqYjdrnjJ8tq3KILnCbWzwSbxIF7Ab7T3E9g6DKYkb5zmVaMVTUQU41ocyYCsJQ==
   dependencies:
     "@credo-ts/core" "0.5.3"
+=======
+"@credo-ts/question-answer@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@credo-ts/question-answer/-/question-answer-0.5.0.tgz#d3871127a36f783c7977c3cbcca8a23523453a32"
+  integrity sha512-cF4RRoVIS05ssIMk4iNQcn53k5E3G4jHVTSrBr3ZoV5EAGHTQ0Y5NMlLCx7kLlY31KGvhdiPXxeECG/uSiS3sg==
+  dependencies:
+    "@credo-ts/core" "0.5.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     class-transformer "0.5.1"
     class-validator "0.14.1"
     rxjs "^7.8.0"
 
+<<<<<<< HEAD
 "@credo-ts/tenants@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/tenants/-/tenants-0.5.3.tgz#bcea2693dff06349c777454e6f6a67c7b0e8ecdb"
   integrity sha512-4KwVCc0Nwdld8223w+d9PBa3Cj/NkuTFmit6/Bk/KIAZ1VasvMF4p/bYuGNB/MJaqy306fwRn12InClq36kJIw==
   dependencies:
     "@credo-ts/core" "0.5.3"
+=======
+"@credo-ts/tenants@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@credo-ts/tenants/-/tenants-0.5.0.tgz#e32943d66580af3b7bf6970fb3321329a479271d"
+  integrity sha512-SB2btH9adWLBwBs2d3od9VTF6AA2Bfzl3oJovlrcdWHXSYQWf0Hm+PRkvmL8+RYwdGtDM8uBKQrkbdPBGWEWAA==
+  dependencies:
+    "@credo-ts/core" "0.5.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     async-mutex "^0.4.0"
 
 "@cspotcode/source-map-support@^0.8.0":
@@ -1304,6 +1375,7 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
+<<<<<<< HEAD
 "@hyperledger/anoncreds-nodejs@0.2.2":
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@hyperledger/anoncreds-nodejs/-/anoncreds-nodejs-0.2.2.tgz#5344427c554fc7280efe22f2061e3a26023fdd84"
@@ -1312,10 +1384,21 @@
     "@2060.io/ffi-napi" "^4.0.9"
     "@2060.io/ref-napi" "^3.0.6"
     "@hyperledger/anoncreds-shared" "0.2.2"
+=======
+"@hyperledger/anoncreds-nodejs@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@hyperledger/anoncreds-nodejs/-/anoncreds-nodejs-0.2.1.tgz#7dbde3e878758371e4d44542daa7f54ecf48f38e"
+  integrity sha512-wfQEVSqYHq6mQFTLRMVayyi8kbHlz3RGEIe10JOQSHCw4ZCTifQ1XuVajSwOj8ykNYwxuckcfNikJtJScs7l+w==
+  dependencies:
+    "@2060.io/ffi-napi" "4.0.8"
+    "@2060.io/ref-napi" "3.0.6"
+    "@hyperledger/anoncreds-shared" "0.2.1"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     "@mapbox/node-pre-gyp" "^1.0.11"
     ref-array-di "1.2.2"
     ref-struct-di "1.1.1"
 
+<<<<<<< HEAD
 "@hyperledger/anoncreds-shared@0.2.2":
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@hyperledger/anoncreds-shared/-/anoncreds-shared-0.2.2.tgz#492995d076448d682a828312bbba58314e943c4a"
@@ -1329,11 +1412,27 @@
     "@2060.io/ffi-napi" "^4.0.9"
     "@2060.io/ref-napi" "^3.0.6"
     "@hyperledger/aries-askar-shared" "0.2.1"
+=======
+"@hyperledger/anoncreds-shared@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@hyperledger/anoncreds-shared/-/anoncreds-shared-0.2.1.tgz#7a8be78473e8cdd33b73ccdf2e9b838226aef0f9"
+  integrity sha512-QpkmsiDBto4B3MS7+tJKn8DHCuhaZuzPKy+SoSAIH8wrjBmQ4NQqzMBZXs0z0JnNr1egkIFR3HIFsIu9ayK20g==
+
+"@hyperledger/aries-askar-nodejs@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@hyperledger/aries-askar-nodejs/-/aries-askar-nodejs-0.2.0.tgz#7a0b469184f0682d0e31955e29d091956f662273"
+  integrity sha512-d73D2zK1f1cM5y8MFp4BK+NvkquujDlRr91THpxkuRwmLf407gibOY3G4OdGIkL1kQtorGM5c5U0/qMzW+8E1Q==
+  dependencies:
+    "@2060.io/ffi-napi" "4.0.8"
+    "@2060.io/ref-napi" "3.0.6"
+    "@hyperledger/aries-askar-shared" "0.2.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     "@mapbox/node-pre-gyp" "^1.0.10"
     node-cache "^5.1.2"
     ref-array-di "^1.2.2"
     ref-struct-di "^1.1.1"
 
+<<<<<<< HEAD
 "@hyperledger/aries-askar-shared@0.2.1":
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/@hyperledger/aries-askar-shared/-/aries-askar-shared-0.2.1.tgz#0c01abe47fd53dd1629ee41af51c9d9d42f7f86f"
@@ -1349,14 +1448,38 @@
     "@2060.io/ffi-napi" "^4.0.9"
     "@2060.io/ref-napi" "^3.0.6"
     "@hyperledger/indy-vdr-shared" "0.2.2"
+=======
+"@hyperledger/aries-askar-shared@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@hyperledger/aries-askar-shared/-/aries-askar-shared-0.2.0.tgz#9291733f8fa1e3039dfe36e1fabca1819b93bd1b"
+  integrity sha512-A6bHbTwTtV1YT3XphNFltX34DCBtj7qPyip4R+WAQFnus5286a2xsppNvl5OAPMAxgKjQTdyFBqcYaNRc0lqIQ==
+  dependencies:
+    buffer "^6.0.3"
+
+"@hyperledger/indy-vdr-nodejs@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@hyperledger/indy-vdr-nodejs/-/indy-vdr-nodejs-0.2.0.tgz#c5fd2c211d5a2b2a0637efa6b9636b208d919c06"
+  integrity sha512-yv+p0mU9NBUgmUDJijNgxtLonhzhDP54wRl4Mfn/s/ZyzLbEQakswmqa2sX0mYQDTLG14iq5uEN6d0eRzUtDeg==
+  dependencies:
+    "@2060.io/ffi-napi" "4.0.8"
+    "@2060.io/ref-napi" "3.0.6"
+    "@hyperledger/indy-vdr-shared" "0.2.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     "@mapbox/node-pre-gyp" "^1.0.10"
     ref-array-di "^1.2.2"
     ref-struct-di "^1.1.1"
 
+<<<<<<< HEAD
 "@hyperledger/indy-vdr-shared@0.2.2":
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@hyperledger/indy-vdr-shared/-/indy-vdr-shared-0.2.2.tgz#9ca8b56cd89ab18792d129a0358b641e211274e3"
   integrity sha512-9425MHU3K+/ahccCRjOIX3Z/51gqxvp3Nmyujyqlx9cd7PWG2Rianx7iNWecFBkdAEqS0DfHsb6YqqH39YZp/A==
+=======
+"@hyperledger/indy-vdr-shared@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@hyperledger/indy-vdr-shared/-/indy-vdr-shared-0.2.0.tgz#4781e38bffe69366e694e8d025a8d017b8a1cb5b"
+  integrity sha512-/aPzpzb6Wks7poRSercSp6f3mFOBoQmxSIyo50XO6ci/Jfa4ZGuV8y8YWU2SJktsdz4TtL5YJxt2WVfOus9bEQ==
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 
 "@isaacs/cliui@^8.0.2":
   version "8.0.2"
@@ -1705,6 +1828,7 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
+<<<<<<< HEAD
 "@sd-jwt/core@^0.6.1":
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/@sd-jwt/core/-/core-0.6.1.tgz#d28be10d0f4b672636fcf7ad71737cb08e5dae96"
@@ -1761,6 +1885,75 @@
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@sideway/pinpoint/-/pinpoint-2.0.0.tgz#cff8ffadc372ad29fd3f78277aeb29e632cc70df"
   integrity sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==
+=======
+"@sd-jwt/core@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/core/-/core-0.2.1.tgz#75b0b273758e6be050e042a75bd6a0c4a2a7258e"
+  integrity sha512-8auyt3mfzgAK+IP9mNc3kSONdo5x2Y8ypNj5gHKP7N81nVeyI+DHethoPQv84JVcqYYcNwHwyrc2Z5k7rg2lFQ==
+  dependencies:
+    "@sd-jwt/decode" "0.2.1"
+    "@sd-jwt/present" "0.2.1"
+    "@sd-jwt/types" "0.2.1"
+    "@sd-jwt/utils" "0.2.1"
+
+"@sd-jwt/decode@0.2.1", "@sd-jwt/decode@^0.2.0", "@sd-jwt/decode@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/decode/-/decode-0.2.1.tgz#e0fb32dd2a95440ad69237e66ea2cd4770ec7e09"
+  integrity sha512-rs55WB3llrMObxN8jeMl06km/h0WivO9jSWNubO9JUIdlfrVhssU38xoXakvQeSDjAJkUUhfZcvmC2vNo1X6Wg==
+  dependencies:
+    "@sd-jwt/types" "0.2.1"
+    "@sd-jwt/utils" "0.2.1"
+
+"@sd-jwt/decode@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/decode/-/decode-0.3.0.tgz#23627ce1b7c678a6ac685d7241e7f64e18bd9a8c"
+  integrity sha512-jCN1g3VzopiUxUtBZWq0Ojfzbg+wYkE1/gV86Xq7/gV8aNacCJo7Su5a3pYtoYg/rnH7ou1kwpD6vteQFkvXMQ==
+  dependencies:
+    "@sd-jwt/types" "0.3.0"
+    "@sd-jwt/utils" "0.3.0"
+
+"@sd-jwt/present@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/present/-/present-0.2.1.tgz#ff9958626b271a60d539dd1e601763ff33c024e8"
+  integrity sha512-yWIAR2C/q1jNUwzAeUlUcf3WCTEcSSGo9pltHW5AXptELjyaWGSmC5p6o9ucDXHvBnicfPONhe5OdUCSpiCntw==
+  dependencies:
+    "@sd-jwt/types" "0.2.1"
+    "@sd-jwt/utils" "0.2.1"
+
+"@sd-jwt/present@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/present/-/present-0.3.0.tgz#e054f66c0ec9c339570ec028e0f2291d75c279e3"
+  integrity sha512-dICPhH5hqOLXmuJMdTaA47ZMpCDkTzbWUQXsIgw0vma7Aj9Bc6ySNevPwlsUx4K8XBjPgYWwBM9tKdrs3tsCvQ==
+  dependencies:
+    "@sd-jwt/types" "0.3.0"
+    "@sd-jwt/utils" "0.3.0"
+
+"@sd-jwt/types@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/types/-/types-0.2.1.tgz#e1e6b47728dffa90ed244e15e2253bd01793cb96"
+  integrity sha512-nbNik/cq6UIMsN144FcgPZQzaqIsjEEj307j3ZSFORkQBR4Tsmcj54aswTuNh0Z0z/4aSbfw14vOKBZvRWyVLQ==
+
+"@sd-jwt/types@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/types/-/types-0.3.0.tgz#12f2fa7b448f1f5e368ddfac8db2143ed58c38f7"
+  integrity sha512-JbpZICZ+nWPiKPKw+Veg5tf0Oftit4EzxhLJyvcd0u4R6IulNZvi6LCoUL7b2IT1H86eYPd/qB1KvSh43ByZOA==
+
+"@sd-jwt/utils@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/utils/-/utils-0.2.1.tgz#35ad83232eab2de911e765d93222acd871982a5e"
+  integrity sha512-9eRrge44dhE3fenawR/RZGxP5iuW9DtgdOVANu/JK5PEl80r0fDsMwm/gDjuv8OgLDCmQ6uSaVte1lYaTG71bQ==
+  dependencies:
+    "@sd-jwt/types" "0.2.1"
+    buffer "*"
+
+"@sd-jwt/utils@0.3.0", "@sd-jwt/utils@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@sd-jwt/utils/-/utils-0.3.0.tgz#73ce9809ccc98b35d5a6d1bf1ed34758bcdfb39d"
+  integrity sha512-jQNYxvyfLda9StVLeUqUZtv5csI6IuzcD6b55/wsC9xJgTuntZqf8vyJvuu4MwEJUFwm9PdGkCJXyl/nbpmNLw==
+  dependencies:
+    "@sd-jwt/types" "0.3.0"
+    buffer "*"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 
 "@sindresorhus/is@^4.0.0":
   version "4.6.0"
@@ -1786,6 +1979,7 @@
   resolved "https://registry.yarnpkg.com/@sovpro/delimited-stream/-/delimited-stream-1.1.0.tgz#4334bba7ee241036e580fdd99c019377630d26b4"
   integrity sha512-kQpk267uxB19X3X2T1mvNMjyvIEonpNSHrMlK5ZaBU6aZxw7wPbpgKJOjHN3+/GPVpXgAV9soVT2oyHpLkLtyw==
 
+<<<<<<< HEAD
 "@sphereon/pex-models@^2.2.4":
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/@sphereon/pex-models/-/pex-models-2.2.4.tgz#0ce28e9858b38012fe1ff7d9fd12ec503473ee66"
@@ -1802,11 +1996,30 @@
     "@sd-jwt/types" "^0.6.1"
     "@sphereon/pex-models" "^2.2.4"
     "@sphereon/ssi-types" "0.22.0"
+=======
+"@sphereon/pex-models@^2.2.2":
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/@sphereon/pex-models/-/pex-models-2.2.2.tgz#3f8b12c49d8fab7372b4b47eae5bcbf8729cccba"
+  integrity sha512-CZIsBoaV5rMZEWYBsmH+RxsdoxpXf5FSDwDz0GB0qOf5WFk1BGUnzpZzi5yJ+2L151mhPk97dlRc9Wb01Awr4Q==
+
+"@sphereon/pex@3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@sphereon/pex/-/pex-3.3.0.tgz#86384f7ee6e5a966b98d3e8010a27e93eb144317"
+  integrity sha512-CNthF/6dlIECqTqdOWGD5HOT72OWjzKTFVuFGmSbgOqsEtEtGU0e0g0gYbvXWNm0hYKsyFgS5XIZ1Uj3NR5UMg==
+  dependencies:
+    "@astronautlabs/jsonpath" "^1.1.2"
+    "@sd-jwt/decode" "^0.3.0"
+    "@sd-jwt/present" "^0.3.0"
+    "@sd-jwt/utils" "^0.3.0"
+    "@sphereon/pex-models" "^2.2.2"
+    "@sphereon/ssi-types" "0.18.1"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     ajv "^8.12.0"
     ajv-formats "^2.1.1"
     jwt-decode "^3.1.2"
     nanoid "^3.3.7"
     string.prototype.matchall "^4.0.10"
+<<<<<<< HEAD
     uint8arrays "^3.1.1"
 
 "@sphereon/ssi-types@0.22.0":
@@ -1823,6 +2036,15 @@
   integrity sha512-1lM2yfOEhpcYYBxm/12KYY4n3ZSahVf5rFqGdterQkMJMthwr20HqTjw3+VK5p7IVf+86DyBoZJyS4V9tSsoCA==
   dependencies:
     "@sd-jwt/decode" "^0.6.1"
+=======
+
+"@sphereon/ssi-types@0.18.1", "@sphereon/ssi-types@^0.18.1":
+  version "0.18.1"
+  resolved "https://registry.yarnpkg.com/@sphereon/ssi-types/-/ssi-types-0.18.1.tgz#c00e4939149f4e441fae56af860735886a4c33a5"
+  integrity sha512-uM0gb1woyc0R+p+qh8tVDi15ZWmpzo9BP0iBp/yRkJar7gAfgwox/yvtEToaH9jROKnDCwL3DDQCDeNucpMkwg==
+  dependencies:
+    "@sd-jwt/decode" "^0.2.0"
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
     jwt-decode "^3.1.2"
 
 "@stablelib/binary@^1.0.1":
@@ -3000,7 +3222,7 @@ buffer-from@^1.0.0:
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.2.tgz#2b146a6fd72e80b4f55d255f35ed59a3a9a41bd5"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
 
-buffer@^6.0.3:
+buffer@*, buffer@^6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/buffer/-/buffer-6.0.3.tgz#2ace578459cc8fbe2a70aaa8f52ee63b6a74c6c6"
   integrity sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==
@@ -6193,11 +6415,14 @@ msrcrypto@^1.5.6:
   resolved "https://registry.yarnpkg.com/msrcrypto/-/msrcrypto-1.5.8.tgz#be419be4945bf134d8af52e9d43be7fa261f4a1c"
   integrity sha512-ujZ0TRuozHKKm6eGbKHfXef7f+esIhEckmThVnz7RNyiOJd7a6MXj2JGBoL9cnPDW+JMG16MoTUh5X+XXjI66Q==
 
+<<<<<<< HEAD
 multiformats@^9.4.2:
   version "9.9.0"
   resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.9.0.tgz#c68354e7d21037a8f1f8833c8ccd68618e8f1d37"
   integrity sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==
 
+=======
+>>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 nanoid@^3.3.7:
   version "3.3.7"
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.7.tgz#d0c301a691bc8d54efa0a2226ccf3fe2fd656bd8"
