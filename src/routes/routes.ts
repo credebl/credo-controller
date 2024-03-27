@@ -119,7 +119,6 @@ const models: TsoaRoute.Models = {
             "label": {"dataType":"string"},
             "imageUrl": {"dataType":"string"},
             "recipientKey": {"dataType":"string"},
-            "invitationDid": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -135,7 +134,6 @@ const models: TsoaRoute.Models = {
             "@type": {"dataType":"string","required":true},
             "@id": {"dataType":"string","required":true},
             "~thread": {"dataType":"nestedObjectLiteral","nestedProperties":{"pthid":{"dataType":"string"},"thid":{"dataType":"string"}}},
-            "messageType": {"dataType":"string","required":true},
         },
         "additionalProperties": {"dataType":"any"},
     },
@@ -466,17 +464,6 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"string","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "SchemaMetadata": {
-        "dataType": "refObject",
-        "properties": {
-            "did": {"dataType":"string","required":true},
-            "schemaId": {"dataType":"string","required":true},
-            "schemaTxnHash": {"dataType":"string"},
-            "schemaUrl": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "WriteTransaction": {
         "dataType": "refObject",
         "properties": {
@@ -799,8 +786,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.getAllProofs)),
 
-            async function ProofController_getAllProofs(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_getAllProofs(request: any, response: any, next: any) {
+            const args = {
                     threadId: {"in":"query","name":"threadId","dataType":"string"},
             };
 
@@ -817,14 +804,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getAllProofs',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getAllProofs.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -835,8 +817,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.getProofById)),
 
-            async function ProofController_getProofById(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_getProofById(request: any, response: any, next: any) {
+            const args = {
                     proofRecordId: {"in":"path","name":"proofRecordId","required":true,"ref":"RecordId"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -846,7 +828,7 @@ export function RegisterRoutes(app: Router) {
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+                validatedArgs = getValidatedArgs(args, request, response);
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
@@ -855,14 +837,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getProofById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getProofById.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -873,8 +850,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.proposeProof)),
 
-            async function ProofController_proposeProof(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_proposeProof(request: any, response: any, next: any) {
+            const args = {
                     requestProofProposalOptions: {"in":"body","name":"requestProofProposalOptions","required":true,"ref":"RequestProofProposalOptions"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -893,14 +870,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'proposeProof',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.proposeProof.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -911,8 +883,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.acceptProposal)),
 
-            async function ProofController_acceptProposal(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_acceptProposal(request: any, response: any, next: any) {
+            const args = {
                     acceptProposal: {"in":"body","name":"acceptProposal","required":true,"ref":"AcceptProofProposal"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -931,14 +903,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'acceptProposal',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.acceptProposal.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -949,8 +916,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.requestProof)),
 
-            async function ProofController_requestProof(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_requestProof(request: any, response: any, next: any) {
+            const args = {
                     requestProofOptions: {"in":"body","name":"requestProofOptions","required":true,"ref":"RequestProofOptions"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -969,14 +936,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'requestProof',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.requestProof.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -987,8 +949,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.createRequest)),
 
-            async function ProofController_createRequest(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_createRequest(request: any, response: any, next: any) {
+            const args = {
                     createRequestOptions: {"in":"body","name":"createRequestOptions","required":true,"ref":"CreateProofRequestOobOptions"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
@@ -1006,14 +968,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'createRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.createRequest.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1024,8 +981,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.acceptRequest)),
 
-            async function ProofController_acceptRequest(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_acceptRequest(request: any, response: any, next: any) {
+            const args = {
                     proofRecordId: {"in":"path","name":"proofRecordId","required":true,"dataType":"string"},
                     request: {"in":"body","name":"request","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"comment":{"dataType":"string"},"filterByNonRevocationRequirements":{"dataType":"boolean"},"filterByPresentationPreview":{"dataType":"boolean"}}},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
@@ -1045,14 +1002,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'acceptRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.acceptRequest.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1063,8 +1015,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.acceptPresentation)),
 
-            async function ProofController_acceptPresentation(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_acceptPresentation(request: any, response: any, next: any) {
+            const args = {
                     proofRecordId: {"in":"path","name":"proofRecordId","required":true,"dataType":"string"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -1083,14 +1035,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'acceptPresentation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.acceptPresentation.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1101,8 +1048,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
             ...(fetchMiddlewares<RequestHandler>(ProofController.prototype.proofFormData)),
 
-            async function ProofController_proofFormData(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ProofController_proofFormData(request: any, response: any, next: any) {
+            const args = {
                     proofRecordId: {"in":"path","name":"proofRecordId","required":true,"dataType":"string"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -1121,14 +1068,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'proofFormData',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.proofFormData.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1139,8 +1081,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(Polygon)),
             ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createKeyPair)),
 
-            async function Polygon_createKeyPair(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function Polygon_createKeyPair(request: any, response: any, next: any) {
+            const args = {
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 
@@ -1157,14 +1099,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'createKeyPair',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.createKeyPair.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1175,8 +1112,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(Polygon)),
             ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createSchema)),
 
-            async function Polygon_createSchema(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function Polygon_createSchema(request: any, response: any, next: any) {
+            const args = {
                     createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
                     badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
@@ -1195,14 +1132,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'createSchema',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.createSchema.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1213,8 +1145,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(Polygon)),
             ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.estimateTransaction)),
 
-            async function Polygon_estimateTransaction(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function Polygon_estimateTransaction(request: any, response: any, next: any) {
+            const args = {
                     estimateTransactionRequest: {"in":"body","name":"estimateTransactionRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"transaction":{"dataType":"any","required":true},"operation":{"dataType":"any","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
                     badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
@@ -1233,14 +1165,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'estimateTransaction',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.estimateTransaction.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1251,8 +1178,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(Polygon)),
             ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.getSchemaById)),
 
-            async function Polygon_getSchemaById(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function Polygon_getSchemaById(request: any, response: any, next: any) {
+            const args = {
                     did: {"in":"path","name":"did","required":true,"dataType":"string"},
                     schemaId: {"in":"path","name":"schemaId","required":true,"dataType":"string"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -1272,14 +1199,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getSchemaById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getSchemaById.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1290,8 +1212,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.getAllOutOfBandRecords)),
 
-            async function OutOfBandController_getAllOutOfBandRecords(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_getAllOutOfBandRecords(request: any, response: any, next: any) {
+            const args = {
                     invitationId: {"in":"query","name":"invitationId","ref":"RecordId"},
             };
 
@@ -1308,14 +1230,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getAllOutOfBandRecords',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getAllOutOfBandRecords.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1326,8 +1243,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.getOutOfBandRecordById)),
 
-            async function OutOfBandController_getOutOfBandRecordById(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_getOutOfBandRecordById(request: any, response: any, next: any) {
+            const args = {
                     outOfBandId: {"in":"path","name":"outOfBandId","required":true,"ref":"RecordId"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
             };
@@ -1345,14 +1262,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getOutOfBandRecordById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getOutOfBandRecordById.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1363,10 +1275,10 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.createInvitation)),
 
-            async function OutOfBandController_createInvitation(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_createInvitation(request: any, response: any, next: any) {
+            const args = {
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-                    config: {"in":"body","name":"config","required":true,"dataType":"intersection","subSchemas":[{"ref":"CreateInvitationOptions"},{"ref":"RecipientKeyOption"}]},
+                    config: {"in":"body","name":"config","required":true,"ref":"CreateInvitationOptions"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -1382,14 +1294,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'createInvitation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.createInvitation.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1400,8 +1307,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.createLegacyInvitation)),
 
-            async function OutOfBandController_createLegacyInvitation(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_createLegacyInvitation(request: any, response: any, next: any) {
+            const args = {
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
                     config: {"in":"body","name":"config","dataType":"intersection","subSchemas":[{"ref":"Omit_CreateLegacyInvitationConfig.routing_"},{"ref":"RecipientKeyOption"}]},
             };
@@ -1419,14 +1326,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'createLegacyInvitation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.createLegacyInvitation.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1437,8 +1339,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.createLegacyConnectionlessInvitation)),
 
-            async function OutOfBandController_createLegacyConnectionlessInvitation(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_createLegacyConnectionlessInvitation(request: any, response: any, next: any) {
+            const args = {
                     config: {"in":"body","name":"config","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"domain":{"dataType":"string","required":true},"message":{"ref":"AgentMessageType","required":true},"recordId":{"dataType":"string","required":true}}},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -1457,14 +1359,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'createLegacyConnectionlessInvitation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.createLegacyConnectionlessInvitation.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1475,8 +1372,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.receiveInvitation)),
 
-            async function OutOfBandController_receiveInvitation(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_receiveInvitation(request: any, response: any, next: any) {
+            const args = {
                     invitationRequest: {"in":"body","name":"invitationRequest","required":true,"ref":"ReceiveInvitationProps"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
@@ -1485,7 +1382,7 @@ export function RegisterRoutes(app: Router) {
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+                validatedArgs = getValidatedArgs(args, request, response);
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
@@ -1494,14 +1391,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'receiveInvitation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.receiveInvitation.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1512,8 +1404,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.receiveInvitationFromUrl)),
 
-            async function OutOfBandController_receiveInvitationFromUrl(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_receiveInvitationFromUrl(request: any, response: any, next: any) {
+            const args = {
                     invitationRequest: {"in":"body","name":"invitationRequest","required":true,"ref":"ReceiveInvitationByUrlProps"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
@@ -1522,7 +1414,7 @@ export function RegisterRoutes(app: Router) {
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+                validatedArgs = getValidatedArgs(args, request, response);
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
@@ -1531,14 +1423,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'receiveInvitationFromUrl',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.receiveInvitationFromUrl.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1549,8 +1436,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.acceptInvitation)),
 
-            async function OutOfBandController_acceptInvitation(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_acceptInvitation(request: any, response: any, next: any) {
+            const args = {
                     outOfBandId: {"in":"path","name":"outOfBandId","required":true,"ref":"RecordId"},
                     acceptInvitationConfig: {"in":"body","name":"acceptInvitationConfig","required":true,"ref":"AcceptInvitationConfig"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
@@ -1570,14 +1457,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'acceptInvitation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.acceptInvitation.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -1588,8 +1470,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController)),
             ...(fetchMiddlewares<RequestHandler>(OutOfBandController.prototype.deleteOutOfBandRecord)),
 
-            async function OutOfBandController_deleteOutOfBandRecord(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function OutOfBandController_deleteOutOfBandRecord(request: any, response: any, next: any) {
+            const args = {
                     outOfBandId: {"in":"path","name":"outOfBandId","required":true,"ref":"RecordId"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -1608,14 +1490,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'deleteOutOfBandRecord',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.deleteOutOfBandRecord.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -2164,8 +2041,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
             ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.createPolygonW3CSchema)),
 
-            async function MultiTenancyController_createPolygonW3CSchema(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function MultiTenancyController_createPolygonW3CSchema(request: any, response: any, next: any) {
+            const args = {
                     createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
                     tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
@@ -3138,86 +3015,11 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController)),
             ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController.prototype.endorserTransaction)),
 
-            async function EndorserTransactionController_endorserTransaction(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function EndorserTransactionController_endorserTransaction(request: any, response: any, next: any) {
+            const args = {
                     endorserTransaction: {"in":"body","name":"endorserTransaction","required":true,"ref":"EndorserTransaction"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
                     forbiddenError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'endorserTransaction',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/transactions/set-endorser-role',
-            authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController)),
-            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController.prototype.didNymTransaction)),
-
-            async function EndorserTransactionController_didNymTransaction(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    didNymTransaction: {"in":"body","name":"didNymTransaction","required":true,"ref":"DidNymTransaction"},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'didNymTransaction',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/transactions/write',
-            authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController)),
-            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController.prototype.writeSchemaAndCredDefOnLedger)),
-
-            async function EndorserTransactionController_writeSchemaAndCredDefOnLedger(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    forbiddenError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-                    writeTransaction: {"in":"body","name":"writeTransaction","required":true,"ref":"WriteTransaction"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -3269,27 +3071,21 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getDidRecordByDid',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+              const promise = controller.endorserTransaction.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/dids/write',
+        app.post('/transactions/set-endorser-role',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(DidController)),
-            ...(fetchMiddlewares<RequestHandler>(DidController.prototype.writeDid)),
+            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController)),
+            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController.prototype.didNymTransaction)),
 
-            async function DidController_writeDid(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    createDidOptions: {"in":"body","name":"createDidOptions","required":true,"ref":"DidCreate"},
+            async function EndorserTransactionController_didNymTransaction(request: any, response: any, next: any) {
+            const args = {
+                    didNymTransaction: {"in":"body","name":"didNymTransaction","required":true,"ref":"DidNymTransaction"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 
@@ -3301,7 +3097,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<DidController>(DidController);
+                const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -3342,69 +3138,23 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getDids',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+              const promise = controller.didNymTransaction.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/schemas/:schemaId',
+        app.post('/transactions/write',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(SchemaController)),
-            ...(fetchMiddlewares<RequestHandler>(SchemaController.prototype.getSchemaById)),
+            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController)),
+            ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController.prototype.writeSchemaAndCredDefOnLedger)),
 
-            async function SchemaController_getSchemaById(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    schemaId: {"in":"path","name":"schemaId","required":true,"ref":"SchemaId"},
-                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    forbiddenError: {"in":"res","name":"403","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<SchemaController>(SchemaController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'getSchemaById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/schemas',
-            authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(SchemaController)),
-            ...(fetchMiddlewares<RequestHandler>(SchemaController.prototype.createSchema)),
-
-            async function SchemaController_createSchema(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    schema: {"in":"body","name":"schema","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"endorserDid":{"dataType":"string"},"endorse":{"dataType":"boolean"},"attributes":{"dataType":"array","array":{"dataType":"string"},"required":true},"version":{"ref":"Version","required":true},"name":{"dataType":"string","required":true},"issuerId":{"dataType":"string","required":true}}},
+            async function EndorserTransactionController_writeSchemaAndCredDefOnLedger(request: any, response: any, next: any) {
+            const args = {
                     forbiddenError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                    writeTransaction: {"in":"body","name":"writeTransaction","required":true,"ref":"WriteTransaction"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -3415,34 +3165,58 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<SchemaController>(SchemaController);
+                const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'createSchema',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.writeSchemaAndCredDefOnLedger.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/credential-definitions/:credentialDefinitionId',
+        app.get('/dids/:did',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController.prototype.getCredentialDefinitionById)),
+            ...(fetchMiddlewares<RequestHandler>(DidController)),
+            ...(fetchMiddlewares<RequestHandler>(DidController.prototype.getDidRecordByDid)),
 
-            async function CredentialDefinitionController_getCredentialDefinitionById(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    credentialDefinitionId: {"in":"path","name":"credentialDefinitionId","required":true,"ref":"CredentialDefinitionId"},
-                    badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+            async function DidController_getDidRecordByDid(request: any, response: any, next: any) {
+            const args = {
+                    did: {"in":"path","name":"did","required":true,"ref":"Did"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<DidController>(DidController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getDidRecordByDid.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/dids/write',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(DidController)),
+            ...(fetchMiddlewares<RequestHandler>(DidController.prototype.writeDid)),
+
+            async function DidController_writeDid(request: any, response: any, next: any) {
+            const args = {
+                    createDidOptions: {"in":"body","name":"createDidOptions","required":true,"ref":"DidCreate"},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 
@@ -3454,33 +3228,26 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<CredentialDefinitionController>(CredentialDefinitionController);
+                const controller: any = await container.get<DidController>(DidController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getCredentialDefinitionById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.writeDid.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credential-definitions',
+        app.get('/dids',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController.prototype.createCredentialDefinition)),
+            ...(fetchMiddlewares<RequestHandler>(DidController)),
+            ...(fetchMiddlewares<RequestHandler>(DidController.prototype.getDids)),
 
-            async function CredentialDefinitionController_createCredentialDefinition(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    credentialDefinitionRequest: {"in":"body","name":"credentialDefinitionRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"endorserDid":{"dataType":"string"},"endorse":{"dataType":"boolean"},"tag":{"dataType":"string","required":true},"schemaId":{"ref":"SchemaId","required":true},"issuerId":{"dataType":"string","required":true}}},
-                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+            async function DidController_getDids(request: any, response: any, next: any) {
+            const args = {
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 
@@ -3565,32 +3332,31 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<CredentialController>(CredentialController);
+                const controller: any = await container.get<DidController>(DidController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getAllW3c',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getDids.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/credentials/w3c/:id',
+        app.get('/schemas/:schemaId',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.getW3cById)),
+            ...(fetchMiddlewares<RequestHandler>(SchemaController)),
+            ...(fetchMiddlewares<RequestHandler>(SchemaController.prototype.getSchemaById)),
 
-            async function CredentialController_getW3cById(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    id: {"in":"path","name":"id","required":true,"dataType":"string"},
+            async function SchemaController_getSchemaById(request: any, response: any, next: any) {
+            const args = {
+                    schemaId: {"in":"path","name":"schemaId","required":true,"ref":"SchemaId"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    forbiddenError: {"in":"res","name":"403","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -3601,32 +3367,61 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<CredentialController>(CredentialController);
+                const controller: any = await container.get<SchemaController>(SchemaController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getW3cById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getSchemaById.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/credentials/:credentialRecordId',
+        app.post('/schemas',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.getCredentialById)),
+            ...(fetchMiddlewares<RequestHandler>(SchemaController)),
+            ...(fetchMiddlewares<RequestHandler>(SchemaController.prototype.createSchema)),
 
-            async function CredentialController_getCredentialById(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    credentialRecordId: {"in":"path","name":"credentialRecordId","required":true,"ref":"RecordId"},
+            async function SchemaController_createSchema(request: any, response: any, next: any) {
+            const args = {
+                    schema: {"in":"body","name":"schema","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"endorserDid":{"dataType":"string"},"endorse":{"dataType":"boolean"},"attributes":{"dataType":"array","array":{"dataType":"string"},"required":true},"version":{"ref":"Version","required":true},"name":{"dataType":"string","required":true},"issuerId":{"dataType":"string","required":true}}},
+                    forbiddenError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SchemaController>(SchemaController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.createSchema.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/credential-definitions/:credentialDefinitionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController.prototype.getCredentialDefinitionById)),
+
+            async function CredentialDefinitionController_getCredentialDefinitionById(request: any, response: any, next: any) {
+            const args = {
+                    credentialDefinitionId: {"in":"path","name":"credentialDefinitionId","required":true,"ref":"CredentialDefinitionId"},
+                    badRequestError: {"in":"res","name":"400","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
@@ -3639,32 +3434,27 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<CredentialController>(CredentialController);
+                const controller: any = await container.get<CredentialDefinitionController>(CredentialDefinitionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getCredentialById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getCredentialDefinitionById.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/propose-credential',
+        app.post('/credential-definitions',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.proposeCredential)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialDefinitionController.prototype.createCredentialDefinition)),
 
-            async function CredentialController_proposeCredential(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    proposeCredentialOptions: {"in":"body","name":"proposeCredentialOptions","required":true,"ref":"ProposeCredentialOptions"},
+            async function CredentialDefinitionController_createCredentialDefinition(request: any, response: any, next: any) {
+            const args = {
+                    credentialDefinitionRequest: {"in":"body","name":"credentialDefinitionRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"endorserDid":{"dataType":"string"},"endorse":{"dataType":"boolean"},"tag":{"dataType":"string","required":true},"schemaId":{"ref":"SchemaId","required":true},"issuerId":{"dataType":"string","required":true}}},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
@@ -3677,57 +3467,14 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<CredentialController>(CredentialController);
+                const controller: any = await container.get<CredentialDefinitionController>(CredentialDefinitionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'proposeCredential',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/accept-proposal',
-            authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptProposal)),
 
-            async function CredentialController_acceptProposal(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-                    acceptCredentialProposal: {"in":"body","name":"acceptCredentialProposal","required":true,"ref":"AcceptCredentialProposalOptions"},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<CredentialController>(CredentialController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'acceptProposal',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+              const promise = controller.createCredentialDefinition.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -4150,14 +3897,84 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/basic-messages/:connectionId',
+        app.get('/connections',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(BasicMessageController)),
-            ...(fetchMiddlewares<RequestHandler>(BasicMessageController.prototype.getBasicMessages)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getAllConnections)),
 
-            async function BasicMessageController_getBasicMessages(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function ConnectionController_getAllConnections(request: any, response: any, next: any) {
+            const args = {
+                    outOfBandId: {"in":"query","name":"outOfBandId","dataType":"string"},
+                    alias: {"in":"query","name":"alias","dataType":"string"},
+                    state: {"in":"query","name":"state","ref":"DidExchangeState"},
+                    myDid: {"in":"query","name":"myDid","dataType":"string"},
+                    theirDid: {"in":"query","name":"theirDid","dataType":"string"},
+                    theirLabel: {"in":"query","name":"theirLabel","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getAllConnections.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/connections/:connectionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getConnectionById)),
+
+            async function ConnectionController_getConnectionById(request: any, response: any, next: any) {
+            const args = {
                     connectionId: {"in":"path","name":"connectionId","required":true,"ref":"RecordId"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getConnectionById.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.delete('/connections/:connectionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.deleteConnection)),
+
+            async function ConnectionController_deleteConnection(request: any, response: any, next: any) {
+            const args = {
+                    connectionId: {"in":"path","name":"connectionId","required":true,"ref":"RecordId"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -4168,19 +3985,143 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
+                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.deleteConnection.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/connections/:connectionId/accept-request',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.acceptRequest)),
+
+            async function ConnectionController_acceptRequest(request: any, response: any, next: any) {
+            const args = {
+                    connectionId: {"in":"path","name":"connectionId","required":true,"ref":"RecordId"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.acceptRequest.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/connections/:connectionId/accept-response',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.acceptResponse)),
+
+            async function ConnectionController_acceptResponse(request: any, response: any, next: any) {
+            const args = {
+                    connectionId: {"in":"path","name":"connectionId","required":true,"ref":"RecordId"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.acceptResponse.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/url/:invitationId',
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getInvitation)),
+
+            async function ConnectionController_getInvitation(request: any, response: any, next: any) {
+            const args = {
+                    invitationId: {"in":"path","name":"invitationId","required":true,"dataType":"string"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.getInvitation.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/basic-messages/:connectionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(BasicMessageController)),
+            ...(fetchMiddlewares<RequestHandler>(BasicMessageController.prototype.getBasicMessages)),
+
+            async function BasicMessageController_getBasicMessages(request: any, response: any, next: any) {
+            const args = {
+                    connectionId: {"in":"path","name":"connectionId","required":true,"ref":"RecordId"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
                 const controller: any = await container.get<BasicMessageController>(BasicMessageController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getBasicMessages',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getBasicMessages.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -4191,8 +4132,8 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(BasicMessageController)),
             ...(fetchMiddlewares<RequestHandler>(BasicMessageController.prototype.sendMessage)),
 
-            async function BasicMessageController_sendMessage(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function BasicMessageController_sendMessage(request: any, response: any, next: any) {
+            const args = {
                     connectionId: {"in":"path","name":"connectionId","required":true,"ref":"RecordId"},
                     request: {"in":"body","name":"request","required":true,"ref":"Record_content.string_"},
                     notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
@@ -4212,14 +4153,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'sendMessage',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.sendMessage.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -4229,15 +4165,15 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(AgentController)),
             ...(fetchMiddlewares<RequestHandler>(AgentController.prototype.getAgentInfo)),
 
-            async function AgentController_getAgentInfo(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function AgentController_getAgentInfo(request: any, response: any, next: any) {
+            const args = {
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+                validatedArgs = getValidatedArgs(args, request, response);
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
@@ -4246,14 +4182,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'getAgentInfo',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.getAgentInfo.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
@@ -4264,15 +4195,15 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(AgentController)),
             ...(fetchMiddlewares<RequestHandler>(AgentController.prototype.deleteWallet)),
 
-            async function AgentController_deleteWallet(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            async function AgentController_deleteWallet(request: any, response: any, next: any) {
+            const args = {
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+                validatedArgs = getValidatedArgs(args, request, response);
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
@@ -4281,14 +4212,9 @@ export function RegisterRoutes(app: Router) {
                 controller.setStatus(undefined);
                 }
 
-              await templateService.apiHandler({
-                methodName: 'deleteWallet',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
+
+              const promise = controller.deleteWallet.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }

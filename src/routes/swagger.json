@@ -249,6 +249,209 @@
 					},
 					"recipientKey": {
 						"type": "string"
+					}
+				},
+				"required": [
+					"protocolVersion",
+					"proofFormats"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HandshakeProtocol": {
+				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
+				"enum": [
+					"https://didcomm.org/didexchange/1.x",
+					"https://didcomm.org/connections/1.x"
+				],
+				"type": "string"
+			},
+			"RequestProofProposalOptions": {
+				"properties": {
+					"connectionId": {
+						"type": "string"
+					},
+					"proofFormats": {
+						"properties": {
+							"action": {
+								"type": "string",
+								"enum": [
+									"createProposal"
+								],
+								"nullable": false
+							},
+							"formats": {
+								"items": {
+									"$ref": "#/components/schemas/ProofFormat"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"action",
+							"formats"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"@type",
+					"@id"
+				],
+				"type": "object",
+				"additionalProperties": {}
+			},
+			"AgentMessage": {
+				"$ref": "#/components/schemas/PlaintextMessage"
+			},
+			"KeyType": {
+				"enum": [
+					"ed25519",
+					"bls12381g1g2",
+					"bls12381g1",
+					"bls12381g2",
+					"x25519",
+					"p256",
+					"p384",
+					"p521",
+					"k256"
+				],
+				"type": "string"
+			},
+			"Key": {
+				"properties": {
+					"publicKey": {
+						"type": "string",
+						"format": "byte"
+					},
+					"parentThreadId": {
+						"type": "string"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"connectionId",
+					"proofFormats"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AcceptProofProposal": {
+				"properties": {
+					"proofRecordId": {
+						"type": "string"
+					},
+					"proofFormats": {
+						"properties": {
+							"action": {
+								"type": "string",
+								"enum": [
+									"acceptProposal"
+								],
+								"nullable": false
+							},
+							"formats": {
+								"items": {
+									"$ref": "#/components/schemas/ProofFormat"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"action",
+							"formats"
+						],
+						"type": "object"
+					},
+					"comment": {
+						"type": "string"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"proofRecordId",
+					"proofFormats"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RequestProofOptions": {
+				"properties": {
+					"connectionId": {
+						"type": "string"
+					},
+					"protocolVersion": {
+						"type": "string"
+					},
+					"proofFormats": {},
+					"comment": {
+						"type": "string"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"parentThreadId": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"connectionId",
+					"protocolVersion",
+					"proofFormats",
+					"comment",
+					"autoAcceptProof"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateProofRequestOobOptions": {
+				"properties": {
+					"protocolVersion": {
+						"type": "string"
+					},
+					"proofFormats": {},
+					"goalCode": {
+						"type": "string"
+					},
+					"parentThreadId": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
+					},
+					"label": {
+						"type": "string"
+					},
+					"imageUrl": {
+						"type": "string"
+					},
+					"recipientKey": {
+						"type": "string"
 					},
 					"invitationDid": {
 						"type": "string"
@@ -1103,28 +1306,6 @@
 			"Version": {
 				"type": "string",
 				"example": "1.0.0"
-			},
-			"SchemaMetadata": {
-				"properties": {
-					"did": {
-						"type": "string"
-					},
-					"schemaId": {
-						"type": "string"
-					},
-					"schemaTxnHash": {
-						"type": "string"
-					},
-					"schemaUrl": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"did",
-					"schemaId"
-				],
-				"type": "object",
-				"additionalProperties": false
 			},
 			"WriteTransaction": {
 				"properties": {
@@ -1992,7 +2173,7 @@
 						"name": "proofRecordId",
 						"required": true,
 						"schema": {
-							"$ref": "#/components/schemas/RecordId"
+							"type": "string"
 						}
 					}
 				]
@@ -2322,18 +2503,18 @@
 							}
 						}
 					},
-					"404": {
+					"500": {
 						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
 										}
 									},
 									"required": [
-										"reason"
+										"message"
 									],
 									"type": "object"
 								}
@@ -2480,7 +2661,28 @@
 							"type": "string"
 						}
 					}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"comment": {
+										"type": "string"
+									},
+									"filterByNonRevocationRequirements": {
+										"type": "boolean"
+									},
+									"filterByPresentationPreview": {
+										"type": "boolean"
+									}
+								},
+								"type": "object"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/proofs/{proofRecordId}/form-data": {
@@ -2588,6 +2790,24 @@
 										"address",
 										"publicKeyBase58",
 										"privateKey"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
 									],
 									"type": "object"
 								}
@@ -3039,6 +3259,7 @@
 				],
 				"parameters": [
 					{
+						"description": "Record identifier",
 						"in": "path",
 						"name": "outOfBandId",
 						"required": true,
@@ -3056,24 +3277,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
 							}
 						}
 					},
@@ -3234,14 +3437,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/CreateInvitationOptions"
-									},
-									{
-										"$ref": "#/components/schemas/RecipientKeyOption"
-									}
-								],
+								"$ref": "#/components/schemas/CreateInvitationOptions",
 								"description": "configuration of how out-of-band invitation should be created"
 							}
 						}
