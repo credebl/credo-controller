@@ -1,6 +1,6 @@
 import type { ServerConfig } from '../src/utils/ServerConfig'
 
-import { AgentConfig } from '@aries-framework/core'
+import { AgentConfig } from '@credo-ts/core'
 import bodyParser from 'body-parser'
 import express from 'express'
 import { connect } from 'ngrok'

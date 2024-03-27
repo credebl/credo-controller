@@ -4,8 +4,8 @@ import {
   AnonCredsError,
   getUnqualifiedCredentialDefinitionId,
   parseIndyCredentialDefinitionId,
-} from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+} from '@credo-ts/anoncreds'
+import { Agent, CredoError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum } from '../../enums/enum'
@@ -41,11 +41,11 @@ export class CredentialDefinitionController extends Controller {
     try {
       return await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
     } catch (error) {
-      if (error instanceof AriesFrameworkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+      if (error instanceof CredoError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
           reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
         })
-      } else if (error instanceof AnonCredsError && error.cause instanceof AriesFrameworkError) {
+      } else if (error instanceof AnonCredsError && error.cause instanceof CredoError) {
         if ((error.cause.cause, 'CommonInvalidStructure')) {
           return badRequestError(400, {
             reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,

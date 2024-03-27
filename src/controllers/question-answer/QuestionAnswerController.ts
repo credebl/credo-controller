@@ -1,8 +1,8 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { ValidResponse } from '@aries-framework/question-answer'
+import type { ValidResponse } from '@credo-ts/question-answer'
 
-import { Agent, RecordNotFoundError } from '@aries-framework/core'
-import { QuestionAnswerRole, QuestionAnswerState } from '@aries-framework/question-answer'
+import { Agent, RecordNotFoundError } from '@credo-ts/core'
+import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import { injectable } from 'tsyringe'
 
 import { RecordId } from '../examples'
