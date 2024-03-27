@@ -1,6 +1,7 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
 import type { RecipientKeyOption } from '../types'
+import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
   ConnectionRecordProps,
@@ -11,12 +12,11 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
-} from '@aries-framework/core'
-import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@aries-framework/indy-vdr'
-import type { QuestionAnswerRecord, ValidResponse } from '@aries-framework/question-answer'
-import type { TenantRecord } from '@aries-framework/tenants'
-import type { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
-import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+} from '@credo-ts/core'
+import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
+import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
+import type { TenantRecord } from '@credo-ts/tenants'
+import type { TenantAgent } from '@credo-ts/tenants/build/TenantAgent'
 
 import {
   getUnqualifiedSchemaId,
@@ -24,11 +24,11 @@ import {
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
   AnonCredsError,
-} from '@aries-framework/anoncreds'
+} from '@credo-ts/anoncreds'
 import {
   AcceptCredentialOfferOptions,
   Agent,
-  AriesFrameworkError,
+  CredoError,
   ConnectionRepository,
   CredentialRepository,
   CredentialState,
@@ -44,8 +44,8 @@ import {
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
   injectable,
-} from '@aries-framework/core'
-import { QuestionAnswerRole, QuestionAnswerState } from '@aries-framework/question-answer'
+} from '@credo-ts/core'
+import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 
 import { CredentialEnum, DidMethod, Network, Role } from '../../enums/enum'
@@ -602,7 +602,7 @@ export class MultiTenancyController extends Controller {
 
       return { signedTransaction }
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(400, {
             reason: 'this action is not allowed.',
@@ -906,7 +906,7 @@ export class MultiTenancyController extends Controller {
 
       return schemaRecord
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(400, {
             reason: 'this action is not allowed.',
@@ -925,7 +925,7 @@ export class MultiTenancyController extends Controller {
     createSchemaRequest: {
       did: string
       schemaName: string
-      schema: object
+      schema: { [key: string]: any }
     },
     @Path('tenantId') tenantId: string,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
@@ -970,7 +970,7 @@ export class MultiTenancyController extends Controller {
         return tenantAgent.modules.polygon.getSchemaById(did, schemaId)
       })
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(401, {
             reason: 'this action is not allowed.',
@@ -1009,7 +1009,7 @@ export class MultiTenancyController extends Controller {
         throw new Error('Please provide valid schema or credential-def!')
       }
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(400, {
             reason: 'this action is not allowed.',
@@ -1082,6 +1082,8 @@ export class MultiTenancyController extends Controller {
         options: {
           endorserMode: 'external',
           endorsedTransaction: endorsedTransaction,
+          // TODO: Update this later
+          supportRevocation: false,
         },
       })
 
@@ -1175,7 +1177,10 @@ export class MultiTenancyController extends Controller {
               schemaId: credentialDefinitionRequest.schemaId,
               tag: credentialDefinitionRequest.tag,
             },
-            options: {},
+            options: {
+              // TODO: update this later
+              supportRevocation: false,
+            },
           })
 
           if (!credentialDefinitionState?.credentialDefinitionId) {
@@ -1198,9 +1203,12 @@ export class MultiTenancyController extends Controller {
               issuerId: credentialDefinitionRequest.issuerId,
               tag: credentialDefinitionRequest.tag,
               schemaId: credentialDefinitionRequest.schemaId,
-              type: 'CL',
+              // TODO: Need to check this
+              // type: 'CL',
             },
             options: {
+              // TODO: update this later
+              supportRevocation: false,
               endorserMode: 'external',
               endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
             },
@@ -1239,11 +1247,11 @@ export class MultiTenancyController extends Controller {
 
       return getCredDef
     } catch (error) {
-      if (error instanceof AriesFrameworkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+      if (error instanceof CredoError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
           reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
         })
-      } else if (error instanceof AnonCredsError && error.cause instanceof AriesFrameworkError) {
+      } else if (error instanceof AnonCredsError && error.cause instanceof CredoError) {
         if ((error.cause.cause, 'CommonInvalidStructure')) {
           return badRequestError(400, {
             reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,
