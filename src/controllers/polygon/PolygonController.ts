@@ -1,8 +1,8 @@
 import type { RestAgentModules } from '../../cliAgent'
 
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
 import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
 import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
+import { Agent, CredoError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { Route, Tags, Security, Controller, Post, TsoaResponse, Res, Body, Get, Path } from 'tsoa'
@@ -49,7 +49,7 @@ export class Polygon extends Controller {
     createSchemaRequest: {
       did: string
       schemaName: string
-      schema: object
+      schema: { [key: string]: any }
     },
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Res() badRequestError: TsoaResponse<400, { reason: string }>
@@ -120,7 +120,7 @@ export class Polygon extends Controller {
     try {
       return this.agent.modules.polygon.getSchemaById(did, schemaId)
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(401, {
             reason: 'this action is not allowed.',
