@@ -1,13 +1,13 @@
 import type { Version } from '../examples'
-import type { IndyVdrDidCreateOptions } from '@aries-framework/indy-vdr'
+import type { IndyVdrDidCreateOptions } from '@credo-ts/indy-vdr'
 
 import {
   getUnqualifiedCredentialDefinitionId,
   getUnqualifiedSchemaId,
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
-} from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+} from '@credo-ts/anoncreds'
+import { Agent, CredoError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum } from '../../enums/enum'
@@ -41,7 +41,7 @@ export class EndorserTransactionController extends Controller {
 
       return { signedTransaction }
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(400, {
             reason: 'this action is not allowed.',
@@ -98,7 +98,7 @@ export class EndorserTransactionController extends Controller {
         throw new Error('Please provide valid schema or credential-def!')
       }
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(400, {
             reason: 'this action is not allowed.',

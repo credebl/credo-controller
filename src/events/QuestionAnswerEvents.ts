@@ -1,8 +1,8 @@
 import type { ServerConfig } from '../utils/ServerConfig'
-import type { Agent } from '@aries-framework/core'
-import type { QuestionAnswerStateChangedEvent } from '@aries-framework/question-answer'
+import type { Agent } from '@credo-ts/core'
+import type { QuestionAnswerStateChangedEvent } from '@credo-ts/question-answer'
 
-import { QuestionAnswerEventTypes } from '@aries-framework/question-answer'
+import { QuestionAnswerEventTypes } from '@credo-ts/question-answer'
 
 import { sendWebSocketEvent } from './WebSocketEvents'
 import { sendWebhookEvent } from './WebhookEvent'

@@ -1,6 +1,6 @@
 import type { DidResolutionResultProps } from '../types'
-import type { KeyDidCreateOptions } from '@aries-framework/core'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+import type { KeyDidCreateOptions } from '@credo-ts/core'
 
 import {
   KeyType,
@@ -9,7 +9,7 @@ import {
   getEd25519VerificationKey2018,
   Agent,
   getBls12381G2Key2020,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import axios from 'axios'
 import { injectable } from 'tsyringe'
 

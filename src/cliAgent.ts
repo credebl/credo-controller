@@ -1,7 +1,8 @@
-import type { InitConfig } from '@aries-framework/core'
-import type { WalletConfig } from '@aries-framework/core/build/types'
-import type { IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
+import type { InitConfig } from '@credo-ts/core'
+import type { WalletConfig } from '@credo-ts/core/build/types'
+import type { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
+import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
@@ -10,9 +11,8 @@ import {
   LegacyIndyProofFormatService,
   V1CredentialProtocol,
   V1ProofProtocol,
-} from '@aries-framework/anoncreds'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
+} from '@credo-ts/anoncreds'
+import { AskarModule, AskarMultiWalletDatabaseScheme } from '@credo-ts/askar'
 import {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -28,23 +28,22 @@ import {
   CacheModule,
   InMemoryLruCache,
   WebDidResolver,
-  PresentationExchangeProofFormatService,
   HttpOutboundTransport,
   WsOutboundTransport,
   LogLevel,
   Agent,
   JsonLdCredentialFormatService,
-} from '@aries-framework/core'
+  DifPresentationExchangeProofFormatService,
+} from '@credo-ts/core'
 import {
   IndyVdrAnonCredsRegistry,
   IndyVdrIndyDidResolver,
   IndyVdrModule,
   IndyVdrIndyDidRegistrar,
-} from '@aries-framework/indy-vdr'
-import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
-import { QuestionAnswerModule } from '@aries-framework/question-answer'
-import { TenantsModule } from '@aries-framework/tenants'
-import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
+} from '@credo-ts/indy-vdr'
+import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
+import { QuestionAnswerModule } from '@credo-ts/question-answer'
+import { TenantsModule } from '@credo-ts/tenants'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
@@ -119,7 +118,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
   const anonCredsCredentialFormatService = new AnonCredsCredentialFormatService()
   const anonCredsProofFormatService = new AnonCredsProofFormatService()
-  const presentationExchangeProofFormatService = new PresentationExchangeProofFormatService()
+  const presentationExchangeProofFormatService = new DifPresentationExchangeProofFormatService()
   return {
     askar: new AskarModule({
       ariesAskar,
@@ -138,10 +137,6 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     anoncreds: new AnonCredsModule({
       registries: [new IndyVdrAnonCredsRegistry()],
-    }),
-
-    // Use anoncreds-rs as anoncreds backend
-    anoncredsRs: new AnonCredsRsModule({
       anoncreds,
     }),
 
@@ -186,7 +181,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       fileServerToken:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
       rpcUrl: 'https://polygon-mumbai.infura.io/v3/0579d305568d404e996e49695e9272a3',
-      serverUrl: 'https://schema.credebl.id/',
+      serverUrl: 'https://schema.credebl.id',
     }),
   }
 }
@@ -241,6 +236,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     },
     ...afjConfig,
     logger,
+    autoUpdateStorageOnStartup: true,
+    // As backup is only supported for sqlite storage
+    // we need to manually take backup of the storage before updating the storage
+    backupBeforeStorageUpdate: false,
   }
 
   async function fetchLedgerData(ledgerConfig: {
