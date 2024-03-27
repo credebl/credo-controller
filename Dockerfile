@@ -7,11 +7,7 @@ RUN apt-get update -y && apt-get install -y \
     apt-transport-https \
     curl \
     # Only needed to build indy-sdk
-    build-essential 
-
-# libindy
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88
-RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable"
+    build-essential
 
 # nodejs
 # RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
@@ -25,12 +21,11 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
 
 # install depdencies
 RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
-    libindy \
     nodejs
 
-# Install yarn seperately due to `no-install-recommends` to skip nodejs install 
+# Install yarn seperately due to `no-install-recommends` to skip nodejs install
 RUN apt-get install -y --no-install-recommends yarn
- 
+
 RUN yarn global add patch-package
 # AFJ specifc setup
 WORKDIR /www
@@ -42,7 +37,7 @@ COPY patches ./patches
 RUN yarn install --production
 
 COPY build ./build
-COPY libindy_vdr.so /usr/lib/
-COPY libindy_vdr.so /usr/local/lib/
+# COPY libindy_vdr.so /usr/lib/
+# COPY libindy_vdr.so /usr/local/lib/
 
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]

@@ -1,6 +1,6 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 import type { AgentMessageType, RecipientKeyOption } from '../types'
-import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
+import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@credo-ts/core'
 
 import {
   AgentMessage,
@@ -10,7 +10,7 @@ import {
   RecordNotFoundError,
   Key,
   KeyType,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
