@@ -1,5 +1,6 @@
 import type { Version } from './examples'
 import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@aries-framework/anoncreds'
+// eslint-disable-next-line import/order
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -27,7 +28,12 @@ import type {
   KeyType,
   JsonLdCredentialFormat,
 } from '@aries-framework/core'
+
+// import type { GenericRecordsApi } from '@aries-framework/core/build/modules/generic-records'
+// import type { GenericRecord } from '@aries-framework/core/build/modules/generic-records/repository/GenericRecord'
 import type { DIDDocument } from 'did-resolver'
+
+// import type { GenericRecord } from '@aries-framework/core/build/modules/generic-records/repository/GenericRecord'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>
@@ -38,6 +44,7 @@ export interface AgentInfo {
   endpoints: string[]
   isInitialized: boolean
   publicDid: void
+  token: any
   // publicDid?: {
   //   did: string
   //   verkey: string

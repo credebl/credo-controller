@@ -44,6 +44,7 @@ const models: TsoaRoute.Models = {
             "endpoints": {"dataType":"array","array":{"dataType":"string"},"required":true},
             "isInitialized": {"dataType":"boolean","required":true},
             "publicDid": {"dataType":"void","required":true},
+            "token": {"dataType":"any","required":true},
         },
         "additionalProperties": false,
     },

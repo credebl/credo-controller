@@ -53,6 +53,8 @@ import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
 import jwt from 'jsonwebtoken'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { AgentType } from './enums/enum'
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
 import { BCOVRIN_TEST_GENESIS } from './utils/util'
@@ -347,7 +349,19 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // instead use the existin JWT token
     // if JWT token is not found, create/generate a new token and save in genericRecords
     // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
+
+    // Krish: Should add agent role and tenant id in case of tenants
+    // token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
+
+    // agent role set for dedicated agent and base-wallet respectively
+    if (!('tenants' in agent.modules)) {
+      token = jwt.sign({ role: AgentType.AgentWithoutTenant }, secretKeyInfo)
+    } else {
+      token = jwt.sign({ role: AgentType.AgentWithTenant }, secretKeyInfo)
+    }
+
+    // Krish: there should be no need to store the token if it is a refresh token. It's okay to save it for now and return it in the additional endpoint
+    console.log('--------------if---------------', token)
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
@@ -357,6 +371,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   } else {
     const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
     token = recordWithToken?.content.token as string
+    console.log('--------------else---------------', token)
   }
 
   const app = await setupServer(

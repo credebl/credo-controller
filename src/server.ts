@@ -10,6 +10,7 @@ import { rateLimit } from 'express-rate-limit'
 import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
+// eslint-disable-next-line import/namespace
 import { setDynamicApiKey } from './authentication'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
@@ -43,6 +44,8 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     })
   )
 
+  // Krish: there's no need to currently store apiKey
+  // This will be verified based on the secretKey stored in wallet
   setDynamicApiKey(apiKey ? apiKey : '')
 
   app.use(bodyParser.json())

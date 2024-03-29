@@ -87,6 +87,7 @@ import {
 export class MultiTenancyController extends Controller {
   private readonly agent: Agent<RestMultiTenantAgentModules>
 
+  // Krish: can simply add 'private readonly' in constructor
   public constructor(agent: Agent<RestMultiTenantAgentModules>) {
     super()
     this.agent = agent

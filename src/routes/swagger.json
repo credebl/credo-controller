@@ -21,13 +21,15 @@
 					"isInitialized": {
 						"type": "boolean"
 					},
-					"publicDid": {}
+					"publicDid": {},
+					"token": {}
 				},
 				"required": [
 					"label",
 					"endpoints",
 					"isInitialized",
-					"publicDid"
+					"publicDid",
+					"token"
 				],
 				"type": "object",
 				"additionalProperties": false

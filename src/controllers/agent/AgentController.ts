@@ -21,11 +21,17 @@ export class AgentController extends Controller {
    */
   @Get('/')
   public async getAgentInfo(): Promise<AgentInfo> {
+    // const details = await this.agent.genericRecords.getAll()
+    const genericRecord = await this.agent.genericRecords.getAll()
+    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+    const token = recordWithToken?.content.token as string
     return {
       label: this.agent.config.label,
       endpoints: this.agent.config.endpoints,
       isInitialized: this.agent.isInitialized,
       publicDid: undefined,
+      // token: details[0].content.token,
+      token: token,
     }
   }
 

@@ -21,3 +21,9 @@ export enum Network {
   Indicio_Demonet = 'indicio:demonet',
   Indicio_Mainnet = 'indicio:mainnet',
 }
+
+export enum AgentType {
+  AgentWithTenant = 'AgentWithTenant',
+  AgentWithoutTenant = 'AgentWithoutTenant',
+  TenantAgent = 'TenantAgent',
+}
