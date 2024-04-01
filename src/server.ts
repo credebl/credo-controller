@@ -1,5 +1,7 @@
 import 'reflect-metadata'
+import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
 import type { ServerConfig } from './utils/ServerConfig'
+import type { AgentModulesInput } from '@aries-framework/core/build/agent/AgentModules'
 import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 
 import { Agent } from '@aries-framework/core'
@@ -22,9 +24,20 @@ import { SecurityMiddleware } from './securityMiddleware'
 import { maxRateLimit, windowMs } from './utils/util'
 
 import { ValidateError, type Exception } from 'tsoa'
+// Define conditional type for Agent
+// type AgentWithModules<T extends RestAgentModules> = Agent<T> & (RestMultiTenantAgentModules | RestAgentModules)
 
-export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
-  container.registerInstance(Agent, agent)
+// setupServer function
+export const setupServer = async (
+  agent: Agent<RestMultiTenantAgentModules | RestAgentModules>,
+  config: ServerConfig,
+  apiKey?: string
+) => {
+  // export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
+  // let NewAgent: RestMultiTenantAgentModules | RestAgentModules
+  // container.register(NewAgent, newAgent)
+  container.registerInstance(Agent, agent as Agent)
+  console.log('Reached here. This is Agent::::', agent)
 
   const app = config.app ?? express()
   if (config.cors) app.use(cors())

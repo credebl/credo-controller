@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 // eslint-disable-next-line import/order
 import type { RecipientKeyOption } from '../types' //   AgentMessageType,
 // import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
 
-import type { CreateLegacyInvitationConfig, CreateOutOfBandInvitationConfig, Routing } from '@aries-framework/core'
+import type { CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { GenericRecord } from '@aries-framework/core/build/modules/generic-records/repository/GenericRecord'
 
 import {
@@ -47,23 +49,20 @@ import {
 } from 'tsoa'
 
 @Tags('Out Of Band')
-@Security('authorization')
+// @Security('authorization')
 @Route('/testEndpoint')
 @injectable()
 export class ContextController extends Controller {
   // private agent: Agent
-
   // public constructor(agent: Agent) {
   //   super()
   //   this.agent = agent
   // }
-
   // @Get('/get-token')
   // public async getAgentToken(): Promise<GenericRecord[]> {
   //   const agentDetails = await this.agent.genericRecords.getAll()
   //   return agentDetails
   // }
-
   // This is multi-tenant invitation endpoint
   // @Security('apiKey')
   // @Post('/create-legacy-invitation/:tenantId')
@@ -100,13 +99,11 @@ export class ContextController extends Controller {
   //         ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
   //       }
   //     })
-
   //     return getInvitation
   //   } catch (error) {
   //     return internalServerError(500, { message: `something went wrong: ${error}` })
   //   }
   // }
-
   // This is dedicated agent invitation endpoint
   /**
    * Creates an outbound out-of-band record in the same way how `createInvitation` method does it,
@@ -156,7 +153,6 @@ export class ContextController extends Controller {
   //     return internalServerError(500, { message: `something went wrong: ${error}` })
   //   }
   // }
-
   // Create a common function that calls createLegacyInvitation
   /**
    * Creates an outbound out-of-band record in the same way how `createInvitation` method does it,
@@ -166,46 +162,44 @@ export class ContextController extends Controller {
    * @param config configuration of how a invitation should be created
    * @returns out-of-band record and invitation
    */
-  @Example<{ invitation: OutOfBandInvitationProps; outOfBandRecord: OutOfBandRecordWithInvitationProps }>({
-    invitation: outOfBandInvitationExample,
-    outOfBandRecord: outOfBandRecordExample,
-  })
-  @Post('/create-legacy-invitation')
-  public async createLegacyInvitation(
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
-  ) {
-    try {
-      let routing: Routing
-      if (config?.recipientKey) {
-        routing = {
-          endpoints: this.agent.config.endpoints,
-          routingKeys: [],
-          recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
-          mediatorId: undefined,
-        }
-      } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
-      }
-      const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation({
-        ...config,
-        routing,
-      })
-      return {
-        invitationUrl: invitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        invitation: invitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-        ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
-      }
-    } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
-    }
-  }
-
-
+  // @Example<{ invitation: OutOfBandInvitationProps; outOfBandRecord: OutOfBandRecordWithInvitationProps }>({
+  //   invitation: outOfBandInvitationExample,
+  //   outOfBandRecord: outOfBandRecordExample,
+  // })
+  // @Post('/create-legacy-invitation')
+  // public async createLegacyInvitation(
+  //   @Res() internalServerError: TsoaResponse<500, { message: string }>,
+  //   @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
+  // ) {
+  //   try {
+  //     let routing: Routing
+  //     if (config?.recipientKey) {
+  //       routing = {
+  //         endpoints: this.agent.config.endpoints,
+  //         routingKeys: [],
+  //         recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+  //         mediatorId: undefined,
+  //       }
+  //     } else {
+  //       routing = await this.agent.mediationRecipient.getRouting({})
+  //     }
+  //     const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation({
+  //       ...config,
+  //       routing,
+  //     })
+  //     return {
+  //       invitationUrl: invitation.toUrl({
+  //         domain: this.agent.config.endpoints[0],
+  //         useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+  //       }),
+  //       invitation: invitation.toJSON({
+  //         useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+  //       }),
+  //       outOfBandRecord: outOfBandRecord.toJSON(),
+  //       ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
+  //     }
+  //   } catch (error) {
+  //     return internalServerError(500, { message: `something went wrong: ${error}` })
+  //   }
+  // }
 }

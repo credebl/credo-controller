@@ -1,6 +1,6 @@
 {
   "label": "AFJ Rest Agent 1",
-  "walletId": "sample",
+  "walletId": "sample1",
   "walletKey": "sample",
   "walletType": "postgres",
   "walletUrl": "localhost:5432",

@@ -161,3 +161,8 @@ export const maxRateLimit = 800
 export const DID_CONTRACT_ADDRESS = '0x12513116875BB3E4F098Ce74624739Ee51bAf023'
 export const SCHEMA_MANAGER_CONTRACT_ADDRESS = '0x552992e9f14b15bBd76488cD4c38c89B80259f37'
 export const RPC_URL = 'https://rpc-mumbai.maticvigil.com'
+
+export enum RESULT {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+}

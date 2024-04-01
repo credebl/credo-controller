@@ -49,13 +49,16 @@ import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
-import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
+// eslint-disable-next-line import/order
 import jwt from 'jsonwebtoken'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { container } from 'tsyringe'
+
 import { AgentType } from './enums/enum'
 import { setupServer } from './server'
+import { generateSecretKey } from './utils/common.service'
 import { TsLogger } from './utils/logger'
 import { BCOVRIN_TEST_GENESIS } from './utils/util'
 
@@ -114,6 +117,12 @@ export async function readRestConfig(path: string) {
 export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenantModules>>
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
+
+// export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenantModules>>
+// type AgentWithTenantModules = Awaited<ReturnType<typeof getWithTenantModules>>
+// type AgentWithoutTenantModules = Awaited<ReturnType<typeof getModules>>
+// export type RestMultiTenantAgentModules = Agent<AgentWithTenantModules>
+// export type RestAgentModules = Agent<AgentWithoutTenantModules>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
@@ -204,23 +213,24 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   }
 }
 
-async function generateSecretKey(length: number = 32): Promise<string> {
-  // Asynchronously generate a buffer containing random values
-  const buffer: Buffer = await new Promise((resolve, reject) => {
-    randomBytes(length, (error, buf) => {
-      if (error) {
-        reject(error)
-      } else {
-        resolve(buf)
-      }
-    })
-  })
+// Add this function in common service
+// async function generateSecretKey(length: number = 32): Promise<string> {
+//   // Asynchronously generate a buffer containing random values
+//   const buffer: Buffer = await new Promise((resolve, reject) => {
+//     randomBytes(length, (error, buf) => {
+//       if (error) {
+//         reject(error)
+//       } else {
+//         resolve(buf)
+//       }
+//     })
+//   })
 
-  // Convert the buffer to a hexadecimal string
-  const secretKey: string = buffer.toString('hex')
+//   // Convert the buffer to a hexadecimal string
+//   const secretKey: string = buffer.toString('hex')
 
-  return secretKey
-}
+//   return secretKey
+// }
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
@@ -328,6 +338,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   }
 
   await agent.initialize()
+
+  // Add the agent context to container in tsyringe
+  // container.registerInstance(Agent, agent as Agent)
 
   let token: string = ''
   const genericRecord = await agent.genericRecords.getAll()

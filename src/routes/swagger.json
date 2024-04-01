@@ -1741,6 +1741,11 @@
 				"type": "apiKey",
 				"name": "Authorization",
 				"in": "header"
+			},
+			"NewAuth": {
+				"type": "NewAuth",
+				"name": "Authorization",
+				"in": "header"
 			}
 		}
 	},
@@ -9110,6 +9115,76 @@
 						}
 					}
 				]
+			}
+		},
+		"/test-endpoint/multi-tenant/create-tenant": {
+			"post": {
+				"operationId": "CreateTenant",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Multi Tenant"
+				],
+				"security": [
+					{
+						"NewAuth": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateTenantOptions"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/question-answer": {
