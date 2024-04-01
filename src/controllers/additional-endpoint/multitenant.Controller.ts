@@ -28,7 +28,7 @@ export class MultiTenantController extends Controller {
   }
 
   // @Security('RootAuthorization')
-  @Security('NewAuth')
+  @Security('jwt')
   @Post('/create-tenant')
   public async createTenant(
     @Request() request: RequestWithRootTenantAgent,

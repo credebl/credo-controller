@@ -1742,10 +1742,10 @@
 				"name": "Authorization",
 				"in": "header"
 			},
-			"NewAuth": {
-				"type": "NewAuth",
-				"name": "Authorization",
-				"in": "header"
+			"jwt": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT"
 			}
 		}
 	},
@@ -9171,7 +9171,7 @@
 				],
 				"security": [
 					{
-						"NewAuth": []
+						"jwt": []
 					}
 				],
 				"parameters": [],
@@ -9181,6 +9181,136 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/CreateTenantOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/test-endpoint/create-legacy-invitation": {
+			"post": {
+				"operationId": "CreateLegacyInvitation",
+				"responses": {
+					"200": {
+						"description": "out-of-band record and invitation",
+						"content": {
+							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"invitation": {
+												"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
+												"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
+												"label": "Aries Test Agent",
+												"accept": [
+													"didcomm/aip1",
+													"didcomm/aip2;env=rfc19"
+												],
+												"handshake_protocols": [
+													"https://didcomm.org/didexchange/1.0",
+													"https://didcomm.org/connections/1.0"
+												],
+												"services": [
+													{
+														"id": "#inline-0",
+														"serviceEndpoint": "https://6b77-89-20-162-146.ngrok.io",
+														"type": "did-communication",
+														"recipientKeys": [
+															"did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM"
+														],
+														"routingKeys": []
+													}
+												]
+											},
+											"outOfBandRecord": {
+												"_tags": {
+													"invitationId": "1cbd22e4-1906-41e9-8807-83d84437f978",
+													"state": "await-response",
+													"role": "sender",
+													"recipientKeyFingerprints": [
+														"z6MktUCPZjfRJXD4GMcYuXiqX2qZ8vBw6UAYpDFiHEUfwuLj"
+													]
+												},
+												"outOfBandInvitation": {
+													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
+													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
+													"label": "Aries Test Agent",
+													"accept": [
+														"didcomm/aip1",
+														"didcomm/aip2;env=rfc19"
+													],
+													"handshake_protocols": [
+														"https://didcomm.org/didexchange/1.0",
+														"https://didcomm.org/connections/1.0"
+													],
+													"services": [
+														{
+															"id": "#inline-0",
+															"serviceEndpoint": "https://6b77-89-20-162-146.ngrok.io",
+															"type": "did-communication",
+															"recipientKeys": [
+																"did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM"
+															],
+															"routingKeys": []
+														}
+													]
+												},
+												"metadata": {},
+												"id": "42a95528-0e30-4f86-a462-0efb02178b53",
+												"createdAt": "2022-01-01T00:00:00.000Z",
+												"reusable": false
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Creates an outbound out-of-band record in the same way how `createInvitation` method does it,\nbut it also converts out-of-band invitation message to an \"legacy\" invitation message defined\nin RFC 0160: Connection Protocol and returns it together with out-of-band record.",
+				"tags": [
+					"Test Connection"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"description": "configuration of how a invitation should be created",
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/Omit_CreateLegacyInvitationConfig.routing_"
+									},
+									{
+										"$ref": "#/components/schemas/RecipientKeyOption"
+									}
+								],
+								"description": "configuration of how a invitation should be created"
 							}
 						}
 					}

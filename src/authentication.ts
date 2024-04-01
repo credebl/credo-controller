@@ -7,7 +7,7 @@ import type { Request } from 'express'
 
 import { Agent, LogLevel } from '@aries-framework/core'
 import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
-import jwt from 'jsonwebtoken'
+import jwt, { decode } from 'jsonwebtoken'
 import { container } from 'tsyringe'
 
 import { AgentType } from './enums/enum'
@@ -65,12 +65,16 @@ export async function expressAuthentication(
       }
     }
 
-    if (securityName === 'NewAuth') {
+    if (securityName === 'jwt') {
       const tenancy = true
-      const token = apiKeyHeader
-      const decodedToken: jwt.JwtPayload = jwt.decode(token) as jwt.JwtPayload
-      const role: AgentType = decodedToken.role
+      const tokenWithHeader = apiKeyHeader
+      console.log(`This is tokenWithHeader:::${tokenWithHeader}`)
+      const token = tokenWithHeader.replace('Bearer ', '')
+      console.log(`This is token:::${token}`)
       const reqPath = request.path
+      console.log(`This is reqPath:::${reqPath}`)
+      const decodedToken: jwt.JwtPayload = decode(token) as jwt.JwtPayload
+      const role: AgentType = decodedToken.role
       // Shound not contain any
       // const rootAgent = container.resolve(Agent)
       // Krish: figure out how can we get token from agent's generic records
@@ -83,7 +87,7 @@ export async function expressAuthentication(
           return 'The agent is a multi-tenant agent'
         }
 
-        if (role === AgentType.TenantAgent && decodedToken.tenantId) {
+        if (role === AgentType.TenantAgent) {
           // Logic if the token is of tenant agent
           console.log('Middleware: Authentication: TenantAgent. The token is::', token)
           if (reqPath.includes('/multi-tenant/')) {
@@ -91,16 +95,18 @@ export async function expressAuthentication(
           } else {
             // verify tenant agent
             const tenantId: string = decodedToken.tenantId
-            const tenantAgent = await rootAgent.modules.tenants.getTenantAgent({
-              tenantId,
-            })
-            const tenantAgent1: TenantAgent<RestAgentModules> = await getTenantAgent(rootAgent, tenantId)
-            console.log('Log from console, tenantAgent1::::', tenantAgent1)
-            console.log('Log from console, tenantAgent::::', tenantAgent)
+            // const tenantAgent = await rootAgent.modules.tenants.getTenantAgent({
+            //   tenantId,
+            // })
+            const tenantAgent: TenantAgent<RestAgentModules> = await getTenantAgent(rootAgent, tenantId)
+            // console.log('Log from console, tenantAgent1::::', tenantAgent1)
+            // console.log('Log from console, tenantAgent::::', tenantAgent)
             if (!tenantAgent) return
 
             const secretKey = await getSecretKey(tenantAgent)
+            console.log('This is the secretkey for tenantAgent:::::', secretKey)
             const verified = jwt.verify(token, secretKey)
+            console.log('This is the verified for tenantAgent:::::', verified)
 
             // Failed to verify token
             if (!verified) return
@@ -108,6 +114,7 @@ export async function expressAuthentication(
             // Only need to registerInstance for TenantAgent.
             // As Instance of RootAgent with and without tenant will already be registered while starting the server
             container.registerInstance(TenantAgent<RestAgentModules>, tenantAgent)
+            return 'success'
           }
         } else if (role === AgentType.AgentWithTenant) {
           // Logic for base wallet verification

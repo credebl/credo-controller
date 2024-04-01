@@ -48,16 +48,17 @@ import {
   Security,
 } from 'tsoa'
 
-@Tags('Out Of Band')
+@Tags('Test Connection')
 // @Security('authorization')
-@Route('/testEndpoint')
+@Security('jwt')
+@Route('/test-endpoint')
 @injectable()
 export class ContextController extends Controller {
   // private agent: Agent
-  // public constructor(agent: Agent) {
-  //   super()
-  //   this.agent = agent
-  // }
+  public constructor(private readonly agent: Agent) {
+    super()
+    this.agent = agent
+  }
   // @Get('/get-token')
   // public async getAgentToken(): Promise<GenericRecord[]> {
   //   const agentDetails = await this.agent.genericRecords.getAll()
@@ -162,44 +163,44 @@ export class ContextController extends Controller {
    * @param config configuration of how a invitation should be created
    * @returns out-of-band record and invitation
    */
-  // @Example<{ invitation: OutOfBandInvitationProps; outOfBandRecord: OutOfBandRecordWithInvitationProps }>({
-  //   invitation: outOfBandInvitationExample,
-  //   outOfBandRecord: outOfBandRecordExample,
-  // })
-  // @Post('/create-legacy-invitation')
-  // public async createLegacyInvitation(
-  //   @Res() internalServerError: TsoaResponse<500, { message: string }>,
-  //   @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
-  // ) {
-  //   try {
-  //     let routing: Routing
-  //     if (config?.recipientKey) {
-  //       routing = {
-  //         endpoints: this.agent.config.endpoints,
-  //         routingKeys: [],
-  //         recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
-  //         mediatorId: undefined,
-  //       }
-  //     } else {
-  //       routing = await this.agent.mediationRecipient.getRouting({})
-  //     }
-  //     const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation({
-  //       ...config,
-  //       routing,
-  //     })
-  //     return {
-  //       invitationUrl: invitation.toUrl({
-  //         domain: this.agent.config.endpoints[0],
-  //         useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-  //       }),
-  //       invitation: invitation.toJSON({
-  //         useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-  //       }),
-  //       outOfBandRecord: outOfBandRecord.toJSON(),
-  //       ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
-  //     }
-  //   } catch (error) {
-  //     return internalServerError(500, { message: `something went wrong: ${error}` })
-  //   }
-  // }
+  @Example<{ invitation: OutOfBandInvitationProps; outOfBandRecord: OutOfBandRecordWithInvitationProps }>({
+    invitation: outOfBandInvitationExample,
+    outOfBandRecord: outOfBandRecordExample,
+  })
+  @Post('/create-legacy-invitation')
+  public async createLegacyInvitation(
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
+    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
+  ) {
+    try {
+      let routing: Routing
+      if (config?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+      }
+      const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation({
+        ...config,
+        routing,
+      })
+      return {
+        invitationUrl: invitation.toUrl({
+          domain: this.agent.config.endpoints[0],
+          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+        }),
+        invitation: invitation.toJSON({
+          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+        }),
+        outOfBandRecord: outOfBandRecord.toJSON(),
+        ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
+      }
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
 }

@@ -23,7 +23,7 @@ export class SecurityMiddleware {
 
       // Krish: here test endpoints will be replaced by all enpoints except 'pathsToSkipAuthentication'
       if (routePath.includes('/test-endpoint/')) {
-        securityName = 'NewAuth'
+        securityName = 'jwt'
         console.log('Reached in securityMiddleware::::: /test-endpoint/')
         // const result = await expressAuthentication(request, securityName);
       }

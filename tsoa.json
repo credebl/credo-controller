@@ -11,10 +11,10 @@
         "name": "Authorization",
         "in": "header"
       },
-      "NewAuth": {
-        "type": "NewAuth",
-        "name": "Authorization",
-        "in": "header"
+      "jwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
