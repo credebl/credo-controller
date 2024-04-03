@@ -1,7 +1,7 @@
 import type { Version } from '../examples'
 
-import { AnonCredsError, getUnqualifiedSchemaId, parseIndySchemaId } from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+import { AnonCredsError, getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
+import { Agent, CredoError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum } from '../../enums/enum'
@@ -130,7 +130,7 @@ export class SchemaController {
         return createSchemaTxResult
       }
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         if (error.message.includes('UnauthorizedClientRequest')) {
           return forbiddenError(400, {
             reason: 'this action is not allowed.',

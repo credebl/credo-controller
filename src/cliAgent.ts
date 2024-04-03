@@ -1,7 +1,8 @@
-import type { InitConfig } from '@aries-framework/core'
-import type { WalletConfig } from '@aries-framework/core/build/types'
-import type { IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
+import type { InitConfig } from '@credo-ts/core'
+import type { WalletConfig } from '@credo-ts/core/build/types'
+import type { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
+import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
@@ -10,9 +11,8 @@ import {
   LegacyIndyProofFormatService,
   V1CredentialProtocol,
   V1ProofProtocol,
-} from '@aries-framework/anoncreds'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
+} from '@credo-ts/anoncreds'
+import { AskarModule, AskarMultiWalletDatabaseScheme } from '@credo-ts/askar'
 import {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -28,23 +28,22 @@ import {
   CacheModule,
   InMemoryLruCache,
   WebDidResolver,
-  PresentationExchangeProofFormatService,
   HttpOutboundTransport,
   WsOutboundTransport,
   LogLevel,
   Agent,
   JsonLdCredentialFormatService,
-} from '@aries-framework/core'
+  DifPresentationExchangeProofFormatService,
+} from '@credo-ts/core'
 import {
   IndyVdrAnonCredsRegistry,
   IndyVdrIndyDidResolver,
   IndyVdrModule,
   IndyVdrIndyDidRegistrar,
-} from '@aries-framework/indy-vdr'
-import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
-import { QuestionAnswerModule } from '@aries-framework/question-answer'
-import { TenantsModule } from '@aries-framework/tenants'
-import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
+} from '@credo-ts/indy-vdr'
+import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
+import { QuestionAnswerModule } from '@credo-ts/question-answer'
+import { TenantsModule } from '@credo-ts/tenants'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
@@ -138,8 +137,7 @@ const getModules = (
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
   const anonCredsCredentialFormatService = new AnonCredsCredentialFormatService()
   const anonCredsProofFormatService = new AnonCredsProofFormatService()
-  const presentationExchangeProofFormatService = new PresentationExchangeProofFormatService()
-
+  const presentationExchangeProofFormatService = new DifPresentationExchangeProofFormatService()
   return {
     askar: new AskarModule({
       ariesAskar,
@@ -159,10 +157,6 @@ const getModules = (
 
     anoncreds: new AnonCredsModule({
       registries: [new IndyVdrAnonCredsRegistry()],
-    }),
-
-    // Use anoncreds-rs as anoncreds backend
-    anoncredsRs: new AnonCredsRsModule({
       anoncreds,
     }),
 
@@ -295,6 +289,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     },
     ...afjConfig,
     logger,
+    autoUpdateStorageOnStartup: true,
+    // As backup is only supported for sqlite storage
+    // we need to manually take backup of the storage before updating the storage
+    backupBeforeStorageUpdate: false,
   }
 
   async function fetchLedgerData(ledgerConfig: {
@@ -409,7 +407,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   let token: string = ''
   const genericRecord = await agent.genericRecords.getAll()
 
-  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
+  const recordsWithToken = genericRecord.some((record: { content: { token: any } }) => record?.content?.token)
   if (!genericRecord.length || !recordsWithToken) {
     // Call the async function
     const secretKeyInfo: string = await generateSecretKey()
@@ -434,7 +432,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       },
     })
   } else {
-    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+    const recordWithToken = genericRecord.find(
+      (record: { content: { token: undefined } }) => record?.content?.token !== undefined
+    )
     token = recordWithToken?.content.token as string
   }
 
