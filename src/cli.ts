@@ -3,6 +3,7 @@ import type { InboundTransport, Transports, AriesRestConfig } from './cliAgent'
 import yargs from 'yargs'
 
 import { runRestAgent } from './cliAgent'
+import { IDLE_TIMEOUT, CONNECT_TIMEOUT, MAX_CONNECTIONS } from './utils/util'
 
 const parsed = yargs
   .command('start', 'Start AFJ Rest agent')
@@ -51,19 +52,12 @@ const parsed = yargs
     array: true,
     default: [],
   })
-  .option('public-did-seed', {
-    string: true,
-  })
   .option('endpoint', {
     array: true,
   })
   .option('log-level', {
     number: true,
     default: 3,
-  })
-  .option('use-legacy-did-sov-prefix', {
-    boolean: true,
-    default: false,
   })
   .option('outbound-transport', {
     default: [],
@@ -107,16 +101,9 @@ const parsed = yargs
     choices: ['always', 'never', 'contentApproved'],
     default: 'never',
   })
-  .option('auto-accept-mediation-requests', {
-    boolean: true,
-    default: false,
-  })
   .option('auto-accept-proofs', {
     choices: ['always', 'never', 'contentApproved'],
     default: 'never',
-  })
-  .option('connection-image-url', {
-    string: true,
   })
   .option('webhook-url', {
     string: true,
@@ -129,22 +116,30 @@ const parsed = yargs
     boolean: true,
     default: false,
   })
-  // .option('storage-config', {
-  //   array: true,
-  //   default: [],
-  //   coerce: (input) => JSON.parse(input),
-  // })
-  // .option('storageConfig', {
-  //   type: 'string',
-  //   describe: 'Storage configuration JSON',
-  //   coerce: (value) => {
-  //     try {
-  //       return JSON.parse(value);
-  //     } catch (error) {
-  //       throw new Error('Invalid JSON format for storageConfig');
-  //     }
-  //   },
-  // })
+  .option('did-registry-contract-address', {
+    string: true,
+  })
+  .option('schema-manager-contract-address', {
+    string: true,
+  })
+  .option('rpc-url', {
+    string: true,
+  })
+  .option('file-server-url', {
+    string: true,
+  })
+  .option('file-server-token', {
+    string: true,
+  })
+  .option('wallet-connect-timeout', {
+    number: true,
+  })
+  .option('wallet-max-connections', {
+    number: true,
+  })
+  .option('wallet-idle-timeout', {
+    number: true,
+  })
 
   .config()
   .env('AFJ_REST')
@@ -166,9 +161,9 @@ export async function runCliServer() {
         type: parsed['wallet-type'],
         config: {
           host: parsed['wallet-url'],
-          connectTimeout: 10,
-          maxConnections: 1000,
-          idleTimeout: 30000,
+          connectTimeout: parsed['wallet-connect-timeout'] || CONNECT_TIMEOUT,
+          maxConnections: parsed['wallet-max-connections'] || MAX_CONNECTIONS,
+          idleTimeout: parsed['wallet-idle-timeout'] || IDLE_TIMEOUT,
         },
         credentials: {
           account: parsed['wallet-account'],
@@ -179,24 +174,21 @@ export async function runCliServer() {
       },
     },
     indyLedger: parsed['indy-ledger'],
-    // publicDidSeed: parsed['public-did-seed'],
     endpoints: parsed.endpoint,
     autoAcceptConnections: parsed['auto-accept-connections'],
     autoAcceptCredentials: parsed['auto-accept-credentials'],
     autoAcceptProofs: parsed['auto-accept-proofs'],
-    autoAcceptMediationRequests: parsed['auto-accept-mediation-requests'],
-    useLegacyDidSovPrefix: parsed['use-legacy-did-sov-prefix'],
-    logLevel: 2,
+    logLevel: parsed['log-level'],
     inboundTransports: parsed['inbound-transport'],
     outboundTransports: parsed['outbound-transport'],
-    connectionImageUrl: parsed['connection-image-url'],
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
     tenancy: parsed['tenancy'],
-    didRegistryContractAddress: parsed['didRegistryContractAddress'],
-    schemaManagerContractAddress: parsed['schemaManagerContractAddress'],
-    rpcUrl: parsed['rpcUrl'],
-    fileServerUrl: parsed['fileServerUrl'],
-    fileServerToken: parsed['fileServerToken'],
+    didRegistryContractAddress: parsed['did-registry-contract-address'],
+    schemaManagerContractAddress: parsed['schema-manager-contract-address'],
+    rpcUrl: parsed['rpc-url'],
+    fileServerUrl: parsed['file-server-url'],
+    fileServerToken: parsed['file-server-token'],
+    walletScheme: parsed['wallet-scheme'],
   } as unknown as AriesRestConfig)
 }

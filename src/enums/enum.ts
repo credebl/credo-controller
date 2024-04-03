@@ -15,6 +15,17 @@ export enum DidMethod {
   Polygon = 'polygon',
 }
 
+export enum NetworkName {
+  Bcovrin = 'bcovrin',
+  Indicio = 'indicio',
+}
+
+export enum IndicioTransactionAuthorAgreement {
+  Indicio_Testnet_Mainnet_Version = '1.0',
+  Indicio_Demonet_Version = '1.3',
+  Indicio_Acceptance_Mechanism = 'wallet_agreement',
+}
+
 export enum Network {
   Bcovrin_Testnet = 'bcovrin:testnet',
   Indicio_Testnet = 'indicio:testnet',
