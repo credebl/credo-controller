@@ -163,7 +163,7 @@ export const SCHEMA_MANAGER_CONTRACT_ADDRESS = '0x552992e9f14b15bBd76488cD4c38c8
 export const FILE_SERVER_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk'
 export const RPC_URL = 'https://polygon-mumbai.infura.io/v3/0579d305568d404e996e49695e9272a3'
-export const SERVER_URL = 'https://schema.credebl.id/'
+export const SERVER_URL = 'https://schema.credebl.id'
 
 export const CONNECT_TIMEOUT = 10
 export const MAX_CONNECTIONS = 1000

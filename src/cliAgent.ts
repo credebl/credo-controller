@@ -52,7 +52,7 @@ import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
 import jwt from 'jsonwebtoken'
 
-import { IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums/enum'
+import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums/enum'
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
 import {
@@ -106,7 +106,7 @@ export interface AriesRestConfig {
   rpcUrl?: string
   fileServerUrl?: string
   fileServerToken?: string
-  walletScheme?: string
+  walletScheme?: AskarMultiWalletDatabaseScheme
 }
 
 export async function readRestConfig(path: string) {
@@ -128,9 +128,9 @@ const getModules = (
   rpcUrl: string,
   schemaManagerContractAddress: string,
   autoAcceptConnections: boolean,
-  autoAcceptCredentials: string,
-  autoAcceptProofs: string,
-  walletScheme: string
+  autoAcceptCredentials: AutoAcceptCredential,
+  autoAcceptProofs: AutoAcceptProof,
+  walletScheme: AskarMultiWalletDatabaseScheme
 ) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
@@ -216,9 +216,9 @@ const getWithTenantModules = (
   rpcUrl: string,
   schemaManagerContractAddress: string,
   autoAcceptConnections: boolean,
-  autoAcceptCredentials: string,
-  autoAcceptProofs: string,
-  walletScheme: string
+  autoAcceptCredentials: AutoAcceptCredential,
+  autoAcceptProofs: AutoAcceptProof,
+  walletScheme: AskarMultiWalletDatabaseScheme
 ) => {
   const modules = getModules(
     networkConfig,
@@ -321,12 +321,12 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       ) {
         networkConfig.transactionAuthorAgreement = {
           version: IndicioTransactionAuthorAgreement.Indicio_Testnet_Mainnet_Version,
-          acceptanceMechanism: IndicioTransactionAuthorAgreement.Indicio_Acceptance_Mechanism,
+          acceptanceMechanism: IndicioAcceptanceMechanism.Wallet_Agreement,
         }
       } else {
         networkConfig.transactionAuthorAgreement = {
           version: IndicioTransactionAuthorAgreement.Indicio_Demonet_Version,
-          acceptanceMechanism: IndicioTransactionAuthorAgreement.Indicio_Acceptance_Mechanism,
+          acceptanceMechanism: IndicioAcceptanceMechanism.Wallet_Agreement,
         }
       }
     }
@@ -361,9 +361,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     rpcUrl || '',
     schemaManagerContractAddress || '',
     autoAcceptConnections || true,
-    autoAcceptCredentials || '',
-    autoAcceptProofs || '',
-    walletScheme || ''
+    autoAcceptCredentials || AutoAcceptCredential.Always,
+    autoAcceptProofs || AutoAcceptProof.ContentApproved,
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
   )
   const modules = getModules(
     networkConfig,
@@ -373,9 +373,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     rpcUrl || '',
     schemaManagerContractAddress || '',
     autoAcceptConnections || true,
-    autoAcceptCredentials || '',
-    autoAcceptProofs || '',
-    walletScheme || ''
+    autoAcceptCredentials || AutoAcceptCredential.Always,
+    autoAcceptProofs || AutoAcceptProof.ContentApproved,
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
   )
   const agent = new Agent({
     config: agentConfig,

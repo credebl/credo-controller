@@ -23,7 +23,6 @@ export enum NetworkName {
 export enum IndicioTransactionAuthorAgreement {
   Indicio_Testnet_Mainnet_Version = '1.0',
   Indicio_Demonet_Version = '1.3',
-  Indicio_Acceptance_Mechanism = 'wallet_agreement',
 }
 
 export enum Network {
@@ -31,4 +30,9 @@ export enum Network {
   Indicio_Testnet = 'indicio:testnet',
   Indicio_Demonet = 'indicio:demonet',
   Indicio_Mainnet = 'indicio:mainnet',
+}
+
+export enum IndicioAcceptanceMechanism {
+  Wallet_Agreement = 'wallet_agreement',
+  Accept = 'accept',
 }
