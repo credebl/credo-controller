@@ -1,43 +1,33 @@
-FROM ubuntu:20.04
+# Stage 1: Builder stage
+FROM node:18.19.0 AS builder
 
-ENV DEBIAN_FRONTEND noninteractive
+WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y \
-    software-properties-common \
-    apt-transport-https \
-    curl \
-    # Only needed to build indy-sdk
-    build-essential
+# Copy package.json and yarn.lock files
+COPY package.json yarn.lock ./
 
-# nodejs
-# RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-# RUN /bin/bash -c "source /root/.nvm/nvm.sh && nvm install 18 && nvm use 18"
+# Install dependencies
+RUN yarn install --frozen-lockfile
 
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+# Copy the rest of the application code
+COPY . .
 
-# yarn
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+# Build the application
+RUN yarn build
 
-# install depdencies
-RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
-    nodejs
+# Stage 2: Production stage
+FROM node:18.19.0-slim
 
-# Install yarn seperately due to `no-install-recommends` to skip nodejs install
-RUN apt-get install -y --no-install-recommends yarn
+WORKDIR /app
 
-RUN yarn global add patch-package
-# AFJ specifc setup
-WORKDIR /www
+# Copy built files and node_modules from the builder stage
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/bin ./bin
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 
-COPY bin ./bin
-COPY package.json ./package.json
-COPY patches ./patches
+# Set entry point
+ENTRYPOINT ["node", "./bin/afj-rest.js", "start"]
 
-RUN yarn install --production
 
-COPY build ./build
-# COPY libindy_vdr.so /usr/lib/
-# COPY libindy_vdr.so /usr/local/lib/
 
-ENTRYPOINT [ "./bin/afj-rest.js", "start" ]

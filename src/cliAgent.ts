@@ -407,7 +407,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   let token: string = ''
   const genericRecord = await agent.genericRecords.getAll()
 
-  const recordsWithToken = genericRecord.some((record: { content: { token: any } }) => record?.content?.token)
+  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
   if (!genericRecord.length || !recordsWithToken) {
     // Call the async function
     const secretKeyInfo: string = await generateSecretKey()
@@ -432,9 +432,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       },
     })
   } else {
-    const recordWithToken = genericRecord.find(
-      (record: { content: { token: undefined } }) => record?.content?.token !== undefined
-    )
+    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+
     token = recordWithToken?.content.token as string
   }
 
