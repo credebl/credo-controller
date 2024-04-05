@@ -318,6 +318,9 @@
 					},
 					"recipientKey": {
 						"type": "string"
+					},
+					"invitationDid": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -356,11 +359,15 @@
 							}
 						},
 						"type": "object"
+					},
+					"messageType": {
+						"type": "string"
 					}
 				},
 				"required": [
 					"@type",
-					"@id"
+					"@id",
+					"messageType"
 				],
 				"type": "object",
 				"additionalProperties": {}

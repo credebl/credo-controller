@@ -51,6 +51,8 @@ import {
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
   injectable,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -1453,7 +1455,7 @@ export class MultiTenancyController extends Controller {
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
-          recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          invitationDid: createOfferOptions?.invitationDid ? '' : invitationDid,
         }
       })
       return createOfferOobRecord
