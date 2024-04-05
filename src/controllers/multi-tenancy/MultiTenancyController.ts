@@ -51,6 +51,8 @@ import {
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
   injectable,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -685,6 +687,7 @@ export class MultiTenancyController extends Controller {
   public async createInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
+    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
     @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
   ) {
     let outOfBandRecord: OutOfBandRecord | undefined
@@ -1453,7 +1456,7 @@ export class MultiTenancyController extends Controller {
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
-          recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          invitationDid: createOfferOptions?.invitationDid ? '' : invitationDid,
         }
       })
       return createOfferOobRecord
