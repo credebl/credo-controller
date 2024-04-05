@@ -2,12 +2,12 @@
 
 # ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update -y && apt-get install -y \
-    software-properties-common \
-    apt-transport-https \
-    curl \
-    # Only needed to build indy-sdk
-    build-essential
+# RUN apt-get update -y && apt-get install -y \
+#     software-properties-common \
+#     apt-transport-https \
+#     curl \
+#     # Only needed to build indy-sdk
+#     build-essential
 
 # RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 
@@ -19,12 +19,43 @@ RUN apt-get update -y && apt-get install -y \
 # RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
 #     nodejs
 
-# install depdencies
-RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
-    nodejs
+# # install depdencies
+# RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
+#     nodejs
 
-# Install yarn seperately due to `no-install-recommends` to skip nodejs install
-RUN apt-get install -y --no-install-recommends yarn
+# # Install yarn seperately due to `no-install-recommends` to skip nodejs install
+# RUN apt-get install -y --no-install-recommends yarn
+
+# RUN yarn global add patch-package
+# # AFJ specifc setup
+# WORKDIR /www
+
+# COPY bin ./bin
+# COPY package.json ./package.json
+# COPY patches ./patches
+
+# RUN yarn install --production
+
+# COPY build ./build
+# # COPY libindy_vdr.so /usr/lib/
+# # COPY libindy_vdr.so /usr/local/lib/
+
+# ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
+
+
+# Stage 1: Builder stage
+FROM node:18.19.0 AS builder
+
+WORKDIR /app
+
+# Copy package.json and yarn.lock files
+COPY package.json yarn.lock ./
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy the rest of the application code
+COPY . .
 
 RUN yarn global add patch-package
 
@@ -46,7 +77,4 @@ COPY --from=builder /app/patches ./patches
 # Set entry point
 ENTRYPOINT ["node", "./bin/afj-rest.js", "start"]
 
-COPY build ./build
-# COPY libindy_vdr.so /usr/lib/
-# COPY libindy_vdr.so /usr/local/lib/
 
