@@ -1,6 +1,11 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
-import type { AgentMessageType, RecipientKeyOption } from '../types'
-import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@credo-ts/core'
+import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../types'
+import type {
+  ConnectionRecordProps,
+  CreateLegacyInvitationConfig,
+  PeerDidNumAlgo2CreateOptions,
+  Routing,
+} from '@credo-ts/core'
 
 import {
   AgentMessage,
@@ -10,6 +15,8 @@ import {
   RecordNotFoundError,
   Key,
   KeyType,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
 } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
