@@ -19,7 +19,7 @@
     }
   },
   "routes": {
-    "routesDir": "src/routes",
+    "routesDir": "./src/routes",
     "iocModule": "./src/utils/tsyringeTsoaIocContainer",
     "authenticationModule": "src/authentication"
   }

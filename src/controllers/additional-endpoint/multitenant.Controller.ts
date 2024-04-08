@@ -1,20 +1,20 @@
 import type { RestMultiTenantAgentModules } from '../../cliAgent'
+import type { Agent } from '@aries-framework/core'
 import type { TenantRecord } from '@aries-framework/tenants'
 
-// eslint-disable-next-line import/order
-import { Agent, RecordNotFoundError, injectable } from '@aries-framework/core'
-
+import { RecordNotFoundError, injectable } from '@aries-framework/core'
 import jwt from 'jsonwebtoken'
 
 import { RequestWithRootTenantAgent } from '../../authentication'
-import { AgentType } from '../../enums/enum'
+import { AgentRole } from '../../enums/enum'
 import { generateSecretKey } from '../../utils/common.service'
 import { CreateTenantOptions } from '../types'
 
-// import { AgentType } from 'src/enums/enum'
+// import { AgentRole } from 'src/enums/enum'
 import { Body, Controller, Post, Request, Res, Route, Security, Tags, TsoaResponse } from 'tsoa'
 
 @Tags('Multi Tenant')
+@Security('jwt')
 @Route('/test-endpoint/multi-tenant')
 // @Security('NewAuth')
 @injectable()
@@ -22,13 +22,12 @@ export class MultiTenantController extends Controller {
   // private readonly agent: Agent<RestMultiTenantAgentModules>
 
   // Krish: can simply add 'private readonly' in constructor
-  public constructor(private readonly agent: Agent<RestMultiTenantAgentModules>) {
-    super()
-    this.agent = agent
-  }
+  // public constructor(private readonly agent: Agent<RestMultiTenantAgentModules>) {
+  //   super()
+  //   this.agent = agent
+  // }
 
   // @Security('RootAuthorization')
-  @Security('jwt')
   @Post('/create-tenant')
   public async createTenant(
     @Request() request: RequestWithRootTenantAgent,
@@ -38,8 +37,9 @@ export class MultiTenantController extends Controller {
   ) {
     const { config } = createTenantOptions
     try {
-      const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config })
-      const token = await this.getToken(tenantRecord.id)
+      console.log('reached in create tenant')
+      const tenantRecord: TenantRecord = await request.user.agent.modules.tenants.createTenant({ config })
+      const token = await this.getToken(request.user.agent, tenantRecord.id)
       const withToken = { token, ...tenantRecord }
       return withToken
       return 'success'
@@ -54,19 +54,24 @@ export class MultiTenantController extends Controller {
     }
   }
 
-  private async createToken(tenantId: string) {
+  private async createToken(agent: Agent<RestMultiTenantAgentModules>, tenantId: string) {
     const secretKey = await generateSecretKey()
     // const genericRecord = await this.agent.genericRecords.getAll()
     // const records = genericRecord.find((record) => record?.content?.secretKey !== undefined)
     // const secretKey = records?.content.secretKey as string
-    const token = jwt.sign({ role: AgentType.TenantAgent, tenantId }, secretKey)
+    const token = jwt.sign({ role: AgentRole.TenantAgent, tenantId }, secretKey)
     // Save token to individual tenants generic records
-    await this.saveTokenAndSecretKey(token, secretKey, tenantId)
+    await this.saveTokenAndSecretKey(agent, token, secretKey, tenantId)
     return token
   }
 
-  private async saveTokenAndSecretKey(token: string, secretKey: string, tenantId: string) {
-    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+  private async saveTokenAndSecretKey(
+    agent: Agent<RestMultiTenantAgentModules>,
+    token: string,
+    secretKey: string,
+    tenantId: string
+  ) {
+    await agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
       tenantAgent.genericRecords.save({
         content: {
           secretKey: secretKey,
@@ -75,8 +80,8 @@ export class MultiTenantController extends Controller {
     })
   }
 
-  private async getToken(tenantId: string) {
-    const token: string = await this.createToken(tenantId)
+  private async getToken(agent: Agent<RestMultiTenantAgentModules>, tenantId: string) {
+    const token: string = await this.createToken(agent, tenantId)
     return token
   }
 }

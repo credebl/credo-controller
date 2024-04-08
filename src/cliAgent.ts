@@ -50,13 +50,10 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
 import { readFile } from 'fs/promises'
-// eslint-disable-next-line import/order
 import jwt from 'jsonwebtoken'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { container } from 'tsyringe'
-
-import { AgentType } from './enums/enum'
+import { AgentRole } from './enums/enum'
+// eslint-disable-next-line import/no-cycle
 import { setupServer } from './server'
 import { generateSecretKey } from './utils/common.service'
 import { TsLogger } from './utils/logger'
@@ -119,10 +116,10 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
 // export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenantModules>>
-// type AgentWithTenantModules = Awaited<ReturnType<typeof getWithTenantModules>>
-// type AgentWithoutTenantModules = Awaited<ReturnType<typeof getModules>>
-// export type RestMultiTenantAgentModules = Agent<AgentWithTenantModules>
-// export type RestAgentModules = Agent<AgentWithoutTenantModules>
+// type RestRootAgentWithTenantsModules = Awaited<ReturnType<typeof getWithTenantModules>>
+// type RestRootAgentModules = Awaited<ReturnType<typeof getModules>>
+// export type RestMultiTenantAgentModules = Agent<RestRootAgentWithTenantsModules>
+// export type RestAgentModules = Agent<RestRootAgentModules>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
@@ -368,9 +365,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
     // agent role set for dedicated agent and base-wallet respectively
     if (!('tenants' in agent.modules)) {
-      token = jwt.sign({ role: AgentType.AgentWithoutTenant }, secretKeyInfo)
+      token = jwt.sign({ role: AgentRole.RestRootAgent }, secretKeyInfo)
     } else {
-      token = jwt.sign({ role: AgentType.AgentWithTenant }, secretKeyInfo)
+      token = jwt.sign({ role: AgentRole.RestRootAgentWithTenants }, secretKeyInfo)
     }
 
     // Krish: there should be no need to store the token if it is a refresh token. It's okay to save it for now and return it in the additional endpoint

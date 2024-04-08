@@ -1,6 +1,6 @@
 {
-  "label": "AFJ Rest Agent 1",
-  "walletId": "sample1",
+  "label": "Credo Rest Agent",
+  "walletId": "sharedAgent",
   "walletKey": "sample",
   "walletType": "postgres",
   "walletUrl": "localhost:5432",

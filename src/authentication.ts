@@ -1,18 +1,21 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
-import type * as express from 'express'
-
-// import { Agent } from '@aries-framework/core'
-// eslint-disable-next-line import/namespace
+import type { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
 import type { Request } from 'express'
 
 import { Agent, LogLevel } from '@aries-framework/core'
-import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
 import jwt, { decode } from 'jsonwebtoken'
 import { container } from 'tsyringe'
 
-import { AgentType } from './enums/enum'
+import { AgentRole } from './enums/enum'
 import { TsLogger } from './utils/logger'
 
+export type AgentType = Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>
+// export type RequestWithAgent = Request & {
+//   name: string
+//   user: {
+//     agent: TenantAgent<RestAgentModules> | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules>
+//   }
+// }
 export type RequestWithAgent = RequestWithRootAgent | RequestWithTenantAgent | RequestWithRootTenantAgent
 
 export type RequestWithTenantAgent = Request & {
@@ -36,13 +39,16 @@ export type RequestWithRootTenantAgent = Request & {
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
 export async function expressAuthentication(
-  request: express.Request,
+  request: Request,
   securityName: string,
   secMethod?: { [key: string]: any },
   scopes?: string
-) {
+): Promise<boolean | AgentType> {
+  // ): Promise<boolean | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>> {
   try {
     const logger = new TsLogger(LogLevel.info)
+    const req = request as RequestWithAgent
+    const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
 
     logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
     logger.info(`scopes::: ${JSON.stringify(scopes)}`)
@@ -60,135 +66,97 @@ export async function expressAuthentication(
         const providedApiKey = apiKeyHeader as string
 
         if (providedApiKey === dynamicApiKey) {
-          return 'success'
+          return agent
         }
       }
     }
 
     if (securityName === 'jwt') {
-      const tenancy = true
+      const tenancy = agent.modules.tenants ? true : false
       const tokenWithHeader = apiKeyHeader
-      console.log(`This is tokenWithHeader:::${tokenWithHeader}`)
       const token = tokenWithHeader.replace('Bearer ', '')
-      console.log(`This is token:::${token}`)
       const reqPath = request.path
-      console.log(`This is reqPath:::${reqPath}`)
       const decodedToken: jwt.JwtPayload = decode(token) as jwt.JwtPayload
-      const role: AgentType = decodedToken.role
-      // Shound not contain any
-      // const rootAgent = container.resolve(Agent)
-      // Krish: figure out how can we get token from agent's generic records
-      // const secretKey = this.agent
+      const role: AgentRole = decodedToken.role
 
       if (tenancy) {
-        const rootAgent = container.resolve(Agent<RestMultiTenantAgentModules>)
+        // const rootAgent = container.resolve(Agent<RestMultiTenantAgentModules>)
         // it should be a shared agent
-        if (role !== AgentType.AgentWithTenant && role !== AgentType.TenantAgent) {
-          return 'The agent is a multi-tenant agent'
+        if (role !== AgentRole.RestRootAgentWithTenants && role !== AgentRole.TenantAgent) {
+          return false //'The agent is a multi-tenant agent'
         }
 
-        if (role === AgentType.TenantAgent) {
+        if (role === AgentRole.TenantAgent) {
           // Logic if the token is of tenant agent
-          console.log('Middleware: Authentication: TenantAgent. The token is::', token)
           if (reqPath.includes('/multi-tenant/')) {
-            return `Tenants can't manage tenants`
+            return false //'Tenants cannot manage tenants'
           } else {
             // verify tenant agent
             const tenantId: string = decodedToken.tenantId
-            // const tenantAgent = await rootAgent.modules.tenants.getTenantAgent({
-            //   tenantId,
-            // })
-            const tenantAgent: TenantAgent<RestAgentModules> = await getTenantAgent(rootAgent, tenantId)
-            // console.log('Log from console, tenantAgent1::::', tenantAgent1)
-            // console.log('Log from console, tenantAgent::::', tenantAgent)
-            if (!tenantAgent) return
+            if (!tenantId) return false
+            const tenantAgent = await getTenantAgent(agent, tenantId)
+            if (!tenantAgent) return false
 
-            const secretKey = await getSecretKey(tenantAgent)
-            console.log('This is the secretkey for tenantAgent:::::', secretKey)
-            const verified = jwt.verify(token, secretKey)
-            console.log('This is the verified for tenantAgent:::::', verified)
+            const verified = await verifyToken(tenantAgent, token)
 
             // Failed to verify token
-            if (!verified) return
+            if (!verified) return false
 
             // Only need to registerInstance for TenantAgent.
-            // As Instance of RootAgent with and without tenant will already be registered while starting the server
-            container.registerInstance(TenantAgent<RestAgentModules>, tenantAgent)
-            return 'success'
+            req['user'] = { agent: tenantAgent }
+            // return { req }
+            return tenantAgent
           }
-        } else if (role === AgentType.AgentWithTenant) {
+        } else if (role === AgentRole.RestRootAgentWithTenants) {
           // Logic for base wallet verification
-          const verified = await verifyToken(rootAgent, token)
+          const verified = await verifyToken(agent, token)
 
-          console.log('Middleware: Authentication: Basewallet. The token is::', token)
-          console.log('The verified is::', verified)
-          if (!verified) return
+          // Base wallet cant access any endpoints apart from multi-tenant endpoint
+          // if (!reqPath.includes('/multi-tenant/') && !reqPath.includes('/multi-tenancy/'))
+          //   return 'Basewallet can only manage tenants and can`t perform other operations'
+          if (!verified) return false
 
-          return 'success'
+          // req['user'] = {agent}
+          req['user'] = { agent: agent }
+          // return { req }
+          return agent
         } else {
-          return 'Invalid Token'
+          return false //'Invalid Token'
         }
       } else {
-        const rootAgent = container.resolve(Agent<RestAgentModules>)
-        // it should be a dedicated agent
-        if (role !== AgentType.AgentWithoutTenant) {
-          return 'This is a dedicated agent'
+        if (role !== AgentRole.RestRootAgent) {
+          return false //'This is a dedicated agent'
         } else {
-          // It has a role of dedicated agent
-          // Verify dedicated agent
-          const verified = await verifyToken(rootAgent, token)
+          // It has a role of dedicated agent, verify
 
-          console.log('Reached here. The token is::', token)
-          console.log('The verified is::', verified)
-          if (!verified) return
+          if (reqPath.includes('/multi-tenant/')) return false
+
+          const verified = await verifyToken(agent, token)
+          if (!verified) return false
 
           // Can have an enum instead of 'success' string
-          // return RESULT.SUCCESS
-          return 'success'
+          // req['user'] = { agent: agent }
+          // return { req }
+          return agent
         }
       }
-
-      // if (role === AgentType.AgentWithoutTenant) {
-      //   if (tenancy === true) {
-      //     return false
-      //   }
-      // }
-
-      // if (role === AgentType.AgentWithTenant) {
-      //   if (tenancy === false) {
-      //     return false
-      //   }
-      // else {
-      //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      //   const agent: Agent<RestMultiTenantAgentModules>
-      //   const genericRecord = await agent.genericRecords.getAll()
-      //   const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
-      //   token = recordWithToken?.content.token as string
-      //   return 'success'
-      // }
-      // }
-
-      // const verified = jwt.verify(token, )
     }
+    return false
   } catch (error) {
     const logger = new TsLogger(LogLevel.error)
     if (error instanceof Error) {
       logger.error('Error in Authentication', error)
     }
+    return false
   }
 }
 
-async function verifyToken(agent: Agent, token: string): Promise<boolean> {
+async function verifyToken(agent: Agent | TenantAgent<RestAgentModules>, token: string): Promise<boolean> {
   // try {
   const secretKey = await getSecretKey(agent)
   const verified = jwt.verify(token, secretKey)
 
   return verified ? true : false
-  // } catch (error) {
-  //   if (error instanceof Error) {
-  //     logger.error('Token Invalid')
-  //   }
-  // }
 }
 
 // Common function to pass agent object and get secretKey

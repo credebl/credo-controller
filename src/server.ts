@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
 import type { ServerConfig } from './utils/ServerConfig'
-import type { AgentModulesInput } from '@aries-framework/core/build/agent/AgentModules'
-import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
+import type { Response as ExResponse, Request as ExRequest, NextFunction, Request, Response } from 'express'
 
 import { Agent } from '@aries-framework/core'
 import bodyParser from 'body-parser'
@@ -13,13 +12,14 @@ import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
 // eslint-disable-next-line import/namespace
-import { setDynamicApiKey } from './authentication'
+import { RequestWithAgent, setDynamicApiKey } from './authentication'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { RegisterRoutes } from './routes/routes'
+// eslint-disable-next-line import/no-cycle
 import { SecurityMiddleware } from './securityMiddleware'
 import { maxRateLimit, windowMs } from './utils/util'
 

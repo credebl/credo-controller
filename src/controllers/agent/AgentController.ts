@@ -1,4 +1,4 @@
-import type { AgentInfo } from '../types'
+import type { AgentInfo, AgentToken } from '../types'
 
 import { Agent } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
@@ -19,11 +19,12 @@ export class AgentController extends Controller {
   /**
    * Retrieve basic agent information
    */
-  @Get('/')
+  @Get('/info')
   public async getAgentInfo(): Promise<AgentInfo> {
     // const details = await this.agent.genericRecords.getAll()
     const genericRecord = await this.agent.genericRecords.getAll()
     const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const token = recordWithToken?.content.token as string
     return {
       label: this.agent.config.label,
@@ -31,6 +32,21 @@ export class AgentController extends Controller {
       isInitialized: this.agent.isInitialized,
       publicDid: undefined,
       // token: details[0].content.token,
+      // token: token,
+    }
+  }
+
+  /**
+   * Retrieve agent token
+   */
+  @Get('/token')
+  @Security('apiKey')
+  public async getAgentToken(): Promise<AgentToken> {
+    // const details = await this.agent.genericRecords.getAll()
+    const genericRecord = await this.agent.genericRecords.getAll()
+    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+    const token = recordWithToken?.content.token as string
+    return {
       token: token,
     }
   }

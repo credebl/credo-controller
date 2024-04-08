@@ -44,11 +44,14 @@ export interface AgentInfo {
   endpoints: string[]
   isInitialized: boolean
   publicDid: void
-  token: any
   // publicDid?: {
   //   did: string
   //   verkey: string
   // }
+}
+
+export interface AgentToken {
+  token: string
 }
 
 export interface AgentMessageType {

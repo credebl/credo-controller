@@ -22,8 +22,8 @@ export enum Network {
   Indicio_Mainnet = 'indicio:mainnet',
 }
 
-export enum AgentType {
-  AgentWithTenant = 'AgentWithTenant',
-  AgentWithoutTenant = 'AgentWithoutTenant',
-  TenantAgent = 'TenantAgent',
+export enum AgentRole {
+  RestRootAgentWithTenants = 'RestRootAgentWithTenants', // Basewallet // Better name: RestRootRestRootAgentWithTenantss
+  RestRootAgent = 'RestRootAgent', // Dedicated // Better name: RestRootAgent
+  TenantAgent = 'TenantAgent', // Tenant // Better name: RestTenantAgent
 }

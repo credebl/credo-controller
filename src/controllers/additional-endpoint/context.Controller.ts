@@ -1,24 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 // eslint-disable-next-line import/order
 import type { RecipientKeyOption } from '../types' //   AgentMessageType,
 // import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
 
-import type { CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { GenericRecord } from '@aries-framework/core/build/modules/generic-records/repository/GenericRecord'
+import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
 
 import {
-  //   AgentMessage,
-  //   JsonTransformer,
-  //   OutOfBandInvitation,
-  Agent,
   Key,
   KeyType,
   //   RecordNotFoundError,
   //   Key,
   //   KeyType,
+  Agent,
 } from '@aries-framework/core'
 import { injectable } from 'tsyringe'
 
@@ -30,15 +23,15 @@ import { injectable } from 'tsyringe'
 //   CreateInvitationOptions,
 // } from '../types'
 
-import { outOfBandInvitationExample, outOfBandRecordExample } from '../examples'
+import { RequestWithAgent } from '../../authentication'
+import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample } from '../examples'
+import { ReceiveInvitationByUrlProps } from '../types'
 
 import {
   Body,
   Controller,
   // Delete,
   Example,
-  Get,
-  Path,
   Post,
   // Query,
   Res,
@@ -46,6 +39,7 @@ import {
   Tags,
   TsoaResponse,
   Security,
+  Request,
 } from 'tsoa'
 
 @Tags('Test Connection')
@@ -169,10 +163,13 @@ export class ContextController extends Controller {
   })
   @Post('/create-legacy-invitation')
   public async createLegacyInvitation(
+    // Request implementation
+    // @Request() request: RequestWithAgent,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
   ) {
     try {
+      // console.log('this is request::::::::::', JSON.stringify(request))
       let routing: Routing
       if (config?.recipientKey) {
         routing = {
@@ -198,6 +195,45 @@ export class ContextController extends Controller {
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
         ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
+      }
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  /**
+   * Creates inbound out-of-band record and assigns out-of-band invitation message to it if the
+   * message is valid.
+   *
+   * @param invitationUrl invitation url
+   * @param config config for handling of invitation
+   * @returns out-of-band record and connection record if one has been created.
+   */
+  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: ConnectionRecordProps }>({
+    outOfBandRecord: outOfBandRecordExample,
+    connectionRecord: ConnectionRecordExample,
+  })
+  @Post('/receive-invitation-url')
+  public async receiveInvitationFromUrl(
+    // Request implementation
+    @Request() request: RequestWithAgent,
+    @Body() invitationRequest: ReceiveInvitationByUrlProps,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    const { invitationUrl, ...config } = invitationRequest
+
+    try {
+      const linkSecretIds = await request.user.agent.modules.anoncreds.getLinkSecretIds()
+      if (linkSecretIds.length === 0) {
+        await request.user.agent.modules.anoncreds.createLinkSecret()
+      }
+      const { outOfBandRecord, connectionRecord } = await request.user.agent.oob.receiveInvitationFromUrl(
+        invitationUrl,
+        config
+      )
+      return {
+        outOfBandRecord: outOfBandRecord.toJSON(),
+        connectionRecord: connectionRecord?.toJSON(),
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
