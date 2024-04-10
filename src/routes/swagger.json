@@ -9168,7 +9168,7 @@
 				}
 			}
 		},
-		"/agent/info": {
+		"/agent": {
 			"get": {
 				"operationId": "GetAgentInfo",
 				"responses": {
