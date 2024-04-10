@@ -9089,7 +9089,7 @@
 				}
 			}
 		},
-		"/agent": {
+		"/agent/info": {
 			"get": {
 				"operationId": "GetAgentInfo",
 				"responses": {
