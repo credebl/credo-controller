@@ -1,4 +1,4 @@
-import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
+import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps, RecordId } from '../examples'
 // eslint-disable-next-line import/order
 import type { RecipientKeyOption } from '../types' //   AgentMessageType,
 // import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
@@ -40,7 +40,12 @@ import {
   TsoaResponse,
   Security,
   Request,
+  Get,
+  Path,
+  Query,
 } from 'tsoa'
+import { Request as Req} from 'express'
+import { request } from 'http'
 
 @Tags('Test Connection')
 // @Security('authorization')
@@ -49,10 +54,10 @@ import {
 @injectable()
 export class ContextController extends Controller {
   // private agent: Agent
-  public constructor(private readonly agent: Agent) {
-    super()
-    this.agent = agent
-  }
+  // public constructor(private readonly agent: Agent) {
+  //   super()
+  //   this.agent = agent
+  // }
   // @Get('/get-token')
   // public async getAgentToken(): Promise<GenericRecord[]> {
   //   const agentDetails = await this.agent.genericRecords.getAll()
@@ -164,7 +169,7 @@ export class ContextController extends Controller {
   @Post('/create-legacy-invitation')
   public async createLegacyInvitation(
     // Request implementation
-    // @Request() request: RequestWithAgent,
+    @Request() request: Req,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
   ) {
@@ -173,25 +178,25 @@ export class ContextController extends Controller {
       let routing: Routing
       if (config?.recipientKey) {
         routing = {
-          endpoints: this.agent.config.endpoints,
+          endpoints: request.user.agent.config.endpoints,
           routingKeys: [],
           recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
           mediatorId: undefined,
         }
       } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+        routing = await request.user.agent.mediationRecipient.getRouting({})
       }
-      const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation({
+      const { outOfBandRecord, invitation } = await request.user.agent.oob.createLegacyInvitation({
         ...config,
         routing,
       })
       return {
         invitationUrl: invitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          domain: request.user.agent.config.endpoints[0],
+          useDidSovPrefixWhereAllowed: request.user.agent.config.useDidSovPrefixWhereAllowed,
         }),
         invitation: invitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          useDidSovPrefixWhereAllowed: request.user.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
         ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
@@ -216,7 +221,7 @@ export class ContextController extends Controller {
   @Post('/receive-invitation-url')
   public async receiveInvitationFromUrl(
     // Request implementation
-    @Request() request: RequestWithAgent,
+    @Request() request: Req,
     @Body() invitationRequest: ReceiveInvitationByUrlProps,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
@@ -238,5 +243,43 @@ export class ContextController extends Controller {
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
+  }
+
+  /**
+   * Retrieve all out of band records
+   * @param invitationId invitation identifier
+   * @returns OutOfBandRecord[]
+   */
+  @Example<OutOfBandRecordWithInvitationProps[]>([outOfBandRecordExample])
+  @Get()
+  public async getAllOutOfBandRecords(@Request() request: Req, @Query('invitationId') invitationId?: RecordId) {
+    let outOfBandRecords = await request.user.agent.oob.getAll()
+
+    if (invitationId)
+      outOfBandRecords = outOfBandRecords.filter(
+        (o: { outOfBandInvitation: { id: string } }) => o.outOfBandInvitation.id === invitationId
+      )
+
+    return outOfBandRecords.map((c: { toJSON: () => any }) => c.toJSON())
+  }
+
+  /**
+   * Retrieve an out of band record by id
+   * @param recordId record identifier
+   * @returns OutOfBandRecord
+   */
+  @Example<OutOfBandRecordWithInvitationProps>(outOfBandRecordExample)
+  @Get('/:outOfBandId')
+  public async getOutOfBandRecordById(
+    @Request() request: Req,
+    @Path('outOfBandId') outOfBandId: RecordId,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>
+  ) {
+    const outOfBandRecord = await request.user.agent.oob.findById(outOfBandId)
+
+    if (!outOfBandRecord)
+      return notFoundError(404, { reason: `Out of band record with id "${outOfBandId}" not found.` })
+
+    return outOfBandRecord.toJSON()
   }
 }

@@ -11,7 +11,12 @@
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "typeRoots": [
+      "@types",
+      "./node_modules/@types",
+      "src/types"  // Add your custom types directory
+    ]
   },
   "exclude": ["node_modules", "build"]
 }

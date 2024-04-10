@@ -10,31 +10,31 @@ import { AgentRole } from './enums/enum'
 import { TsLogger } from './utils/logger'
 
 export type AgentType = Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>
-// export type RequestWithAgent = Request & {
-//   name: string
+export type RequestWithAgent = Request & {
+  name: string
+  user: {
+    agent: TenantAgent<RestAgentModules> | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules>
+  }
+}
+// export type RequestWithAgent = RequestWithRootAgent | RequestWithTenantAgent | RequestWithRootTenantAgent
+
+// export type RequestWithTenantAgent = Request & {
 //   user: {
-//     agent: TenantAgent<RestAgentModules> | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules>
+//     agent: TenantAgent<RestAgentModules>
 //   }
 // }
-export type RequestWithAgent = RequestWithRootAgent | RequestWithTenantAgent | RequestWithRootTenantAgent
 
-export type RequestWithTenantAgent = Request & {
-  user: {
-    agent: TenantAgent<RestAgentModules>
-  }
-}
+// export type RequestWithRootAgent = Request & {
+//   user: {
+//     agent: Agent<RestAgentModules>
+//   }
+// }
 
-export type RequestWithRootAgent = Request & {
-  user: {
-    agent: Agent<RestAgentModules>
-  }
-}
-
-export type RequestWithRootTenantAgent = Request & {
-  user: {
-    agent: Agent<RestMultiTenantAgentModules>
-  }
-}
+// export type RequestWithRootTenantAgent = Request & {
+//   user: {
+//     agent: Agent<RestMultiTenantAgentModules>
+//   }
+// }
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
@@ -43,11 +43,10 @@ export async function expressAuthentication(
   securityName: string,
   secMethod?: { [key: string]: any },
   scopes?: string
-): Promise<boolean | AgentType> {
-  // ): Promise<boolean | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>> {
+  // ): Promise<boolean | AgentType> {
+): Promise<boolean | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>> {
   try {
     const logger = new TsLogger(LogLevel.info)
-    const req = request as RequestWithAgent
     const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
 
     logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
@@ -103,7 +102,7 @@ export async function expressAuthentication(
             if (!verified) return false
 
             // Only need to registerInstance for TenantAgent.
-            req['user'] = { agent: tenantAgent }
+            // req['user'] = { agent: tenantAgent }
             // return { req }
             return tenantAgent
           }
@@ -117,8 +116,9 @@ export async function expressAuthentication(
           if (!verified) return false
 
           // req['user'] = {agent}
-          req['user'] = { agent: agent }
+          // req['user'] = { agent: agent }
           // return { req }
+          console.log('verified in authentication for BW')
           return agent
         } else {
           return false //'Invalid Token'

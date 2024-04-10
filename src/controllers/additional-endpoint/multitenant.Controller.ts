@@ -3,9 +3,9 @@ import type { Agent } from '@aries-framework/core'
 import type { TenantRecord } from '@aries-framework/tenants'
 
 import { RecordNotFoundError, injectable } from '@aries-framework/core'
+import { Request as Req } from 'express'
 import jwt from 'jsonwebtoken'
 
-import { RequestWithRootTenantAgent } from '../../authentication'
 import { AgentRole } from '../../enums/enum'
 import { generateSecretKey } from '../../utils/common.service'
 import { CreateTenantOptions } from '../types'
@@ -30,7 +30,7 @@ export class MultiTenantController extends Controller {
   // @Security('RootAuthorization')
   @Post('/create-tenant')
   public async createTenant(
-    @Request() request: RequestWithRootTenantAgent,
+    @Request() request: Req,
     @Body() createTenantOptions: CreateTenantOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
@@ -38,11 +38,15 @@ export class MultiTenantController extends Controller {
     const { config } = createTenantOptions
     try {
       console.log('reached in create tenant')
-      const tenantRecord: TenantRecord = await request.user.agent.modules.tenants.createTenant({ config })
-      const token = await this.getToken(request.user.agent, tenantRecord.id)
+      console.log('this is request.user::::::', request.user)
+      console.log('this is request.user.agent::::::', request.user.agent)
+      const agent = request.user as unknown as Agent<RestMultiTenantAgentModules>
+      const tenantRecord: TenantRecord = await agent.modules.tenants?.createTenant({ config })
+      const token = await this.getToken(agent, tenantRecord.id)
       const withToken = { token, ...tenantRecord }
       return withToken
-      return 'success'
+      // return typeof request['user'].agent
+      // return 'success'
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
@@ -75,6 +79,7 @@ export class MultiTenantController extends Controller {
       tenantAgent.genericRecords.save({
         content: {
           secretKey: secretKey,
+          token,
         },
       })
     })
