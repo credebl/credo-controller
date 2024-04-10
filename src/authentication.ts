@@ -14,8 +14,8 @@ export async function expressAuthentication(
 ) {
   const logger = new TsLogger(LogLevel.info)
 
-  logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
-  logger.info(`scopes::: ${JSON.stringify(scopes)}`)
+  logger.info(`secMethod::: ${secMethod}`)
+  logger.info(`scopes::: ${scopes}`)
 
   const apiKeyHeader = request.headers['authorization']
 
