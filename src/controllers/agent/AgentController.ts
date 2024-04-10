@@ -19,7 +19,7 @@ export class AgentController extends Controller {
   /**
    * Retrieve basic agent information
    */
-  @Get('/')
+  @Get('/info')
   public async getAgentInfo(): Promise<AgentInfo> {
     return {
       label: this.agent.config.label,
