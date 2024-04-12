@@ -1343,6 +1343,7 @@ export class MultiTenancyController extends Controller {
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
           recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          credentialId: offerOob.credentialRecord.id,
         }
       })
       return createOfferOobRecord
@@ -1562,6 +1563,7 @@ export class MultiTenancyController extends Controller {
           recipientKey: createRequestOptions?.recipientKey
             ? {}
             : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          presentationId: proof.proofRecord.id,
         }
       })
 
