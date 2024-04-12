@@ -1,4 +1,5 @@
 import type {
+  ProofRole,
   AutoAcceptProof,
   BasicMessageRole,
   CredentialState,
@@ -10,7 +11,8 @@ import type {
   ProofState,
   OutOfBandRole,
   OutOfBandState,
-} from '@aries-framework/core'
+  CredentialRole,
+} from '@credo-ts/core'
 
 /**
  * @example "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
@@ -182,6 +184,7 @@ export const CredentialExchangeRecordExample = {
   threadId: '82701488-b43c-4d7b-9244-4bb204a7ae26',
   credentialAttributes: [],
   protocolVersion: 'v1',
+  role: 'issuer' as CredentialRole.Issuer,
 }
 
 export const ProofRecordExample = {
@@ -198,6 +201,7 @@ export const ProofRecordExample = {
   threadId: '0019d466-5eea-4269-8c40-031b4896c5b7',
   autoAcceptProof: 'always' as AutoAcceptProof,
   protocolVersion: 'v1',
+  role: 'verifier' as ProofRole.Verifier,
 }
 
 export const SchemaExample = {
