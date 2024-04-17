@@ -11,13 +11,18 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
   agent.events.on(CredentialEventTypes.CredentialStateChanged, async (event: CredentialStateChangedEvent) => {
     const record = event.payload.credentialRecord
 
-    const body = { ...record.toJSON(), ...event.metadata } as { outOfBandId?: string }
+    const body: Record<string, unknown> = {
+      ...record.toJSON(),
+      ...event.metadata,
+      outOfBandId: null,
+    }
 
     if (event.metadata.contextCorrelationId !== 'default' && record?.connectionId) {
       await agent.modules.tenants.withTenantAgent(
         { tenantId: event.metadata.contextCorrelationId },
         async (tenantAgent) => {
           const connectionRecord = await tenantAgent.connections.findById(record.connectionId!)
+
           body.outOfBandId = connectionRecord?.outOfBandId
         }
       )
