@@ -1,18 +1,12 @@
-import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps, RecordId } from '../examples'
+import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 // eslint-disable-next-line import/order
 import type { RecipientKeyOption } from '../types' //   AgentMessageType,
 // import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
 
 import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@aries-framework/core'
 
-import {
-  Key,
-  KeyType,
-  //   RecordNotFoundError,
-  //   Key,
-  //   KeyType,
-  Agent,
-} from '@aries-framework/core'
+import { Key, KeyType } from '@aries-framework/core'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 // import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
@@ -23,8 +17,7 @@ import { injectable } from 'tsyringe'
 //   CreateInvitationOptions,
 // } from '../types'
 
-import { RequestWithAgent } from '../../authentication'
-import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample } from '../examples'
+import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
 import { ReceiveInvitationByUrlProps } from '../types'
 
 import {
@@ -44,8 +37,6 @@ import {
   Path,
   Query,
 } from 'tsoa'
-import { Request as Req} from 'express'
-import { request } from 'http'
 
 @Tags('Test Connection')
 // @Security('authorization')
@@ -174,29 +165,29 @@ export class ContextController extends Controller {
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
   ) {
     try {
-      // console.log('this is request::::::::::', JSON.stringify(request))
+      console.log('this is request.agent.config in [createLegacyInvitation]::::::::::', request.agent.config)
       let routing: Routing
       if (config?.recipientKey) {
         routing = {
-          endpoints: request.user.agent.config.endpoints,
+          endpoints: request.agent.config.endpoints,
           routingKeys: [],
           recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
           mediatorId: undefined,
         }
       } else {
-        routing = await request.user.agent.mediationRecipient.getRouting({})
+        routing = await request.agent.mediationRecipient.getRouting({})
       }
-      const { outOfBandRecord, invitation } = await request.user.agent.oob.createLegacyInvitation({
+      const { outOfBandRecord, invitation } = await request.agent.oob.createLegacyInvitation({
         ...config,
         routing,
       })
       return {
         invitationUrl: invitation.toUrl({
-          domain: request.user.agent.config.endpoints[0],
-          useDidSovPrefixWhereAllowed: request.user.agent.config.useDidSovPrefixWhereAllowed,
+          domain: request.agent.config.endpoints[0],
+          useDidSovPrefixWhereAllowed: request.agent.config.useDidSovPrefixWhereAllowed,
         }),
         invitation: invitation.toJSON({
-          useDidSovPrefixWhereAllowed: request.user.agent.config.useDidSovPrefixWhereAllowed,
+          useDidSovPrefixWhereAllowed: request.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
         ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
@@ -228,11 +219,12 @@ export class ContextController extends Controller {
     const { invitationUrl, ...config } = invitationRequest
 
     try {
-      const linkSecretIds = await request.user.agent.modules.anoncreds.getLinkSecretIds()
+      console.log('Reached in receive invitation')
+      const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
-        await request.user.agent.modules.anoncreds.createLinkSecret()
+        await request.agent.modules.anoncreds.createLinkSecret()
       }
-      const { outOfBandRecord, connectionRecord } = await request.user.agent.oob.receiveInvitationFromUrl(
+      const { outOfBandRecord, connectionRecord } = await request.agent.oob.receiveInvitationFromUrl(
         invitationUrl,
         config
       )
@@ -253,7 +245,7 @@ export class ContextController extends Controller {
   @Example<OutOfBandRecordWithInvitationProps[]>([outOfBandRecordExample])
   @Get()
   public async getAllOutOfBandRecords(@Request() request: Req, @Query('invitationId') invitationId?: RecordId) {
-    let outOfBandRecords = await request.user.agent.oob.getAll()
+    let outOfBandRecords = await request.agent.oob.getAll()
 
     if (invitationId)
       outOfBandRecords = outOfBandRecords.filter(
@@ -275,7 +267,7 @@ export class ContextController extends Controller {
     @Path('outOfBandId') outOfBandId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>
   ) {
-    const outOfBandRecord = await request.user.agent.oob.findById(outOfBandId)
+    const outOfBandRecord = await request.agent.oob.findById(outOfBandId)
 
     if (!outOfBandRecord)
       return notFoundError(404, { reason: `Out of band record with id "${outOfBandId}" not found.` })

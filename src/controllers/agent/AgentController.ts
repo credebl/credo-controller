@@ -1,12 +1,10 @@
 import type { AgentInfo, AgentToken } from '../types'
 
 import { Agent } from '@aries-framework/core'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import { RequestWithAgent } from '../../authentication'
-
 import { Controller, Delete, Get, Route, Tags, Security, Request } from 'tsoa'
-import { Request as Req } from 'express'
 
 @Tags('Agent')
 @Route('/agent')
@@ -46,8 +44,8 @@ export class AgentController extends Controller {
   @Security('apiKey')
   public async getAgentToken(@Request() request: Req): Promise<AgentToken | string> {
     // const details = await this.agent.genericRecords.getAll()
-    console.log(`This is in agent token request['user'].agent::::::`, request['user'])
-    const genericRecord = await request.user.agent.genericRecords.getAll()
+    console.log(`This is in agent token request.agent::::::`, request.agent)
+    const genericRecord = await request.agent.genericRecords.getAll()
     console.log('genericRecord:::::', genericRecord)
     // const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
     // const token = recordWithToken?.content.token as string

@@ -1,40 +1,15 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
+import type { Agent } from '@aries-framework/core'
 import type { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
 import type { Request } from 'express'
 
-import { Agent, LogLevel } from '@aries-framework/core'
+import { LogLevel } from '@aries-framework/core'
 import jwt, { decode } from 'jsonwebtoken'
-import { container } from 'tsyringe'
 
 import { AgentRole } from './enums/enum'
 import { TsLogger } from './utils/logger'
 
-export type AgentType = Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>
-export type RequestWithAgent = Request & {
-  name: string
-  user: {
-    agent: TenantAgent<RestAgentModules> | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules>
-  }
-}
-// export type RequestWithAgent = RequestWithRootAgent | RequestWithTenantAgent | RequestWithRootTenantAgent
-
-// export type RequestWithTenantAgent = Request & {
-//   user: {
-//     agent: TenantAgent<RestAgentModules>
-//   }
-// }
-
-// export type RequestWithRootAgent = Request & {
-//   user: {
-//     agent: Agent<RestAgentModules>
-//   }
-// }
-
-// export type RequestWithRootTenantAgent = Request & {
-//   user: {
-//     agent: Agent<RestMultiTenantAgentModules>
-//   }
-// }
+// export type AgentType = Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
@@ -42,14 +17,17 @@ export async function expressAuthentication(
   request: Request,
   securityName: string,
   secMethod?: { [key: string]: any },
-  scopes?: string
-  // ): Promise<boolean | AgentType> {
+  scopes?: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  agent?: Agent<RestMultiTenantAgentModules>
 ): Promise<boolean | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>> {
   try {
+    console.log('Race: Reached in Authentication')
     const logger = new TsLogger(LogLevel.info)
-    const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
+    // const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
 
     logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
+    logger.info(`scopes::: ${JSON.stringify(scopes)}`)
     logger.info(`scopes::: ${JSON.stringify(scopes)}`)
 
     const apiKeyHeader = request.headers['authorization']
@@ -61,17 +39,18 @@ export async function expressAuthentication(
     // add additional logic to get the token from wallet for validating the passed
 
     if (securityName === 'apiKey') {
+      // Auth: For BW/Dedicated agent to GET their token
       if (apiKeyHeader) {
         const providedApiKey = apiKeyHeader as string
 
         if (providedApiKey === dynamicApiKey) {
-          return agent
+          return true
         }
       }
     }
 
     if (securityName === 'jwt') {
-      const tenancy = agent.modules.tenants ? true : false
+      const tenancy = agent!.modules.tenants ? true : false
       const tokenWithHeader = apiKeyHeader
       const token = tokenWithHeader.replace('Bearer ', '')
       const reqPath = request.path
@@ -90,10 +69,10 @@ export async function expressAuthentication(
           if (reqPath.includes('/multi-tenant/')) {
             return false //'Tenants cannot manage tenants'
           } else {
-            // verify tenant agent
+            // Auth: tenant agent
             const tenantId: string = decodedToken.tenantId
             if (!tenantId) return false
-            const tenantAgent = await getTenantAgent(agent, tenantId)
+            const tenantAgent = await getTenantAgent(agent!, tenantId)
             if (!tenantAgent) return false
 
             const verified = await verifyToken(tenantAgent, token)
@@ -107,8 +86,8 @@ export async function expressAuthentication(
             return tenantAgent
           }
         } else if (role === AgentRole.RestRootAgentWithTenants) {
-          // Logic for base wallet verification
-          const verified = await verifyToken(agent, token)
+          // Auth: base wallet
+          const verified = await verifyToken(agent!, token)
 
           // Base wallet cant access any endpoints apart from multi-tenant endpoint
           // if (!reqPath.includes('/multi-tenant/') && !reqPath.includes('/multi-tenancy/'))
@@ -119,7 +98,7 @@ export async function expressAuthentication(
           // req['user'] = { agent: agent }
           // return { req }
           console.log('verified in authentication for BW')
-          return agent
+          return true
         } else {
           return false //'Invalid Token'
         }
@@ -127,17 +106,17 @@ export async function expressAuthentication(
         if (role !== AgentRole.RestRootAgent) {
           return false //'This is a dedicated agent'
         } else {
-          // It has a role of dedicated agent, verify
+          // Auth: dedicated agent
 
           if (reqPath.includes('/multi-tenant/')) return false
 
-          const verified = await verifyToken(agent, token)
+          const verified = await verifyToken(agent!, token)
           if (!verified) return false
 
           // Can have an enum instead of 'success' string
           // req['user'] = { agent: agent }
           // return { req }
-          return agent
+          return true
         }
       }
     }

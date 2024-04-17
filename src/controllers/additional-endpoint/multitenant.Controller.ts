@@ -38,9 +38,10 @@ export class MultiTenantController extends Controller {
     const { config } = createTenantOptions
     try {
       console.log('reached in create tenant')
-      console.log('this is request.user::::::', request.user)
-      console.log('this is request.user.agent::::::', request.user.agent)
-      const agent = request.user as unknown as Agent<RestMultiTenantAgentModules>
+      console.log('this is request in controller::::::', request)
+      console.log('this is request.user::::::', request.agent)
+      console.log('this is request.agent.config::::::', request.agent.config)
+      const agent = request.agent as unknown as Agent<RestMultiTenantAgentModules>
       const tenantRecord: TenantRecord = await agent.modules.tenants?.createTenant({ config })
       const token = await this.getToken(agent, tenantRecord.id)
       const withToken = { token, ...tenantRecord }

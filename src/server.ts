@@ -12,7 +12,7 @@ import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
 // eslint-disable-next-line import/namespace
-import { RequestWithAgent, setDynamicApiKey } from './authentication'
+import { setDynamicApiKey } from './authentication'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'

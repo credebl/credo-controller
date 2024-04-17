@@ -21,7 +21,7 @@ interface IAgent {
 declare global {
   namespace Express {
     interface Request {
-      user: IAgent
+      agent: AgentType
     }
   }
 }

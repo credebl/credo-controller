@@ -1,4 +1,4 @@
-import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
+import type { RestMultiTenantAgentModules } from './cliAgent'
 import type * as express from 'express'
 import type { NextFunction } from 'express'
 
@@ -16,10 +16,11 @@ import { expressAuthentication } from './authentication' // Import your authenti
 @Middlewares()
 export class SecurityMiddleware {
   public async use(request: express.Request, response: express.Response, next: NextFunction) {
+    console.log('Race: Reached in Middleware')
     // public async use(request: express.Request, response: express.Response) {
     // try {
 
-    const agent = container.resolve(Agent<RestMultiTenantAgentModules | RestAgentModules>)
+    const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
     let securityName = 'jwt'
 
     // Extract route path or controller name from the request
@@ -42,18 +43,20 @@ export class SecurityMiddleware {
       // Skip authentication for this route or controller
       console.log('Skipped authentication')
       // for skipped authentication there are two ways to handle
-      request.user = { agent: agent }
+      request['agent'] = agent
       next()
       // const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
       // return Promise.resolve({ agent: agent })
     } else if (securityName) {
-      const result = await expressAuthentication(request, securityName, next)
+      const result = await expressAuthentication(request, securityName, undefined, undefined, agent)
       console.log('Result:::::', result)
       if (typeof result === 'boolean') {
         console.log('Successfully resulted')
         if (result) {
+          // Auth: for BW/Dedicated agent
           // Validation for api-key
-          request.user = { agent: agent }
+          // request.user = { agent: agent }
+          request['agent'] = agent
           next()
         } else response.status(401).json({ message: `Unauthorized` })
         // } else return Promise.reject(new StatusException('Unauthorized', 401))
@@ -68,12 +71,13 @@ export class SecurityMiddleware {
         // const temp = request.user
         // temp['agent'] = result
         // request.user = temp
-        request.user = { agent: result }
+        request['agent'] = result
         // request.user['agent'] = result
         console.log('verified agent from middleware')
-        console.log(`this is request.user`, request.user)
-        console.log(`this is request.user.agent`, request.user.agent)
-        console.log(`this is request.user.agent.config`, request.user.agent.config)
+        console.log('this is request in middleware::::::', request)
+        console.log(`this is request.agent`, request.agent)
+        // console.log(`this is request.user.agent`, request.user)
+        console.log(`this is request.agent.config`, request.agent.config)
         next()
       }
     } else {
