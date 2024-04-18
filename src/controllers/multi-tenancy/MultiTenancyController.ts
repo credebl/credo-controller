@@ -1083,7 +1083,7 @@ export class MultiTenancyController extends Controller {
           endorserMode: 'external',
           endorsedTransaction: endorsedTransaction,
           // TODO: Update this later
-          supportRevocation: false,
+          supportRevocation: true,
         },
       })
 
@@ -1158,18 +1158,21 @@ export class MultiTenancyController extends Controller {
       tag: string
       endorse?: boolean
       endorserDid?: string
+      supportRevocation?: boolean
     },
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     let credentialDefinitionRecord
+    const issuerId = credentialDefinitionRequest.issuerId
+    let revocationStatusList: any
+    let revocationRegistryDefinition: any
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse
           ? credentialDefinitionRequest.endorse
           : false
-
         if (!credentialDefinitionRequest.endorse) {
           const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
             credentialDefinition: {
@@ -1179,7 +1182,7 @@ export class MultiTenancyController extends Controller {
             },
             options: {
               // TODO: update this later
-              supportRevocation: false,
+              supportRevocation: true,
             },
           })
 
@@ -1196,6 +1199,30 @@ export class MultiTenancyController extends Controller {
             credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
           }
 
+          if (credentialDefinitionRequest.supportRevocation) {
+            console.log('supportRevocation:::::', credentialDefinitionRequest.supportRevocation)
+            revocationRegistryDefinition = await tenantAgent.modules.anoncreds.registerRevocationRegistryDefinition({
+              options: {},
+              revocationRegistryDefinition: {
+                credentialDefinitionId: credentialDefinitionState.credentialDefinitionId,
+                issuerId,
+                maximumCredentialNumber: 10,
+                tag: 'Default',
+              },
+            })
+
+            console.log('revocationRegistryDefinition::::', revocationRegistryDefinition)
+
+            revocationStatusList = await tenantAgent.modules.anoncreds.registerRevocationStatusList({
+              options: {},
+              revocationStatusList: {
+                issuerId,
+                revocationRegistryDefinitionId: revocationRegistryDefinition?.revocationRegistryDefinitionId,
+              },
+            })
+          }
+
+          console.log('revocationStatusList::::', revocationStatusList)
           credentialDefinitionRecord = credentialDefinitionState
         } else {
           const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
@@ -1208,7 +1235,7 @@ export class MultiTenancyController extends Controller {
             },
             options: {
               // TODO: update this later
-              supportRevocation: false,
+              supportRevocation: true,
               endorserMode: 'external',
               endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
             },

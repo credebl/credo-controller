@@ -55,6 +55,7 @@ import jwt from 'jsonwebtoken'
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
 import { BCOVRIN_TEST_GENESIS } from './utils/util'
+import { FullTailsFileService } from './FullTailsFileService'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -137,6 +138,9 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     anoncreds: new AnonCredsModule({
       registries: [new IndyVdrAnonCredsRegistry()],
+      tailsFileService: new FullTailsFileService({
+        tailsServerBaseUrl: 'http://localhost:3001',
+      }),
       anoncreds,
     }),
 
