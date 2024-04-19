@@ -49,27 +49,27 @@
   dependencies:
     static-eval "2.0.2"
 
-"@ayanworks/credo-polygon-w3c-module@0.0.2-alpha.3":
-  version "0.0.2-alpha.3"
-  resolved "https://registry.yarnpkg.com/@ayanworks/credo-polygon-w3c-module/-/credo-polygon-w3c-module-0.0.2-alpha.3.tgz#c3ee5d71944427de99e777b5828e9864720acf4d"
-  integrity sha512-YMyPo4sEh1KWxeZ5fdGSZv+41Tm1zmnD+dSn53alHGx30KuwxSFzZnmw45Z0OM8imfjBuIsaLpGgZcl6i2A/Qw==
+"@ayanworks/credo-polygon-w3c-module@0.0.2-alpha.7":
+  version "0.0.2-alpha.7"
+  resolved "https://registry.yarnpkg.com/@ayanworks/credo-polygon-w3c-module/-/credo-polygon-w3c-module-0.0.2-alpha.7.tgz#003e09a4249a4618da914d3504ffafb522c74133"
+  integrity sha512-AK9rBqFYUvV8/VaD/X7b+/simfasbPuUgJCi1L1V4SIc2lJhJ2cxaI8OdEv5V1xBytmBdSC+THfSaKg0py3QRA==
   dependencies:
-    "@ayanworks/polygon-did-registrar" "0.0.16-alpha.13"
-    "@ayanworks/polygon-did-resolver" "0.0.16-alpha.10"
-    "@ayanworks/polygon-schema-manager" "0.0.2-alpha.5"
-    "@credo-ts/askar" "0.5.0"
-    "@credo-ts/core" "0.5.0"
+    "@ayanworks/polygon-did-registrar" "0.0.16-alpha.16"
+    "@ayanworks/polygon-did-resolver" "0.0.16-alpha.11"
+    "@ayanworks/polygon-schema-manager" "0.0.2-alpha.6"
+    "@credo-ts/askar" "0.5.1"
+    "@credo-ts/core" "0.5.1"
     did-resolver "^4.1.0"
     ethers "^6.9.0"
 
-"@ayanworks/polygon-did-registrar@0.0.16-alpha.13":
-  version "0.0.16-alpha.13"
-  resolved "https://registry.yarnpkg.com/@ayanworks/polygon-did-registrar/-/polygon-did-registrar-0.0.16-alpha.13.tgz#cdb7f4dfee1f6e97006630d57c3a520051c09aeb"
-  integrity sha512-fihShp7HMMtzwuxV0VAVk/piktr/auig2Gj0rGq0S1x0GWP0NbZy7baLZvsVx4/kjgFNqu6cv3p42dmYVnRuIg==
+"@ayanworks/polygon-did-registrar@0.0.16-alpha.16":
+  version "0.0.16-alpha.16"
+  resolved "https://registry.yarnpkg.com/@ayanworks/polygon-did-registrar/-/polygon-did-registrar-0.0.16-alpha.16.tgz#8467412a8138ffb8b2305bf4ea7914a4ce979267"
+  integrity sha512-q3Y1bzeHmCAxRpbA6rXKaO9CQhLjlP4aMZuJxYiiicPlQ6plkRt+Icxdp1ozsCEcMouj3l4E5kgzjK48bhOxrw==
   dependencies:
     "@ayanworks/polygon-did-registry-contract" "2.0.1-alpha.3"
-    "@ayanworks/polygon-did-resolver" "^0.0.16-alpha.10"
-    "@credo-ts/core" "0.5.0"
+    "@ayanworks/polygon-did-resolver" "^0.0.16-alpha.11"
+    "@credo-ts/core" "0.5.1"
     "@ethersproject/basex" "^5.7.0"
     "@ethersproject/signing-key" "^5.7.0"
     "@ethersproject/transactions" "^5.7.0"
@@ -92,10 +92,10 @@
     did-resolver "^4.1.0"
     ethers "^5.1.0"
 
-"@ayanworks/polygon-schema-manager@0.0.2-alpha.5":
-  version "0.0.2-alpha.5"
-  resolved "https://registry.yarnpkg.com/@ayanworks/polygon-schema-manager/-/polygon-schema-manager-0.0.2-alpha.5.tgz#f5b29b513c07f28eb52f52d6fa33ffec0b919370"
-  integrity sha512-0BnJ2FxmHnLia2zDxj7MPRnD7u5FA3LZF8xwuZf5vlHE9Jh/sgV6dQg5XMnPYmyhdlxSrTQ8FpNZbAir2PuMGQ==
+"@ayanworks/polygon-schema-manager@0.0.2-alpha.6":
+  version "0.0.2-alpha.6"
+  resolved "https://registry.yarnpkg.com/@ayanworks/polygon-schema-manager/-/polygon-schema-manager-0.0.2-alpha.6.tgz#a872afc1166e39561dba63f0ba83f898376bb874"
+  integrity sha512-H8W0eS//Q3eDCiwtEqfqPhGW3bRLWOkJU1EYOuiwZGaIuZb4kWbYqAGdgl0s5g0ZP1rjirk4Ztx1w10cWqsZWw==
   dependencies:
     "@ayanworks/polygon-did-registry-contract" "2.0.1-alpha.3"
     "@ayanworks/polygon-did-resolver" "^0.0.16-alpha.11"
@@ -603,35 +603,35 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@credo-ts/anoncreds@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/anoncreds/-/anoncreds-0.5.0.tgz#74bcaec9b3e5f75fd03924efc2e8bd67b905b035"
-  integrity sha512-fYPYxGV2S99dTCb0LHcHnJrVL3FLgrON5tFiv6U7By6aR9paT70Gwep/Lyp0WNzssg2vZ+a4gEf2gKjQiBE8pA==
+"@credo-ts/anoncreds@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/anoncreds/-/anoncreds-0.5.1.tgz#d1ba19e5764e1de5982a0a7e51cd5bc1badce6ad"
+  integrity sha512-d97wELxvt7jOqgr21FOVfFqHFSu487L+qF0QObOVCl9xElsST9sYl1iaRPHHW2GzYUMWLlnSwZm8fN4pLo9UVA==
   dependencies:
     "@astronautlabs/jsonpath" "^1.1.2"
-    "@credo-ts/core" "0.5.0"
+    "@credo-ts/core" "0.5.1"
     big-integer "^1.6.51"
     bn.js "^5.2.1"
     class-transformer "0.5.1"
     class-validator "0.14.1"
     reflect-metadata "^0.1.13"
 
-"@credo-ts/askar@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/askar/-/askar-0.5.0.tgz#5fa2e6443fe3ae1b15c8b66eb73e63beb5c096a1"
-  integrity sha512-84wxDU6GbucBTe4HV7gUbCieFdhXVX19q8o6dNK8a3zl87yiV3OVwPwtnzghjh47vv14Xr+gWRvqbRvZrhRsaA==
+"@credo-ts/askar@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/askar/-/askar-0.5.1.tgz#107d2f91f6afecb77fc7f24556725ec0e7597989"
+  integrity sha512-O3XWnmpnEe5U/a0kGQHigzXPw6/SXKp2v4ob3DJdHA0kiK3DywANNeG/Hw44lxdg24nNpizmVlO5EjRa6ULcmw==
   dependencies:
-    "@credo-ts/core" "0.5.0"
+    "@credo-ts/core" "0.5.1"
     bn.js "^5.2.1"
     class-transformer "0.5.1"
     class-validator "0.14.1"
     rxjs "^7.8.0"
     tsyringe "^4.8.0"
 
-"@credo-ts/core@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/core/-/core-0.5.0.tgz#a6366df4b176a492f4f45b7e2f45b8c905e1eeca"
-  integrity sha512-7SJBgs1yd2gpwv8BnCO+U63Uu06v6Cxzg+ypWpqyNkkG4nTsQZSI8r0oSQ+DgbiqwN/AZKsn9HuNISFftf5yKQ==
+"@credo-ts/core@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/core/-/core-0.5.1.tgz#bb38e2f5451753cea1d3a73b1d407255af02c4ed"
+  integrity sha512-ywwFw6wwiMft3A994Y91LAm8CrEg2G7CJQRyLD8UzneU4coMWZTeED63thAEX6XK/tyDmv2MAcrO04hE3KQPcA==
   dependencies:
     "@digitalcredentials/jsonld" "^6.0.0"
     "@digitalcredentials/jsonld-signatures" "^9.4.0"
@@ -665,22 +665,22 @@
     varint "^6.0.0"
     web-did-resolver "^2.0.21"
 
-"@credo-ts/indy-vdr@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/indy-vdr/-/indy-vdr-0.5.0.tgz#1799b2a90599d000a43c5dc59e7bd1e1eda68fe1"
-  integrity sha512-hW7xDdL6fVIgTIclmJRfVz3mlpo87Cwk6hCiRY1/lWV62bsKs6RHGLv6RUp+WPwTIpPpbBs6T1Dm85ditBbxpA==
+"@credo-ts/indy-vdr@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/indy-vdr/-/indy-vdr-0.5.1.tgz#1fe4719235f3e586e770e57aa46bba7182d53c10"
+  integrity sha512-pXRAKzLlwijaNaCOPheV9dHeZm0FAfiJw9kYEvpjBn+d/ARygb92kr9lJizUGK3cPtF9dbhrNBuLWwskM39fCw==
   dependencies:
-    "@credo-ts/anoncreds" "0.5.0"
-    "@credo-ts/core" "0.5.0"
+    "@credo-ts/anoncreds" "0.5.1"
+    "@credo-ts/core" "0.5.1"
 
-"@credo-ts/node@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/node/-/node-0.5.0.tgz#d28ed5040f9925777a65f66f55abed7c2d2e53de"
-  integrity sha512-/44SrgmjuRDE4Sjb6QDMvquPTUsH5DkIp8pbN7csLe0GEDDzPOUvzCaf4yI7TRnuSZN9Nh9/f6C2UGn0JuQ0Sg==
+"@credo-ts/node@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/node/-/node-0.5.1.tgz#adf24f931fd80848722f8f313012be00da405deb"
+  integrity sha512-F/PA3wyKN9MvH2JFSUmYGqQT+JaeSGKWNJxT+OkQzqseCZnCbErAnr8oNWlTwBWogp6ECx31FEn9wMq9zAMLaw==
   dependencies:
     "@2060.io/ffi-napi" "^4.0.8"
     "@2060.io/ref-napi" "^3.0.6"
-    "@credo-ts/core" "0.5.0"
+    "@credo-ts/core" "0.5.1"
     "@types/express" "^4.17.15"
     express "^4.17.1"
     ws "^8.13.0"
@@ -694,22 +694,22 @@
     class-validator "0.14.1"
     tsyringe "^4.6.0"
 
-"@credo-ts/question-answer@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/question-answer/-/question-answer-0.5.0.tgz#d3871127a36f783c7977c3cbcca8a23523453a32"
-  integrity sha512-cF4RRoVIS05ssIMk4iNQcn53k5E3G4jHVTSrBr3ZoV5EAGHTQ0Y5NMlLCx7kLlY31KGvhdiPXxeECG/uSiS3sg==
+"@credo-ts/question-answer@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/question-answer/-/question-answer-0.5.1.tgz#538dbfec8fc866de188c11ede9860bf0ef712937"
+  integrity sha512-yPjOl3tUfK5GT9BvX70hiTq86Fi5WTxB0pL42e17evq7+puBOMqhwQ1nv7dhDSWC2Oy+r0D0mF7Lz2hGulrJJg==
   dependencies:
-    "@credo-ts/core" "0.5.0"
+    "@credo-ts/core" "0.5.1"
     class-transformer "0.5.1"
     class-validator "0.14.1"
     rxjs "^7.8.0"
 
-"@credo-ts/tenants@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/tenants/-/tenants-0.5.0.tgz#e32943d66580af3b7bf6970fb3321329a479271d"
-  integrity sha512-SB2btH9adWLBwBs2d3od9VTF6AA2Bfzl3oJovlrcdWHXSYQWf0Hm+PRkvmL8+RYwdGtDM8uBKQrkbdPBGWEWAA==
+"@credo-ts/tenants@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/tenants/-/tenants-0.5.1.tgz#63ca79eb0a6c7d4bdf43ea00ed712d7399c25421"
+  integrity sha512-+wJ+Wd3rThY6eP9e3WYFeFlJKQEUrmJPhN5t+vr4zyhB5T7pM5Nsg53pzugWoCeWsMUNCqmHo12Tc9edQTH0bg==
   dependencies:
-    "@credo-ts/core" "0.5.0"
+    "@credo-ts/core" "0.5.1"
     async-mutex "^0.4.0"
 
 "@cspotcode/source-map-support@^0.8.0":
@@ -1770,6 +1770,23 @@
   dependencies:
     "@sd-jwt/types" "0.3.0"
     buffer "*"
+
+"@sideway/address@^4.1.5":
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/@sideway/address/-/address-4.1.5.tgz#4bc149a0076623ced99ca8208ba780d65a99b9d5"
+  integrity sha512-IqO/DUQHUkPeixNQ8n0JA6102hT9CmaljNTPmQ1u8MEhBo/R4Q8eKLN/vGZxuebwOroDB4cbpjheD4+/sKFK4Q==
+  dependencies:
+    "@hapi/hoek" "^9.0.0"
+
+"@sideway/formula@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@sideway/formula/-/formula-3.0.1.tgz#80fcbcbaf7ce031e0ef2dd29b1bfc7c3f583611f"
+  integrity sha512-/poHZJJVjx3L+zVD6g9KgHfYnb443oi7wLu/XKojDviHy6HOEOA6z1Trk5aR1dGcmPenJEgb2sK2I80LeS3MIg==
+
+"@sideway/pinpoint@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@sideway/pinpoint/-/pinpoint-2.0.0.tgz#cff8ffadc372ad29fd3f78277aeb29e632cc70df"
+  integrity sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==
 
 "@sindresorhus/is@^4.0.0":
   version "4.6.0"
