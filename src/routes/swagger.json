@@ -284,11 +284,15 @@
 							}
 						},
 						"type": "object"
+					},
+					"messageType": {
+						"type": "string"
 					}
 				},
 				"required": [
 					"@type",
-					"@id"
+					"@id",
+					"messageType"
 				],
 				"type": "object",
 				"additionalProperties": {}
