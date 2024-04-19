@@ -604,6 +604,7 @@
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 "@credo-ts/anoncreds@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/anoncreds/-/anoncreds-0.5.3.tgz#3e6775b461fc34e377bebe2c0ca53c34ee630a26"
@@ -620,12 +621,22 @@
     "@astronautlabs/jsonpath" "^1.1.2"
     "@credo-ts/core" "0.5.0"
 >>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
+=======
+"@credo-ts/anoncreds@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/anoncreds/-/anoncreds-0.5.1.tgz#d1ba19e5764e1de5982a0a7e51cd5bc1badce6ad"
+  integrity sha512-d97wELxvt7jOqgr21FOVfFqHFSu487L+qF0QObOVCl9xElsST9sYl1iaRPHHW2GzYUMWLlnSwZm8fN4pLo9UVA==
+  dependencies:
+    "@astronautlabs/jsonpath" "^1.1.2"
+    "@credo-ts/core" "0.5.1"
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
     big-integer "^1.6.51"
     bn.js "^5.2.1"
     class-transformer "0.5.1"
     class-validator "0.14.1"
     reflect-metadata "^0.1.13"
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 "@credo-ts/askar@0.5.3":
   version "0.5.3"
@@ -641,12 +652,21 @@
   dependencies:
     "@credo-ts/core" "0.5.0"
 >>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
+=======
+"@credo-ts/askar@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/askar/-/askar-0.5.1.tgz#107d2f91f6afecb77fc7f24556725ec0e7597989"
+  integrity sha512-O3XWnmpnEe5U/a0kGQHigzXPw6/SXKp2v4ob3DJdHA0kiK3DywANNeG/Hw44lxdg24nNpizmVlO5EjRa6ULcmw==
+  dependencies:
+    "@credo-ts/core" "0.5.1"
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
     bn.js "^5.2.1"
     class-transformer "0.5.1"
     class-validator "0.14.1"
     rxjs "^7.8.0"
     tsyringe "^4.8.0"
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 "@credo-ts/core@0.5.3":
   version "0.5.3"
@@ -658,6 +678,12 @@
   resolved "https://registry.yarnpkg.com/@credo-ts/core/-/core-0.5.0.tgz#a6366df4b176a492f4f45b7e2f45b8c905e1eeca"
   integrity sha512-7SJBgs1yd2gpwv8BnCO+U63Uu06v6Cxzg+ypWpqyNkkG4nTsQZSI8r0oSQ+DgbiqwN/AZKsn9HuNISFftf5yKQ==
 >>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
+=======
+"@credo-ts/core@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/core/-/core-0.5.1.tgz#bb38e2f5451753cea1d3a73b1d407255af02c4ed"
+  integrity sha512-ywwFw6wwiMft3A994Y91LAm8CrEg2G7CJQRyLD8UzneU4coMWZTeED63thAEX6XK/tyDmv2MAcrO04hE3KQPcA==
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
   dependencies:
     "@digitalcredentials/jsonld" "^6.0.0"
     "@digitalcredentials/jsonld-signatures" "^9.4.0"
@@ -702,6 +728,7 @@
     web-did-resolver "^2.0.21"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 "@credo-ts/indy-vdr@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@credo-ts/indy-vdr/-/indy-vdr-0.5.3.tgz#14c1fbe77b77f7214ee66807e4011a5e3c813819"
@@ -723,19 +750,29 @@
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@credo-ts/indy-vdr/-/indy-vdr-0.5.0.tgz#1799b2a90599d000a43c5dc59e7bd1e1eda68fe1"
   integrity sha512-hW7xDdL6fVIgTIclmJRfVz3mlpo87Cwk6hCiRY1/lWV62bsKs6RHGLv6RUp+WPwTIpPpbBs6T1Dm85ditBbxpA==
+=======
+"@credo-ts/indy-vdr@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/indy-vdr/-/indy-vdr-0.5.1.tgz#1fe4719235f3e586e770e57aa46bba7182d53c10"
+  integrity sha512-pXRAKzLlwijaNaCOPheV9dHeZm0FAfiJw9kYEvpjBn+d/ARygb92kr9lJizUGK3cPtF9dbhrNBuLWwskM39fCw==
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
   dependencies:
-    "@credo-ts/anoncreds" "0.5.0"
-    "@credo-ts/core" "0.5.0"
+    "@credo-ts/anoncreds" "0.5.1"
+    "@credo-ts/core" "0.5.1"
 
-"@credo-ts/node@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@credo-ts/node/-/node-0.5.0.tgz#d28ed5040f9925777a65f66f55abed7c2d2e53de"
-  integrity sha512-/44SrgmjuRDE4Sjb6QDMvquPTUsH5DkIp8pbN7csLe0GEDDzPOUvzCaf4yI7TRnuSZN9Nh9/f6C2UGn0JuQ0Sg==
+"@credo-ts/node@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/node/-/node-0.5.1.tgz#adf24f931fd80848722f8f313012be00da405deb"
+  integrity sha512-F/PA3wyKN9MvH2JFSUmYGqQT+JaeSGKWNJxT+OkQzqseCZnCbErAnr8oNWlTwBWogp6ECx31FEn9wMq9zAMLaw==
   dependencies:
     "@2060.io/ffi-napi" "^4.0.8"
     "@2060.io/ref-napi" "^3.0.6"
+<<<<<<< HEAD
     "@credo-ts/core" "0.5.0"
 >>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
+=======
+    "@credo-ts/core" "0.5.1"
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
     "@types/express" "^4.17.15"
     express "^4.17.1"
     ws "^8.13.0"
@@ -749,6 +786,7 @@
     class-validator "0.14.1"
     tsyringe "^4.6.0"
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 "@credo-ts/question-answer@0.5.3":
   version "0.5.3"
@@ -764,10 +802,19 @@
   dependencies:
     "@credo-ts/core" "0.5.0"
 >>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
+=======
+"@credo-ts/question-answer@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/question-answer/-/question-answer-0.5.1.tgz#538dbfec8fc866de188c11ede9860bf0ef712937"
+  integrity sha512-yPjOl3tUfK5GT9BvX70hiTq86Fi5WTxB0pL42e17evq7+puBOMqhwQ1nv7dhDSWC2Oy+r0D0mF7Lz2hGulrJJg==
+  dependencies:
+    "@credo-ts/core" "0.5.1"
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
     class-transformer "0.5.1"
     class-validator "0.14.1"
     rxjs "^7.8.0"
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 "@credo-ts/tenants@0.5.3":
   version "0.5.3"
@@ -783,6 +830,14 @@
   dependencies:
     "@credo-ts/core" "0.5.0"
 >>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
+=======
+"@credo-ts/tenants@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@credo-ts/tenants/-/tenants-0.5.1.tgz#63ca79eb0a6c7d4bdf43ea00ed712d7399c25421"
+  integrity sha512-+wJ+Wd3rThY6eP9e3WYFeFlJKQEUrmJPhN5t+vr4zyhB5T7pM5Nsg53pzugWoCeWsMUNCqmHo12Tc9edQTH0bg==
+  dependencies:
+    "@credo-ts/core" "0.5.1"
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
     async-mutex "^0.4.0"
 
 "@cspotcode/source-map-support@^0.8.0":
@@ -1954,6 +2009,23 @@
     "@sd-jwt/types" "0.3.0"
     buffer "*"
 >>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
+
+"@sideway/address@^4.1.5":
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/@sideway/address/-/address-4.1.5.tgz#4bc149a0076623ced99ca8208ba780d65a99b9d5"
+  integrity sha512-IqO/DUQHUkPeixNQ8n0JA6102hT9CmaljNTPmQ1u8MEhBo/R4Q8eKLN/vGZxuebwOroDB4cbpjheD4+/sKFK4Q==
+  dependencies:
+    "@hapi/hoek" "^9.0.0"
+
+"@sideway/formula@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@sideway/formula/-/formula-3.0.1.tgz#80fcbcbaf7ce031e0ef2dd29b1bfc7c3f583611f"
+  integrity sha512-/poHZJJVjx3L+zVD6g9KgHfYnb443oi7wLu/XKojDviHy6HOEOA6z1Trk5aR1dGcmPenJEgb2sK2I80LeS3MIg==
+
+"@sideway/pinpoint@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@sideway/pinpoint/-/pinpoint-2.0.0.tgz#cff8ffadc372ad29fd3f78277aeb29e632cc70df"
+  integrity sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==
 
 "@sindresorhus/is@^4.0.0":
   version "4.6.0"
@@ -5829,11 +5901,14 @@ joi@^17.12.3:
     "@sideway/formula" "^3.0.1"
     "@sideway/pinpoint" "^2.0.0"
 
+<<<<<<< HEAD
 js-base64@^3.7.6:
   version "3.7.7"
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-3.7.7.tgz#e51b84bf78fbf5702b9541e2cb7bfcb893b43e79"
   integrity sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==
 
+=======
+>>>>>>> 5dc99ac... feat: migrated to amoy (#96)
 js-sha3@0.8.0:
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/js-sha3/-/js-sha3-0.8.0.tgz#b9b7a5da73afad7dedd0f8c463954cbde6818840"
