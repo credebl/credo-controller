@@ -129,6 +129,9 @@ const parsed = yargs
     boolean: true,
     default: false,
   })
+  .option('apiKey', {
+    string: true,
+  })
   // .option('storage-config', {
   //   array: true,
   //   default: [],
@@ -198,5 +201,6 @@ export async function runCliServer() {
     rpcUrl: parsed['rpcUrl'],
     fileServerUrl: parsed['fileServerUrl'],
     fileServerToken: parsed['fileServerToken'],
+    apiKey: parsed['apiKey'],
   } as unknown as AriesRestConfig)
 }

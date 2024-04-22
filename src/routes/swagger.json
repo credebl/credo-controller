@@ -1793,7 +1793,7 @@
 			}
 		},
 		"/agent/token": {
-			"get": {
+			"post": {
 				"operationId": "GetAgentToken",
 				"responses": {
 					"200": {

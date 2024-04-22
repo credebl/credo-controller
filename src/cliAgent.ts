@@ -50,14 +50,12 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
 import { readFile } from 'fs/promises'
-import jwt from 'jsonwebtoken'
 
-import { AgentRole } from './enums/enum'
 // eslint-disable-next-line import/no-cycle
 import { setupServer } from './server'
-import { generateSecretKey } from './utils/common.service'
 import { TsLogger } from './utils/logger'
 import { BCOVRIN_TEST_GENESIS } from './utils/util'
+import { generateSecretKey } from './utils/common.service'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -102,6 +100,7 @@ export interface AriesRestConfig {
   rpcUrl: string
   fileServerUrl: string
   fileServerToken: string
+  apiKey: string
 }
 
 export async function readRestConfig(path: string) {
@@ -237,6 +236,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     webhookUrl,
     adminPort,
     walletConfig,
+    apiKey,
     ...afjConfig
   } = restConfig
 
@@ -336,52 +336,18 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  // Add the agent context to container in tsyringe
-  // container.registerInstance(Agent, agent as Agent)
-
-  let token: string = ''
   const genericRecord = await agent.genericRecords.getAll()
+  const recordsWithSecretKey = genericRecord.some((record) => record?.content?.secretKey)
 
-  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
-  if (!genericRecord.length || !recordsWithToken) {
-    // Call the async function
-    const secretKeyInfo: string = await generateSecretKey()
-    // Check if the secretKey already exist in the genericRecords
-
-    // if already exist - then don't generate the secret key again
-    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
-    // instead use the existin JWT token
-    // if JWT token is not found, create/generate a new token and save in genericRecords
-    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-
-    // if already exist - then don't generate the secret key again
-    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
-    // instead use the existin JWT token
-    // if JWT token is not found, create/generate a new token and save in genericRecords
-    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-
-    // Krish: Should add agent role and tenant id in case of tenants
-    // token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
-
-    // agent role set for dedicated agent and base-wallet respectively
-    if (!('tenants' in agent.modules)) {
-      token = jwt.sign({ role: AgentRole.RestRootAgent }, secretKeyInfo)
-    } else {
-      token = jwt.sign({ role: AgentRole.RestRootAgentWithTenants }, secretKeyInfo)
-    }
-
-    // Krish: there should be no need to store the token if it is a refresh token. It's okay to save it for now and return it in the additional endpoint
-    console.log('--------------if---------------', token)
+  if (!genericRecord.length || !recordsWithSecretKey) {
+    // If secretKey doesn't exist in genericRecord: i.e. Agent initialized for the first time or secretKey not found
+    // Generate and store secret key for agent while initialization
+    const secretKeyInfo = await generateSecretKey()
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
-        token,
       },
     })
-  } else {
-    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
-    token = recordWithToken?.content.token as string
-    console.log('--------------else---------------', token)
   }
 
   const app = await setupServer(
@@ -390,10 +356,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       webhookUrl,
       port: adminPort,
     },
-    token
+    apiKey
   )
 
-  logger.info(`*** API Token: ${token}`)
+  logger.info(`*** API Key: ${apiKey}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)
