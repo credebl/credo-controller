@@ -37,6 +37,7 @@
     "validate": "yarn lint && yarn check-types && yarn check-format"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@ayanworks/credo-polygon-w3c-module": "0.0.2-alpha.8",
     "@credo-ts/anoncreds": "0.5.3",
     "@credo-ts/askar": "0.5.3",
@@ -49,6 +50,20 @@
     "@hyperledger/anoncreds-nodejs": "0.2.2",
     "@hyperledger/aries-askar-nodejs": "0.2.1",
     "@hyperledger/indy-vdr-nodejs": "0.2.2",
+=======
+    "@ayanworks/credo-polygon-w3c-module": "0.0.2-alpha.7",
+    "@credo-ts/anoncreds": "0.5.1",
+    "@credo-ts/askar": "0.5.1",
+    "@credo-ts/core": "0.5.1",
+    "@credo-ts/indy-vdr": "0.5.1",
+    "@credo-ts/node": "0.5.1",
+    "@credo-ts/push-notifications": "^0.7.0",
+    "@credo-ts/question-answer": "0.5.1",
+    "@credo-ts/tenants": "0.5.1",
+    "@hyperledger/anoncreds-nodejs": "0.2.1",
+    "@hyperledger/aries-askar-nodejs": "0.2.0",
+    "@hyperledger/indy-vdr-nodejs": "0.2.0",
+>>>>>>> 81e66a3... merge: develop to main (#98)
     "@tsoa/runtime": "^6.0.0",
     "@types/node-fetch": "^2.6.4",
     "@types/ref-struct-di": "^1.1.9",
