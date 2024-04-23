@@ -23,7 +23,7 @@ export enum Network {
 }
 
 export enum AgentRole {
-  RestRootAgentWithTenants = 'RestRootAgentWithTenants', // Basewallet // Better name: RestRootRestRootAgentWithTenantss
+  RestRootAgentWithTenants = 'RestRootAgentWithTenants', // Basewallet // Better name: RestRootRestRootAgentWithTenants
   RestRootAgent = 'RestRootAgent', // Dedicated // Better name: RestRootAgent
-  TenantAgent = 'TenantAgent', // Tenant // Better name: RestTenantAgent
+  RestTenantAgent = 'RestTenantAgent', // Tenant // Better name: RestTenantAgent
 }

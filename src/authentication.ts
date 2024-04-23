@@ -1,10 +1,10 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
-import type { Agent } from '@aries-framework/core'
 import type { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
 import type { Request } from 'express'
 
-import { LogLevel } from '@aries-framework/core'
+import { Agent, LogLevel } from '@aries-framework/core'
 import jwt, { decode } from 'jsonwebtoken'
+import { container } from 'tsyringe'
 
 import { AgentRole } from './enums/enum'
 import { TsLogger } from './utils/logger'
@@ -17,18 +17,40 @@ export async function expressAuthentication(
   request: Request,
   securityName: string,
   secMethod?: { [key: string]: any },
-  scopes?: string,
+  scopes?: string
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  agent?: Agent<RestMultiTenantAgentModules>
+  // agent?: Agent<RestMultiTenantAgentModules>
 ): Promise<boolean | Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>> {
   try {
     console.log('Race: Reached in Authentication')
     const logger = new TsLogger(LogLevel.info)
-    // const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
+    const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
 
     logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
     logger.info(`scopes::: ${JSON.stringify(scopes)}`)
     logger.info(`scopes::: ${JSON.stringify(scopes)}`)
+
+    const routePath = request.path
+    const requestMethod = request.method
+
+    // List of paths for which authentication should be skipped
+    const pathsToSkipAuthentication = [
+      { path: '/url/', method: 'GET' },
+      { path: '/multi-tenancy/url/', method: 'GET' },
+      { path: '/agent', method: 'GET' },
+    ]
+
+    const skipAuthentication = pathsToSkipAuthentication.some(
+      ({ path, method }) => routePath.includes(path) && requestMethod === method
+    )
+
+    if (skipAuthentication) {
+      // Skip authentication for this route or controller
+      console.log('Skipped authentication')
+      // for skipped authentication there are two ways to handle
+      request['agent'] = agent
+      return true
+    }
 
     const apiKeyHeader = request.headers['authorization']
 
@@ -44,6 +66,7 @@ export async function expressAuthentication(
         const providedApiKey = apiKeyHeader as string
 
         if (providedApiKey === dynamicApiKey) {
+          request['agent'] = agent
           return true
         }
       }
@@ -58,18 +81,19 @@ export async function expressAuthentication(
       const role: AgentRole = decodedToken.role
 
       if (tenancy) {
-        // const rootAgent = container.resolve(Agent<RestMultiTenantAgentModules>)
         // it should be a shared agent
-        if (role !== AgentRole.RestRootAgentWithTenants && role !== AgentRole.TenantAgent) {
+        if (role !== AgentRole.RestRootAgentWithTenants && role !== AgentRole.RestTenantAgent) {
           return false //'The agent is a multi-tenant agent'
         }
 
-        if (role === AgentRole.TenantAgent) {
+        if (role === AgentRole.RestTenantAgent) {
           // Logic if the token is of tenant agent
+          console.log('Reached here in [expressAuthentication] in role === AgentRole.RestTenantAgent')
           if (reqPath.includes('/multi-tenant/')) {
             return false //'Tenants cannot manage tenants'
           } else {
             // Auth: tenant agent
+            console.log('This is agent in tenantAgent:::::', agent)
             const tenantId: string = decodedToken.tenantId
             if (!tenantId) return false
             const tenantAgent = await getTenantAgent(agent!, tenantId)
@@ -81,9 +105,10 @@ export async function expressAuthentication(
             if (!verified) return false
 
             // Only need to registerInstance for TenantAgent.
-            // req['user'] = { agent: tenantAgent }
-            // return { req }
-            return tenantAgent
+            // return tenantAgent
+            request['agent'] = tenantAgent
+            console.log('This is agent in request["agent"]:::::', request['agent'])
+            return true
           }
         } else if (role === AgentRole.RestRootAgentWithTenants) {
           // Auth: base wallet
@@ -98,6 +123,7 @@ export async function expressAuthentication(
           // req['user'] = { agent: agent }
           // return { req }
           console.log('verified in authentication for BW')
+          request['agent'] = agent
           return true
         } else {
           return false //'Invalid Token'
@@ -116,6 +142,7 @@ export async function expressAuthentication(
           // Can have an enum instead of 'success' string
           // req['user'] = { agent: agent }
           // return { req }
+          request['agent'] = agent
           return true
         }
       }
@@ -154,12 +181,14 @@ async function getTenantAgent(
   tenantId: string
 ): Promise<TenantAgent<RestAgentModules>> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  return new Promise((resolve) => {
-    agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      // Some logic
-      resolve(tenantAgent)
-    })
-  })
+  // return new Promise((resolve) => {
+  //   agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+  //     // Some logic
+  //     resolve(tenantAgent)
+  //   })
+  // })
+  const tenantAgent = await agent.modules.tenants.getTenantAgent({ tenantId })
+  return tenantAgent
 }
 
 export function setDynamicApiKey(newApiKey: string) {

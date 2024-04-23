@@ -53,9 +53,9 @@ import { readFile } from 'fs/promises'
 
 // eslint-disable-next-line import/no-cycle
 import { setupServer } from './server'
+import { generateSecretKey } from './utils/common.service'
 import { TsLogger } from './utils/logger'
 import { BCOVRIN_TEST_GENESIS } from './utils/util'
-import { generateSecretKey } from './utils/common.service'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -114,11 +114,6 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
-// export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenantModules>>
-// type RestRootAgentWithTenantsModules = Awaited<ReturnType<typeof getWithTenantModules>>
-// type RestRootAgentModules = Awaited<ReturnType<typeof getModules>>
-// export type RestMultiTenantAgentModules = Agent<RestRootAgentWithTenantsModules>
-// export type RestAgentModules = Agent<RestRootAgentModules>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()

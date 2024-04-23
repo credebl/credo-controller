@@ -1,9 +1,10 @@
 import 'reflect-metadata'
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
 import type { ServerConfig } from './utils/ServerConfig'
-import type { Response as ExResponse, Request as ExRequest, NextFunction, Request, Response } from 'express'
+import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 
 import { Agent } from '@aries-framework/core'
+import { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
@@ -78,6 +79,12 @@ export const setupServer = async (
   app.use(securityMiddleware.use)
   RegisterRoutes(app)
 
+  app.use(async (req, _, next) => {
+    // End tenant session if active
+    await endTenantSessionIfActive(req)
+    next()
+  })
+
   app.use((req, res, next) => {
     if (req.url == '/') {
       res.redirect('/docs')
@@ -86,7 +93,15 @@ export const setupServer = async (
     next()
   })
 
-  app.use(function errorHandler(err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void {
+  app.use(async function errorHandler(
+    err: unknown,
+    req: ExRequest,
+    res: ExResponse,
+    next: NextFunction
+  ): Promise<ExResponse | void> {
+    // End tenant session if active
+    await endTenantSessionIfActive(req)
+
     if (err instanceof ValidateError) {
       agent.config.logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
       return res.status(422).json({
@@ -119,4 +134,14 @@ export const setupServer = async (
   })
 
   return app
+}
+
+async function endTenantSessionIfActive(request: ExRequest) {
+  if ('agent' in request) {
+    const agent = request?.agent
+    if (agent instanceof TenantAgent) {
+      agent.config.logger.debug('Ending tenant session')
+      await agent.endSession()
+    }
+  }
 }
