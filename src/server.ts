@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
+import type { ApiError } from './error'
 import type { ServerConfig } from './utils/ServerConfig'
 import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 
@@ -14,6 +15,7 @@ import { container } from 'tsyringe'
 
 // eslint-disable-next-line import/namespace
 import { setDynamicApiKey } from './authentication'
+import { ErrorMessages } from './enums/enum'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
@@ -79,11 +81,12 @@ export const setupServer = async (
   app.use(securityMiddleware.use)
   RegisterRoutes(app)
 
-  app.use(async (req, _, next) => {
-    // End tenant session if active
-    await endTenantSessionIfActive(req)
-    next()
-  })
+  // app.use(async (req, _, next) => {
+  //   // End tenant session if active
+  //   console.log('Ended tenant session using app.use')
+  //   await endTenantSessionIfActive(req)
+  //   next()
+  // })
 
   app.use((req, res, next) => {
     if (req.url == '/') {
@@ -100,7 +103,8 @@ export const setupServer = async (
     next: NextFunction
   ): Promise<ExResponse | void> {
     // End tenant session if active
-    await endTenantSessionIfActive(req)
+    // console.log('Ended tenant session in [errorHandler]')
+    // await endTenantSessionIfActive(req)
 
     if (err instanceof ValidateError) {
       agent.config.logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
@@ -117,6 +121,13 @@ export const setupServer = async (
           message: `Bad Request`,
           details: err.message,
         })
+      }
+
+      if (exceptionError.status === 401) {
+        return res.status(401).json({
+          message: `Unauthorized`,
+          details: err.message !== ErrorMessages.Unauthorized ? err.message : undefined,
+        } satisfies ApiError)
       }
 
       agent.config.logger.error('Internal Server Error.', err)
@@ -136,12 +147,12 @@ export const setupServer = async (
   return app
 }
 
-async function endTenantSessionIfActive(request: ExRequest) {
-  if ('agent' in request) {
-    const agent = request?.agent
-    if (agent instanceof TenantAgent) {
-      agent.config.logger.debug('Ending tenant session')
-      await agent.endSession()
-    }
-  }
-}
+// async function endTenantSessionIfActive(request: ExRequest) {
+//   if ('agent' in request) {
+//     const agent = request?.agent
+//     if (agent instanceof TenantAgent) {
+//       agent.config.logger.debug('Ending tenant session')
+//       await agent.endSession()
+//     }
+//   }
+// }

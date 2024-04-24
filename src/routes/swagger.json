@@ -1788,7 +1788,11 @@
 				"tags": [
 					"Agent"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -1830,8 +1834,13 @@
 			"delete": {
 				"operationId": "DeleteWallet",
 				"responses": {
-					"204": {
-						"description": "No content"
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
 					}
 				},
 				"description": "Delete wallet",
@@ -1840,7 +1849,7 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": []
 					}
 				],
 				"parameters": []

@@ -1,6 +1,5 @@
 import type { AgentInfo, AgentToken } from '../types'
 
-import { Agent } from '@aries-framework/core'
 import { Request as Req } from 'express'
 import jwt from 'jsonwebtoken'
 import { injectable } from 'tsyringe'
@@ -13,23 +12,25 @@ import { Controller, Delete, Get, Post, Route, Tags, Security, Request } from 't
 @Tags('Agent')
 @Route('/agent')
 @injectable()
+// @Security('jwt')
 export class AgentController extends Controller {
-  private agent: Agent
+  // private agent: Agent
 
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
+  // public constructor(agent: Agent) {
+  //   super()
+  //   this.agent = agent
+  // }
 
   /**
    * Retrieve basic agent information
    */
+  @Security('jwt')
   @Get('/info')
-  public async getAgentInfo(): Promise<AgentInfo> {
+  public async getAgentInfo(@Request() request: Req): Promise<AgentInfo> {
     return {
-      label: this.agent.config.label,
-      endpoints: this.agent.config.endpoints,
-      isInitialized: this.agent.isInitialized,
+      label: request.agent.config.label,
+      endpoints: request.agent.config.endpoints,
+      isInitialized: request.agent.isInitialized,
       publicDid: undefined,
     }
   }
@@ -40,8 +41,7 @@ export class AgentController extends Controller {
   @Post('/token')
   @Security('apiKey')
   public async getAgentToken(@Request() request: Req): Promise<AgentToken | string> {
-    // const details = await this.agent.genericRecords.getAll()
-    console.log(`This is in agent token request.agent::::::`, request.agent)
+    // const details = await request.agent.genericRecords.getAll()
     // const genericRecord = await request.agent.genericRecords.getAll()
     // console.log('genericRecord:::::', genericRecord)
     // const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
@@ -50,7 +50,7 @@ export class AgentController extends Controller {
     //   token: token,
     // }
     let token
-    const genericRecords = await this.agent.genericRecords.getAll()
+    const genericRecords = await request.agent.genericRecords.getAll()
     const secretKeyInfo = genericRecords.find((record) => record?.content?.secretKey !== undefined)
     if (!secretKeyInfo) {
       throw new Error('secretKeyInfo not found')
@@ -107,7 +107,7 @@ export class AgentController extends Controller {
     //   token = recordWithToken?.content.token as string
     //   console.log('--------------else---------------', token)
     // }
-    if (!('tenants' in this.agent.modules)) {
+    if (!('tenants' in request.agent.modules)) {
       token = jwt.sign({ role: AgentRole.RestRootAgent }, secretKey)
     } else {
       token = jwt.sign({ role: AgentRole.RestRootAgentWithTenants }, secretKey)
@@ -120,10 +120,10 @@ export class AgentController extends Controller {
   /**
    * Delete wallet
    */
-  @Security('apiKey')
   @Delete('/wallet')
-  public async deleteWallet() {
-    const deleteWallet = await this.agent.wallet.delete()
+  @Security('jwt')
+  public async deleteWallet(@Request() request: Req) {
+    const deleteWallet = await request.agent.wallet.delete()
     return deleteWallet
   }
 }

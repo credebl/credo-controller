@@ -23,7 +23,11 @@ export enum Network {
 }
 
 export enum AgentRole {
-  RestRootAgentWithTenants = 'RestRootAgentWithTenants', // Basewallet // Better name: RestRootRestRootAgentWithTenants
-  RestRootAgent = 'RestRootAgent', // Dedicated // Better name: RestRootAgent
-  RestTenantAgent = 'RestTenantAgent', // Tenant // Better name: RestTenantAgent
+  RestRootAgentWithTenants = 'RestRootAgentWithTenants',
+  RestRootAgent = 'RestRootAgent',
+  RestTenantAgent = 'RestTenantAgent',
+}
+
+export enum ErrorMessages {
+  Unauthorized = 'Unauthorized',
 }
