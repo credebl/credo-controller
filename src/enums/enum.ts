@@ -1,6 +1,7 @@
 export enum CredentialEnum {
   Finished = 'finished',
   Action = 'action',
+  Failed = 'Failed',
 }
 
 export enum Role {

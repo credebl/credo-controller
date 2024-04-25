@@ -1,5 +1,5 @@
 import type { Version } from './examples'
-import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
+import type { AnonCredsCredentialFormat, AnonCredsSchema, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -379,4 +379,13 @@ export interface WriteTransaction {
 }
 export interface RecipientKeyOption {
   recipientKey?: string
+}
+
+export interface CreateSchemaInput extends AnonCredsSchema {
+  issuerId: string
+  name: string
+  version: Version
+  attributes: string[]
+  endorse?: boolean
+  endorserDid?: string
 }

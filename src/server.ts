@@ -81,17 +81,37 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
 
     if (err instanceof Error) {
       const exceptionError = err as Exception
-      if (exceptionError.status === 400) {
-        return res.status(400).json({
-          message: `Bad Request`,
-          details: err.message,
-        })
+      switch (exceptionError.status) {
+        case 400:
+          return res.status(400).json({
+            message: `Bad Request`,
+            details: err?.message,
+          })
+        case 401:
+          return res.status(401).json({
+            message: `Unauthorized`,
+            details: err?.message,
+          })
+        case 403:
+          return res.status(403).json({
+            message: `Forbidden`,
+            details: err?.message,
+          })
+        case 404:
+          return res.status(404).json({
+            message: `Not Found`,
+            details: err?.message,
+          })
+        case 409:
+          return res.status(409).json({
+            message: `Conflict`,
+            details: err?.message,
+          })
+        default:
+          return res.status(500).json({
+            message: err && err.message ? err.message : 'Internal Server Error. Check server logging.',
+          })
       }
-
-      agent.config.logger.error('Internal Server Error.', err)
-      return res.status(500).json({
-        message: 'Internal Server Error. Check server logging.',
-      })
     }
     next()
   })
