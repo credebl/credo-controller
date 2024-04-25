@@ -6739,6 +6739,85 @@
 				]
 			}
 		},
+		"/multi-tenancy/revoke/{credentialRecordId}/{tenantId}": {
+			"post": {
+				"operationId": "RevokeCredentials",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Send a answer to question",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "credentialRecordId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Tenant identifier",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/transactions/endorse": {
 			"post": {
 				"operationId": "EndorserTransaction",

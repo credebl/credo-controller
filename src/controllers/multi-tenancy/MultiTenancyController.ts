@@ -2,6 +2,8 @@ import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAge
 import type { Version } from '../examples'
 import type { RecipientKeyOption } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+import type { RegisterRevocationStatusListReturn } from '@credo-ts/anoncreds'
+import type { AnonCredsCredentialMetadata } from '@credo-ts/anoncreds/build/utils'
 import type {
   AcceptProofRequestOptions,
   ConnectionRecordProps,
@@ -25,6 +27,7 @@ import {
   parseIndySchemaId,
   AnonCredsError,
 } from '@credo-ts/anoncreds'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils'
 import {
   AcceptCredentialOfferOptions,
   Agent,
@@ -1166,7 +1169,8 @@ export class MultiTenancyController extends Controller {
   ) {
     let credentialDefinitionRecord
     const issuerId = credentialDefinitionRequest.issuerId
-    let revocationStatusList: any
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let revocationStatusList: RegisterRevocationStatusListReturn
     let revocationRegistryDefinition: any
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1200,29 +1204,25 @@ export class MultiTenancyController extends Controller {
           }
 
           if (credentialDefinitionRequest.supportRevocation) {
-            console.log('supportRevocation:::::', credentialDefinitionRequest.supportRevocation)
             revocationRegistryDefinition = await tenantAgent.modules.anoncreds.registerRevocationRegistryDefinition({
               options: {},
               revocationRegistryDefinition: {
                 credentialDefinitionId: credentialDefinitionState.credentialDefinitionId,
                 issuerId,
-                maximumCredentialNumber: 10,
+                maximumCredentialNumber: 100,
                 tag: 'Default',
               },
             })
 
-            console.log('revocationRegistryDefinition::::', revocationRegistryDefinition)
-
-            revocationStatusList = await tenantAgent.modules.anoncreds.registerRevocationStatusList({
+            await tenantAgent.modules.anoncreds.registerRevocationStatusList({
               options: {},
               revocationStatusList: {
                 issuerId,
-                revocationRegistryDefinitionId: revocationRegistryDefinition?.revocationRegistryDefinitionId,
+                revocationRegistryDefinitionId:
+                  revocationRegistryDefinition?.revocationRegistryDefinitionState.revocationRegistryDefinitionId,
               },
             })
           }
-
-          console.log('revocationStatusList::::', revocationStatusList)
           credentialDefinitionRecord = credentialDefinitionState
         } else {
           const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
@@ -1932,5 +1932,47 @@ export class MultiTenancyController extends Controller {
     }
 
     return questionAnswerRecord
+  }
+
+  /**
+   * Revoke the crdential
+   *
+   * @param tenantId Tenant identifier
+   * @param credentialRecordId Credential record identifier
+   * @param response The response of the question
+   */
+  @Security('apiKey')
+  @Post('/revoke/:credentialRecordId/:tenantId')
+  public async revokeCredentials(
+    @Path('credentialRecordId') credentialRecordId: string,
+    @Path('tenantId') tenantId: string,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      let responseRevocationStatusList
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const record = await tenantAgent.credentials.getById(credentialRecordId)
+        const anoncredsCredentialTags = await record.metadata.get<AnonCredsCredentialMetadata>(
+          AnonCredsCredentialMetadataKey
+        )
+        if (!anoncredsCredentialTags?.revocationRegistryId || anoncredsCredentialTags?.credentialRevocationId) {
+          throw Error('This is not a revocable credential!')
+        }
+        responseRevocationStatusList = await tenantAgent.modules.anoncreds.updateRevocationStatusList({
+          revocationStatusList: {
+            revocationRegistryDefinitionId: anoncredsCredentialTags?.revocationRegistryId,
+            revokedCredentialIndexes: [Number(anoncredsCredentialTags?.credentialRevocationId)],
+          },
+          options: {},
+        })
+      })
+      return responseRevocationStatusList
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, { reason: `Record with credential record id not found.` })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
   }
 }

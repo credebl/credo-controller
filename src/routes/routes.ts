@@ -2801,6 +2801,40 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/multi-tenancy/revoke/:credentialRecordId/:tenantId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.revokeCredentials)),
+
+            async function MultiTenancyController_revokeCredentials(request: any, response: any, next: any) {
+            const args = {
+                    credentialRecordId: {"in":"path","name":"credentialRecordId","required":true,"dataType":"string"},
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+
+              const promise = controller.revokeCredentials.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/transactions/endorse',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(EndorserTransactionController)),

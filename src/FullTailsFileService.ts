@@ -1,8 +1,11 @@
 import type { AnonCredsRevocationRegistryDefinition } from '@credo-ts/anoncreds'
 import type { AgentContext } from '@credo-ts/core'
+import type { AxiosResponse } from 'axios'
 
 import { BasicTailsFileService } from '@credo-ts/anoncreds'
 import { utils } from '@credo-ts/core'
+import axios from 'axios'
+
 // import FormData from 'form-data'
 import fs from 'fs'
 
@@ -26,16 +29,28 @@ export class FullTailsFileService extends BasicTailsFileService {
     const data = new FormData()
     const readStream = fs.createReadStream(localTailsFilePath)
     data.append('file', readStream)
-    const response = await agentContext.config.agentDependencies.fetch(
-      `${this.tailsServerBaseUrl}/${encodeURIComponent(tailsFileId)}`,
-      {
-        method: 'PUT',
-        body: data,
-      }
-    )
-    if (response.status !== 200) {
-      throw new Error('Cannot upload tails file')
+    const fileDetails: any = {
+      filePath: localTailsFilePath,
     }
+    // const response = await agentContext.config.agentDependencies.fetch(
+    //   `${this.tailsServerBaseUrl}/${encodeURIComponent(tailsFileId)}`,
+    //   {
+    //     method: 'PUT',
+    //     body: fileDetails,
+    //   }
+    // )
+    const response = await axios
+      .put(`${this.tailsServerBaseUrl}/${encodeURIComponent(tailsFileId)}`, fileDetails)
+      .then((response: AxiosResponse) => {
+        console.log('Updated user successfully:', response.data)
+      })
+      .catch((error: any) => {
+        console.error('Error updating user:', error)
+      })
+    console.log('response::::', response)
+    // if (response.status !== 200) {
+    //   throw new Error('Cannot upload tails file')
+    // }
     return { tailsFileUrl: `${this.tailsServerBaseUrl}/${encodeURIComponent(tailsFileId)}` }
   }
 }
