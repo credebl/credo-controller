@@ -1,0 +1,13 @@
+diff --git a/node_modules/@credo-ts/anoncreds/build/AnonCredsApi.js b/node_modules/@credo-ts/anoncreds/build/AnonCredsApi.js
+index d8d29a7..6fef88c 100644
+--- a/node_modules/@credo-ts/anoncreds/build/AnonCredsApi.js
++++ b/node_modules/@credo-ts/anoncreds/build/AnonCredsApi.js
+@@ -299,6 +299,8 @@ let AnonCredsApi = class AnonCredsApi {
+                 revocationRegistryDefinition,
+             });
+             revocationRegistryDefinition.value.tailsLocation = tailsFileUrl;
++            revocationRegistryDefinition.issuerId = issuerId
++            
+             const result = await registry.registerRevocationRegistryDefinition(this.agentContext, {
+                 revocationRegistryDefinition,
+                 options: options.options,
