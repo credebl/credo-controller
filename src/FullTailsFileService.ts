@@ -40,14 +40,13 @@ export class FullTailsFileService extends BasicTailsFileService {
     //   }
     // )
     const response = await axios
-      .put(`${this.tailsServerBaseUrl}/${encodeURIComponent(tailsFileId)}`, fileDetails)
+      .put(`https://5215-103-97-166-226.ngrok-free.app/${encodeURIComponent(tailsFileId)}`, fileDetails)
       .then((response: AxiosResponse) => {
         console.log('Updated user successfully:', response.data)
       })
       .catch((error: any) => {
         console.error('Error updating user:', error)
       })
-    console.log('response::::', response)
     // if (response.status !== 200) {
     //   throw new Error('Cannot upload tails file')
     // }

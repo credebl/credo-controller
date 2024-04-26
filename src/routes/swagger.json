@@ -6788,7 +6788,7 @@
 						}
 					}
 				},
-				"description": "Send a answer to question",
+				"description": "Revoke the crdential",
 				"tags": [
 					"MultiTenancy"
 				],
@@ -6799,6 +6799,7 @@
 				],
 				"parameters": [
 					{
+						"description": "Credential record identifier",
 						"in": "path",
 						"name": "credentialRecordId",
 						"required": true,
