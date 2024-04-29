@@ -680,32 +680,24 @@ export class MultiTenancyController extends Controller {
     @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
   ) {
     let outOfBandRecord: OutOfBandRecord | undefined
-    let invitationDid: string | undefined
+    let finalConfig: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption & { routing?: Routing } = {} // Initialize finalConfig
+
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        if (config?.invitationDid) {
-          invitationDid = config?.invitationDid
+        if (config?.recipientKey) {
+          const routing: Routing = {
+            // Initialize routing object
+            endpoints: tenantAgent.config.endpoints,
+            routingKeys: [],
+            recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+            mediatorId: undefined,
+          }
+          finalConfig = { ...config, routing } // Assign finalConfig
         } else {
-          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
-          const didDocument = createPeerDidDocumentFromServices([
-            {
-              id: 'didcomm',
-              recipientKeys: [didRouting.recipientKey],
-              routingKeys: didRouting.routingKeys,
-              serviceEndpoint: didRouting.endpoints[0],
-            },
-          ])
-          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
-            didDocument,
-            method: 'peer',
-            options: {
-              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
-            },
-          })
-          invitationDid = did.didState.did
+          finalConfig = { ...config, routing: await tenantAgent.mediationRecipient.getRouting({}) } // Assign finalConfig
         }
 
-        outOfBandRecord = await tenantAgent.oob.createInvitation({ ...config, invitationDid })
+        outOfBandRecord = await tenantAgent.oob.createInvitation(finalConfig)
       })
 
       return {
@@ -716,7 +708,7 @@ export class MultiTenancyController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord?.toJSON(),
-        invitationDid: config?.invitationDid ? '' : invitationDid,
+        ...(finalConfig?.recipientKey ? {} : { recipientKey: finalConfig.routing?.recipientKey.publicKeyBase58 }), // Access recipientKey from routing
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })

@@ -1,5 +1,5 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
-import type { AgentMessageType, RecipientKeyOption } from '../types'
+import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../types'
 import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@credo-ts/core'
 
 import {
@@ -99,31 +99,20 @@ export class OutOfBandController extends Controller {
     @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
   ) {
     try {
-      let invitationDid: string | undefined
-      if (config?.invitationDid) {
-        invitationDid = config?.invitationDid
+      let routing: Routing
+      if (config?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
       } else {
-        const didRouting = await this.agent.mediationRecipient.getRouting({})
-        const didDocument = createPeerDidDocumentFromServices([
-          {
-            id: 'didcomm',
-            recipientKeys: [didRouting.recipientKey],
-            routingKeys: didRouting.routingKeys,
-            serviceEndpoint: didRouting.endpoints[0],
-          },
-        ])
-        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
-          didDocument,
-          method: 'peer',
-          options: {
-            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
-          },
-        })
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        invitationDid = did.didState.did
+        routing = await this.agent.mediationRecipient.getRouting({})
       }
 
-      const outOfBandRecord = await this.agent.oob.createInvitation({ ...config, invitationDid })
+      config.routing = routing
+      const outOfBandRecord = await this.agent.oob.createInvitation(config)
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
           domain: this.agent.config.endpoints[0],
@@ -132,7 +121,7 @@ export class OutOfBandController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        invitationDid: config?.invitationDid ? '' : invitationDid,
+        ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
