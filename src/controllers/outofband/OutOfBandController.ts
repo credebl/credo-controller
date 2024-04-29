@@ -1,5 +1,5 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
-import type { AgentMessageType, RecipientKeyOption } from '../types'
+import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../types'
 import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@credo-ts/core'
 
 import {
@@ -14,12 +14,7 @@ import {
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
-import {
-  AcceptInvitationConfig,
-  ReceiveInvitationByUrlProps,
-  ReceiveInvitationProps,
-  CreateInvitationOptions,
-} from '../types'
+import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
 
 import {
   Body,
@@ -101,9 +96,22 @@ export class OutOfBandController extends Controller {
   @Post('/create-invitation')
   public async createInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() config: CreateInvitationOptions // props removed because of issues with serialization
+    @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
   ) {
     try {
+      let routing: Routing
+      if (config?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+      }
+
+      config.routing = routing
       const outOfBandRecord = await this.agent.oob.createInvitation(config)
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -113,6 +121,7 @@ export class OutOfBandController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
