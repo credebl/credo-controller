@@ -1,7 +1,7 @@
 export enum CredentialEnum {
   Finished = 'finished',
   Action = 'action',
-  Failed = 'Failed',
+  Failed = 'failed',
 }
 
 export enum Role {
@@ -36,4 +36,14 @@ export enum Network {
 export enum IndicioAcceptanceMechanism {
   Wallet_Agreement = 'wallet_agreement',
   Accept = 'accept',
+}
+
+export enum EndorserMode {
+  Internal = 'internal',
+  External = 'external',
+}
+
+export enum SchemaError {
+  NotFound = 'notFound',
+  UnSupportedAnonCredsMethod = 'unsupportedAnonCredsMethod',
 }

@@ -1,8 +1,10 @@
 import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
+import { HttpStatusCode } from 'axios'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum } from '../../enums/enum'
+import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
+import { NON_ENDORSER_DID_PRESENT } from '../../errorMessages'
 import { SchemaId, SchemaExample } from '../examples'
 import { CreateSchemaInput } from '../types'
 
@@ -23,7 +25,7 @@ export class SchemaController {
   /**
    * Get schema by schemaId
    * @param schemaId
-   * @param notFoundError
+   * @param notFoundErrormessage
    * @param forbiddenError
    * @param badRequestError
    * @param internalServerError
@@ -33,10 +35,10 @@ export class SchemaController {
   @Get('/:schemaId')
   public async getSchemaById(
     @Path('schemaId') schemaId: SchemaId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() forbiddenError: TsoaResponse<403, { reason: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
+    @Res() forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
+    @Res() badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
   ) {
     try {
       const getSchemBySchemaId = await this.agent.modules.anoncreds.getSchema(schemaId)
@@ -44,10 +46,10 @@ export class SchemaController {
       if (
         (getSchemBySchemaId &&
           getSchemBySchemaId?.resolutionMetadata &&
-          getSchemBySchemaId?.resolutionMetadata?.error === 'notFound') ||
-        getSchemBySchemaId?.resolutionMetadata?.error === 'unsupportedAnonCredsMethod'
+          getSchemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound) ||
+        getSchemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
       ) {
-        return notFoundError(404, { reason: getSchemBySchemaId?.resolutionMetadata?.message })
+        return notFoundError(HttpStatusCode.NotFound, { reason: getSchemBySchemaId?.resolutionMetadata?.message })
       }
 
       return getSchemBySchemaId
@@ -70,10 +72,10 @@ export class SchemaController {
   public async createSchema(
     @Body()
     schema: CreateSchemaInput,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() forbiddenError: TsoaResponse<403, { reason: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { reason: string }>
+    @Res() notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
+    @Res() forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
+    @Res() badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
   ) {
     try {
       const { issuerId, name, version, attributes } = schema
@@ -89,16 +91,16 @@ export class SchemaController {
         const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
           schema: schemaPayload,
           options: {
-            endorserMode: 'internal',
+            endorserMode: EndorserMode.Internal,
             endorserDid: issuerId,
           },
         })
 
-        if (schemaState.state === 'failed') {
-          return internalServerError(500, { reason: `${schemaState.reason}` })
+        if (schemaState.state === CredentialEnum.Failed) {
+          return internalServerError(HttpStatusCode.InternalServerError, { reason: `${schemaState.reason}` })
         }
 
-        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+        const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
 
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
           indySchemaId.namespaceIdentifier,
@@ -111,19 +113,19 @@ export class SchemaController {
         return schemaState
       } else {
         if (!schema.endorserDid) {
-          return badRequestError(400, { reason: 'Please provide the endorser DID' })
+          return badRequestError(HttpStatusCode.BadRequest, { reason: NON_ENDORSER_DID_PRESENT })
         }
 
         const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema({
           options: {
-            endorserMode: 'external',
+            endorserMode: EndorserMode.External,
             endorserDid: schema.endorserDid ? schema.endorserDid : '',
           },
           schema: schemaPayload,
         })
 
-        if (createSchemaTxResult.state === 'failed') {
-          return internalServerError(500, { reason: `${createSchemaTxResult.reason}` })
+        if (createSchemaTxResult.state === CredentialEnum.Failed) {
+          return internalServerError(HttpStatusCode.InternalServerError, { reason: `${createSchemaTxResult.reason}` })
         }
 
         return createSchemaTxResult
