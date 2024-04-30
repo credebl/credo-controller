@@ -121,6 +121,7 @@ export interface CreateOfferOobOptions {
   label?: string
   imageUrl?: string
   recipientKey?: string
+  invitationDid?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -140,6 +141,7 @@ export interface CreateProofRequestOobOptions {
   label?: string
   imageUrl?: string
   recipientKey?: string
+  invitationDid?: string
 }
 
 export interface OfferCredentialOptions {
@@ -348,6 +350,7 @@ export interface CreateInvitationOptions {
   autoAcceptConnection?: boolean
   routing?: Routing
   appendedAttachments?: Attachment[]
+  invitationDid?: string
 }
 
 export interface EndorserTransaction {
