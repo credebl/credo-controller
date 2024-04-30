@@ -1,6 +1,11 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../types'
-import type { ConnectionRecordProps, CreateLegacyInvitationConfig, Routing } from '@credo-ts/core'
+import type {
+  ConnectionRecordProps,
+  CreateLegacyInvitationConfig,
+  PeerDidNumAlgo2CreateOptions,
+  Routing,
+} from '@credo-ts/core'
 
 import {
   AgentMessage,
@@ -10,6 +15,8 @@ import {
   RecordNotFoundError,
   Key,
   KeyType,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
 } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
@@ -99,20 +106,31 @@ export class OutOfBandController extends Controller {
     @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
   ) {
     try {
-      let routing: Routing
-      if (config?.recipientKey) {
-        routing = {
-          endpoints: this.agent.config.endpoints,
-          routingKeys: [],
-          recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
-          mediatorId: undefined,
-        }
+      let invitationDid: string | undefined
+      if (config?.invitationDid) {
+        invitationDid = config?.invitationDid
       } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+        const didRouting = await this.agent.mediationRecipient.getRouting({})
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [didRouting.recipientKey],
+            routingKeys: didRouting.routingKeys,
+            serviceEndpoint: didRouting.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        invitationDid = did.didState.did
       }
 
-      config.routing = routing
-      const outOfBandRecord = await this.agent.oob.createInvitation(config)
+      const outOfBandRecord = await this.agent.oob.createInvitation({ ...config, invitationDid })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
           domain: this.agent.config.endpoints[0],
@@ -121,7 +139,7 @@ export class OutOfBandController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
+        invitationDid: config?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
