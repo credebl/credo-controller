@@ -22,7 +22,7 @@ export class SecurityMiddleware {
         { path: '/agent', method: 'GET' },
       ]
 
-      // Check if authentication should be skipped for this route or controller
+      // Check if authentication should be skipped for this route or controller test
       const skipAuthentication = pathsToSkipAuthentication.some(
         ({ path, method }) => routePath.includes(path) && requestMethod === method
       )
