@@ -9,6 +9,7 @@ import type {
   CredentialProtocolVersionType,
   KeyDidCreateOptions,
   OutOfBandRecord,
+  PeerDidNumAlgo2CreateOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
@@ -44,6 +45,8 @@ import {
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
   injectable,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -642,24 +645,32 @@ export class MultiTenancyController extends Controller {
     @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
   ) {
     let outOfBandRecord: OutOfBandRecord | undefined
-    let finalConfig: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption & { routing?: Routing } = {} // Initialize finalConfig
-
+    let invitationDid: string | undefined
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        if (config?.recipientKey) {
-          const routing: Routing = {
-            // Initialize routing object
-            endpoints: tenantAgent.config.endpoints,
-            routingKeys: [],
-            recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
-            mediatorId: undefined,
-          }
-          finalConfig = { ...config, routing } // Assign finalConfig
+        if (config?.invitationDid) {
+          invitationDid = config?.invitationDid
         } else {
-          finalConfig = { ...config, routing: await tenantAgent.mediationRecipient.getRouting({}) } // Assign finalConfig
+          const didRouting = await this.agent.mediationRecipient.getRouting({})
+          const didDocument = createPeerDidDocumentFromServices([
+            {
+              id: 'didcomm',
+              recipientKeys: [didRouting.recipientKey],
+              routingKeys: didRouting.routingKeys,
+              serviceEndpoint: didRouting.endpoints[0],
+            },
+          ])
+          const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+            didDocument,
+            method: 'peer',
+            options: {
+              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+            },
+          })
+          invitationDid = did.didState.did
         }
 
-        outOfBandRecord = await tenantAgent.oob.createInvitation(finalConfig)
+        outOfBandRecord = await tenantAgent.oob.createInvitation({ ...config, invitationDid })
       })
 
       return {
@@ -670,7 +681,7 @@ export class MultiTenancyController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord?.toJSON(),
-        ...(finalConfig?.recipientKey ? {} : { recipientKey: finalConfig.routing?.recipientKey.publicKeyBase58 }), // Access recipientKey from routing
+        invitationDid: config?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -1313,22 +1324,33 @@ export class MultiTenancyController extends Controller {
     let createOfferOobRecord
 
     try {
-      let routing: Routing
+      let invitationDid: string | undefined
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
         if (linkSecretIds.length === 0) {
           await tenantAgent.modules.anoncreds.createLinkSecret()
         }
 
-        if (createOfferOptions?.recipientKey) {
-          routing = {
-            endpoints: tenantAgent.config.endpoints,
-            routingKeys: [],
-            recipientKey: Key.fromPublicKeyBase58(createOfferOptions.recipientKey, KeyType.Ed25519),
-            mediatorId: undefined,
-          }
+        if (createOfferOptions?.invitationDid) {
+          invitationDid = createOfferOptions?.invitationDid
         } else {
-          routing = await tenantAgent.mediationRecipient.getRouting({})
+          const didRouting = await this.agent.mediationRecipient.getRouting({})
+          const didDocument = createPeerDidDocumentFromServices([
+            {
+              id: 'didcomm',
+              recipientKeys: [didRouting.recipientKey],
+              routingKeys: didRouting.routingKeys,
+              serviceEndpoint: didRouting.endpoints[0],
+            },
+          ])
+          const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+            didDocument,
+            method: 'peer',
+            options: {
+              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+            },
+          })
+          invitationDid = did.didState.did
         }
 
         const offerOob = await tenantAgent.credentials.createOffer({
@@ -1346,7 +1368,7 @@ export class MultiTenancyController extends Controller {
           autoAcceptConnection: true,
           imageUrl: createOfferOptions?.imageUrl,
           goalCode: createOfferOptions?.goalCode,
-          routing,
+          invitationDid,
         })
 
         createOfferOobRecord = {
@@ -1358,7 +1380,7 @@ export class MultiTenancyController extends Controller {
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
-          recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          invitationDid: createOfferOptions?.invitationDid ? '' : invitationDid,
         }
       })
       return createOfferOobRecord
@@ -1528,17 +1550,28 @@ export class MultiTenancyController extends Controller {
   ) {
     let oobProofRecord
     try {
-      let routing: Routing
+      let invitationDid: string | undefined
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        if (createRequestOptions?.recipientKey) {
-          routing = {
-            endpoints: tenantAgent.config.endpoints,
-            routingKeys: [],
-            recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
-            mediatorId: undefined,
-          }
+        if (createRequestOptions?.invitationDid) {
+          invitationDid = createRequestOptions?.invitationDid
         } else {
-          routing = await tenantAgent.mediationRecipient.getRouting({})
+          const didRouting = await this.agent.mediationRecipient.getRouting({})
+          const didDocument = createPeerDidDocumentFromServices([
+            {
+              id: 'didcomm',
+              recipientKeys: [didRouting.recipientKey],
+              routingKeys: didRouting.routingKeys,
+              serviceEndpoint: didRouting.endpoints[0],
+            },
+          ])
+          const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+            didDocument,
+            method: 'peer',
+            options: {
+              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+            },
+          })
+          invitationDid = did.didState.did
         }
         const proof = await tenantAgent.proofs.createRequest({
           protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
@@ -1557,7 +1590,7 @@ export class MultiTenancyController extends Controller {
           messages: [proofMessage],
           autoAcceptConnection: true,
           imageUrl: createRequestOptions?.imageUrl,
-          routing,
+          invitationDid,
           goalCode: createRequestOptions?.goalCode,
         })
 
@@ -1575,9 +1608,7 @@ export class MultiTenancyController extends Controller {
             : proof.message.threadId
             ? proof.message.thread
             : proof.message.id,
-          recipientKey: createRequestOptions?.recipientKey
-            ? {}
-            : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
         }
       })
 
