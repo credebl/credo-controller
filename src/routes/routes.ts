@@ -116,6 +116,7 @@ const models: TsoaRoute.Models = {
             "label": {"dataType":"string"},
             "imageUrl": {"dataType":"string"},
             "recipientKey": {"dataType":"string"},
+            "invitationDid": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -247,6 +248,15 @@ const models: TsoaRoute.Models = {
             "autoAcceptConnection": {"dataType":"boolean"},
             "routing": {"ref":"Routing"},
             "appendedAttachments": {"dataType":"array","array":{"dataType":"refObject","ref":"Attachment"}},
+            "invitationDid": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RecipientKeyOption": {
+        "dataType": "refObject",
+        "properties": {
+            "recipientKey": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -431,9 +441,19 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing__": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string"},"alias":{"dataType":"string"},"imageUrl":{"dataType":"string"},"multiUseInvitation":{"dataType":"boolean"},"autoAcceptConnection":{"dataType":"boolean"},"goalCode":{"dataType":"string"},"goal":{"dataType":"string"},"handshake":{"dataType":"boolean"},"handshakeProtocols":{"dataType":"array","array":{"dataType":"refEnum","ref":"HandshakeProtocol"}},"messages":{"dataType":"array","array":{"dataType":"refAlias","ref":"AgentMessage"}},"appendedAttachments":{"dataType":"array","array":{"dataType":"refObject","ref":"Attachment"}},"invitationDid":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Omit_CreateOutOfBandInvitationConfig.routing_": {
+        "dataType": "refAlias",
+        "type": {"ref":"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing__","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages__": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string"},"alias":{"dataType":"string"},"imageUrl":{"dataType":"string"},"multiUseInvitation":{"dataType":"boolean"},"autoAcceptConnection":{"dataType":"boolean"},"goalCode":{"dataType":"string"},"goal":{"dataType":"string"},"handshake":{"dataType":"boolean"},"handshakeProtocols":{"dataType":"array","array":{"dataType":"refEnum","ref":"HandshakeProtocol"}}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string"},"alias":{"dataType":"string"},"imageUrl":{"dataType":"string"},"multiUseInvitation":{"dataType":"boolean"},"autoAcceptConnection":{"dataType":"boolean"},"goalCode":{"dataType":"string"},"goal":{"dataType":"string"},"handshake":{"dataType":"boolean"},"handshakeProtocols":{"dataType":"array","array":{"dataType":"refEnum","ref":"HandshakeProtocol"}},"invitationDid":{"dataType":"string"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_": {
@@ -574,6 +594,7 @@ const models: TsoaRoute.Models = {
             "label": {"dataType":"string"},
             "imageUrl": {"dataType":"string"},
             "recipientKey": {"dataType":"string"},
+            "invitationDid": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -1264,7 +1285,7 @@ export function RegisterRoutes(app: Router) {
             async function OutOfBandController_createInvitation(request: any, response: any, next: any) {
             const args = {
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
-                    config: {"in":"body","name":"config","required":true,"ref":"CreateInvitationOptions"},
+                    config: {"in":"body","name":"config","required":true,"dataType":"intersection","subSchemas":[{"ref":"CreateInvitationOptions"},{"ref":"RecipientKeyOption"}]},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -1692,7 +1713,7 @@ export function RegisterRoutes(app: Router) {
             const args = {
                     internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
                     tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
-                    config: {"in":"body","name":"config","ref":"Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_"},
+                    config: {"in":"body","name":"config","dataType":"intersection","subSchemas":[{"ref":"Omit_CreateOutOfBandInvitationConfig.routing_"},{"ref":"RecipientKeyOption"}]},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
