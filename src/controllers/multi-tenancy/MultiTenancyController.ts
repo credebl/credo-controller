@@ -1161,6 +1161,7 @@ export class MultiTenancyController extends Controller {
       tag: string
       endorse?: boolean
       endorserDid?: string
+      maximumCredentialNumber?: number
       supportRevocation?: boolean
     },
     @Path('tenantId') tenantId: string,
@@ -1204,12 +1205,15 @@ export class MultiTenancyController extends Controller {
           }
 
           if (credentialDefinitionRequest.supportRevocation) {
+            if (!credentialDefinitionRequest.maximumCredentialNumber) {
+              throw new Error('Please provide a valid maximum credential number')
+            }
             revocationRegistryDefinition = await tenantAgent.modules.anoncreds.registerRevocationRegistryDefinition({
               options: {},
               revocationRegistryDefinition: {
                 credentialDefinitionId: credentialDefinitionState.credentialDefinitionId,
                 issuerId,
-                maximumCredentialNumber: 100,
+                maximumCredentialNumber: credentialDefinitionRequest.maximumCredentialNumber,
                 tag: 'Default',
               },
             })
@@ -1956,7 +1960,8 @@ export class MultiTenancyController extends Controller {
         const anoncredsCredentialTags = await record.metadata.get<AnonCredsCredentialMetadata>(
           AnonCredsCredentialMetadataKey
         )
-        if (!anoncredsCredentialTags?.revocationRegistryId || anoncredsCredentialTags?.credentialRevocationId) {
+        console.log('anoncredsCredentialTags::::', anoncredsCredentialTags)
+        if (!anoncredsCredentialTags?.revocationRegistryId || !anoncredsCredentialTags?.credentialRevocationId) {
           throw Error('This is not a revocable credential!')
         }
         responseRevocationStatusList = await tenantAgent.modules.anoncreds.updateRevocationStatusList({

@@ -40,7 +40,7 @@ export class FullTailsFileService extends BasicTailsFileService {
     //   }
     // )
     const response = await axios
-      .put(`https://5215-103-97-166-226.ngrok-free.app/${encodeURIComponent(tailsFileId)}`, fileDetails)
+      .put(`${this.tailsServerBaseUrl}/${encodeURIComponent(tailsFileId)}`, fileDetails)
       .then((response: AxiosResponse) => {
         console.log('Updated user successfully:', response.data)
       })
