@@ -651,7 +651,7 @@ export class MultiTenancyController extends Controller {
         if (config?.invitationDid) {
           invitationDid = config?.invitationDid
         } else {
-          const didRouting = await this.agent.mediationRecipient.getRouting({})
+          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
           const didDocument = createPeerDidDocumentFromServices([
             {
               id: 'didcomm',
@@ -660,7 +660,7 @@ export class MultiTenancyController extends Controller {
               serviceEndpoint: didRouting.endpoints[0],
             },
           ])
-          const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
             didDocument,
             method: 'peer',
             options: {
@@ -1334,7 +1334,7 @@ export class MultiTenancyController extends Controller {
         if (createOfferOptions?.invitationDid) {
           invitationDid = createOfferOptions?.invitationDid
         } else {
-          const didRouting = await this.agent.mediationRecipient.getRouting({})
+          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
           const didDocument = createPeerDidDocumentFromServices([
             {
               id: 'didcomm',
@@ -1343,7 +1343,7 @@ export class MultiTenancyController extends Controller {
               serviceEndpoint: didRouting.endpoints[0],
             },
           ])
-          const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
             didDocument,
             method: 'peer',
             options: {
@@ -1555,7 +1555,7 @@ export class MultiTenancyController extends Controller {
         if (createRequestOptions?.invitationDid) {
           invitationDid = createRequestOptions?.invitationDid
         } else {
-          const didRouting = await this.agent.mediationRecipient.getRouting({})
+          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
           const didDocument = createPeerDidDocumentFromServices([
             {
               id: 'didcomm',
@@ -1564,7 +1564,7 @@ export class MultiTenancyController extends Controller {
               serviceEndpoint: didRouting.endpoints[0],
             },
           ])
-          const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
             didDocument,
             method: 'peer',
             options: {
