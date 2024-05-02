@@ -3,8 +3,9 @@ import { Agent } from '@credo-ts/core'
 import { SchemaController } from '../controllers/credentials/SchemaController'
 import { getTestAgent } from '../utils/helpers'
 import { setupServer } from '../server'
-import { handleAnonCredsError } from 'src/controllers/credentials/CredentialCommonError'
-describe('AgentController', () => {
+import { handleAnonCredsError } from '../controllers/credentials/CredentialCommonError'
+
+describe('SchemaController', () => {
   let app: Express
   let agent: Agent
 

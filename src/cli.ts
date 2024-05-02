@@ -1,11 +1,50 @@
-import type { InboundTransport, Transports, AriesRestConfig } from './cliAgent'
+import type { AriesRestConfig } from './cliAgent'
 
 import yargs from 'yargs'
 
 import { runRestAgent } from './cliAgent'
 import { IDLE_TIMEOUT, CONNECT_TIMEOUT, MAX_CONNECTIONS } from './utils/util'
 
-const parsed = yargs
+interface Parsed {
+  label: string
+  'wallet-id': string
+  'wallet-key': string
+  'wallet-type': string
+  'wallet-url': string
+  'wallet-scheme': string
+  'wallet-account': string
+  'wallet-password': string
+  'wallet-admin-account': string
+  'wallet-admin-password': string
+  'indy-ledger': string[]
+  endpoint?: string[]
+  'log-level': number
+  'outbound-transport': ('http' | 'ws')[]
+  'inbound-transport': InboundTransport[]
+  'auto-accept-connections': boolean
+  'auto-accept-credentials': 'always' | 'never' | 'contentApproved'
+  'auto-accept-proofs': 'always' | 'never' | 'contentApproved'
+  'webhook-url'?: string
+  'admin-port': number
+  tenancy: boolean
+  'did-registry-contract-address'?: string
+  'schema-manager-contract-address'?: string
+  'rpc-url'?: string
+  'file-server-url'?: string
+  'file-server-token'?: string
+  'wallet-connect-timeout'?: number
+  'wallet-max-connections'?: number
+  'wallet-idle-timeout'?: number
+}
+
+interface InboundTransport {
+  transport: Transports
+  port: number
+}
+
+type Transports = 'http' | 'ws'
+
+const parsed: Parsed = yargs
   .command('start', 'Start AFJ Rest agent')
   .option('label', {
     alias: 'l',
@@ -145,11 +184,11 @@ const parsed = yargs
   .env('AFJ_REST')
   .parse()
 
-const argv = yargs.argv
-const storageConfig = argv['wallet-type']
+// const argv = yargs.argv
+// const storageConfig = argv['wallet-type']
 
 // eslint-disable-next-line no-console
-console.log('Storage Config after YARGS::', storageConfig)
+// console.log('Storage Config after YARGS::', storageConfig)
 
 export async function runCliServer() {
   await runRestAgent({

@@ -1,9 +1,8 @@
 import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
-import { HttpStatusCode } from 'axios'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
+import { CredentialEnum, EndorserMode, HttpStatusCode, SchemaError } from '../../enums/enum'
 import { NON_ENDORSER_DID_PRESENT } from '../../errorMessages'
 import { SchemaId, SchemaExample } from '../examples'
 import { CreateSchemaInput } from '../types'
@@ -34,11 +33,12 @@ export class SchemaController {
   @Example(SchemaExample)
   @Get('/:schemaId')
   public async getSchemaById(
-    @Path('schemaId') schemaId: SchemaId,
-    @Res() notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
-    @Res() forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
-    @Res() badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
+    // @Path('schemaId')
+    schemaId: SchemaId,
+    notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
+    forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
+    badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
+    internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
   ) {
     try {
       const getSchemBySchemaId = await this.agent.modules.anoncreds.getSchema(schemaId)
@@ -70,12 +70,12 @@ export class SchemaController {
   @Example(SchemaExample)
   @Post('/')
   public async createSchema(
-    @Body()
+    // @Body()
     schema: CreateSchemaInput,
-    @Res() notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
-    @Res() forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
-    @Res() badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
+    notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
+    forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
+    badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
+    internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
   ) {
     try {
       const { issuerId, name, version, attributes } = schema
