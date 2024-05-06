@@ -98,7 +98,7 @@ export async function expressAuthentication(
             // return false
             return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
           }
-          const tenantAgent = await getTenantAgent(agent!, tenantId)
+          const tenantAgent = await agent.modules.tenants.getTenantAgent({ tenantId })
           if (!tenantAgent) {
             // return false
             return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
@@ -122,8 +122,16 @@ export async function expressAuthentication(
         const verified = await verifyToken(agent!, token)
 
         // Base wallet cant access any endpoints apart from multi-tenant endpoint
-        // if (!reqPath.includes('/multi-tenant/') && !reqPath.includes('/multi-tenancy/'))
-        //   return 'Basewallet can only manage tenants and can`t perform other operations'
+        if (!reqPath.includes('/multi-tenant/') && !reqPath.includes('/multi-tenancy/')) {
+          logger.error('Basewallet can only manage tenants and can`t perform other operations')
+          return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
+        }
+
+        // if (!scopes?.includes('multi-tenant')) {
+        //   logger.error('Basewallet can only manage tenants')
+        //   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
+        // }
+
         if (!verified) return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 
         request['agent'] = agent
@@ -146,9 +154,6 @@ export async function expressAuthentication(
         const verified = await verifyToken(agent!, token)
         if (!verified) return false
 
-        // Can have an enum instead of 'success' string
-        // req['user'] = { agent: agent }
-        // return { req }
         request['agent'] = agent
         return true
       }
@@ -185,20 +190,13 @@ async function getSecretKey(
   return secretKey
 }
 
-async function getTenantAgent(
-  agent: Agent<RestMultiTenantAgentModules>,
-  tenantId: string
-): Promise<TenantAgent<RestAgentModules>> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // return new Promise((resolve) => {
-  //   agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-  //     // Some logic
-  //     resolve(tenantAgent)
-  //   })
-  // })
-  const tenantAgent = await agent.modules.tenants.getTenantAgent({ tenantId })
-  return tenantAgent
-}
+// async function getTenantAgent(
+//   agent: Agent<RestMultiTenantAgentModules>,
+//   tenantId: string
+// ): Promise<TenantAgent<RestAgentModules>> {
+//   const tenantAgent = await agent.modules.tenants.getTenantAgent({ tenantId })
+//   return tenantAgent
+// }
 
 export function setDynamicApiKey(newApiKey: string) {
   dynamicApiKey = newApiKey

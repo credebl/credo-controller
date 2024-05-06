@@ -1,26 +1,22 @@
-import type { RestAgentModules } from '../../cliAgent'
 import type { ValidResponse } from '@aries-framework/question-answer'
 
-import { Agent, RecordNotFoundError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { RecordNotFoundError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { QuestionAnswerRole, QuestionAnswerState } from '@aries-framework/question-answer'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import { RecordId } from '../examples'
 
-import { Body, Controller, Get, Path, Post, Res, Route, Tags, TsoaResponse, Query, Security } from 'tsoa'
+import { Body, Controller, Get, Path, Post, Res, Route, Tags, TsoaResponse, Query, Security, Request } from 'tsoa'
 
 @Tags('Question Answer')
 @Route('/question-answer')
-@Security('apiKey')
+// @Security('apiKey')
+@Security('jwt')
 @injectable()
 export class QuestionAnswerController extends Controller {
-  private agent: Agent<RestAgentModules>
-
-  public constructor(agent: Agent<RestAgentModules>) {
-    super()
-    this.agent = agent
-  }
-
   /**
    * Retrieve question and answer records by query
    *
@@ -32,12 +28,13 @@ export class QuestionAnswerController extends Controller {
    */
   @Get('/')
   public async getQuestionAnswerRecords(
+    @Request() request: Req,
     @Query('connectionId') connectionId?: string,
     @Query('role') role?: QuestionAnswerRole,
     @Query('state') state?: QuestionAnswerState,
     @Query('threadId') threadId?: string
   ) {
-    const questionAnswerRecords = await this.agent.modules.questionAnswer.findAllByQuery({
+    const questionAnswerRecords = await request.agent.modules.questionAnswer.findAllByQuery({
       connectionId,
       role,
       state,
@@ -54,6 +51,7 @@ export class QuestionAnswerController extends Controller {
    */
   @Post('question/:connectionId')
   public async sendQuestion(
+    @Request() request: Req,
     @Path('connectionId') connectionId: RecordId,
     @Body()
     config: {
@@ -67,7 +65,7 @@ export class QuestionAnswerController extends Controller {
     try {
       const { question, validResponses, detail } = config
 
-      const record = await this.agent.modules.questionAnswer.sendQuestion(connectionId, {
+      const record = await request.agent.modules.questionAnswer.sendQuestion(connectionId, {
         question,
         validResponses,
         detail,
@@ -90,13 +88,14 @@ export class QuestionAnswerController extends Controller {
    */
   @Post('answer/:id')
   public async sendAnswer(
+    @Request() request: Req,
     @Path('id') id: RecordId,
-    @Body() request: Record<'response', string>,
+    @Body() requestBody: Record<'response', string>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const record = await this.agent.modules.questionAnswer.sendAnswer(id, request.response)
+      const record = await request.agent.modules.questionAnswer.sendAnswer(id, requestBody.response)
       return record.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -113,10 +112,11 @@ export class QuestionAnswerController extends Controller {
    */
   @Get('/:id')
   public async getQuestionAnswerRecordById(
+    @Request() request: Req,
     @Path('id') id: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>
   ) {
-    const record = await this.agent.modules.questionAnswer.findById(id)
+    const record = await request.agent.modules.questionAnswer.findById(id)
 
     if (!record)
       return notFoundError(404, {

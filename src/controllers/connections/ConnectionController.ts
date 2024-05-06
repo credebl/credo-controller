@@ -1,29 +1,33 @@
 import type { ConnectionRecordProps } from '@aries-framework/core'
 
-import {
-  ConnectionRepository,
-  DidExchangeState,
-  Agent,
-  AriesFrameworkError,
-  RecordNotFoundError,
-} from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { ConnectionRepository, DidExchangeState, AriesFrameworkError, RecordNotFoundError } from '@aries-framework/core'
+import { Request as Req } from 'express'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, RecordId } from '../examples'
 
-import { Controller, Delete, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import {
+  Controller,
+  Delete,
+  Example,
+  Get,
+  Path,
+  Post,
+  Query,
+  Res,
+  Route,
+  Tags,
+  TsoaResponse,
+  Security,
+  Request,
+} from 'tsoa'
 
 @Tags('Connections')
 @Route()
 @injectable()
 export class ConnectionController extends Controller {
-  private agent: Agent
-
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
-
   /**
    * Retrieve all connections records
    * @param alias Alias
@@ -34,9 +38,11 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord[]
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
-  @Security('apiKey')
+  // @Security('apiKey')
+  @Security('jwt')
   @Get('/connections')
   public async getAllConnections(
+    @Request() request: Req,
     @Query('outOfBandId') outOfBandId?: string,
     @Query('alias') alias?: string,
     @Query('state') state?: DidExchangeState,
@@ -47,11 +53,11 @@ export class ConnectionController extends Controller {
     let connections
 
     if (outOfBandId) {
-      connections = await this.agent.connections.findAllByOutOfBandId(outOfBandId)
+      connections = await request.agent.connections.findAllByOutOfBandId(outOfBandId)
     } else {
-      const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = request.agent.dependencyManager.resolve(ConnectionRepository)
 
-      const connections = await connectionRepository.findByQuery(this.agent.context, {
+      const connections = await connectionRepository.findByQuery(request.agent.context, {
         alias,
         myDid,
         theirDid,
@@ -77,13 +83,15 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('apiKey')
+  // @Security('apiKey')
+  @Security('jwt')
   @Get('/connections/:connectionId')
   public async getConnectionById(
+    @Request() request: Req,
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>
   ) {
-    const connection = await this.agent.connections.findById(connectionId)
+    const connection = await request.agent.connections.findById(connectionId)
 
     if (!connection) return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
 
@@ -96,15 +104,17 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/connections/:connectionId')
-  @Security('apiKey')
+  // @Security('apiKey')
+  @Security('jwt')
   public async deleteConnection(
+    @Request() request: Req,
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       this.setStatus(204)
-      await this.agent.connections.deleteById(connectionId)
+      await request.agent.connections.deleteById(connectionId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
@@ -123,15 +133,17 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('apiKey')
+  // @Security('apiKey')
+  @Security('jwt')
   @Post('/connections/:connectionId/accept-request')
   public async acceptRequest(
+    @Request() request: Req,
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const connection = await this.agent.connections.acceptRequest(connectionId)
+      const connection = await request.agent.connections.acceptRequest(connectionId)
       return connection.toJSON()
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
@@ -151,15 +163,17 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('apiKey')
+  // @Security('apiKey')
+  @Security('jwt')
   @Post('/connections/:connectionId/accept-response')
   public async acceptResponse(
+    @Request() request: Req,
     @Path('connectionId') connectionId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const connection = await this.agent.connections.acceptResponse(connectionId)
+      const connection = await request.agent.connections.acceptResponse(connectionId)
       return connection.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -171,12 +185,13 @@ export class ConnectionController extends Controller {
 
   @Get('/url/:invitationId')
   public async getInvitation(
+    @Request() request: Req,
     @Path('invitationId') invitationId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
-    const outOfBandRecord = await this.agent.oob.findByCreatedInvitationId(invitationId)
+    const outOfBandRecord = await request.agent.oob.findByCreatedInvitationId(invitationId)
 
     if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
       return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })

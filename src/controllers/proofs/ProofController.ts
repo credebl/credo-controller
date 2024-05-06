@@ -5,7 +5,10 @@ import type {
   Routing,
 } from '@aries-framework/core'
 
-import { Agent, HandshakeProtocol, Key, KeyType, RecordNotFoundError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { HandshakeProtocol, Key, KeyType, RecordNotFoundError } from '@aries-framework/core'
+import { Request as Req } from 'express'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -16,19 +19,28 @@ import {
   RequestProofProposalOptions,
 } from '../types'
 
-import { Body, Controller, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import {
+  Body,
+  Controller,
+  Example,
+  Get,
+  Path,
+  Post,
+  Query,
+  Res,
+  Route,
+  Tags,
+  TsoaResponse,
+  Security,
+  Request,
+} from 'tsoa'
 
 @Tags('Proofs')
 @Route('/proofs')
-@Security('apiKey')
+// @Security('apiKey')
+@Security('jwt')
 @injectable()
 export class ProofController extends Controller {
-  private agent: Agent
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
-
   /**
    * Retrieve all proof records
    *
@@ -37,8 +49,8 @@ export class ProofController extends Controller {
    */
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
-  public async getAllProofs(@Query('threadId') threadId?: string) {
-    let proofs = await this.agent.proofs.getAll()
+  public async getAllProofs(@Request() request: Req, @Query('threadId') threadId?: string) {
+    let proofs = await request.agent.proofs.getAll()
 
     if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
 
@@ -54,12 +66,13 @@ export class ProofController extends Controller {
   @Get('/:proofRecordId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async getProofById(
+    @Request() request: Req,
     @Path('proofRecordId') proofRecordId: RecordId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.getById(proofRecordId)
+      const proof = await request.agent.proofs.getById(proofRecordId)
 
       return proof.toJSON()
     } catch (error) {
@@ -82,12 +95,13 @@ export class ProofController extends Controller {
   @Post('/propose-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async proposeProof(
+    @Request() request: Req,
     @Body() requestProofProposalOptions: RequestProofProposalOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.proposeProof({
+      const proof = await request.agent.proofs.proposeProof({
         connectionId: requestProofProposalOptions.connectionId,
         protocolVersion: 'v1' as ProofsProtocolVersionType<[]>,
         proofFormats: requestProofProposalOptions.proofFormats,
@@ -119,12 +133,13 @@ export class ProofController extends Controller {
   @Post('/:proofRecordId/accept-proposal')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptProposal(
+    @Request() request: Req,
     @Body() acceptProposal: AcceptProofProposal,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.acceptProposal(acceptProposal)
+      const proof = await request.agent.proofs.acceptProposal(acceptProposal)
 
       return proof
     } catch (error) {
@@ -140,6 +155,7 @@ export class ProofController extends Controller {
   @Post('/request-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async requestProof(
+    @Request() request: Req,
     @Body() requestProofOptions: RequestProofOptions,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
@@ -155,7 +171,7 @@ export class ProofController extends Controller {
         parentThreadId: requestProofOptions.parentThreadId,
         willConfirm: requestProofOptions.willConfirm,
       }
-      const proof = await this.agent.proofs.requestProof(requestProofPayload)
+      const proof = await request.agent.proofs.requestProof(requestProofPayload)
 
       return proof
     } catch (error) {
@@ -165,6 +181,7 @@ export class ProofController extends Controller {
 
   @Post('create-request-oob')
   public async createRequest(
+    @Request() request: Req,
     @Body() createRequestOptions: CreateProofRequestOobOptions,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
@@ -172,15 +189,15 @@ export class ProofController extends Controller {
       let routing: Routing
       if (createRequestOptions?.recipientKey) {
         routing = {
-          endpoints: this.agent.config.endpoints,
+          endpoints: request.agent.config.endpoints,
           routingKeys: [],
           recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
           mediatorId: undefined,
         }
       } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+        routing = await request.agent.mediationRecipient.getRouting({})
       }
-      const proof = await this.agent.proofs.createRequest({
+      const proof = await request.agent.proofs.createRequest({
         protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
         goalCode: createRequestOptions.goalCode,
@@ -190,7 +207,7 @@ export class ProofController extends Controller {
         comment: createRequestOptions.comment,
       })
       const proofMessage = proof.message
-      const outOfBandRecord = await this.agent.oob.createInvitation({
+      const outOfBandRecord = await request.agent.oob.createInvitation({
         label: createRequestOptions.label,
         handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [proofMessage],
@@ -201,10 +218,10 @@ export class ProofController extends Controller {
 
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: this.agent.config.endpoints[0],
+          domain: request.agent.config.endpoints[0],
         }),
         invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          useDidSovPrefixWhereAllowed: request.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
         recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
@@ -225,9 +242,10 @@ export class ProofController extends Controller {
   @Post('/:proofRecordId/accept-request')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptRequest(
+    @Request() request: Req,
     @Path('proofRecordId') proofRecordId: string,
     @Body()
-    request: {
+    requestBody: {
       filterByPresentationPreview?: boolean
       filterByNonRevocationRequirements?: boolean
       comment?: string
@@ -236,17 +254,17 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const requestedCredentials = await this.agent.proofs.selectCredentialsForRequest({
+      const requestedCredentials = await request.agent.proofs.selectCredentialsForRequest({
         proofRecordId,
       })
 
       const acceptProofRequest: AcceptProofRequestOptions = {
         proofRecordId,
-        comment: request.comment,
+        comment: requestBody.comment,
         proofFormats: requestedCredentials.proofFormats,
       }
 
-      const proof = await this.agent.proofs.acceptRequest(acceptProofRequest)
+      const proof = await request.agent.proofs.acceptRequest(acceptProofRequest)
 
       return proof.toJSON()
     } catch (error) {
@@ -269,12 +287,13 @@ export class ProofController extends Controller {
   @Post('/:proofRecordId/accept-presentation')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptPresentation(
+    @Request() request: Req,
     @Path('proofRecordId') proofRecordId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
+      const proof = await request.agent.proofs.acceptPresentation({ proofRecordId })
       return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -289,12 +308,13 @@ export class ProofController extends Controller {
   @Get('/:proofRecordId/form-data')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async proofFormData(
+    @Request() request: Req,
     @Path('proofRecordId') proofRecordId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const proof = await this.agent.proofs.getFormatData(proofRecordId)
+      const proof = await request.agent.proofs.getFormatData(proofRecordId)
       return proof
     } catch (error) {
       if (error instanceof RecordNotFoundError) {

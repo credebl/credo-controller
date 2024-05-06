@@ -1,24 +1,18 @@
-import type { RestAgentModules } from '../../cliAgent'
-
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { AriesFrameworkError } from '@aries-framework/core'
 import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
 import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import { Route, Tags, Security, Controller, Post, TsoaResponse, Res, Body, Get, Path } from 'tsoa'
+import { Route, Tags, Security, Controller, Post, TsoaResponse, Res, Body, Get, Path, Request } from 'tsoa'
 
 @Tags('Polygon')
-@Security('apiKey')
+// @Security('apiKey')
+@Security('jwt')
 @Route('/polygon')
 @injectable()
 export class Polygon extends Controller {
-  private agent: Agent<RestAgentModules>
-
-  public constructor(agent: Agent<RestAgentModules>) {
-    super()
-    this.agent = agent
-  }
-
   /**
    * Create Secp256k1 key pair for polygon DID
    *
@@ -45,6 +39,7 @@ export class Polygon extends Controller {
    */
   @Post('create-schema')
   public async createSchema(
+    @Request() request: Req,
     @Body()
     createSchemaRequest: {
       did: string
@@ -62,7 +57,7 @@ export class Polygon extends Controller {
         })
       }
 
-      return this.agent.modules.polygon.createSchema({
+      return request.agent.modules.polygon.createSchema({
         did,
         schemaName,
         schema,
@@ -79,6 +74,7 @@ export class Polygon extends Controller {
    */
   @Post('estimate-transaction')
   public async estimateTransaction(
+    @Request() request: Req,
     @Body()
     estimateTransactionRequest: {
       operation: any
@@ -96,9 +92,9 @@ export class Polygon extends Controller {
         })
       }
       if (operation === DidOperation.Create) {
-        return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
+        return request.agent.modules.polygon.estimateFeeForDidOperation({ operation })
       } else if (operation === DidOperation.Update) {
-        return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
+        return request.agent.modules.polygon.estimateFeeForDidOperation({ operation })
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -112,13 +108,14 @@ export class Polygon extends Controller {
    */
   @Get(':did/:schemaId')
   public async getSchemaById(
+    @Request() request: Req,
     @Path('did') did: string,
     @Path('schemaId') schemaId: string,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Res() forbiddenError: TsoaResponse<401, { reason: string }>
   ): Promise<unknown> {
     try {
-      return this.agent.modules.polygon.getSchemaById(did, schemaId)
+      return request.agent.modules.polygon.getSchemaById(did, schemaId)
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
         if (error.message.includes('UnauthorizedClientRequest')) {

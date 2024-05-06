@@ -19,15 +19,8 @@ import { Body, Controller, Get, Path, Post, Request, Res, Route, Security, Tags,
 // @Security('NewAuth')
 @injectable()
 export class MultiTenantController extends Controller {
-  // private readonly agent: Agent<RestMultiTenantAgentModules>
-
-  // Krish: can simply add 'private readonly' in constructor
-  // public constructor(private readonly agent: Agent<RestMultiTenantAgentModules>) {
-  //   super()
-  //   this.agent = agent
-  // }
-
   // @Security('RootAuthorization')
+  @Security('jwt', ['multi-tenant'])
   @Post('/create-tenant')
   public async createTenant(
     @Request() request: Req,
@@ -37,21 +30,50 @@ export class MultiTenantController extends Controller {
   ) {
     const { config } = createTenantOptions
     try {
-      console.log('reached in create tenant')
-      console.log('this is request in controller::::::', request)
-      console.log('this is request.user::::::', request.agent)
-      console.log('this is request.agent.config::::::', request.agent.config)
       const agent = request.agent as unknown as Agent<RestMultiTenantAgentModules>
       const tenantRecord: TenantRecord = await agent.modules.tenants?.createTenant({ config })
-      const token = await this.getToken(agent, tenantRecord.id)
+      const token = await this.createToken(agent, tenantRecord.id)
       const withToken = { token, ...tenantRecord }
       return withToken
-      // return typeof request['user'].agent
-      // return 'success'
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
           reason: `Tenant not created`,
+        })
+      }
+
+      return internalServerError(500, { message: `Something went wrong: ${error}` })
+    }
+  }
+
+  @Security('jwt', ['multi-tenant'])
+  @Post('/get-token/:tenantId')
+  public async getTenantToken(
+    @Request() request: Req,
+    @Path('tenantId') tenantId: string,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const agent = request.agent as unknown as Agent<RestMultiTenantAgentModules>
+      let secretKey
+      await agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const genericRecord = await tenantAgent.genericRecords.getAll()
+        const records = genericRecord.find((record) => record?.content?.secretKey !== undefined)
+        secretKey = records?.content.secretKey as string
+      })
+
+      if (!secretKey) {
+        throw new RecordNotFoundError('secretKey does not exist in wallet', { recordType: 'debug', cause: undefined })
+      }
+
+      const token = await this.createToken(agent, tenantId, secretKey)
+
+      return { token: token }
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, {
+          reason: `SecretKey not found`,
         })
       }
 
@@ -89,14 +111,6 @@ export class MultiTenantController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      // let outOfBandRecord: OutOfBandRecord | undefined
-      // const agent = request.agent as unknown as Agent<RestMultiTenantAgentModules>
-      // const tenantId = '5f8ba896-15c9-4db0-89a7-7eb2aa709613'
-      console.log('This is request.agent', request.agent)
-      console.log('reached here 12')
-      // await agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      // outOfBandRecord = await tenantAgent.oob.createInvitation()
-      // })
       const outOfBandRecord = await request.agent.oob.createInvitation()
       return outOfBandRecord
     } catch (error) {
@@ -109,14 +123,21 @@ export class MultiTenantController extends Controller {
     }
   }
 
-  private async createToken(agent: Agent<RestMultiTenantAgentModules>, tenantId: string) {
-    const secretKey = await generateSecretKey()
-    // const genericRecord = await this.agent.genericRecords.getAll()
-    // const records = genericRecord.find((record) => record?.content?.secretKey !== undefined)
-    // const secretKey = records?.content.secretKey as string
-    const token = jwt.sign({ role: AgentRole.RestTenantAgent, tenantId }, secretKey)
-    // Save token to individual tenants generic records
-    await this.saveTokenAndSecretKey(agent, token, secretKey, tenantId)
+  private async createToken(agent: Agent<RestMultiTenantAgentModules>, tenantId: string, secretKey?: string) {
+    let key: string
+    if (!secretKey) {
+      key = await generateSecretKey()
+      await agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        tenantAgent.genericRecords.save({
+          content: {
+            secretKey: key,
+          },
+        })
+      })
+    } else {
+      key = secretKey
+    }
+    const token = jwt.sign({ role: AgentRole.RestTenantAgent, tenantId }, key)
     return token
   }
 
@@ -134,10 +155,5 @@ export class MultiTenantController extends Controller {
         },
       })
     })
-  }
-
-  private async getToken(agent: Agent<RestMultiTenantAgentModules>, tenantId: string) {
-    const token: string = await this.createToken(agent, tenantId)
-    return token
   }
 }

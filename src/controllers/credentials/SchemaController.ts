@@ -1,27 +1,23 @@
 import type { Version } from '../examples'
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { AnonCredsError, getUnqualifiedSchemaId, parseIndySchemaId } from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { AriesFrameworkError } from '@aries-framework/core'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum } from '../../enums/enum'
 import { SchemaId, SchemaExample } from '../examples'
 
-import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security, Request } from 'tsoa'
 
 @Tags('Schemas')
 @Route('/schemas')
-@Security('apiKey')
+// @Security('apiKey')
+@Security('jwt')
 @injectable()
 export class SchemaController {
-  private agent: Agent
-  // private anonCredsSchema: AnonCredsApi
-
-  public constructor(agent: Agent) {
-    this.agent = agent
-    // this.anonCredsSchema = anonCredsSchema
-  }
-
   /**
    * Retrieve schema by schema id
    *
@@ -31,6 +27,7 @@ export class SchemaController {
   @Example(SchemaExample)
   @Get('/:schemaId')
   public async getSchemaById(
+    @Request() request: Req,
     @Path('schemaId') schemaId: SchemaId,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() forbiddenError: TsoaResponse<403, { reason: string }>,
@@ -38,7 +35,7 @@ export class SchemaController {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.modules.anoncreds.getSchema(schemaId)
+      return await request.agent.modules.anoncreds.getSchema(schemaId)
     } catch (errorMessage) {
       if (
         errorMessage instanceof AnonCredsError &&
@@ -73,6 +70,7 @@ export class SchemaController {
   @Example(SchemaExample)
   @Post('/')
   public async createSchema(
+    @Request() request: Req,
     @Body()
     schema: {
       issuerId: string
@@ -96,13 +94,17 @@ export class SchemaController {
       }
 
       if (!schema.endorse) {
-        const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
+        const { schemaState } = await request.agent.modules.anoncreds.registerSchema({
           schema: schemaPayload,
           options: {
             endorserMode: 'internal',
             endorserDid: issuerId,
           },
         })
+
+        if (!schemaState.schemaId) {
+          throw Error('SchemaId not found')
+        }
 
         const indySchemaId = parseIndySchemaId(schemaState.schemaId)
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
@@ -119,7 +121,7 @@ export class SchemaController {
           throw new Error('Please provide the endorser DID')
         }
 
-        const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema({
+        const createSchemaTxResult = await request.agent.modules.anoncreds.registerSchema({
           options: {
             endorserMode: 'external',
             endorserDid: schema.endorserDid ? schema.endorserDid : '',

@@ -1,24 +1,20 @@
 import type { BasicMessageRecord, BasicMessageStorageProps } from '@aries-framework/core'
 
-import { Agent, RecordNotFoundError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { RecordNotFoundError } from '@aries-framework/core'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import { BasicMessageRecordExample, RecordId } from '../examples'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security, Request } from 'tsoa'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
-@Security('apiKey')
+// @Security('apiKey')
+@Security('jwt')
 @injectable()
 export class BasicMessageController extends Controller {
-  private agent: Agent
-
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
-
   /**
    * Retrieve basic messages by connection id
    *
@@ -27,8 +23,11 @@ export class BasicMessageController extends Controller {
    */
   @Example<BasicMessageStorageProps[]>([BasicMessageRecordExample])
   @Get('/:connectionId')
-  public async getBasicMessages(@Path('connectionId') connectionId: RecordId): Promise<BasicMessageRecord[]> {
-    return await this.agent.basicMessages.findAllByQuery({ connectionId })
+  public async getBasicMessages(
+    @Path('connectionId') connectionId: RecordId,
+    @Request() request: Req
+  ): Promise<BasicMessageRecord[]> {
+    return await request.agent.basicMessages.findAllByQuery({ connectionId })
   }
 
   /**
@@ -40,13 +39,14 @@ export class BasicMessageController extends Controller {
   @Post('/:connectionId')
   public async sendMessage(
     @Path('connectionId') connectionId: RecordId,
-    @Body() request: Record<'content', string>,
+    @Body() requestBody: Record<'content', string>,
+    @Request() request: Req,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       this.setStatus(204)
-      await this.agent.basicMessages.sendMessage(connectionId, request.content)
+      await request.agent.basicMessages.sendMessage(connectionId, requestBody.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })

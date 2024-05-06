@@ -1,40 +1,40 @@
+import type { AgentType } from '../../types/request'
 import type { Version } from '../examples'
+// eslint-disable-next-line import/order
 import type { IndyVdrDidCreateOptions } from '@aries-framework/indy-vdr'
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   getUnqualifiedCredentialDefinitionId,
   getUnqualifiedSchemaId,
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
 } from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { AriesFrameworkError } from '@aries-framework/core'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum } from '../../enums/enum'
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
 
-import { Body, Controller, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Post, Res, Route, Tags, TsoaResponse, Security, Request } from 'tsoa'
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
-@Security('apiKey')
+// @Security('apiKey')
+@Security('jwt')
 @injectable()
 export class EndorserTransactionController extends Controller {
-  private agent: Agent
-
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
-
   @Post('/endorse')
   public async endorserTransaction(
+    @Request() request: Req,
     @Body() endorserTransaction: EndorserTransaction,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Res() forbiddenError: TsoaResponse<400, { reason: string }>
   ) {
     try {
-      const signedTransaction = await this.agent.modules.indyVdr.endorseTransaction(
+      const signedTransaction = await request.agent.modules.indyVdr.endorseTransaction(
         endorserTransaction.transaction,
         endorserTransaction.endorserDid
       )
@@ -54,11 +54,12 @@ export class EndorserTransactionController extends Controller {
 
   @Post('/set-endorser-role')
   public async didNymTransaction(
+    @Request() request: Req,
     @Body() didNymTransaction: DidNymTransaction,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      const didCreateSubmitResult = await this.agent.dids.create<IndyVdrDidCreateOptions>({
+      const didCreateSubmitResult = await request.agent.dids.create<IndyVdrDidCreateOptions>({
         did: didNymTransaction.did,
         options: {
           endorserMode: 'external',
@@ -76,6 +77,7 @@ export class EndorserTransactionController extends Controller {
 
   @Post('/write')
   public async writeSchemaAndCredDefOnLedger(
+    @Request() request: Req,
     @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body()
@@ -85,12 +87,14 @@ export class EndorserTransactionController extends Controller {
       if (writeTransaction.schema) {
         const writeSchema = await this.submitSchemaOnLedger(
           writeTransaction.schema,
+          request.agent,
           writeTransaction.endorsedTransaction
         )
         return writeSchema
       } else if (writeTransaction.credentialDefinition) {
         const writeCredDef = await this.submitCredDefOnLedger(
           writeTransaction.credentialDefinition,
+          request.agent,
           writeTransaction.endorsedTransaction
         )
         return writeCredDef
@@ -116,11 +120,12 @@ export class EndorserTransactionController extends Controller {
       version: Version
       attributes: string[]
     },
+    agent: AgentType,
     endorsedTransaction?: string
   ) {
     try {
       const { issuerId, name, version, attributes } = schema
-      const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
+      const { schemaState } = await agent.modules.anoncreds.registerSchema({
         options: {
           endorserMode: 'external',
           endorsedTransaction,
@@ -132,6 +137,10 @@ export class EndorserTransactionController extends Controller {
           version: version,
         },
       })
+
+      if (!schemaState.schemaId) {
+        throw Error('SchemaId not found')
+      }
 
       const indySchemaId = parseIndySchemaId(schemaState.schemaId)
       const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
@@ -156,16 +165,21 @@ export class EndorserTransactionController extends Controller {
       value: unknown
       type: string
     },
+    agent: AgentType,
     endorsedTransaction?: string
   ) {
     try {
-      const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
+      const { credentialDefinitionState } = await agent.modules.anoncreds.registerCredentialDefinition({
         credentialDefinition,
         options: {
           endorserMode: 'external',
           endorsedTransaction: endorsedTransaction,
         },
       })
+
+      if (!credentialDefinitionState.credentialDefinitionId) {
+        throw Error('Credential Definition Id not found')
+      }
 
       const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(

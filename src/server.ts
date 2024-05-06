@@ -36,11 +36,7 @@ export const setupServer = async (
   config: ServerConfig,
   apiKey?: string
 ) => {
-  // export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
-  // let NewAgent: RestMultiTenantAgentModules | RestAgentModules
-  // container.register(NewAgent, newAgent)
   container.registerInstance(Agent, agent as Agent)
-  console.log('Reached here. This is Agent::::', agent)
 
   const app = config.app ?? express()
   if (config.cors) app.use(cors())
@@ -81,12 +77,11 @@ export const setupServer = async (
   app.use(securityMiddleware.use)
   RegisterRoutes(app)
 
-  // app.use(async (req, _, next) => {
-  //   // End tenant session if active
-  //   console.log('Ended tenant session using app.use')
-  //   await endTenantSessionIfActive(req)
-  //   next()
-  // })
+  app.use(async (req, _, next) => {
+    // End tenant session if active
+    await endTenantSessionIfActive(req)
+    next()
+  })
 
   app.use((req, res, next) => {
     if (req.url == '/') {
@@ -103,8 +98,7 @@ export const setupServer = async (
     next: NextFunction
   ): Promise<ExResponse | void> {
     // End tenant session if active
-    // console.log('Ended tenant session in [errorHandler]')
-    // await endTenantSessionIfActive(req)
+    await endTenantSessionIfActive(req)
 
     if (err instanceof ValidateError) {
       agent.config.logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
@@ -147,12 +141,12 @@ export const setupServer = async (
   return app
 }
 
-// async function endTenantSessionIfActive(request: ExRequest) {
-//   if ('agent' in request) {
-//     const agent = request?.agent
-//     if (agent instanceof TenantAgent) {
-//       agent.config.logger.debug('Ending tenant session')
-//       await agent.endSession()
-//     }
-//   }
-// }
+async function endTenantSessionIfActive(request: ExRequest) {
+  if ('agent' in request) {
+    const agent = request?.agent
+    if (agent instanceof TenantAgent) {
+      agent.config.logger.debug('Ending tenant session')
+      await agent.endSession()
+    }
+  }
+}

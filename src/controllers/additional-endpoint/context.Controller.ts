@@ -165,12 +165,8 @@ export class ContextController extends Controller {
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
   ) {
     try {
-      // const agent = request.agent as TenantAgent<RestAgentModules>
-      console.log('this is request.agent.config in [createLegacyInvitation]::::::::::', request.agent.config)
       let routing: Routing
-      console.log('reached here 1')
       if (config?.recipientKey) {
-        console.log('reached here 2')
         routing = {
           endpoints: request.agent.config.endpoints,
           routingKeys: [],
@@ -178,22 +174,14 @@ export class ContextController extends Controller {
           mediatorId: undefined,
         }
       } else {
-        console.log('reached here 3')
         routing = await request.agent.mediationRecipient.getRouting({})
-        // routing = await request.agent.mediationRecipient.getRouting({})
-        // routing = request.agent.mediationRecipient.getRouting({}).catch((error) => {
-        //   console.error(error)
-        // })
-        console.log('routing ------ ', routing)
       }
-      console.log('reached here 4')
 
       const { outOfBandRecord, invitation } = await request.agent.oob.createLegacyInvitation({
         ...config,
         routing,
       })
 
-      console.log('reached here 5')
       return {
         invitationUrl: invitation.toUrl({
           domain: request.agent.config.endpoints[0],
@@ -205,7 +193,6 @@ export class ContextController extends Controller {
         outOfBandRecord: outOfBandRecord.toJSON(),
         ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
       }
-      console.log('reached here 6')
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -233,7 +220,6 @@ export class ContextController extends Controller {
     const { invitationUrl, ...config } = invitationRequest
 
     try {
-      console.log('Reached in receive invitation')
       const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await request.agent.modules.anoncreds.createLinkSecret()

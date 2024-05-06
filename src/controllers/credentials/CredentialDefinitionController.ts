@@ -1,29 +1,27 @@
 import type { SchemaId } from '../examples'
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   AnonCredsError,
   getUnqualifiedCredentialDefinitionId,
   parseIndyCredentialDefinitionId,
 } from '@aries-framework/anoncreds'
-import { Agent, AriesFrameworkError } from '@aries-framework/core'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { AriesFrameworkError } from '@aries-framework/core'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum } from '../../enums/enum'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security, Request } from 'tsoa'
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
-@Security('apiKey')
+// @Security('apiKey')
+@Security('jwt')
 @injectable()
 export class CredentialDefinitionController extends Controller {
-  private agent: Agent
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
-
   /**
    * Retrieve credential definition by credential definition id
    *
@@ -33,13 +31,14 @@ export class CredentialDefinitionController extends Controller {
   @Example(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
   public async getCredentialDefinitionById(
+    @Request() request: Req,
     @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
     @Res() badRequestError: TsoaResponse<400, { reason: string }>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      return await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
+      return await request.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
     } catch (error) {
       if (error instanceof AriesFrameworkError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
         return notFoundError(404, {
@@ -65,6 +64,7 @@ export class CredentialDefinitionController extends Controller {
   @Example(CredentialDefinitionExample)
   @Post('/')
   public async createCredentialDefinition(
+    @Request() request: Req,
     @Body()
     credentialDefinitionRequest: {
       issuerId: string
@@ -85,10 +85,14 @@ export class CredentialDefinitionController extends Controller {
         type: 'CL',
       }
       if (!endorse) {
-        const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
+        const { credentialDefinitionState } = await request.agent.modules.anoncreds.registerCredentialDefinition({
           credentialDefinition: credentialDefinitionPyload,
           options: {},
         })
+
+        if (!credentialDefinitionState?.credentialDefinitionId) {
+          throw new Error('Credential Definition Id not found')
+        }
 
         const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
@@ -106,7 +110,7 @@ export class CredentialDefinitionController extends Controller {
           throw new Error('Please provide the endorser DID')
         }
 
-        const createCredDefTxResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
+        const createCredDefTxResult = await request.agent.modules.anoncreds.registerCredentialDefinition({
           credentialDefinition: credentialDefinitionPyload,
           options: {
             endorserMode: 'external',
