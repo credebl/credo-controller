@@ -12,7 +12,6 @@ import type {
   DidResolutionMetadata,
   DidDocumentMetadata,
   ProofExchangeRecord,
-  ProofFormat,
   DidRegistrationExtraOptions,
   DidDocument,
   DidRegistrationSecretOptions,
@@ -267,10 +266,7 @@ export interface RequestProofOptions {
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
   connectionId: string
-  proofFormats: {
-    formats: ProofFormat[]
-    action: 'createProposal'
-  }
+  proofFormats: any
   goalCode?: string
   parentThreadId?: string
   autoAcceptProof?: AutoAcceptProof
@@ -279,10 +275,7 @@ export interface RequestProofProposalOptions {
 
 export interface AcceptProofProposal {
   proofRecordId: string
-  proofFormats: {
-    formats: ProofFormat[]
-    action: 'acceptProposal'
-  }
+  proofFormats: any
   comment?: string
   autoAcceptProof?: AutoAcceptProof
   goalCode?: string
