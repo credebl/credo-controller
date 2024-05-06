@@ -17,33 +17,18 @@ let dynamicApiKey: string = 'api_key' // Initialize with a default value
 export async function expressAuthentication(
   request: Request,
   securityName: string,
-  secMethod?: { [key: string]: any },
-  scopes?: string
+  scopes?: string[]
+  // secMethod?: string
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // agent?: Agent<RestMultiTenantAgentModules>
 ) {
   const logger = new TsLogger(LogLevel.info)
   const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
 
-  logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
-  logger.info(`securityName::: ${JSON.stringify(securityName)}`)
-  logger.info(`scopes::: ${JSON.stringify(scopes)}`)
+  logger.info(`securityName::: ${securityName}`)
+  logger.info(`scopes::: ${scopes}`)
 
-  const routePath = request.path
-  const requestMethod = request.method
-
-  // List of paths for which authentication should be skipped
-  const pathsToSkipAuthentication = [
-    // { path: '/url/', method: 'GET' },
-    { path: '/multi-tenancy/url/', method: 'GET' },
-    // { path: '/agent', method: 'GET' },
-  ]
-
-  const skipAuthentication = pathsToSkipAuthentication.some(
-    ({ path, method }) => routePath.includes(path) && requestMethod === method
-  )
-
-  if (skipAuthentication || secMethod?.includes('skip')) {
+  if (scopes && scopes?.includes('skip')) {
     // Skip authentication for this route or controller
     // for skipped authentication there are two ways to handle
     request['agent'] = agent
@@ -56,8 +41,6 @@ export async function expressAuthentication(
     // return false
     return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
   }
-
-  // add additional logic to get the token from wallet for validating the passed
 
   if (securityName === 'apiKey') {
     // Auth: For BW/Dedicated agent to GET their token
@@ -87,7 +70,8 @@ export async function expressAuthentication(
       }
       if (role === AgentRole.RestTenantAgent) {
         // Logic if the token is of tenant agent
-        if (reqPath.includes('/multi-tenant/')) {
+        if (reqPath.includes('/multi-tenancy/')) {
+          // if (scopes?.includes('multi-tenant/')) {
           // return false //'Tenants cannot manage tenants'
           logger.debug('Tenants cannot manage tenants')
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
@@ -105,6 +89,8 @@ export async function expressAuthentication(
           }
 
           const verified = await verifyToken(tenantAgent, token)
+          // With the below implementation, secretkey will be stored and received from BaseWallet
+          // const verified = await verifyToken(agent, token)
 
           // Failed to verify token
           if (!verified) {
@@ -122,10 +108,11 @@ export async function expressAuthentication(
         const verified = await verifyToken(agent!, token)
 
         // Base wallet cant access any endpoints apart from multi-tenant endpoint
-        if (!reqPath.includes('/multi-tenant/') && !reqPath.includes('/multi-tenancy/')) {
-          logger.error('Basewallet can only manage tenants and can`t perform other operations')
-          return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
-        }
+        // To do: Implement the authorization part using scopes, instead of url
+        // if (!reqPath.includes('/multi-tenancy/')) {
+        //   logger.error('Basewallet can only manage tenants and can`t perform other operations')
+        //   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
+        // }
 
         // if (!scopes?.includes('multi-tenant')) {
         //   logger.error('Basewallet can only manage tenants')
@@ -149,10 +136,12 @@ export async function expressAuthentication(
       } else {
         // Auth: dedicated agent
 
-        if (reqPath.includes('/multi-tenant/')) return false
+        if (reqPath.includes('/multi-tenancy/'))
+          return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 
         const verified = await verifyToken(agent!, token)
-        if (!verified) return false
+        if (!verified) return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
+        //return false
 
         request['agent'] = agent
         return true
