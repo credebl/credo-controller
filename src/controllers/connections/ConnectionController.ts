@@ -183,6 +183,7 @@ export class ConnectionController extends Controller {
     }
   }
 
+  @Security('jwt', ['skip'])
   @Get('/url/:invitationId')
   public async getInvitation(
     @Request() request: Req,
