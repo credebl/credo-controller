@@ -14,14 +14,7 @@ import { TsLogger } from './utils/logger'
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
-export async function expressAuthentication(
-  request: Request,
-  securityName: string,
-  scopes?: string[]
-  // secMethod?: string
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // agent?: Agent<RestMultiTenantAgentModules>
-) {
+export async function expressAuthentication(request: Request, securityName: string, scopes?: string[]) {
   const logger = new TsLogger(LogLevel.info)
   const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
 
@@ -30,7 +23,6 @@ export async function expressAuthentication(
 
   if (scopes && scopes?.includes('skip')) {
     // Skip authentication for this route or controller
-    // for skipped authentication there are two ways to handle
     request['agent'] = agent
     return true
   }
@@ -71,8 +63,8 @@ export async function expressAuthentication(
       if (role === AgentRole.RestTenantAgent) {
         // Logic if the token is of tenant agent
         if (reqPath.includes('/multi-tenancy/')) {
-          // if (scopes?.includes('multi-tenant/')) {
-          // return false //'Tenants cannot manage tenants'
+          // Note: Include the below logic for path detection instead of url
+          // if (scopes && scopes?.includes('multi-tenant')) {
           logger.debug('Tenants cannot manage tenants')
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         } else {
@@ -89,7 +81,7 @@ export async function expressAuthentication(
           }
 
           const verified = await verifyToken(tenantAgent, token)
-          // With the below implementation, secretkey will be stored and received from BaseWallet
+          // Note: logic to store generate token for tenant using BW's secertKey
           // const verified = await verifyToken(agent, token)
 
           // Failed to verify token
@@ -108,12 +100,12 @@ export async function expressAuthentication(
         const verified = await verifyToken(agent!, token)
 
         // Base wallet cant access any endpoints apart from multi-tenant endpoint
-        // To do: Implement the authorization part using scopes, instead of url
         // if (!reqPath.includes('/multi-tenancy/')) {
         //   logger.error('Basewallet can only manage tenants and can`t perform other operations')
         //   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         // }
 
+        // Note: Implement the authorization part using scopes(below), instead of url(above)
         // if (!scopes?.includes('multi-tenant')) {
         //   logger.error('Basewallet can only manage tenants')
         //   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
@@ -150,15 +142,6 @@ export async function expressAuthentication(
   }
   // return false
   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
-  // } catch (error) {
-  //   const logger = new TsLogger(LogLevel.error)
-  //   if (error instanceof Error) {
-  //     console.log('log 8.0')
-  //     logger.error('Error in Authentication', error)
-  //     response?.status(401)
-  //   }
-  //   return false
-  // }
 }
 
 async function verifyToken(agent: Agent | TenantAgent<RestAgentModules>, token: string): Promise<boolean> {
@@ -178,14 +161,6 @@ async function getSecretKey(
 
   return secretKey
 }
-
-// async function getTenantAgent(
-//   agent: Agent<RestMultiTenantAgentModules>,
-//   tenantId: string
-// ): Promise<TenantAgent<RestAgentModules>> {
-//   const tenantAgent = await agent.modules.tenants.getTenantAgent({ tenantId })
-//   return tenantAgent
-// }
 
 export function setDynamicApiKey(newApiKey: string) {
   dynamicApiKey = newApiKey

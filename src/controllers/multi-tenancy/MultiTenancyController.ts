@@ -19,7 +19,7 @@ import { Body, Controller, Delete, Post, Res, Route, Tags, TsoaResponse, Path, S
 export class MultiTenancyController extends Controller {
   //create wallet
   // @Security('apiKey')
-  @Security('jwt')
+  @Security('jwt', ['multi-tenant'])
   @Post('/create-tenant')
   public async createTenant(
     @Request() request: Req,
@@ -31,7 +31,11 @@ export class MultiTenancyController extends Controller {
     try {
       const agent = request.agent as Agent<RestMultiTenantAgentModules>
       const tenantRecord: TenantRecord = await agent.modules.tenants.createTenant({ config })
-      return tenantRecord
+      // Note: logic to store generate token for tenant using BW's secertKey
+      // Here no need to change the logic, here only change the logic in 'createToken'
+      const token = await this.createToken(agent, tenantRecord.id)
+      const withToken = { token, ...tenantRecord }
+      return withToken
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
@@ -43,7 +47,8 @@ export class MultiTenancyController extends Controller {
     }
   }
 
-  @Security('apiKey')
+  // @Security('apiKey')
+  @Security('jwt', ['multi-tenant'])
   @Get(':tenantId')
   public async getTenantById(
     @Request() request: Req,
@@ -65,6 +70,7 @@ export class MultiTenancyController extends Controller {
     }
   }
 
+  // @Security('apiKey')
   @Security('jwt', ['multi-tenant'])
   @Post('/get-token/:tenantId')
   public async getTenantToken(
@@ -82,8 +88,13 @@ export class MultiTenancyController extends Controller {
         secretKey = records?.content.secretKey as string
       })
 
+      // Note: logic to store generate token for tenant using BW's secertKey
+      // const genericRecord = await agent.genericRecords.getAll()
+      // const records = genericRecord.find((record) => record?.content?.secretKey !== undefined)
+      // const secretKey = records?.content.secretKey as string
+
       if (!secretKey) {
-        throw new RecordNotFoundError('secretKey does not exist in wallet', { recordType: 'debug', cause: undefined })
+        throw new Error('secretKey does not exist in wallet')
       }
 
       const token = await this.createToken(agent, tenantId, secretKey)
@@ -1647,7 +1658,7 @@ export class MultiTenancyController extends Controller {
   // }
 
   // @Security('apiKey')
-  @Security('jwt')
+  @Security('jwt', ['multi-tenant'])
   @Delete(':tenantId')
   public async deleteTenantById(
     @Request() request: Req,
@@ -1898,6 +1909,15 @@ export class MultiTenancyController extends Controller {
           },
         })
       })
+
+      // Note: logic to store generate token for tenant using BW's secertKey
+      // const genericRecord = await agent.genericRecords.getAll()
+      // const recordWithToken = genericRecord.find((record) => record?.content?.secretKey !== undefined)
+      // const key = recordWithToken?.content.secretKey as string
+
+      if (!key) {
+        throw new Error('SecretKey does not exist for basewallet')
+      }
     } else {
       key = secretKey
     }
