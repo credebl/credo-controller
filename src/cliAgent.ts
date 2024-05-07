@@ -176,8 +176,8 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: '0xc087766218b885C6283072BA316a2Bc31B5c17db',
-      schemaManagerContractAddress: '0xD6f235F1159970211B3628CbC15e6c75D4Fb6e6e',
+      didContractAddress: '0xC1c392DC1073a86821B4ae37f1F0faCDcFFf45bF',
+      schemaManagerContractAddress: '0x289c7Bd4C7d38cC54bff370d6f9f01b74Df51b11',
       fileServerToken:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
       rpcUrl: 'https://rpc-amoy.polygon.technology',
