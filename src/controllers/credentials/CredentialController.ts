@@ -7,7 +7,6 @@ import {
   CredentialState,
   Agent,
   RecordNotFoundError,
-  HandshakeProtocol,
   W3cCredentialService,
   Key,
   KeyType,
@@ -231,7 +230,6 @@ export class CredentialController extends Controller {
       const credentialMessage = offerOob.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: outOfBandOption.label,
-        handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [credentialMessage],
         autoAcceptConnection: true,
         imageUrl: outOfBandOption?.imageUrl,
