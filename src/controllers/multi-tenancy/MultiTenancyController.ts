@@ -35,7 +35,6 @@ import {
   CredentialState,
   DidDocumentBuilder,
   DidExchangeState,
-  HandshakeProtocol,
   JsonTransformer,
   Key,
   KeyType,
@@ -127,7 +126,6 @@ export class MultiTenancyController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     let didRes
-
     try {
       if (!createDidOptions.method) {
         throw Error('Method is required')
@@ -149,6 +147,10 @@ export class MultiTenancyController extends Controller {
 
         case DidMethod.Polygon:
           result = await this.handlePolygon(createDidOptions, tenantId)
+          break
+
+        case DidMethod.Peer:
+          result = await this.handleDidPeer(createDidOptions, tenantId)
           break
 
         default:
@@ -434,6 +436,40 @@ export class MultiTenancyController extends Controller {
       didResponse = {
         did,
         didDocument,
+      }
+    })
+    return didResponse
+  }
+
+  private async handleDidPeer(createDidOptions: DidCreate, tenantId: string) {
+    let didResponse
+    let did: any
+
+    if (!createDidOptions.keyType) {
+      throw Error('keyType is required')
+    }
+
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      const didRouting = await tenantAgent.mediationRecipient.getRouting({})
+      const didDocument = createPeerDidDocumentFromServices([
+        {
+          id: 'didcomm',
+          recipientKeys: [didRouting.recipientKey],
+          routingKeys: didRouting.routingKeys,
+          serviceEndpoint: didRouting.endpoints[0],
+        },
+      ])
+      const didPeerResponse = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
+        didDocument,
+        method: DidMethod.Peer,
+        options: {
+          numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+        },
+      })
+
+      did = didPeerResponse.didState.did
+      didResponse = {
+        did,
       }
     })
     return didResponse
@@ -1363,7 +1399,6 @@ export class MultiTenancyController extends Controller {
         const credentialMessage = offerOob.message
         const outOfBandRecord = await tenantAgent.oob.createInvitation({
           label: createOfferOptions.label,
-          handshakeProtocols: [HandshakeProtocol.Connections],
           messages: [credentialMessage],
           autoAcceptConnection: true,
           imageUrl: createOfferOptions?.imageUrl,
@@ -1586,7 +1621,6 @@ export class MultiTenancyController extends Controller {
         const proofMessage = proof.message
         const outOfBandRecord = await tenantAgent.oob.createInvitation({
           label: createRequestOptions.label,
-          handshakeProtocols: [HandshakeProtocol.Connections],
           messages: [proofMessage],
           autoAcceptConnection: true,
           imageUrl: createRequestOptions?.imageUrl,
