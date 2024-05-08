@@ -5,7 +5,7 @@ import type {
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, HandshakeProtocol, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
+import { Agent, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -192,7 +192,6 @@ export class ProofController extends Controller {
       const proofMessage = proof.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: createRequestOptions.label,
-        handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [proofMessage],
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
