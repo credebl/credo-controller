@@ -201,19 +201,11 @@
 						"$ref": "#/components/schemas/AutoAcceptProof"
 					},
 					"goalCode": {
-<<<<<<< HEAD
 						"type": "string"
 					},
 					"parentThreadId": {
 						"type": "string"
 					},
-=======
-						"type": "string"
-					},
-					"parentThreadId": {
-						"type": "string"
-					},
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 					"willConfirm": {
 						"type": "boolean"
 					}
@@ -257,12 +249,9 @@
 					},
 					"recipientKey": {
 						"type": "string"
-<<<<<<< HEAD
 					},
 					"invitationDid": {
 						"type": "string"
-=======
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 					}
 				},
 				"required": [
@@ -1564,7 +1553,6 @@
 								]
 							}
 						]
-<<<<<<< HEAD
 					},
 					"message": {
 						"type": "string"
@@ -1597,40 +1585,6 @@
 					"nextVersionId": {
 						"type": "string"
 					},
-=======
-					},
-					"message": {
-						"type": "string"
-					},
-					"servedFromCache": {
-						"type": "boolean"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"DIDDocumentMetadata": {
-				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
-				"properties": {
-					"created": {
-						"type": "string"
-					},
-					"updated": {
-						"type": "string"
-					},
-					"deactivated": {
-						"type": "boolean"
-					},
-					"versionId": {
-						"type": "string"
-					},
-					"nextUpdate": {
-						"type": "string"
-					},
-					"nextVersionId": {
-						"type": "string"
-					},
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 					"equivalentId": {
 						"type": "string"
 					},
@@ -3033,7 +2987,6 @@
 							}
 						}
 					},
-<<<<<<< HEAD
 					"404": {
 						"description": "",
 						"content": {
@@ -3084,8 +3037,6 @@
 							}
 						}
 					},
-=======
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 					"404": {
 						"description": "",
 						"content": {
@@ -3103,13 +3054,27 @@
 								}
 							}
 						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
 					}
 				},
-<<<<<<< HEAD
 				"description": "Deletes an out of band record from the repository.",
-=======
-				"description": "Retrieve an out of band record by id",
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 				"tags": [
 					"Out Of Band"
 				],
@@ -3126,22 +3091,6 @@
 						"required": true,
 						"schema": {
 							"$ref": "#/components/schemas/RecordId"
-<<<<<<< HEAD
-=======
-						}
-					}
-				]
-			},
-			"delete": {
-				"operationId": "DeleteOutOfBandRecord",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 						}
 					}
 				]
@@ -3247,11 +3196,7 @@
 						}
 					}
 				},
-<<<<<<< HEAD
 				"description": "Creates an outbound out-of-band record containing out-of-band invitation message defined in\nAries RFC 0434: Out-of-Band Protocol 1.1.",
-=======
-				"description": "Deletes an out of band record from the repository.",
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 				"tags": [
 					"Out Of Band"
 				],
@@ -3260,7 +3205,6 @@
 						"apiKey": []
 					}
 				],
-<<<<<<< HEAD
 				"parameters": [],
 				"requestBody": {
 					"description": "configuration of how out-of-band invitation should be created",
@@ -3276,154 +3220,6 @@
 										"$ref": "#/components/schemas/RecipientKeyOption"
 									}
 								],
-								"description": "configuration of how out-of-band invitation should be created"
-							}
-=======
-				"parameters": [
-					{
-						"description": "Record identifier",
-						"in": "path",
-						"name": "outOfBandId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
-						}
-					}
-				]
-			}
-		},
-<<<<<<< HEAD
-		"/oob/create-legacy-invitation": {
-			"post": {
-				"operationId": "CreateLegacyInvitation",
-				"responses": {
-					"200": {
-						"description": "out-of-band record and invitation",
-=======
-		"/oob/create-invitation": {
-			"post": {
-				"operationId": "CreateInvitation",
-				"responses": {
-					"200": {
-						"description": "Out of band record",
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-<<<<<<< HEAD
-=======
-											"invitationUrl": "string",
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
-											"invitation": {
-												"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
-												"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
-												"label": "Aries Test Agent",
-												"accept": [
-													"didcomm/aip1",
-													"didcomm/aip2;env=rfc19"
-												],
-												"handshake_protocols": [
-													"https://didcomm.org/didexchange/1.0",
-													"https://didcomm.org/connections/1.0"
-												],
-												"services": [
-													{
-														"id": "#inline-0",
-														"serviceEndpoint": "https://6b77-89-20-162-146.ngrok.io",
-														"type": "did-communication",
-														"recipientKeys": [
-															"did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM"
-														],
-														"routingKeys": []
-													}
-												]
-											},
-											"outOfBandRecord": {
-												"_tags": {
-													"invitationId": "1cbd22e4-1906-41e9-8807-83d84437f978",
-													"state": "await-response",
-													"role": "sender",
-													"recipientKeyFingerprints": [
-														"z6MktUCPZjfRJXD4GMcYuXiqX2qZ8vBw6UAYpDFiHEUfwuLj"
-													]
-												},
-												"outOfBandInvitation": {
-													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
-													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
-													"label": "Aries Test Agent",
-													"accept": [
-														"didcomm/aip1",
-														"didcomm/aip2;env=rfc19"
-													],
-													"handshake_protocols": [
-														"https://didcomm.org/didexchange/1.0",
-														"https://didcomm.org/connections/1.0"
-													],
-													"services": [
-														{
-															"id": "#inline-0",
-															"serviceEndpoint": "https://6b77-89-20-162-146.ngrok.io",
-															"type": "did-communication",
-															"recipientKeys": [
-																"did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM"
-															],
-															"routingKeys": []
-														}
-													]
-												},
-												"metadata": {},
-												"id": "42a95528-0e30-4f86-a462-0efb02178b53",
-												"createdAt": "2022-01-01T00:00:00.000Z",
-												"reusable": false
-											}
-										}
-									}
-								}
-							}
-						}
-					},
-<<<<<<< HEAD
-=======
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Creates an outbound out-of-band record containing out-of-band invitation message defined in\nAries RFC 0434: Out-of-Band Protocol 1.1.",
-				"tags": [
-					"Out Of Band"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"description": "configuration of how out-of-band invitation should be created",
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateInvitationOptions",
 								"description": "configuration of how out-of-band invitation should be created"
 							}
 						}
@@ -3511,7 +3307,6 @@
 							}
 						}
 					},
->>>>>>> 1374790... feat: upgrade credo to 0.5.0 (#78)
 					"500": {
 						"description": "",
 						"content": {
