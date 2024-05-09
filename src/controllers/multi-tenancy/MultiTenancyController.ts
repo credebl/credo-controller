@@ -44,6 +44,8 @@ import {
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
   injectable,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -680,24 +682,32 @@ export class MultiTenancyController extends Controller {
     @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
   ) {
     let outOfBandRecord: OutOfBandRecord | undefined
-    let finalConfig: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption & { routing?: Routing } = {} // Initialize finalConfig
-
+    let invitationDid: string | undefined
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        if (config?.recipientKey) {
-          const routing: Routing = {
-            // Initialize routing object
-            endpoints: tenantAgent.config.endpoints,
-            routingKeys: [],
-            recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
-            mediatorId: undefined,
-          }
-          finalConfig = { ...config, routing } // Assign finalConfig
+        if (config?.invitationDid) {
+          invitationDid = config?.invitationDid
         } else {
-          finalConfig = { ...config, routing: await tenantAgent.mediationRecipient.getRouting({}) } // Assign finalConfig
+          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
+          const didDocument = createPeerDidDocumentFromServices([
+            {
+              id: 'didcomm',
+              recipientKeys: [didRouting.recipientKey],
+              routingKeys: didRouting.routingKeys,
+              serviceEndpoint: didRouting.endpoints[0],
+            },
+          ])
+          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
+            didDocument,
+            method: 'peer',
+            options: {
+              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+            },
+          })
+          invitationDid = did.didState.did
         }
 
-        outOfBandRecord = await tenantAgent.oob.createInvitation(finalConfig)
+        outOfBandRecord = await tenantAgent.oob.createInvitation({ ...config, invitationDid })
       })
 
       return {
@@ -708,7 +718,7 @@ export class MultiTenancyController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord?.toJSON(),
-        ...(finalConfig?.recipientKey ? {} : { recipientKey: finalConfig.routing?.recipientKey.publicKeyBase58 }), // Access recipientKey from routing
+        invitationDid: config?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -1421,7 +1431,7 @@ export class MultiTenancyController extends Controller {
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
-          recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          invitationDid: createOfferOptions?.invitationDid ? '' : invitationDid,
         }
       })
       return createOfferOobRecord

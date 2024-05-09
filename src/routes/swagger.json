@@ -249,6 +249,9 @@
 					},
 					"recipientKey": {
 						"type": "string"
+					},
+					"invitationDid": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -3437,7 +3440,14 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/CreateInvitationOptions",
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/CreateInvitationOptions"
+									},
+									{
+										"$ref": "#/components/schemas/RecipientKeyOption"
+									}
+								],
 								"description": "configuration of how out-of-band invitation should be created"
 							}
 						}

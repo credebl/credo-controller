@@ -9,15 +9,15 @@
 #     # Only needed to build indy-sdk
 #     build-essential
 
-# # nodejs
-# # RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-# # RUN /bin/bash -c "source /root/.nvm/nvm.sh && nvm install 18 && nvm use 18"
-
 # RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 
 # # yarn
 # RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
 #     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+# # install depdencies
+# RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
+#     nodejs
 
 # # install depdencies
 # RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
@@ -76,5 +76,3 @@ COPY --from=builder /app/patches ./patches
 
 # Set entry point
 ENTRYPOINT ["node", "./bin/afj-rest.js", "start"]
-
-
