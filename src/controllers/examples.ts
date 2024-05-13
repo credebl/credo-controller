@@ -164,6 +164,35 @@ export const outOfBandRecordExample = {
   reusable: false,
 }
 
+// TODO: Fix example to satisfy W3cCredentialRecordOptions
+export const W3cCredentialRecordExample = {
+  credential: {
+    // Populate with the required properties for a W3cVerifiableCredential
+    // Example:
+    '@context': ['https://www.w3.org/2018/credentials/v1'],
+    type: ['VerifiableCredential'],
+    issuer: 'https://example.com',
+    issuanceDate: '2023-01-01T00:00:00Z',
+    credentialSubject: {
+      id: 'did:example:1234567890',
+      name: 'John Doe',
+    },
+    proof: {
+      type: 'Ed25519Signature2018',
+      created: '2023-01-01T00:00:00Z',
+      proofPurpose: 'assertionMethod',
+      verificationMethod: 'https://example.com/keys/1',
+      jws: '...',
+    },
+  },
+  tags: {
+    // Populate with the required properties for CustomW3cCredentialTags
+    // Example:
+    tag1: 'value1',
+    tag2: 'value2',
+  },
+}
+
 export const CredentialExchangeRecordExample = {
   _tags: {
     state: 'offer-sent',
@@ -211,6 +240,34 @@ export const SchemaExample = {
   version: '1.0',
   attrNames: ['string'],
   seqNo: 351936,
+}
+
+export const CreateSchemaSuccessful = {
+  state: 'finished',
+  schema: {
+    issuerId: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+    name: 'Test Schema',
+    version: '1.0.0',
+    attrNames: ['Name', 'Age'],
+  },
+  schemaId: 'LRCUFcizUL74AGgLqdJHK7:2:Test Schema:1.0.0',
+}
+
+export const CreateDidResponse = {
+  did: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+  didDocument: {
+    '@context': ['https://w3id.org/did/v1', 'https://w3id.org/security/suites/ed25519-2018/v1'],
+    id: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+    verificationMethod: [
+      {
+        id: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey',
+        type: 'Ed25519VerificationKey2018',
+        controller: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+        publicKeyBase58: 'BapLDK4dEY88vWcQgNbpAPVVP4r3CHs4MvShmmhqkxXM',
+      },
+    ],
+    authentication: ['did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey'],
+  },
 }
 
 export const CredentialDefinitionExample = {

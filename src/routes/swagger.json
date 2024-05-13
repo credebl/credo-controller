@@ -16,15 +16,8 @@
 				"type": "string",
 				"example": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
 			},
-			"ProofFormat": {
-			"Record_string.unknown_": {
-				"properties": {},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
-			},
-			"RecordId": {
-				"type": "string",
-				"example": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
+			"ProofExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"ProofFormat": {
 				"properties": {
@@ -289,6 +282,37 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"PlaintextMessage": {
+				"properties": {
+					"@type": {
+						"type": "string"
+					},
+					"@id": {
+						"type": "string"
+					},
+					"~thread": {
+						"properties": {
+							"pthid": {
+								"type": "string"
+							},
+							"thid": {
+								"type": "string"
+							}
+						},
+						"type": "object"
+					},
+					"messageType": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"@type",
+					"@id",
+					"messageType"
+				],
+				"type": "object",
+				"additionalProperties": {}
+			},
 			"CreateProofRequestOobOptions": {
 				"properties": {
 					"protocolVersion": {
@@ -340,37 +364,6 @@
 					"https://didcomm.org/connections/1.x"
 				],
 				"type": "string"
-			},
-			"PlaintextMessage": {
-				"properties": {
-					"@type": {
-						"type": "string"
-					},
-					"@id": {
-						"type": "string"
-					},
-					"~thread": {
-						"properties": {
-							"pthid": {
-								"type": "string"
-							},
-							"thid": {
-								"type": "string"
-							}
-						},
-						"type": "object"
-					},
-					"messageType": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"@type",
-					"@id",
-					"messageType"
-				],
-				"type": "object",
-				"additionalProperties": {}
 			},
 			"AgentMessage": {
 				"$ref": "#/components/schemas/PlaintextMessage"
@@ -655,10 +648,10 @@
 			},
 			"Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -678,6 +671,9 @@
 				"$ref": "#/components/schemas/Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__",
 				"description": "Construct a type with the properties of T except for those in type K."
 			},
+			"OutOfBandRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"AgentMessageType": {
 				"properties": {
 					"@id": {
@@ -693,6 +689,13 @@
 				],
 				"type": "object",
 				"additionalProperties": {}
+			},
+			"CustomHandshakeProtocol": {
+				"enum": [
+					"https://didcomm.org/didexchange/1.1",
+					"https://didcomm.org/connections/1.0"
+				],
+				"type": "string"
 			},
 			"OutOfBandDidCommService": {
 				"properties": {
@@ -758,7 +761,7 @@
 					},
 					"handshake_protocols": {
 						"items": {
-							"$ref": "#/components/schemas/HandshakeProtocol"
+							"$ref": "#/components/schemas/CustomHandshakeProtocol"
 						},
 						"type": "array"
 					},
@@ -789,10 +792,10 @@
 			},
 			"Pick_ReceiveOutOfBandInvitationConfig.Exclude_keyofReceiveOutOfBandInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -827,10 +830,10 @@
 			},
 			"ReceiveInvitationProps": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -867,10 +870,10 @@
 			},
 			"ReceiveInvitationByUrlProps": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -929,7 +932,9 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
+			"TenantRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
 				"properties": {
 					"label": {
@@ -962,26 +967,8 @@
 				"properties": {
 					"config": {
 						"$ref": "#/components/schemas/Omit_TenantConfig.walletConfig_"
-					},
-					"seed": {
-						"type": "string"
-					},
-					"method": {
-						"type": "string"
-					},
-					"role": {
-						"type": "string"
-					},
-					"endorserDid": {
-						"type": "string"
-					},
-					"did": {
-						"type": "string"
 					}
 				},
-				"required": [
-					"config"
-				],
 				"required": [
 					"config"
 				],
@@ -1086,10 +1073,10 @@
 			},
 			"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -1142,10 +1129,10 @@
 			},
 			"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -1202,6 +1189,61 @@
 			"Version": {
 				"type": "string",
 				"example": "1.0.0"
+			},
+			"CreateSchemaInput": {
+				"properties": {
+					"issuerId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"version": {
+						"$ref": "#/components/schemas/Version"
+					},
+					"attributes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"endorse": {
+						"type": "boolean"
+					},
+					"endorserDid": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"issuerId",
+					"name",
+					"version",
+					"attributes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SchemaMetadata": {
+				"properties": {
+					"did": {
+						"type": "string"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaTxnHash": {
+						"type": "string"
+					},
+					"schemaUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"did",
+					"schemaId"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"WriteTransaction": {
 				"properties": {
@@ -1277,46 +1319,12 @@
 				"type": "string",
 				"example": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
 			},
-			"SchemaId": {
-				"type": "string",
-				"example": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0"
-			},
-			"CredentialDefinitionId": {
-				"type": "string",
-				"example": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
-			},
-			"AutoAcceptCredential": {
-				"description": "Typing of the state for auto acceptance",
+			"ProtocolVersion": {
 				"enum": [
-					"always",
-					"contentApproved",
-					"never"
+					"v1",
+					"v2"
 				],
 				"type": "string"
-			},
-			"CreateOfferOptions": {
-				"properties": {
-					"protocolVersion": {
-						"type": "string"
-					},
-					"connectionId": {
-						"type": "string"
-					},
-					"credentialFormats": {},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"protocolVersion",
-					"connectionId",
-					"credentialFormats"
-				],
-				"type": "object",
-				"additionalProperties": false
 			},
 			"CredentialPreviewAttributeOptions": {
 				"properties": {
@@ -1504,6 +1512,56 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CredentialFormatPayload_CredentialFormats.createOffer_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"AutoAcceptCredential": {
+				"description": "Typing of the state for auto acceptance",
+				"enum": [
+					"always",
+					"contentApproved",
+					"never"
+				],
+				"type": "string"
+			},
+			"CreateOfferOptions": {
+				"properties": {
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProtocolVersion"
+					},
+					"connectionId": {
+						"$ref": "#/components/schemas/RecordId"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.createOffer_"
+					},
+					"autoAcceptCredential": {
+						"$ref": "#/components/schemas/AutoAcceptCredential"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"protocolVersion",
+					"connectionId",
+					"credentialFormats"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialFormatPayload_CredentialFormatType-Array.createOffer_": {
 				"properties": {
 					"indy": {
@@ -1647,7 +1705,134 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
-			"DidResolutionMetadata": {
+			"Record_content.string_": {
+				"properties": {
+					"content": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"content"
+				],
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"DidRegistrationSecretOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidOperationStateWait": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidOperationStateActionBase": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state",
+					"action"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidOperationStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state",
+					"did",
+					"didDocument"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidOperationStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidRegistrationMetadata": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"DidResolutionMetadata": {
 				"properties": {
 					"contentType": {
@@ -1677,6 +1862,42 @@
 						"type": "boolean"
 					}
 				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidCreateResult_DidOperationStateActionBase_": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"didState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/DidOperationStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateActionBase"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateFailed"
+							}
+						]
+					},
+					"didRegistrationMetadata": {
+						"$ref": "#/components/schemas/DidRegistrationMetadata"
+					},
+					"didDocumentMetadata": {
+						"$ref": "#/components/schemas/DidResolutionMetadata"
+					}
+				},
+				"required": [
+					"didState",
+					"didRegistrationMetadata",
+					"didDocumentMetadata"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -1718,78 +1939,548 @@
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
-			"Did": {
+			"DidRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"AnonCredsSchema": {
+				"properties": {
+					"issuerId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"version": {
+						"type": "string"
+					},
+					"attrNames": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"issuerId",
+					"name",
+					"version",
+					"attrNames"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsResolutionMetadata": {
+				"properties": {
+					"error": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"enum": [
+									"invalid",
+									"notFound",
+									"unsupportedAnonCredsMethod"
+								]
+							}
+						]
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredoExtensible": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"GetSchemaReturn": {
+				"properties": {
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"resolutionMetadata": {
+						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
+					},
+					"schemaMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"schemaId",
+					"resolutionMetadata",
+					"schemaMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateWait": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateAction": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"action",
+					"schema",
+					"schemaId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"schema",
+					"schemaId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"reason": {
+						"type": "string"
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturn": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"schemaState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateAction"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateFailed"
+							}
+						]
+					},
+					"schemaMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					},
+					"registrationMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"schemaState",
+					"schemaMetadata",
+					"registrationMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsCredentialDefinition": {
+				"properties": {
+					"issuerId": {
+						"type": "string"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"CL"
+						],
+						"nullable": false
+					},
+					"tag": {
+						"type": "string"
+					},
+					"value": {
+						"properties": {
+							"revocation": {},
+							"primary": {
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						},
+						"required": [
+							"primary"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"issuerId",
+					"schemaId",
+					"type",
+					"tag",
+					"value"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"GetCredentialDefinitionReturn": {
+				"properties": {
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"resolutionMetadata": {
+						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
+					},
+					"credentialDefinitionMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"credentialDefinitionId",
+					"resolutionMetadata",
+					"credentialDefinitionMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateWait": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateAction": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					}
+				},
+				"required": [
+					"state",
+					"action",
+					"credentialDefinitionId",
+					"credentialDefinition"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"credentialDefinition",
+					"credentialDefinitionId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"reason": {
+						"type": "string"
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturn": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"credentialDefinitionState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateAction"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFailed"
+							}
+						]
+					},
+					"credentialDefinitionMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					},
+					"registrationMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"credentialDefinitionState",
+					"credentialDefinitionMetadata",
+					"registrationMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ThreadId": {
 				"type": "string",
-				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+				"example": "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
+			},
+			"CredentialRole": {
+				"enum": [
+					"issuer",
+					"holder"
+				],
+				"type": "string"
 			},
 			"W3cCredentialRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
-			"ConnectionRecord": {
+			"CredentialExchangeRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__": {
+				"properties": {
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_": {
+				"$ref": "#/components/schemas/Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"LegacyIndyProposeCredentialFormat": {
+				"$ref": "#/components/schemas/Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_",
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer\n\nNOTE: This doesn't include the `issuerId` and `schemaIssuerId` properties that are present in the newer format."
+			},
+			"AnonCredsProposeCredentialFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer",
+				"properties": {
+					"schemaIssuerId": {
+						"type": "string"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"issuerId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_CredentialFormatType-Array.createProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/LegacyIndyProposeCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsProposeCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"ProposeCredentialOptions": {
 				"properties": {
-					"connectionRecord": {
-						"$ref": "#/components/schemas/ConnectionRecord"
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProtocolVersion"
 					},
 					"credentialFormats": {
-						"properties": {
-							"indy": {
-								"properties": {
-									"attributes": {
-										"items": {
-											"properties": {
-												"value": {
-													"type": "string"
-												},
-												"name": {
-													"type": "string"
-												}
-											},
-											"required": [
-												"value",
-												"name"
-											],
-											"type": "object"
-										},
-										"type": "array"
-									},
-									"issuerDid": {
-										"type": "string"
-									},
-									"credentialDefinitionId": {
-										"type": "string"
-									},
-									"schemaVersion": {
-										"type": "string"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"schemaId": {
-										"type": "string"
-									},
-									"schemaIssuerDid": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"issuerDid",
-									"credentialDefinitionId",
-									"schemaVersion",
-									"schemaName",
-									"schemaId",
-									"schemaIssuerDid"
-								],
-								"type": "object"
-							}
-						},
-						"required": [
-							"indy"
-						],
-						"type": "object"
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormatType-Array.createProposal_"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -1798,20 +2489,66 @@
 						"type": "string"
 					},
 					"connectionId": {
-						"type": "string"
+						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"connectionRecord",
+					"protocolVersion",
 					"credentialFormats",
 					"connectionId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+			"AnonCredsAcceptProposalFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptProposal",
+				"properties": {
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryIndex": {
+						"type": "number",
+						"format": "double"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Record_string.never_": {
 				"properties": {},
-				"additionalProperties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"EmptyObject": {
+				"$ref": "#/components/schemas/Record_string.never_"
+			},
+			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
@@ -1836,16 +2573,35 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"AnonCredsAcceptOfferFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptOffer. No options are available for this\nmethod, so it's an empty object",
+				"properties": {
+					"linkSecretId": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialFormatPayload_CredentialFormats.acceptOffer_": {
-				"properties": {},
-				"additionalProperties": {},
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"CredentialOfferOptions": {
 				"properties": {
 					"credentialRecordId": {
-						"type": "string"
+						"$ref": "#/components/schemas/RecordId"
 					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
@@ -1863,19 +2619,39 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialExchangeRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
+			"AnonCredsAcceptRequestFormat": {
+				"$ref": "#/components/schemas/Record_string.never_",
+				"description": "This defines the module payload for calling CredentialsApi.acceptRequest. No options are available for this\nmethod, so it's an empty object"
+			},
+			"JsonLdAcceptRequestFormat": {
+				"description": "Format for accepting a jsonld credential request. Optionally allows the verification\nmethod to use to sign the credential.",
+				"properties": {
+					"verificationMethod": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
-				"properties": {},
-				"additionalProperties": {},
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdAcceptRequestFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"AcceptCredentialRequestOptions": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
 					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptRequest_"
@@ -1888,77 +2664,25 @@
 					}
 				},
 				"required": [
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"AcceptCredential": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"BasicMessageRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"Record_content.string_": {
-				"properties": {
-					"content": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"content"
-				],
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
-			},
-			"AgentInfo": {
-				"properties": {
-					"label": {
-						"type": "string"
-					},
-					"endpoints": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"isInitialized": {
-						"type": "boolean"
-					},
-					"publicDid": {}
-				},
-				"required": [
-					"label",
-					"endpoints",
-					"isInitialized",
-					"publicDid"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"BasicMessageRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"Record_content.string_": {
-				"properties": {
-					"content": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"content"
-				],
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
 			},
 			"AgentInfo": {
 				"properties": {
@@ -1995,7 +2719,7 @@
 		}
 	},
 	"info": {
-		"title": "@aries-framework/rest",
+		"title": "credo-controller",
 		"version": "0.9.4",
 		"description": "Rest endpoint wrapper for using your agent over HTTP",
 		"license": {
@@ -2103,7 +2827,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2118,45 +2844,8 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
-				"description": "Retrieve proof record by proof record id",
 				"description": "Retrieve proof record by proof record id",
 				"tags": [
 					"Proofs"
@@ -2193,7 +2882,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2205,61 +2896,11 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
 					}
 				},
-				"description": "Initiate a new presentation exchange as prover by sending a presentation proposal request\nto the connection with the specified connection id.",
 				"description": "Initiate a new presentation exchange as prover by sending a presentation proposal request\nto the connection with the specified connection id.",
 				"tags": [
 					"Proofs"
@@ -2291,7 +2932,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2303,42 +2946,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -2374,7 +2981,9 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2389,44 +2998,9 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
+				"description": "Creates a presentation request bound to existing connection",
 				"tags": [
 					"Proofs"
 				],
@@ -2456,29 +3030,64 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
 									"properties": {
-										"message": {
+										"recipientKey": {
+											"anyOf": [
+												{
+													"properties": {
+														"recipientKey": {}
+													},
+													"type": "object"
+												},
+												{
+													"properties": {
+														"recipientKey": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"recipientKey"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
 											"type": "string"
 										}
 									},
 									"required": [
-										"message"
+										"recipientKey",
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
 									],
 									"type": "object"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"metadata": {},
+											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
+										}
+									}
 								}
 							}
 						}
 					}
 				},
+				"description": "Creates a presentation request not bound to any proposal or existing connection",
 				"tags": [
 					"Proofs"
 				],
@@ -2509,7 +3118,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2524,63 +3135,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Accept a presentation request as prover by sending an accept request message\nto the connection associated with the proof record.",
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -2669,7 +3223,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2681,61 +3237,11 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
 					}
 				},
-				"description": "Accept a presentation as prover by sending an accept presentation message\nto the connection associated with the proof record.",
 				"description": "Accept a presentation as prover by sending an accept presentation message\nto the connection associated with the proof record.",
 				"tags": [
 					"Proofs"
@@ -2768,8 +3274,7 @@
 				"operationId": "ProofFormData",
 				"responses": {
 					"200": {
-						"description": "Ok",
-						"description": "Ok",
+						"description": "ProofRecord",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -2790,46 +3295,10 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
+				"description": "Return proofRecord",
 				"tags": [
-					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -2841,10 +3310,8 @@
 					{
 						"in": "path",
 						"name": "proofRecordId",
-						"name": "proofRecordId",
 						"required": true,
 						"schema": {
-							"type": "string"
 							"type": "string"
 						}
 					}
@@ -2852,16 +3319,14 @@
 			}
 		},
 		"/polygon/create-keys": {
-		"/polygon/create-keys": {
 			"post": {
-				"operationId": "CreateKeyPair",
 				"operationId": "CreateKeyPair",
 				"responses": {
 					"200": {
 						"description": "Secp256k1KeyPair",
-						"description": "Secp256k1KeyPair",
 						"content": {
 							"application/json": {
+								"schema": {}
 								"schema": {
 									"properties": {
 										"address": {
@@ -2878,24 +3343,6 @@
 										"address",
 										"publicKeyBase58",
 										"privateKey"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
 									],
 									"type": "object"
 								}
@@ -2924,105 +3371,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-								"schema": {
-									"properties": {
-										"address": {
-											"type": "string"
-										},
-										"publicKeyBase58": {
-											"type": "string"
-										},
-										"privateKey": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"address",
-										"publicKeyBase58",
-										"privateKey"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Create Secp256k1 key pair for polygon DID",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/polygon/create-schema": {
-			"post": {
-				"operationId": "CreateSchema",
-				"responses": {
-					"200": {
-						"description": "Schema JSON",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -3080,42 +3428,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Estimate transaction",
@@ -3159,43 +3471,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"401": {
-					"401": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -3337,7 +3612,9 @@
 						"description": "OutOfBandRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3382,24 +3659,6 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Retrieve an out of band record by id",
@@ -3425,49 +3684,8 @@
 			"delete": {
 				"operationId": "DeleteOutOfBandRecord",
 				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
+					"204": {
+						"description": "No content"
 					}
 				},
 				"description": "Deletes an out of band record from the repository.",
@@ -3500,7 +3718,29 @@
 						"description": "Out of band record",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"invitationDid": {
+											"type": "string"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"invitationDid",
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3572,24 +3812,6 @@
 								}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Creates an outbound out-of-band record containing out-of-band invitation message defined in\nAries RFC 0434: Out-of-Band Protocol 1.1.",
@@ -3631,7 +3853,28 @@
 						"description": "out-of-band record and invitation",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
+											"type": "string"
+										},
+										"recipientKey": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3702,24 +3945,6 @@
 								}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Creates an outbound out-of-band record in the same way how `createInvitation` method does it,\nbut it also converts out-of-band invitation message to an \"legacy\" invitation message defined\nin RFC 0160: Connection Protocol and returns it together with out-of-band record.",
@@ -3761,7 +3986,25 @@
 						"description": "a message and a invitationUrl",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/OutOfBandRecord"
+										},
+										"invitationUrl": {
+											"type": "string"
+										},
+										"message": {
+											"$ref": "#/components/schemas/AgentMessage"
+										}
+									},
+									"required": [
+										"outOfBandRecord",
+										"invitationUrl",
+										"message"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3772,42 +4015,6 @@
 											"invitationUrl": "http://example.com/invitation_url"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -3861,7 +4068,21 @@
 						"description": "out-of-band record and connection record if one has been created.",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"connectionRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										}
+									},
+									"required": [
+										"connectionRecord",
+										"outOfBandRecord"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3920,24 +4141,6 @@
 											}
 										}
 									}
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -3973,7 +4176,21 @@
 						"description": "out-of-band record and connection record if one has been created.",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"connectionRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										}
+									},
+									"required": [
+										"connectionRecord",
+										"outOfBandRecord"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -4032,24 +4249,6 @@
 											}
 										}
 									}
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -4085,7 +4284,21 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"connectionRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										}
+									},
+									"required": [
+										"connectionRecord",
+										"outOfBandRecord"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -4144,42 +4357,6 @@
 											}
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -4224,42 +4401,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/TenantRecord"
 								}
 							}
 						}
@@ -4295,42 +4438,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -4376,24 +4483,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -4425,24 +4514,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -4485,40 +4556,12 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
-											"type": "string"
-										}
+										"signedTransaction": {}
 									},
 									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
+										"signedTransaction"
 									],
 									"type": "object"
 								}
@@ -4586,24 +4629,6 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -4642,22 +4667,26 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
 									"properties": {
-										"message": {
+										"invitationDid": {
+											"type": "string"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
 											"type": "string"
 										}
 									},
 									"required": [
-										"message"
+										"invitationDid",
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
 									],
 									"type": "object"
 								}
@@ -4713,24 +4742,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -4781,24 +4792,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -4840,24 +4833,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -4903,24 +4878,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -4960,24 +4917,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -5061,24 +5000,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -5116,42 +5037,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -5177,36 +5062,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"endorserDid": {
-										"type": "string"
-									},
-									"endorse": {
-										"type": "boolean"
-									},
-									"attributes": {
-										"items": {
-											"type": "string"
-										},
-										"type": "array"
-									},
-									"version": {
-										"$ref": "#/components/schemas/Version"
-									},
-									"name": {
-										"type": "string"
-									},
-									"issuerId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"version",
-									"name",
-									"issuerId"
-								],
-								"type": "object"
+								"$ref": "#/components/schemas/CreateSchemaInput"
 							}
 						}
 					}
@@ -5223,24 +5079,6 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/SchemaMetadata"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -5307,60 +5145,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -5410,42 +5194,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -5487,78 +5235,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -5603,41 +5279,8 @@
 							}
 						}
 					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
+					"202": {
+						"description": "Wait for action to complete"
 					}
 				},
 				"tags": [
@@ -5703,60 +5346,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -5796,24 +5385,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -5859,24 +5430,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -5920,42 +5473,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -5997,42 +5514,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -6186,42 +5667,6 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -6275,42 +5720,6 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -6352,24 +5761,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -6424,42 +5815,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -6537,42 +5892,6 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -6626,42 +5945,6 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -6700,42 +5983,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/Record_string.any_"
 								}
 							}
 						}
@@ -6770,24 +6019,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -6831,24 +6062,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -6970,42 +6183,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Send a question to a connection",
@@ -7078,42 +6255,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Send a answer to question",
@@ -7168,24 +6309,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Retrieve question answer record by id",
@@ -7219,57 +6342,149 @@
 				]
 			}
 		},
-		"/transactions/endorse": {
+		"/multi-tenancy/basic-messages/{connectionId}/{tenantId}": {
+			"get": {
+				"operationId": "GetBasicMessages",
+				"responses": {
+					"200": {
+						"description": "BasicMessageRecord[]",
+						"content": {
+							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": [
+											{
+												"_tags": {
+													"role": "sender",
+													"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
+												},
+												"metadata": {},
+												"id": "74bcf865-1fdc-45b4-b517-9def02dfd25f",
+												"createdAt": "2022-08-18T08:38:40.216Z",
+												"content": "string",
+												"sentTime": "2022-08-18T08:38:40.216Z",
+												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
+											}
+										]
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieve basic messages by connection id",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Connection identifier",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/RecordId"
+						}
+					},
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
 			"post": {
-				"operationId": "EndorserTransaction",
-		"/transactions/endorse": {
-			"post": {
-				"operationId": "EndorserTransaction",
+				"operationId": "SendMessage",
 				"responses": {
 					"200": {
 						"description": "Ok",
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"_tags": {
+												"role": "sender",
+												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
+											},
+											"metadata": {},
+											"id": "74bcf865-1fdc-45b4-b517-9def02dfd25f",
+											"createdAt": "2022-08-18T08:38:40.216Z",
+											"content": "string",
+											"sentTime": "2022-08-18T08:38:40.216Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
 										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
+									}
 								}
 							}
 						}
+					}
+				},
+				"description": "Send a basic message to a connection",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Connection identifier",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/RecordId"
+						}
 					},
-					"500": {
-						"description": "",
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Record_content.string_"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transactions/endorse": {
+			"post": {
+				"operationId": "EndorserTransaction",
+				"responses": {
+					"200": {
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
 									"properties": {
-										"message": {
-											"type": "string"
-										}
+										"signedTransaction": {}
 									},
 									"required": [
-										"message"
+										"signedTransaction"
 									],
 									"type": "object"
 								}
@@ -7307,24 +6522,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/DidCreateResult_DidOperationStateActionBase_"
 								}
 							}
 						}
@@ -7367,42 +6566,6 @@
 								"schema": {}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"tags": [
@@ -7441,70 +6604,42 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"anyOf": [
-										{
-											"properties": {
-												"importDid": {}
-											},
-											"required": [
-												"importDid"
-											],
-											"type": "object"
+									"properties": {
+										"didDocumentMetadata": {
+											"$ref": "#/components/schemas/DIDDocumentMetadata"
 										},
-										{
-											"properties": {
-												"importDid": {},
-												"didDocumentMetadata": {
-													"$ref": "#/components/schemas/DIDDocumentMetadata"
-												},
-												"didResolutionMetadata": {
-													"$ref": "#/components/schemas/DidResolutionMetadata"
-												},
-												"didDocument": {
-													"$ref": "#/components/schemas/Record_string.any_"
-												}
-											},
-											"required": [
-												"didDocumentMetadata",
-												"didResolutionMetadata",
-												"didDocument"
-											],
-											"type": "object"
+										"didResolutionMetadata": {
+											"$ref": "#/components/schemas/DidResolutionMetadata"
+										},
+										"didDocument": {
+											"$ref": "#/components/schemas/Record_string.any_"
 										}
-									]
+									},
+									"required": [
+										"didDocumentMetadata",
+										"didResolutionMetadata",
+										"didDocument"
+									],
+									"type": "object"
 								},
 								"schema": {
-									"anyOf": [
-										{
-											"properties": {
-												"importDid": {}
-											},
-											"required": [
-												"importDid"
-											],
-											"type": "object"
+									"properties": {
+										"didDocumentMetadata": {
+											"$ref": "#/components/schemas/DIDDocumentMetadata"
 										},
-										{
-											"properties": {
-												"importDid": {},
-												"didDocumentMetadata": {
-													"$ref": "#/components/schemas/DIDDocumentMetadata"
-												},
-												"didResolutionMetadata": {
-													"$ref": "#/components/schemas/DidResolutionMetadata"
-												},
-												"didDocument": {
-													"$ref": "#/components/schemas/Record_string.any_"
-												}
-											},
-											"required": [
-												"didDocumentMetadata",
-												"didResolutionMetadata",
-												"didDocument"
-											],
-											"type": "object"
+										"didResolutionMetadata": {
+											"$ref": "#/components/schemas/DidResolutionMetadata"
+										},
+										"didDocument": {
+											"$ref": "#/components/schemas/Record_string.any_"
 										}
-									]
+									},
+									"required": [
+										"didDocumentMetadata",
+										"didResolutionMetadata",
+										"didDocument"
+									],
+									"type": "object"
 								},
 								"examples": {
 									"Example 1": {
@@ -7586,102 +6721,31 @@
 						"description": "DidResolutionResult",
 						"content": {
 							"application/json": {
-								"schema": {}
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"did": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
 											"didDocument": {
 												"@context": [
 													"https://w3id.org/did/v1",
-													"https://w3id.org/security/suites/ed25519-2018/v1",
-													"https://w3id.org/security/suites/x25519-2019/v1"
+													"https://w3id.org/security/suites/ed25519-2018/v1"
 												],
-												"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+												"id": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
 												"verificationMethod": [
 													{
-														"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+														"id": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey",
 														"type": "Ed25519VerificationKey2018",
-														"controller": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
-														"publicKeyBase58": "6fioC1zcDPyPEL19pXRS2E4iJ46zH7xP6uSgAaPdwDrx"
+														"controller": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
+														"publicKeyBase58": "BapLDK4dEY88vWcQgNbpAPVVP4r3CHs4MvShmmhqkxXM"
 													}
 												],
 												"authentication": [
-													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
-												],
-												"assertionMethod": [
-													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
-												],
-												"capabilityInvocation": [
-													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
-												],
-												"capabilityDelegation": [
-													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
-												],
-												"keyAgreement": [
-													{
-														"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6LSrdqo4M24WRDJj1h2hXxgtDTyzjjKCiyapYVgrhwZAySn",
-														"type": "X25519KeyAgreementKey2019",
-														"controller": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
-														"publicKeyBase58": "FxfdY3DCQxVZddKGAtSjZdFW9bCCW7oRwZn1NFJ2Tbg2"
-													}
+													"did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey"
 												]
-											},
-											"didDocumentMetadata": {},
-											"didResolutionMetadata": {
-												"contentType": "application/did+ld+json"
 											}
 										}
 									}
-								}
-							}
-						}
-					}
-				},
-				"description": "Resolves did and returns did resolution result",
-				"tags": [
-					"Dids"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Decentralized Identifier",
-						"in": "path",
-						"name": "did",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/Did"
-						}
-					}
-				]
-			}
-		},
-		"/dids/write": {
-			"post": {
-				"operationId": "WriteDid",
-				"responses": {
-					"200": {
-						"description": "DidResolutionResult",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -7723,24 +6787,11 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
+									"items": {
+										"$ref": "#/components/schemas/DidRecord"
 									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"type": "array"
 								}
 							}
 						}
@@ -7763,11 +6814,12 @@
 				"operationId": "GetSchemaById",
 				"responses": {
 					"200": {
-						"description": "Schema",
-						"description": "Schema",
+						"description": "get schema by Id",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/GetSchemaReturn"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -7792,86 +6844,9 @@
 								}
 							}
 						}
-					},
-					"400": {
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"403": {
-					"403": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
-				"description": "Retrieve schema by schema id",
-				"description": "Retrieve schema by schema id",
+				"description": "Get schema by schemaId",
 				"tags": [
 					"Schemas"
 					"Schemas"
@@ -7888,8 +6863,7 @@
 						"name": "schemaId",
 						"required": true,
 						"schema": {
-							"$ref": "#/components/schemas/SchemaId"
-							"$ref": "#/components/schemas/SchemaId"
+							"type": "string"
 						}
 					}
 				]
@@ -7903,76 +6877,41 @@
 				"operationId": "CreateSchema",
 				"responses": {
 					"200": {
-						"description": "schema",
-						"description": "schema",
+						"description": "get schema",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturn"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
+										}
+									]
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0",
-											"name": "schema",
-											"version": "1.0",
-											"attrNames": [
-												"string"
-											],
-											"seqNo": 351936
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0",
-											"name": "schema",
-											"version": "1.0",
-											"attrNames": [
-												"string"
-											],
-											"seqNo": 351936
+											"state": "finished",
+											"schema": {
+												"issuerId": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
+												"name": "Test Schema",
+												"version": "1.0.0",
+												"attrNames": [
+													"Name",
+													"Age"
+												]
+											},
+											"schemaId": "LRCUFcizUL74AGgLqdJHK7:2:Test Schema:1.0.0"
 										}
 									}
 								}
 							}
 						}
-					},
-					"400": {
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
-				"description": "Creates a new schema and registers schema on ledger",
-				"description": "Creates a new schema and registers schema on ledger",
+				"description": "Create schema",
 				"tags": [
 					"Schemas"
 					"Schemas"
@@ -7988,36 +6927,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"endorserDid": {
-										"type": "string"
-									},
-									"endorse": {
-										"type": "boolean"
-									},
-									"attributes": {
-										"items": {
-											"type": "string"
-										},
-										"type": "array"
-									},
-									"version": {
-										"$ref": "#/components/schemas/Version"
-									},
-									"name": {
-										"type": "string"
-									},
-									"issuerId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"version",
-									"name",
-									"issuerId"
-								],
-								"type": "object"
+								"$ref": "#/components/schemas/CreateSchemaInput"
 							}
 						}
 					}
@@ -8033,7 +6943,9 @@
 						"description": "CredDef",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/GetCredentialDefinitionReturn"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8069,100 +6981,6 @@
 											}
 										}
 									}
-								}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag",
-											"schemaId": "351936",
-											"type": "CL",
-											"tag": "definition",
-											"value": {
-												"primary": {
-													"n": "string",
-													"s": "string",
-													"r": {
-														"master_secret": "string",
-														"string": "string"
-													},
-													"rctxt": "string",
-													"z": "string"
-												},
-												"revocation": {
-													"g": "1 string",
-													"g_dash": "string",
-													"h": "string",
-													"h0": "string",
-													"h1": "string",
-													"h2": "string",
-													"htilde": "string",
-													"h_cap": "string",
-													"u": "string",
-													"pk": "string",
-													"y": "string"
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"404": {
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8212,46 +7030,16 @@
 						"description": "CredDef",
 						"content": {
 							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag",
-											"schemaId": "351936",
-											"type": "CL",
-											"tag": "definition",
-											"value": {
-												"primary": {
-													"n": "string",
-													"s": "string",
-													"r": {
-														"master_secret": "string",
-														"string": "string"
-													},
-													"rctxt": "string",
-													"z": "string"
-												},
-												"revocation": {
-													"g": "1 string",
-													"g_dash": "string",
-													"h": "string",
-													"h0": "string",
-													"h1": "string",
-													"h2": "string",
-													"htilde": "string",
-													"h_cap": "string",
-													"u": "string",
-													"pk": "string",
-													"y": "string"
-												}
-											}
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturn"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
 										}
-									}
-								}
-							}
-						}
-								"schema": {},
+									]
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8291,42 +7079,8 @@
 							}
 						}
 					},
-					"404": {
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
+					"202": {
+						"description": "Wait for action to complete"
 					}
 				},
 				"description": "Creates a new credential definition.",
@@ -8457,7 +7211,15 @@
 						"name": "threadId",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/ThreadId"
+						}
+					},
+					{
+						"in": "query",
+						"name": "parentThreadId",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ThreadId"
 						}
 					},
 					{
@@ -8465,7 +7227,7 @@
 						"name": "connectionId",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/RecordId"
 						}
 					},
 					{
@@ -8474,6 +7236,14 @@
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/CredentialState"
+						}
+					},
+					{
+						"in": "query",
+						"name": "role",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/CredentialRole"
 						}
 					}
 				]
@@ -8551,7 +7321,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8575,42 +7347,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8645,7 +7381,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8669,42 +7407,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8740,7 +7442,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8764,42 +7468,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8835,7 +7503,9 @@
 						"description": "AgentMessage, CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8859,24 +7529,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8912,22 +7564,44 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
 									"properties": {
-										"message": {
+										"recipientKey": {
+											"anyOf": [
+												{
+													"properties": {
+														"recipientKey": {}
+													},
+													"type": "object"
+												},
+												{
+													"properties": {
+														"recipientKey": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"recipientKey"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
 											"type": "string"
 										}
 									},
 									"required": [
-										"message"
+										"recipientKey",
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
 									],
 									"type": "object"
 								}
@@ -8964,7 +7638,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8988,42 +7664,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -9059,7 +7699,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -9083,42 +7725,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -9154,7 +7760,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -9178,42 +7786,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -9253,7 +7825,12 @@
 						"description": "ConnectionRecord[]",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Record_string.unknown_"
+									},
+									"type": "array"
+								},
 								"examples": {
 									"Example 1": {
 										"value": [
@@ -9353,7 +7930,9 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -9372,24 +7951,6 @@
 											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -9420,49 +7981,8 @@
 			"delete": {
 				"operationId": "DeleteConnection",
 				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
+					"204": {
+						"description": "No content"
 					}
 				},
 				"description": "Deletes a connection record from the connection repository.",
@@ -9496,7 +8016,9 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -9515,42 +8037,6 @@
 											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -9588,7 +8074,9 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -9607,66 +8095,6 @@
 											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"_tags": {
-												"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-												"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-												"invitationKey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz",
-												"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d",
-												"verkey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz"
-											},
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-											"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
-										}
-									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -9704,42 +8132,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/PlaintextMessage"
 								}
 							}
 						}
@@ -9825,43 +8219,24 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
+									"$ref": "#/components/schemas/BasicMessageRecord"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"_tags": {
+												"role": "sender",
+												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
+											},
+											"metadata": {},
+											"id": "74bcf865-1fdc-45b4-b517-9def02dfd25f",
+											"createdAt": "2022-08-18T08:38:40.216Z",
+											"content": "string",
+											"sentTime": "2022-08-18T08:38:40.216Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
 										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									}
 								}
 							}
 						}
@@ -10019,42 +8394,11 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}
@@ -10118,42 +8462,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/Record_string.unknown_"
 								}
 							}
 						}
@@ -10199,24 +8509,8 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/Record_string.unknown_"
 								}
 							}
 						}
