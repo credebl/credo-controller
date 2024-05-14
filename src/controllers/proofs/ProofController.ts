@@ -5,7 +5,7 @@ import type {
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
+import { Agent, HandshakeProtocol, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -180,6 +180,17 @@ export class ProofController extends Controller {
       } else {
         routing = await this.agent.mediationRecipient.getRouting({})
       }
+      let routing: Routing
+      if (createRequestOptions?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+      }
       const proof = await this.agent.proofs.createRequest({
         protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
@@ -196,6 +207,7 @@ export class ProofController extends Controller {
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
         routing,
+        routing,
       })
 
       return {
@@ -206,6 +218,7 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
         recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
       }
     } catch (error) {
