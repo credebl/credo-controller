@@ -70,9 +70,9 @@ export class Polygon extends Controller {
         schema,
       })
 
-      const configFileData = fs.readFileSync('config.json', 'utf-8')
-      const config = JSON.parse(configFileData)
-      if (!config.schemaFileServerURL) {
+      const schemaServerConfig = fs.readFileSync('config.json', 'utf-8')
+      const configJson = JSON.parse(schemaServerConfig)
+      if (!configJson.schemaFileServerURL) {
         throw new Error('Please provide valid schema file server URL')
       }
 
@@ -80,7 +80,7 @@ export class Polygon extends Controller {
         throw new Error('Invalid schema response')
       }
       const schemaPayload: SchemaMetadata = {
-        schemaUrl: config.schemaFileServerURL + schemaResponse?.schemaId,
+        schemaUrl: configJson.schemaFileServerURL + schemaResponse?.schemaId,
         did: schemaResponse?.did,
         schemaId: schemaResponse?.schemaId,
         schemaTxnHash: schemaResponse?.resourceTxnHash,
