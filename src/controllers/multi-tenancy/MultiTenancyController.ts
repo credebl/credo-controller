@@ -1010,7 +1010,6 @@ export class MultiTenancyController extends Controller {
 
       const configFileData = fs.readFileSync('config.json', 'utf-8')
       const config = JSON.parse(configFileData)
-
       if (!config.schemaFileServerURL) {
         throw new Error('Please provide valid schema file server URL')
       }
