@@ -17,10 +17,78 @@
 				"example": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
 			},
 			"ProofFormat": {
+			"Record_string.unknown_": {
+				"properties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"RecordId": {
+				"type": "string",
+				"example": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
+			},
+			"ProofFormat": {
 				"properties": {
+					"formatKey": {
 					"formatKey": {
 						"type": "string"
 					},
+					"proofFormats": {
+						"properties": {
+							"selectCredentialsForRequest": {
+								"properties": {
+									"output": {},
+									"input": {}
+								},
+								"required": [
+									"output",
+									"input"
+								],
+								"type": "object"
+							},
+							"getCredentialsForRequest": {
+								"properties": {
+									"output": {},
+									"input": {}
+								},
+								"required": [
+									"output",
+									"input"
+								],
+								"type": "object"
+							},
+							"acceptRequest": {},
+							"createRequest": {},
+							"acceptProposal": {},
+							"createProposal": {}
+						},
+						"required": [
+							"selectCredentialsForRequest",
+							"getCredentialsForRequest",
+							"acceptRequest",
+							"createRequest",
+							"acceptProposal",
+							"createProposal"
+						],
+						"type": "object"
+					},
+					"formatData": {
+						"properties": {
+							"presentation": {},
+							"request": {},
+							"proposal": {}
+						},
+						"required": [
+							"presentation",
+							"request",
+							"proposal"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"formatKey",
+					"proofFormats",
+					"formatData"
 					"proofFormats": {
 						"properties": {
 							"selectCredentialsForRequest": {
@@ -137,6 +205,7 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+				"additionalProperties": false
 			},
 			"AcceptProofProposal": {
 				"properties": {
@@ -249,9 +318,6 @@
 					},
 					"recipientKey": {
 						"type": "string"
-					},
-					"invitationDid": {
-						"type": "string"
 					}
 				},
 				"required": [
@@ -263,7 +329,10 @@
 			},
 			"HandshakeProtocol": {
 				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
+				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
 				"enum": [
+					"https://didcomm.org/didexchange/1.x",
+					"https://didcomm.org/connections/1.x"
 					"https://didcomm.org/didexchange/1.x",
 					"https://didcomm.org/connections/1.x"
 				],
@@ -287,15 +356,11 @@
 							}
 						},
 						"type": "object"
-					},
-					"messageType": {
-						"type": "string"
 					}
 				},
 				"required": [
 					"@type",
-					"@id",
-					"messageType"
+					"@id"
 				],
 				"type": "object",
 				"additionalProperties": {}
@@ -741,6 +806,9 @@
 					},
 					"ourDid": {
 						"type": "string"
+					},
+					"ourDid": {
+						"type": "string"
 					}
 				},
 				"type": "object",
@@ -773,6 +841,9 @@
 					"acceptInvitationTimeoutMs": {
 						"type": "number",
 						"format": "double"
+					},
+					"ourDid": {
+						"type": "string"
 					},
 					"ourDid": {
 						"type": "string"
@@ -814,6 +885,9 @@
 					"ourDid": {
 						"type": "string"
 					},
+					"ourDid": {
+						"type": "string"
+					},
 					"invitationUrl": {
 						"type": "string"
 					}
@@ -849,7 +923,9 @@
 				"additionalProperties": false
 			},
 			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
+			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
 				"properties": {
+					"label": {
 					"label": {
 						"type": "string"
 					},
@@ -860,7 +936,15 @@
 				"required": [
 					"label"
 				],
+					"connectionImageUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"label"
+				],
 				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
 				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
 			"Omit_TenantConfig.walletConfig_": {
@@ -891,9 +975,17 @@
 				"required": [
 					"config"
 				],
+				"required": [
+					"config"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
+			"Record_string.any_": {
+				"properties": {},
+				"additionalProperties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
 			"Record_string.any_": {
 				"properties": {},
 				"additionalProperties": {},
@@ -1104,28 +1196,6 @@
 				"type": "string",
 				"example": "1.0.0"
 			},
-			"SchemaMetadata": {
-				"properties": {
-					"did": {
-						"type": "string"
-					},
-					"schemaId": {
-						"type": "string"
-					},
-					"schemaTxnHash": {
-						"type": "string"
-					},
-					"schemaUrl": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"did",
-					"schemaId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"WriteTransaction": {
 				"properties": {
 					"endorsedTransaction": {
@@ -1191,6 +1261,14 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"SchemaId": {
+				"type": "string",
+				"example": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0"
+			},
+			"CredentialDefinitionId": {
+				"type": "string",
+				"example": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
 			},
 			"SchemaId": {
 				"type": "string",
@@ -1275,6 +1353,13 @@
 				"properties": {
 					"credentialDefinitionId": {
 						"type": "string"
+					},
+					"revocationRegistryDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryIndex": {
+						"type": "number",
+						"format": "double"
 					},
 					"revocationRegistryDefinitionId": {
 						"type": "string"
@@ -1556,7 +1641,9 @@
 				"description": "Construct a type with a set of properties K of type T"
 			},
 			"DidResolutionMetadata": {
+			"DidResolutionMetadata": {
 				"properties": {
+					"contentType": {
 					"contentType": {
 						"type": "string"
 					},
@@ -1608,14 +1695,21 @@
 						"type": "string"
 					},
 					"equivalentId": {
+					"equivalentId": {
 						"type": "string"
 					},
+					"canonicalId": {
+						"type": "string"
 					"canonicalId": {
 						"type": "string"
 					}
 				},
 				"type": "object",
 				"additionalProperties": false
+			},
+			"Did": {
+				"type": "string",
+				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
 			"Did": {
 				"type": "string",
@@ -1843,6 +1937,46 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"BasicMessageRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"Record_content.string_": {
+				"properties": {
+					"content": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"content"
+				],
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"AgentInfo": {
+				"properties": {
+					"label": {
+						"type": "string"
+					},
+					"endpoints": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"isInitialized": {
+						"type": "boolean"
+					},
+					"publicDid": {}
+				},
+				"required": [
+					"label",
+					"endpoints",
+					"isInitialized",
+					"publicDid"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {
@@ -1864,10 +1998,13 @@
 	},
 	"paths": {
 		"/proofs": {
+		"/proofs": {
 			"get": {
+				"operationId": "GetAllProofs",
 				"operationId": "GetAllProofs",
 				"responses": {
 					"200": {
+						"description": "ProofRecord[]",
 						"description": "ProofRecord[]",
 						"content": {
 							"application/json": {
@@ -1893,10 +2030,33 @@
 								}
 							}
 						}
+									"items": {
+										"$ref": "#/components/schemas/Record_string.unknown_"
+									},
+									"type": "array"
+								},
+								"examples": {
+									"Example 1": {
+										"value": [
+											{
+												"metadata": {},
+												"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+												"createdAt": "2022-01-01T00:00:00.000Z",
+												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+												"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+												"protocolVersion": "v1"
+											}
+										]
+									}
+								}
+							}
+						}
 					}
 				},
 				"description": "Retrieve all proof records",
+				"description": "Retrieve all proof records",
 				"tags": [
+					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -1914,10 +2074,22 @@
 						}
 					}
 				]
+				"parameters": [
+					{
+						"in": "query",
+						"name": "threadId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/proofs/{proofRecordId}": {
+		"/proofs/{proofRecordId}": {
 			"get": {
+				"operationId": "GetProofById",
 				"operationId": "GetProofById",
 				"responses": {
 					"200": {
@@ -1978,7 +2150,9 @@
 					}
 				},
 				"description": "Retrieve proof record by proof record id",
+				"description": "Retrieve proof record by proof record id",
 				"tags": [
+					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -1990,6 +2164,7 @@
 					{
 						"in": "path",
 						"name": "proofRecordId",
+						"name": "proofRecordId",
 						"required": true,
 						"schema": {
 							"$ref": "#/components/schemas/RecordId"
@@ -1999,13 +2174,31 @@
 			}
 		},
 		"/proofs/propose-proof": {
+			}
+		},
+		"/proofs/propose-proof": {
 			"post": {
+				"operationId": "ProposeProof",
 				"operationId": "ProposeProof",
 				"responses": {
 					"200": {
 						"description": "ProofRecord",
+						"description": "ProofRecord",
 						"content": {
 							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"metadata": {},
+											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
+										}
+									}
+								}
 								"schema": {},
 								"examples": {
 									"Example 1": {
@@ -2060,7 +2253,9 @@
 					}
 				},
 				"description": "Initiate a new presentation exchange as prover by sending a presentation proposal request\nto the connection with the specified connection id.",
+				"description": "Initiate a new presentation exchange as prover by sending a presentation proposal request\nto the connection with the specified connection id.",
 				"tags": [
+					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -2304,6 +2499,7 @@
 				"responses": {
 					"200": {
 						"description": "ProofRecord",
+						"description": "ProofRecord",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -2313,6 +2509,9 @@
 											"metadata": {},
 											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
 											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
 											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
 											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
 											"protocolVersion": "v1"
@@ -2360,7 +2559,29 @@
 					}
 				},
 				"description": "Accept a presentation request as prover by sending an accept request message\nto the connection associated with the proof record.",
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Accept a presentation request as prover by sending an accept request message\nto the connection associated with the proof record.",
 				"tags": [
+					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -2371,6 +2592,7 @@
 				"parameters": [
 					{
 						"in": "path",
+						"name": "proofRecordId",
 						"name": "proofRecordId",
 						"required": true,
 						"schema": {
@@ -2404,11 +2626,55 @@
 		"/proofs/{proofRecordId}/accept-presentation": {
 			"post": {
 				"operationId": "AcceptPresentation",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"comment": {
+										"type": "string"
+									},
+									"filterByNonRevocationRequirements": {
+										"type": "boolean"
+									},
+									"filterByPresentationPreview": {
+										"type": "boolean"
+									}
+								},
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/proofs/{proofRecordId}/accept-presentation": {
+			"post": {
+				"operationId": "AcceptPresentation",
 				"responses": {
 					"200": {
 						"description": "ProofRecord",
+						"description": "ProofRecord",
 						"content": {
 							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"metadata": {},
+											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
+										}
+									}
+								}
 								"schema": {},
 								"examples": {
 									"Example 1": {
@@ -2463,7 +2729,9 @@
 					}
 				},
 				"description": "Accept a presentation as prover by sending an accept presentation message\nto the connection associated with the proof record.",
+				"description": "Accept a presentation as prover by sending an accept presentation message\nto the connection associated with the proof record.",
 				"tags": [
+					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -2475,8 +2743,10 @@
 					{
 						"in": "path",
 						"name": "proofRecordId",
+						"name": "proofRecordId",
 						"required": true,
 						"schema": {
+							"type": "string"
 							"type": "string"
 						}
 					}
@@ -2486,8 +2756,12 @@
 		"/proofs/{proofRecordId}/form-data": {
 			"get": {
 				"operationId": "ProofFormData",
+		"/proofs/{proofRecordId}/form-data": {
+			"get": {
+				"operationId": "ProofFormData",
 				"responses": {
 					"200": {
+						"description": "Ok",
 						"description": "Ok",
 						"content": {
 							"application/json": {
@@ -2498,6 +2772,9 @@
 											"metadata": {},
 											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
 											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
 											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
 											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
 											"protocolVersion": "v1"
@@ -2546,6 +2823,7 @@
 				},
 				"tags": [
 					"Proofs"
+					"Proofs"
 				],
 				"security": [
 					{
@@ -2556,8 +2834,10 @@
 					{
 						"in": "path",
 						"name": "proofRecordId",
+						"name": "proofRecordId",
 						"required": true,
 						"schema": {
+							"type": "string"
 							"type": "string"
 						}
 					}
@@ -2565,13 +2845,78 @@
 			}
 		},
 		"/polygon/create-keys": {
+		"/polygon/create-keys": {
 			"post": {
+				"operationId": "CreateKeyPair",
 				"operationId": "CreateKeyPair",
 				"responses": {
 					"200": {
 						"description": "Secp256k1KeyPair",
+						"description": "Secp256k1KeyPair",
 						"content": {
 							"application/json": {
+								"schema": {
+									"properties": {
+										"address": {
+											"type": "string"
+										},
+										"publicKeyBase58": {
+											"type": "string"
+										},
+										"privateKey": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"address",
+										"publicKeyBase58",
+										"privateKey"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create Secp256k1 key pair for polygon DID",
+				"tags": [
+					"Polygon"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/polygon/create-schema": {
+			"post": {
+				"operationId": "CreateSchema",
+				"responses": {
+					"200": {
+						"description": "Schema JSON",
+						"content": {
+							"application/json": {
+								"schema": {}
 								"schema": {
 									"properties": {
 										"address": {
@@ -2638,6 +2983,7 @@
 						}
 					},
 					"400": {
+					"400": {
 						"description": "",
 						"content": {
 							"application/json": {
@@ -2675,7 +3021,9 @@
 					}
 				},
 				"description": "Create polygon based W3C schema",
+				"description": "Create polygon based W3C schema",
 				"tags": [
+					"Polygon"
 					"Polygon"
 				],
 				"security": [
@@ -2796,8 +3144,10 @@
 		"/polygon/{did}/{schemaId}": {
 			"get": {
 				"operationId": "GetSchemaById",
+				"operationId": "GetSchemaById",
 				"responses": {
 					"200": {
+						"description": "Schema Object",
 						"description": "Schema Object",
 						"content": {
 							"application/json": {
@@ -2805,6 +3155,7 @@
 							}
 						}
 					},
+					"401": {
 					"401": {
 						"description": "",
 						"content": {
@@ -2843,8 +3194,15 @@
 					}
 				},
 				"description": "Fetch schema details",
+				"description": "Fetch schema details",
 				"tags": [
 					"Polygon"
+					"Polygon"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
 				],
 				"security": [
 					{
@@ -2854,6 +3212,15 @@
 				"parameters": [
 					{
 						"in": "path",
+						"name": "did",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "schemaId",
 						"name": "did",
 						"required": true,
 						"schema": {
@@ -4899,6 +5266,8 @@
 									"schema": {
 										"properties": {},
 										"additionalProperties": {},
+										"properties": {},
+										"additionalProperties": {},
 										"type": "object"
 									},
 									"schemaName": {
@@ -6846,11 +7215,20 @@
 		"/transactions/endorse": {
 			"post": {
 				"operationId": "EndorserTransaction",
+		"/transactions/endorse": {
+			"post": {
+				"operationId": "EndorserTransaction",
 				"responses": {
 					"200": {
 						"description": "Ok",
+						"description": "Ok",
 						"content": {
 							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"400": {
 								"schema": {}
 							}
 						}
@@ -6893,6 +7271,7 @@
 					}
 				},
 				"tags": [
+					"EndorserTransaction"
 					"EndorserTransaction"
 				],
 				"security": [
@@ -6946,6 +7325,7 @@
 				},
 				"tags": [
 					"EndorserTransaction"
+					"EndorserTransaction"
 				],
 				"security": [
 					{
@@ -6959,6 +7339,7 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/DidNymTransaction"
+								"$ref": "#/components/schemas/DidNymTransaction"
 							}
 						}
 					}
@@ -6966,10 +7347,13 @@
 			}
 		},
 		"/transactions/write": {
+		"/transactions/write": {
 			"post": {
+				"operationId": "WriteSchemaAndCredDefOnLedger",
 				"operationId": "WriteSchemaAndCredDefOnLedger",
 				"responses": {
 					"200": {
+						"description": "Ok",
 						"description": "Ok",
 						"content": {
 							"application/json": {
@@ -7016,6 +7400,7 @@
 				},
 				"tags": [
 					"EndorserTransaction"
+					"EndorserTransaction"
 				],
 				"security": [
 					{
@@ -7029,6 +7414,7 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/WriteTransaction"
+								"$ref": "#/components/schemas/WriteTransaction"
 							}
 						}
 					}
@@ -7038,11 +7424,48 @@
 		"/dids/{did}": {
 			"get": {
 				"operationId": "GetDidRecordByDid",
+		"/dids/{did}": {
+			"get": {
+				"operationId": "GetDidRecordByDid",
 				"responses": {
 					"200": {
 						"description": "DidResolutionResult",
+						"description": "DidResolutionResult",
 						"content": {
 							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"properties": {
+												"importDid": {}
+											},
+											"required": [
+												"importDid"
+											],
+											"type": "object"
+										},
+										{
+											"properties": {
+												"importDid": {},
+												"didDocumentMetadata": {
+													"$ref": "#/components/schemas/DIDDocumentMetadata"
+												},
+												"didResolutionMetadata": {
+													"$ref": "#/components/schemas/DidResolutionMetadata"
+												},
+												"didDocument": {
+													"$ref": "#/components/schemas/Record_string.any_"
+												}
+											},
+											"required": [
+												"didDocumentMetadata",
+												"didResolutionMetadata",
+												"didDocument"
+											],
+											"type": "object"
+										}
+									]
+								},
 								"schema": {
 									"anyOf": [
 										{
@@ -7157,6 +7580,84 @@
 						"content": {
 							"application/json": {
 								"schema": {}
+											"didDocument": {
+												"@context": [
+													"https://w3id.org/did/v1",
+													"https://w3id.org/security/suites/ed25519-2018/v1",
+													"https://w3id.org/security/suites/x25519-2019/v1"
+												],
+												"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+												"verificationMethod": [
+													{
+														"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+														"type": "Ed25519VerificationKey2018",
+														"controller": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+														"publicKeyBase58": "6fioC1zcDPyPEL19pXRS2E4iJ46zH7xP6uSgAaPdwDrx"
+													}
+												],
+												"authentication": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"assertionMethod": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"capabilityInvocation": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"capabilityDelegation": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"keyAgreement": [
+													{
+														"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6LSrdqo4M24WRDJj1h2hXxgtDTyzjjKCiyapYVgrhwZAySn",
+														"type": "X25519KeyAgreementKey2019",
+														"controller": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+														"publicKeyBase58": "FxfdY3DCQxVZddKGAtSjZdFW9bCCW7oRwZn1NFJ2Tbg2"
+													}
+												]
+											},
+											"didDocumentMetadata": {},
+											"didResolutionMetadata": {
+												"contentType": "application/did+ld+json"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Resolves did and returns did resolution result",
+				"tags": [
+					"Dids"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Decentralized Identifier",
+						"in": "path",
+						"name": "did",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/Did"
+						}
+					}
+				]
+			}
+		},
+		"/dids/write": {
+			"post": {
+				"operationId": "WriteDid",
+				"responses": {
+					"200": {
+						"description": "DidResolutionResult",
+						"content": {
+							"application/json": {
+								"schema": {}
 							}
 						}
 					},
@@ -7180,7 +7681,9 @@
 					}
 				},
 				"description": "Did nym registration",
+				"description": "Did nym registration",
 				"tags": [
+					"Dids"
 					"Dids"
 				],
 				"security": [
@@ -7195,12 +7698,16 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/DidCreate"
+								"$ref": "#/components/schemas/DidCreate"
 							}
 						}
 					}
 				}
 			}
 		},
+		"/dids": {
+			"get": {
+				"operationId": "GetDids",
 		"/dids": {
 			"get": {
 				"operationId": "GetDids",
@@ -7234,6 +7741,7 @@
 				},
 				"tags": [
 					"Dids"
+					"Dids"
 				],
 				"security": [
 					{
@@ -7249,6 +7757,7 @@
 				"responses": {
 					"200": {
 						"description": "Schema",
+						"description": "Schema",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -7263,12 +7772,21 @@
 												"string"
 											],
 											"seqNo": 351936
+											"ver": "1.0",
+											"id": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0",
+											"name": "schema",
+											"version": "1.0",
+											"attrNames": [
+												"string"
+											],
+											"seqNo": 351936
 										}
 									}
 								}
 							}
 						}
 					},
+					"400": {
 					"400": {
 						"description": "",
 						"content": {
@@ -7288,16 +7806,19 @@
 						}
 					},
 					"403": {
+					"403": {
 						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
 									"properties": {
 										"reason": {
+										"reason": {
 											"type": "string"
 										}
 									},
 									"required": [
+										"reason"
 										"reason"
 									],
 									"type": "object"
@@ -7343,7 +7864,9 @@
 					}
 				},
 				"description": "Retrieve schema by schema id",
+				"description": "Retrieve schema by schema id",
 				"tags": [
+					"Schemas"
 					"Schemas"
 				],
 				"security": [
@@ -7355,8 +7878,10 @@
 					{
 						"in": "path",
 						"name": "schemaId",
+						"name": "schemaId",
 						"required": true,
 						"schema": {
+							"$ref": "#/components/schemas/SchemaId"
 							"$ref": "#/components/schemas/SchemaId"
 						}
 					}
@@ -7366,8 +7891,12 @@
 		"/schemas": {
 			"post": {
 				"operationId": "CreateSchema",
+		"/schemas": {
+			"post": {
+				"operationId": "CreateSchema",
 				"responses": {
 					"200": {
+						"description": "schema",
 						"description": "schema",
 						"content": {
 							"application/json": {
@@ -7383,12 +7912,21 @@
 												"string"
 											],
 											"seqNo": 351936
+											"ver": "1.0",
+											"id": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0",
+											"name": "schema",
+											"version": "1.0",
+											"attrNames": [
+												"string"
+											],
+											"seqNo": 351936
 										}
 									}
 								}
 							}
 						}
 					},
+					"400": {
 					"400": {
 						"description": "",
 						"content": {
@@ -7427,7 +7965,9 @@
 					}
 				},
 				"description": "Creates a new schema and registers schema on ledger",
+				"description": "Creates a new schema and registers schema on ledger",
 				"tags": [
+					"Schemas"
 					"Schemas"
 				],
 				"security": [
@@ -7483,8 +8023,46 @@
 				"responses": {
 					"200": {
 						"description": "CredDef",
+						"description": "CredDef",
 						"content": {
 							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"ver": "1.0",
+											"id": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag",
+											"schemaId": "351936",
+											"type": "CL",
+											"tag": "definition",
+											"value": {
+												"primary": {
+													"n": "string",
+													"s": "string",
+													"r": {
+														"master_secret": "string",
+														"string": "string"
+													},
+													"rctxt": "string",
+													"z": "string"
+												},
+												"revocation": {
+													"g": "1 string",
+													"g_dash": "string",
+													"h": "string",
+													"h0": "string",
+													"h1": "string",
+													"h2": "string",
+													"htilde": "string",
+													"h_cap": "string",
+													"u": "string",
+													"pk": "string",
+													"y": "string"
+												}
+											}
+										}
+									}
+								}
 								"schema": {},
 								"examples": {
 									"Example 1": {
@@ -7544,16 +8122,19 @@
 						}
 					},
 					"404": {
+					"404": {
 						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
 									"properties": {
 										"reason": {
+										"reason": {
 											"type": "string"
 										}
 									},
 									"required": [
+										"reason"
 										"reason"
 									],
 									"type": "object"
@@ -7581,7 +8162,9 @@
 					}
 				},
 				"description": "Retrieve credential definition by credential definition id",
+				"description": "Retrieve credential definition by credential definition id",
 				"tags": [
+					"Credential Definitions"
 					"Credential Definitions"
 				],
 				"security": [
@@ -7599,13 +8182,26 @@
 						}
 					}
 				]
+				"parameters": [
+					{
+						"in": "path",
+						"name": "credentialDefinitionId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/CredentialDefinitionId"
+						}
+					}
+				]
 			}
 		},
 		"/credential-definitions": {
+		"/credential-definitions": {
 			"post": {
+				"operationId": "CreateCredentialDefinition",
 				"operationId": "CreateCredentialDefinition",
 				"responses": {
 					"200": {
+						"description": "CredDef",
 						"description": "CredDef",
 						"content": {
 							"application/json": {
@@ -7648,7 +8244,47 @@
 								}
 							}
 						}
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"ver": "1.0",
+											"id": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag",
+											"schemaId": "351936",
+											"type": "CL",
+											"tag": "definition",
+											"value": {
+												"primary": {
+													"n": "string",
+													"s": "string",
+													"r": {
+														"master_secret": "string",
+														"string": "string"
+													},
+													"rctxt": "string",
+													"z": "string"
+												},
+												"revocation": {
+													"g": "1 string",
+													"g_dash": "string",
+													"h": "string",
+													"h0": "string",
+													"h1": "string",
+													"h2": "string",
+													"htilde": "string",
+													"h_cap": "string",
+													"u": "string",
+													"pk": "string",
+													"y": "string"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
 					},
+					"404": {
 					"404": {
 						"description": "",
 						"content": {
@@ -7687,7 +8323,9 @@
 					}
 				},
 				"description": "Creates a new credential definition.",
+				"description": "Creates a new credential definition.",
 				"tags": [
+					"Credential Definitions"
 					"Credential Definitions"
 				],
 				"security": [
@@ -7701,6 +8339,29 @@
 					"content": {
 						"application/json": {
 							"schema": {
+								"properties": {
+									"endorserDid": {
+										"type": "string"
+									},
+									"endorse": {
+										"type": "boolean"
+									},
+									"tag": {
+										"type": "string"
+									},
+									"schemaId": {
+										"$ref": "#/components/schemas/SchemaId"
+									},
+									"issuerId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"tag",
+									"schemaId",
+									"issuerId"
+								],
+								"type": "object"
 								"properties": {
 									"endorserDid": {
 										"type": "string"
@@ -8576,8 +9237,12 @@
 		"/connections": {
 			"get": {
 				"operationId": "GetAllConnections",
+		"/connections": {
+			"get": {
+				"operationId": "GetAllConnections",
 				"responses": {
 					"200": {
+						"description": "ConnectionRecord[]",
 						"description": "ConnectionRecord[]",
 						"content": {
 							"application/json": {
@@ -8726,6 +9391,7 @@
 				"description": "Retrieve connection record by connection id",
 				"tags": [
 					"Connections"
+					"Connections"
 				],
 				"security": [
 					{
@@ -8794,6 +9460,7 @@
 				},
 				"description": "Deletes a connection record from the connection repository.",
 				"tags": [
+					"Connections"
 					"Connections"
 				],
 				"security": [
@@ -8907,11 +9574,37 @@
 		"/connections/{connectionId}/accept-response": {
 			"post": {
 				"operationId": "AcceptResponse",
+				"operationId": "AcceptResponse",
 				"responses": {
 					"200": {
 						"description": "ConnectionRecord",
+						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"_tags": {
+												"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
+												"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
+												"invitationKey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz",
+												"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d",
+												"verkey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz"
+											},
+											"metadata": {},
+											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+											"createdAt": "2022-01-01T00:00:00.000Z",
+											"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
+											"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
+											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
+										}
+									}
+								}
+							}
+						}
+					},
+					"404": {
 								"schema": {},
 								"examples": {
 									"Example 1": {
@@ -8973,7 +9666,9 @@
 					}
 				},
 				"description": "Accept a connection response as invitee by sending a trust ping message\nfor the connection with the specified connection id.\n\nThis is not needed when auto accepting of connection is enabled.",
+				"description": "Accept a connection response as invitee by sending a trust ping message\nfor the connection with the specified connection id.\n\nThis is not needed when auto accepting of connection is enabled.",
 				"tags": [
+					"Connections"
 					"Connections"
 				],
 				"security": [
@@ -9128,6 +9823,7 @@
 						}
 					},
 					"404": {
+					"404": {
 						"description": "",
 						"content": {
 							"application/json": {
@@ -9176,7 +9872,9 @@
 				"parameters": [
 					{
 						"description": "Connection identifier",
+						"description": "Connection identifier",
 						"in": "path",
+						"name": "connectionId",
 						"name": "connectionId",
 						"required": true,
 						"schema": {
