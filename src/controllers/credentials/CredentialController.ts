@@ -206,9 +206,20 @@ export class CredentialController extends Controller {
   ) {
     try {
       let routing: Routing
+      let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
+      }
+      if (outOfBandOption?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(outOfBandOption.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
       }
       if (outOfBandOption?.recipientKey) {
         routing = {
@@ -234,6 +245,7 @@ export class CredentialController extends Controller {
         autoAcceptConnection: true,
         imageUrl: outOfBandOption?.imageUrl,
         routing,
+        routing,
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -243,6 +255,7 @@ export class CredentialController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
         recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
       }
     } catch (error) {

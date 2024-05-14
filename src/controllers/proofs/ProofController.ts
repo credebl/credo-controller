@@ -5,7 +5,7 @@ import type {
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
+import { Agent, HandshakeProtocol, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -195,6 +195,7 @@ export class ProofController extends Controller {
         messages: [proofMessage],
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
+        routing,
         routing,
       })
 

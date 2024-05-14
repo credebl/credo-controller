@@ -16,11 +16,7 @@ export class SecurityMiddleware {
       const requestMethod = request.method
 
       // List of paths for which authentication should be skipped
-      const pathsToSkipAuthentication = [
-        { path: '/url/', method: 'GET' },
-        { path: '/multi-tenancy/url/', method: 'GET' },
-        { path: '/agent', method: 'GET' },
-      ]
+      const pathsToSkipAuthentication = ['/url/', '/multi-tenancy/url/', '/agent/info']
 
       // Check if authentication should be skipped for this route or controller
       const skipAuthentication = pathsToSkipAuthentication.some(
