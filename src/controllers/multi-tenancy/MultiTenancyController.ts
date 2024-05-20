@@ -1431,6 +1431,7 @@ export class MultiTenancyController extends Controller {
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
+          credentialRequestThId: offerOob.credentialRecord.threadId,
           invitationDid: createOfferOptions?.invitationDid ? '' : invitationDid,
         }
       })
