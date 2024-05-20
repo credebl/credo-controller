@@ -1,5 +1,5 @@
-// eslint-disable-next-line import/order
 import type { Version } from './examples'
+import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -11,7 +11,6 @@ import type {
   DidResolutionMetadata,
   DidDocumentMetadata,
   ProofExchangeRecord,
-  ProofFormatPayload,
   ProofFormat,
   DidRegistrationExtraOptions,
   DidDocument,
@@ -26,7 +25,8 @@ import type {
   Routing,
   Attachment,
   KeyType,
-} from '@aries-framework/core'
+  JsonLdCredentialFormat,
+} from '@credo-ts/core'
 import type { DIDDocument } from 'did-resolver'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
@@ -108,15 +108,20 @@ export interface CreateOfferOptions {
   comment?: string
 }
 
+type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
+
 export interface CreateOfferOobOptions {
   protocolVersion: string
-  credentialFormats: any
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   goalCode?: string
   parentThreadId?: string
   willConfirm?: boolean
   label?: string
+  imageUrl?: string
+  recipientKey?: string
+  invitationDid?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -134,6 +139,9 @@ export interface CreateProofRequestOobOptions {
   autoAcceptProof?: AutoAcceptProof
   comment?: string
   label?: string
+  imageUrl?: string
+  recipientKey?: string
+  invitationDid?: string
 }
 
 export interface OfferCredentialOptions {
@@ -170,7 +178,7 @@ export interface AcceptCredential {
   credentialRecord: CredentialExchangeRecord
 }
 
-export interface AcceptCredentialOfferOptions {
+export interface CredentialOfferOptions {
   credentialRecordId: string
   credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptOffer'>
   autoAcceptCredential?: AutoAcceptCredential
@@ -251,8 +259,10 @@ export interface RequestProofOptions {
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
   connectionId: string
-  // TODO: added indy proof formate
-  proofFormats: ProofFormatPayload<[ProofFormat], 'createProposal'>
+  proofFormats: {
+    formats: ProofFormat[]
+    action: 'createProposal'
+  }
   goalCode?: string
   parentThreadId?: string
   autoAcceptProof?: AutoAcceptProof
@@ -261,7 +271,10 @@ export interface RequestProofProposalOptions {
 
 export interface AcceptProofProposal {
   proofRecordId: string
-  proofFormats?: ProofFormatPayload<[ProofFormat], 'acceptProposal'>
+  proofFormats: {
+    formats: ProofFormat[]
+    action: 'acceptProposal'
+  }
   comment?: string
   autoAcceptProof?: AutoAcceptProof
   goalCode?: string
@@ -287,21 +300,22 @@ export interface ResolvedDid {
 }
 
 export interface DidCreate {
-  keyType?: KeyType
-  seed: string
+  keyType: KeyType
+  seed?: string
   domain?: string
-  method?: string
+  method: string
+  network?: string
   did?: string
   role?: string
-  options?: DidRegistrationExtraOptions
-  secret?: DidRegistrationSecretOptions
   endorserDid?: string
   didDocument?: DidDocument
+  privatekey?: string
+  endpoint?: string
 }
 
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>
-  seed: string
+  seed?: string
   method?: string
   role?: string
   endorserDid?: string
@@ -336,6 +350,7 @@ export interface CreateInvitationOptions {
   autoAcceptConnection?: boolean
   routing?: Routing
   appendedAttachments?: Attachment[]
+  invitationDid?: string
 }
 
 export interface EndorserTransaction {
@@ -364,4 +379,14 @@ export interface WriteTransaction {
     value: unknown
     type: string
   }
+}
+export interface RecipientKeyOption {
+  recipientKey?: string
+}
+
+export interface SchemaMetadata {
+  did: string
+  schemaId: string
+  schemaTxnHash?: string
+  schemaUrl?: string
 }

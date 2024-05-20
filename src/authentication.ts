@@ -1,6 +1,6 @@
 import type * as express from 'express'
 
-import { LogLevel } from '@aries-framework/core'
+import { LogLevel } from '@credo-ts/core'
 
 import { TsLogger } from './utils/logger'
 
@@ -14,8 +14,8 @@ export async function expressAuthentication(
 ) {
   const logger = new TsLogger(LogLevel.info)
 
-  logger.info(`secMethod::: ${JSON.stringify(secMethod)}`)
-  logger.info(`scopes::: ${JSON.stringify(scopes)}`)
+  logger.info(`secMethod::: ${secMethod}`)
+  logger.info(`scopes::: ${scopes}`)
 
   const apiKeyHeader = request.headers['authorization']
 

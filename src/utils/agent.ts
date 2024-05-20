@@ -1,29 +1,37 @@
-import type { InitConfig } from '@aries-framework/core'
+import type { InitConfig } from '@credo-ts/core'
 
+import { PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import {
   AnonCredsModule,
   LegacyIndyCredentialFormatService,
   LegacyIndyProofFormatService,
   V1CredentialProtocol,
   V1ProofProtocol,
-} from '@aries-framework/anoncreds'
-import { AskarModule } from '@aries-framework/askar'
+  AnonCredsCredentialFormatService,
+  AnonCredsProofFormatService,
+} from '@credo-ts/anoncreds'
+import { AskarModule } from '@credo-ts/askar'
 import {
   AutoAcceptCredential,
   CredentialsModule,
   DidsModule,
+  JsonLdCredentialFormatService,
   KeyDidRegistrar,
   KeyDidResolver,
+  DifPresentationExchangeProofFormatService,
   ProofsModule,
+  V2CredentialProtocol,
+  V2ProofProtocol,
   WebDidResolver,
   Agent,
   ConnectionInvitationMessage,
   HttpOutboundTransport,
   LogLevel,
-} from '@aries-framework/core'
-import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@aries-framework/indy-vdr'
-import { agentDependencies, HttpInboundTransport, IndySdkPostgresWalletScheme } from '@aries-framework/node'
-import { TenantsModule } from '@aries-framework/tenants'
+} from '@credo-ts/core'
+import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@credo-ts/indy-vdr'
+import { agentDependencies, HttpInboundTransport } from '@credo-ts/node'
+import { TenantsModule } from '@credo-ts/tenants'
+import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
@@ -33,29 +41,12 @@ import { BCOVRIN_TEST_GENESIS } from './util'
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const logger = new TsLogger(LogLevel.debug)
 
-  const storageConfig = {
-    type: 'postgres_storage',
-    config: {
-      url: '10.100.194.194:5432',
-      wallet_scheme: IndySdkPostgresWalletScheme.DatabasePerWallet,
-    },
-    credentials: {
-      account: 'postgres',
-      password: 'Password1',
-      admin_account: 'postgres',
-      admin_password: 'Password1',
-    },
-  }
-
-  // loadIndySdkPostgresPlugin(storageConfig.config, storageConfig.credentials)
-
   const config: InitConfig = {
     label: name,
     endpoints: endpoints,
     walletConfig: {
       id: name,
       key: name,
-      storage: storageConfig,
     },
     logger: logger,
   }
@@ -82,7 +73,9 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
 
       anoncreds: new AnonCredsModule({
         registries: [new IndyVdrAnonCredsRegistry()],
+        anoncreds,
       }),
+
       dids: new DidsModule({
         registrars: [new KeyDidRegistrar()],
         resolvers: [new KeyDidResolver(), new WebDidResolver()],
@@ -92,6 +85,13 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
           new V1ProofProtocol({
             indyProofFormat: legacyIndyProofFormat,
           }),
+          new V2ProofProtocol({
+            proofFormats: [
+              legacyIndyProofFormat,
+              new AnonCredsProofFormatService(),
+              new DifPresentationExchangeProofFormatService(),
+            ],
+          }),
         ],
       }),
       credentials: new CredentialsModule({
@@ -100,9 +100,23 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
           new V1CredentialProtocol({
             indyCredentialFormat: legacyIndyCredentialFormat,
           }),
+          new V2CredentialProtocol({
+            credentialFormats: [
+              legacyIndyCredentialFormat,
+              new JsonLdCredentialFormatService(),
+              new AnonCredsCredentialFormatService(),
+            ],
+          }),
         ],
       }),
       tenants: new TenantsModule(),
+      polygon: new PolygonModule({
+        didContractAddress: '',
+        schemaManagerContractAddress: '',
+        fileServerToken: '',
+        rpcUrl: '',
+        serverUrl: '',
+      }),
     },
     dependencies: agentDependencies,
   })

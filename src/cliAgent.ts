@@ -1,7 +1,8 @@
-import type { InitConfig } from '@aries-framework/core'
-import type { WalletConfig } from '@aries-framework/core/build/types'
-import type { IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
+import type { InitConfig } from '@credo-ts/core'
+import type { WalletConfig } from '@credo-ts/core/build/types'
+import type { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
+import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
@@ -10,9 +11,8 @@ import {
   LegacyIndyProofFormatService,
   V1CredentialProtocol,
   V1ProofProtocol,
-} from '@aries-framework/anoncreds'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { AskarModule, AskarMultiWalletDatabaseScheme } from '@aries-framework/askar'
+} from '@credo-ts/anoncreds'
+import { AskarModule, AskarMultiWalletDatabaseScheme } from '@credo-ts/askar'
 import {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -33,15 +33,17 @@ import {
   LogLevel,
   Agent,
   JsonLdCredentialFormatService,
-} from '@aries-framework/core'
+  DifPresentationExchangeProofFormatService,
+} from '@credo-ts/core'
 import {
   IndyVdrAnonCredsRegistry,
   IndyVdrIndyDidResolver,
   IndyVdrModule,
   IndyVdrIndyDidRegistrar,
-} from '@aries-framework/indy-vdr'
-import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
-import { TenantsModule } from '@aries-framework/tenants'
+} from '@credo-ts/indy-vdr'
+import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
+import { QuestionAnswerModule } from '@credo-ts/question-answer'
+import { TenantsModule } from '@credo-ts/tenants'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
@@ -78,6 +80,7 @@ export interface AriesRestConfig {
   label: string
   walletConfig: WalletConfig
   indyLedger: indyLedger[]
+  adminPort: number
   publicDidSeed?: string
   endpoints?: string[]
   autoAcceptConnections?: boolean
@@ -91,7 +94,12 @@ export interface AriesRestConfig {
   connectionImageUrl?: string
   tenancy?: boolean
   webhookUrl?: string
-  adminPort: number
+  didRegistryContractAddress?: string
+  schemaManagerContractAddress?: string
+  rpcUrl?: string
+  fileServerUrl?: string
+  fileServerToken?: string
+  schemaFileServerURL?: string
 }
 
 export async function readRestConfig(path: string) {
@@ -111,6 +119,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
   const anonCredsCredentialFormatService = new AnonCredsCredentialFormatService()
   const anonCredsProofFormatService = new AnonCredsProofFormatService()
+  const presentationExchangeProofFormatService = new DifPresentationExchangeProofFormatService()
   return {
     askar: new AskarModule({
       ariesAskar,
@@ -123,16 +132,15 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
 
     dids: new DidsModule({
-      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()],
-      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()],
+      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar(), new PolygonDidRegistrar()],
+      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver(), new PolygonDidResolver()],
     }),
+
     anoncreds: new AnonCredsModule({
       registries: [new IndyVdrAnonCredsRegistry()],
-    }),
-    // Use anoncreds-rs as anoncreds backend
-    _anoncreds: new AnonCredsRsModule({
       anoncreds,
     }),
+
     connections: new ConnectionsModule({
       autoAcceptConnections: true,
     }),
@@ -143,7 +151,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
           indyProofFormat: legacyIndyProofFormat,
         }),
         new V2ProofProtocol({
-          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService],
+          proofFormats: [legacyIndyProofFormat, anonCredsProofFormatService, presentationExchangeProofFormatService],
         }),
       ],
     }),
@@ -165,6 +173,16 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
       cache: new InMemoryLruCache({ limit: Infinity }),
+    }),
+
+    questionAnswer: new QuestionAnswerModule(),
+    polygon: new PolygonModule({
+      didContractAddress: '0x1adeA199dCf07E17232415Cb232442BE52517Add',
+      schemaManagerContractAddress: '0x289c7Bd4C7d38cC54bff370d6f9f01b74Df51b11',
+      fileServerToken:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
+      rpcUrl: 'https://rpc-amoy.polygon.technology',
+      serverUrl: 'https://schema.credebl.id',
     }),
   }
 }
@@ -200,6 +218,7 @@ async function generateSecretKey(length: number = 32): Promise<string> {
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
+    schemaFileServerURL,
     logLevel,
     inboundTransports = [],
     outboundTransports = [],
@@ -219,6 +238,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     },
     ...afjConfig,
     logger,
+    autoUpdateStorageOnStartup: true,
+    // As backup is only supported for sqlite storage
+    // we need to manually take backup of the storage before updating the storage
+    backupBeforeStorageUpdate: false,
   }
 
   async function fetchLedgerData(ledgerConfig: {
@@ -336,17 +359,17 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
     token = recordWithToken?.content.token as string
   }
-
   const app = await setupServer(
     agent,
     {
       webhookUrl,
       port: adminPort,
+      schemaFileServerURL,
     },
     token
   )
 
-  logger.info(`*** API Toekn: ${token}`)
+  logger.info(`*** API Token: ${token}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)

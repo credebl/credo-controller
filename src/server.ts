@@ -2,11 +2,12 @@ import 'reflect-metadata'
 import type { ServerConfig } from './utils/ServerConfig'
 import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 
-import { Agent } from '@aries-framework/core'
+import { Agent } from '@credo-ts/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 import { rateLimit } from 'express-rate-limit'
+import * as fs from 'fs'
 import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
@@ -15,6 +16,7 @@ import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
+import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
 import { maxRateLimit, windowMs } from './utils/util'
@@ -23,11 +25,12 @@ import { ValidateError, type Exception } from 'tsoa'
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
-
+  fs.writeFileSync('config.json', JSON.stringify(config, null, 2))
   const app = config.app ?? express()
   if (config.cors) app.use(cors())
 
   if (config.socketServer || config.webhookUrl) {
+    questionAnswerEvents(agent, config)
     basicMessageEvents(agent, config)
     connectionEvents(agent, config)
     credentialEvents(agent, config)

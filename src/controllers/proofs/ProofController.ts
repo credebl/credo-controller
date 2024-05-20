@@ -2,9 +2,10 @@ import type {
   AcceptProofRequestOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
-} from '@aries-framework/core'
+  Routing,
+} from '@credo-ts/core'
 
-import { HandshakeProtocol, Agent, RecordNotFoundError } from '@aries-framework/core'
+import { Agent, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -168,6 +169,17 @@ export class ProofController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
+      let routing: Routing
+      if (createRequestOptions?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+      }
       const proof = await this.agent.proofs.createRequest({
         protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
@@ -180,9 +192,10 @@ export class ProofController extends Controller {
       const proofMessage = proof.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: createRequestOptions.label,
-        handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [proofMessage],
         autoAcceptConnection: true,
+        imageUrl: createRequestOptions?.imageUrl,
+        routing,
       })
 
       return {
@@ -193,6 +206,7 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })

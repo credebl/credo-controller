@@ -1,17 +1,27 @@
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
-import type { AgentMessageType } from '../types'
-import type { ConnectionRecordProps, CreateLegacyInvitationConfig } from '@aries-framework/core'
+import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../types'
+import type {
+  ConnectionRecordProps,
+  CreateLegacyInvitationConfig,
+  PeerDidNumAlgo2CreateOptions,
+  Routing,
+} from '@credo-ts/core'
 
-import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFoundError } from '@aries-framework/core'
+import {
+  AgentMessage,
+  JsonTransformer,
+  OutOfBandInvitation,
+  Agent,
+  RecordNotFoundError,
+  Key,
+  KeyType,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
+} from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
-import {
-  AcceptInvitationConfig,
-  ReceiveInvitationByUrlProps,
-  ReceiveInvitationProps,
-  CreateInvitationOptions,
-} from '../types'
+import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
 
 import {
   Body,
@@ -93,10 +103,34 @@ export class OutOfBandController extends Controller {
   @Post('/create-invitation')
   public async createInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() config: CreateInvitationOptions // props removed because of issues with serialization
+    @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
   ) {
     try {
-      const outOfBandRecord = await this.agent.oob.createInvitation(config)
+      let invitationDid: string | undefined
+      if (config?.invitationDid) {
+        invitationDid = config?.invitationDid
+      } else {
+        const didRouting = await this.agent.mediationRecipient.getRouting({})
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [didRouting.recipientKey],
+            routingKeys: didRouting.routingKeys,
+            serviceEndpoint: didRouting.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        invitationDid = did.didState.did
+      }
+
+      const outOfBandRecord = await this.agent.oob.createInvitation({ ...config, invitationDid })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
           domain: this.agent.config.endpoints[0],
@@ -105,6 +139,7 @@ export class OutOfBandController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        invitationDid: config?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -126,11 +161,24 @@ export class OutOfBandController extends Controller {
   @Post('/create-legacy-invitation')
   public async createLegacyInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> // routing prop removed because of issues with public key serialization
+    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
   ) {
     try {
-      const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation(config)
-
+      let routing: Routing
+      if (config?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(config.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+      }
+      const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation({
+        ...config,
+        routing,
+      })
       return {
         invitationUrl: invitation.toUrl({
           domain: this.agent.config.endpoints[0],
@@ -140,6 +188,7 @@ export class OutOfBandController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        ...(config?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 }),
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })

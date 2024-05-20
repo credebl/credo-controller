@@ -1,15 +1,16 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { CredentialExchangeRecordProps, CredentialProtocolVersionType } from '@aries-framework/core'
+import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@credo-ts/core'
 
-import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@aries-framework/anoncreds'
+import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@credo-ts/anoncreds'
 import {
-  HandshakeProtocol,
-  W3cCredentialService,
   CredentialRepository,
   CredentialState,
   Agent,
   RecordNotFoundError,
-} from '@aries-framework/core'
+  W3cCredentialService,
+  Key,
+  KeyType,
+} from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
@@ -18,7 +19,7 @@ import {
   AcceptCredentialRequestOptions,
   ProposeCredentialOptions,
   AcceptCredentialProposalOptions,
-  AcceptCredentialOfferOptions,
+  CredentialOfferOptions,
   CreateOfferOptions,
   AcceptCredential,
   CreateOfferOobOptions,
@@ -204,9 +205,20 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
+      let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
+      }
+      if (outOfBandOption?.recipientKey) {
+        routing = {
+          endpoints: this.agent.config.endpoints,
+          routingKeys: [],
+          recipientKey: Key.fromPublicKeyBase58(outOfBandOption.recipientKey, KeyType.Ed25519),
+          mediatorId: undefined,
+        }
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
       }
       const offerOob = await this.agent.credentials.createOffer({
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
@@ -218,9 +230,10 @@ export class CredentialController extends Controller {
       const credentialMessage = offerOob.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: outOfBandOption.label,
-        handshakeProtocols: [HandshakeProtocol.Connections],
         messages: [credentialMessage],
         autoAcceptConnection: true,
+        imageUrl: outOfBandOption?.imageUrl,
+        routing,
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -230,6 +243,7 @@ export class CredentialController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -249,7 +263,7 @@ export class CredentialController extends Controller {
   public async acceptOffer(
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
+    @Body() acceptCredentialOfferOptions: CredentialOfferOptions
   ) {
     try {
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
