@@ -1,15 +1,15 @@
-import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
+import { AnonCredsError, getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum, EndorserMode, HttpStatusCode, SchemaError } from '../../enums/enum'
+import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
 import { NON_ENDORSER_DID_PRESENT } from '../../errorMessages'
-import { SchemaId, SchemaExample } from '../examples'
+import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
+import convertError from '../../utils/errorConverter'
+import { SchemaExample } from '../examples'
 import { CreateSchemaInput } from '../types'
 
-import { handleAnonCredsError } from './CredentialCommonError'
-
-import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Example, Get, Post, Route, Tags, Security, Path, Body } from 'tsoa'
 @Tags('Schemas')
 @Route('/schemas')
 @Security('apiKey')
@@ -32,14 +32,7 @@ export class SchemaController {
    */
   @Example(SchemaExample)
   @Get('/:schemaId')
-  public async getSchemaById(
-    // @Path('schemaId')
-    schemaId: SchemaId,
-    notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
-    forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
-    badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
-    internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
-  ) {
+  public async getSchemaById(@Path('schemaId') schemaId: string) {
     try {
       const getSchemBySchemaId = await this.agent.modules.anoncreds.getSchema(schemaId)
 
@@ -49,12 +42,30 @@ export class SchemaController {
           getSchemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound) ||
         getSchemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
       ) {
-        return notFoundError(HttpStatusCode.NotFound, { reason: getSchemBySchemaId?.resolutionMetadata?.message })
+        throw new NotFoundError(getSchemBySchemaId?.resolutionMetadata?.message)
       }
 
       return getSchemBySchemaId
     } catch (error) {
-      return handleAnonCredsError(error, notFoundError, forbiddenError, badRequestError, internalServerError)
+      if (error instanceof AnonCredsError) {
+        if (error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+          throw new NotFoundError('Ledger not found')
+        } else if (error.cause instanceof AnonCredsError) {
+          if (typeof error.cause.cause === 'string') {
+            switch (error.cause.cause) {
+              case 'LedgerInvalidTransaction':
+                throw new BadRequestError('Ledger invalid transaction')
+              case 'CommonInvalidStructure':
+                throw new BadRequestError('Common invalid structure')
+            }
+          }
+        }
+      }
+      if (error instanceof Error) {
+        throw convertError(error.constructor.name, error.message)
+      } else {
+        throw new InternalServerError(`An unknown error occurred ${error}`)
+      }
     }
   }
 
@@ -69,14 +80,7 @@ export class SchemaController {
    */
   @Example(SchemaExample)
   @Post('/')
-  public async createSchema(
-    // @Body()
-    schema: CreateSchemaInput,
-    notFoundError: TsoaResponse<HttpStatusCode.NotFound, { reason: string }>,
-    forbiddenError: TsoaResponse<HttpStatusCode.Forbidden, { reason: string }>,
-    badRequestError: TsoaResponse<HttpStatusCode.BadRequest, { reason: string }>,
-    internalServerError: TsoaResponse<HttpStatusCode.InternalServerError, { reason: string }>
-  ) {
+  public async createSchema(@Body() schema: CreateSchemaInput) {
     try {
       const { issuerId, name, version, attributes } = schema
 
@@ -97,7 +101,7 @@ export class SchemaController {
         })
 
         if (schemaState.state === CredentialEnum.Failed) {
-          return internalServerError(HttpStatusCode.InternalServerError, { reason: `${schemaState.reason}` })
+          throw new InternalServerError(schemaState.reason)
         }
 
         const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
@@ -113,7 +117,7 @@ export class SchemaController {
         return schemaState
       } else {
         if (!schema.endorserDid) {
-          return badRequestError(HttpStatusCode.BadRequest, { reason: NON_ENDORSER_DID_PRESENT })
+          throw new BadRequestError(NON_ENDORSER_DID_PRESENT)
         }
 
         const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema({
@@ -125,13 +129,31 @@ export class SchemaController {
         })
 
         if (createSchemaTxResult.state === CredentialEnum.Failed) {
-          return internalServerError(HttpStatusCode.InternalServerError, { reason: `${createSchemaTxResult.reason}` })
+          throw new InternalServerError(createSchemaTxResult.reason)
         }
 
         return createSchemaTxResult
       }
     } catch (error) {
-      return handleAnonCredsError(error, notFoundError, forbiddenError, badRequestError, internalServerError)
+      if (error instanceof AnonCredsError) {
+        if (error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
+          throw new NotFoundError('Ledger not found')
+        } else if (error.cause instanceof AnonCredsError) {
+          if (typeof error.cause.cause === 'string') {
+            switch (error.cause.cause) {
+              case 'LedgerInvalidTransaction':
+                throw new BadRequestError('Ledger invalid transaction')
+              case 'CommonInvalidStructure':
+                throw new BadRequestError('Common invalid structure')
+            }
+          }
+        }
+      }
+      if (error instanceof Error) {
+        throw convertError(error.constructor.name, error.message)
+      } else {
+        throw new InternalServerError(`An unknown error occurred ${error}`)
+      }
     }
   }
 }
