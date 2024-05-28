@@ -1,11 +1,11 @@
-import { AnonCredsError, getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
+import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
+import ErrorHandlingService from '../../errorHandlingService'
 import { NON_ENDORSER_DID_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
-import convertError from '../../utils/errorConverter'
 import { SchemaExample } from '../examples'
 import { CreateSchemaInput } from '../types'
 
@@ -47,25 +47,7 @@ export class SchemaController {
 
       return getSchemBySchemaId
     } catch (error) {
-      if (error instanceof AnonCredsError) {
-        if (error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
-          throw new NotFoundError('Ledger not found')
-        } else if (error.cause instanceof AnonCredsError) {
-          if (typeof error.cause.cause === 'string') {
-            switch (error.cause.cause) {
-              case 'LedgerInvalidTransaction':
-                throw new BadRequestError('Ledger invalid transaction')
-              case 'CommonInvalidStructure':
-                throw new BadRequestError('Common invalid structure')
-            }
-          }
-        }
-      }
-      if (error instanceof Error) {
-        throw convertError(error.constructor.name, error.message)
-      } else {
-        throw new InternalServerError(`An unknown error occurred ${error}`)
-      }
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -135,25 +117,7 @@ export class SchemaController {
         return createSchemaTxResult
       }
     } catch (error) {
-      if (error instanceof AnonCredsError) {
-        if (error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
-          throw new NotFoundError('Ledger not found')
-        } else if (error.cause instanceof AnonCredsError) {
-          if (typeof error.cause.cause === 'string') {
-            switch (error.cause.cause) {
-              case 'LedgerInvalidTransaction':
-                throw new BadRequestError('Ledger invalid transaction')
-              case 'CommonInvalidStructure':
-                throw new BadRequestError('Common invalid structure')
-            }
-          }
-        }
-      }
-      if (error instanceof Error) {
-        throw convertError(error.constructor.name, error.message)
-      } else {
-        throw new InternalServerError(`An unknown error occurred ${error}`)
-      }
+      throw ErrorHandlingService.handle(error)
     }
   }
 }

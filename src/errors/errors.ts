@@ -45,6 +45,12 @@ class ConflictError extends BaseError {
   }
 }
 
+class UnprocessableEntityError extends BaseError {
+  public constructor(message: string = 'Unprocessable Entity') {
+    super(message, 422)
+  }
+}
+
 class LedgerNotFoundError extends NotFoundError {
   public constructor(message: string = 'Ledger Not Found') {
     super(message)
@@ -80,6 +86,12 @@ class RecordDuplicateError extends ConflictError {
     super(message)
   }
 }
+class AnonCredsError extends InternalServerError {
+  public cause: typeof AnonCredsError | undefined
+  public constructor(message: string = 'AnonCreds Error') {
+    super(message)
+  }
+}
 
 const errorMap: Record<string, new (message: string) => BaseError> = {
   InternalServerError,
@@ -94,6 +106,8 @@ const errorMap: Record<string, new (message: string) => BaseError> = {
   CredoError,
   RecordNotFoundError,
   RecordDuplicateError,
+  UnprocessableEntityError,
+  AnonCredsError,
 }
 
 export {
@@ -110,5 +124,7 @@ export {
   CredoError,
   RecordNotFoundError,
   RecordDuplicateError,
+  UnprocessableEntityError,
+  AnonCredsError,
   errorMap,
 }

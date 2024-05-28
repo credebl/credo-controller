@@ -12,6 +12,7 @@ import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
 import { setDynamicApiKey } from './authentication'
+import { BaseError } from './errors/errors'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
@@ -21,7 +22,7 @@ import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
 import { maxRateLimit, windowMs } from './utils/util'
 
-import { ValidateError, type Exception } from 'tsoa'
+import { ValidateError } from 'tsoa'
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
@@ -73,54 +74,17 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
 
   app.use(function errorHandler(err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void {
     if (err instanceof ValidateError) {
-      agent.config.logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
       return res.status(422).json({
-        message: 'Validation Failed',
-        details: err?.fields,
+        message: err?.fields,
       })
     }
 
-    if (err instanceof Error) {
-      const exceptionError = err as Exception
-      switch (exceptionError.status) {
-        case 400:
-          return res.status(400).json({
-            message: `Bad Request`,
-            details: err?.message,
-          })
-        case 401:
-          return res.status(401).json({
-            message: `Unauthorized`,
-            details: err?.message,
-          })
-        case 403:
-          return res.status(403).json({
-            message: `Forbidden`,
-            details: err?.message,
-          })
-        case 404:
-          return res.status(404).json({
-            message: `Not Found`,
-            details: err?.message,
-          })
-        case 409:
-          return res.status(409).json({
-            message: `Conflict`,
-            details: err?.message,
-          })
-        default:
-          return res.status(500).json({
-            message: err && err.message ? err.message : 'Internal Server Error. Check server logging.',
-          })
-      }
+    if (err instanceof BaseError) {
+      return res.status(err.statusCode).json({
+        message: err.message,
+      })
     }
     next()
-  })
-
-  app.use(function notFoundHandler(_req, res: ExResponse) {
-    res.status(404).send({
-      message: 'Not Found',
-    })
   })
 
   return app

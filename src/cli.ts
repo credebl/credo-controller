@@ -121,11 +121,10 @@ async function parseArguments(): Promise<Parsed> {
       coerce: (input) => {
         const validValues = ['http', 'ws']
         return input.map((item: string) => {
-          const value = String(item).toLowerCase()
-          if (validValues.includes(value)) {
-            return value as 'http' | 'ws'
+          if (validValues.includes(item)) {
+            return item as 'http' | 'ws'
           } else {
-            throw new Error(`Invalid value for outbound-transport: ${value}. Valid values are 'http' or 'ws'.`)
+            throw new Error(`Invalid value for outbound-transport: ${item}. Valid values are 'http' or 'ws'.`)
           }
         })
       },
@@ -161,9 +160,8 @@ async function parseArguments(): Promise<Parsed> {
     .option('auto-accept-credentials', {
       choices: ['always', 'never', 'contentApproved'],
       coerce: (input: string) => {
-        const value = input.toLowerCase()
-        if (value === 'always' || value === 'never' || value === 'contentapproved') {
-          return value as 'always' | 'never' | 'contentApproved'
+        if (input === 'always' || input === 'never' || input === 'contentApproved') {
+          return input as 'always' | 'never' | 'contentApproved'
         } else {
           throw new Error(
             'Invalid value for auto-accept-credentials. Valid values are "always", "never", or "contentApproved".'
@@ -174,9 +172,8 @@ async function parseArguments(): Promise<Parsed> {
     .option('auto-accept-proofs', {
       choices: ['always', 'never', 'contentApproved'],
       coerce: (input: string) => {
-        const value = input.toLowerCase()
-        if (value === 'always' || value === 'never' || value === 'contentapproved') {
-          return value as 'always' | 'never' | 'contentApproved'
+        if (input === 'always' || input === 'never' || input === 'contentApproved') {
+          return input as 'always' | 'never' | 'contentApproved'
         } else {
           throw new Error(
             'Invalid value for auto-accept-proofs. Valid values are "always", "never", or "contentApproved".'
