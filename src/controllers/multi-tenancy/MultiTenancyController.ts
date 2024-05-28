@@ -1,6 +1,6 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption } from '../types'
+import type { RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -9,6 +9,7 @@ import type {
   CredentialProtocolVersionType,
   KeyDidCreateOptions,
   OutOfBandRecord,
+  PeerDidNumAlgo2CreateOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
@@ -34,7 +35,6 @@ import {
   CredentialState,
   DidDocumentBuilder,
   DidExchangeState,
-  HandshakeProtocol,
   JsonTransformer,
   Key,
   KeyType,
@@ -44,9 +44,12 @@ import {
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
   injectable,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
+import * as fs from 'fs'
 
 import { CredentialEnum, DidMethod, Network, Role } from '../../enums/enum'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
@@ -124,7 +127,6 @@ export class MultiTenancyController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     let didRes
-
     try {
       if (!createDidOptions.method) {
         throw Error('Method is required')
@@ -146,6 +148,10 @@ export class MultiTenancyController extends Controller {
 
         case DidMethod.Polygon:
           result = await this.handlePolygon(createDidOptions, tenantId)
+          break
+
+        case DidMethod.Peer:
+          result = await this.handleDidPeer(createDidOptions, tenantId)
           break
 
         default:
@@ -436,6 +442,40 @@ export class MultiTenancyController extends Controller {
     return didResponse
   }
 
+  private async handleDidPeer(createDidOptions: DidCreate, tenantId: string) {
+    let didResponse
+    let did: any
+
+    if (!createDidOptions.keyType) {
+      throw Error('keyType is required')
+    }
+
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      const didRouting = await tenantAgent.mediationRecipient.getRouting({})
+      const didDocument = createPeerDidDocumentFromServices([
+        {
+          id: 'didcomm',
+          recipientKeys: [didRouting.recipientKey],
+          routingKeys: didRouting.routingKeys,
+          serviceEndpoint: didRouting.endpoints[0],
+        },
+      ])
+      const didPeerResponse = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
+        didDocument,
+        method: DidMethod.Peer,
+        options: {
+          numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+        },
+      })
+
+      did = didPeerResponse.didState.did
+      didResponse = {
+        did,
+      }
+    })
+    return didResponse
+  }
+
   private async handleWeb(createDidOptions: DidCreate, tenantId: string) {
     let did
     let didDocument: any
@@ -639,12 +679,35 @@ export class MultiTenancyController extends Controller {
   public async createInvitation(
     @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
-    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
+    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
   ) {
     let outOfBandRecord: OutOfBandRecord | undefined
+    let invitationDid: string | undefined
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        outOfBandRecord = await tenantAgent.oob.createInvitation(config)
+        if (config?.invitationDid) {
+          invitationDid = config?.invitationDid
+        } else {
+          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
+          const didDocument = createPeerDidDocumentFromServices([
+            {
+              id: 'didcomm',
+              recipientKeys: [didRouting.recipientKey],
+              routingKeys: didRouting.routingKeys,
+              serviceEndpoint: didRouting.endpoints[0],
+            },
+          ])
+          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
+            didDocument,
+            method: 'peer',
+            options: {
+              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+            },
+          })
+          invitationDid = did.didState.did
+        }
+
+        outOfBandRecord = await tenantAgent.oob.createInvitation({ ...config, invitationDid })
       })
 
       return {
@@ -655,6 +718,7 @@ export class MultiTenancyController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord?.toJSON(),
+        invitationDid: config?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -929,23 +993,38 @@ export class MultiTenancyController extends Controller {
     },
     @Path('tenantId') tenantId: string,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ): Promise<unknown> {
+  ): Promise<SchemaMetadata> {
     try {
-      let schemaResponse
       const { did, schemaName, schema } = createSchemaRequest
       if (!did || !schemaName || !schema) {
         throw Error('One or more parameters are empty or undefined.')
       }
 
-      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        //need to add the return type after adding the scham URL
-        schemaResponse = await tenantAgent.modules.polygon.createSchema({
+      const schemaResponse = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        return await tenantAgent.modules.polygon.createSchema({
           did,
           schemaName,
           schema,
         })
       })
-      return schemaResponse
+
+      const configFileData = fs.readFileSync('config.json', 'utf-8')
+      const config = JSON.parse(configFileData)
+      if (!config.schemaFileServerURL) {
+        throw new Error('Please provide valid schema file server URL')
+      }
+
+      if (!schemaResponse?.schemaId) {
+        throw new Error('Invalid schema response')
+      }
+      const schemaPayload: SchemaMetadata = {
+        schemaUrl: config.schemaFileServerURL + schemaResponse?.schemaId,
+        did: schemaResponse?.did,
+        schemaId: schemaResponse?.schemaId,
+        schemaTxnHash: schemaResponse?.resourceTxnHash,
+      }
+
+      return schemaPayload
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
@@ -1297,22 +1376,33 @@ export class MultiTenancyController extends Controller {
     let createOfferOobRecord
 
     try {
-      let routing: Routing
+      let invitationDid: string | undefined
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
         if (linkSecretIds.length === 0) {
           await tenantAgent.modules.anoncreds.createLinkSecret()
         }
 
-        if (createOfferOptions?.recipientKey) {
-          routing = {
-            endpoints: tenantAgent.config.endpoints,
-            routingKeys: [],
-            recipientKey: Key.fromPublicKeyBase58(createOfferOptions.recipientKey, KeyType.Ed25519),
-            mediatorId: undefined,
-          }
+        if (createOfferOptions?.invitationDid) {
+          invitationDid = createOfferOptions?.invitationDid
         } else {
-          routing = await tenantAgent.mediationRecipient.getRouting({})
+          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
+          const didDocument = createPeerDidDocumentFromServices([
+            {
+              id: 'didcomm',
+              recipientKeys: [didRouting.recipientKey],
+              routingKeys: didRouting.routingKeys,
+              serviceEndpoint: didRouting.endpoints[0],
+            },
+          ])
+          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
+            didDocument,
+            method: 'peer',
+            options: {
+              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+            },
+          })
+          invitationDid = did.didState.did
         }
 
         const offerOob = await tenantAgent.credentials.createOffer({
@@ -1325,12 +1415,11 @@ export class MultiTenancyController extends Controller {
         const credentialMessage = offerOob.message
         const outOfBandRecord = await tenantAgent.oob.createInvitation({
           label: createOfferOptions.label,
-          handshakeProtocols: [HandshakeProtocol.Connections],
           messages: [credentialMessage],
           autoAcceptConnection: true,
           imageUrl: createOfferOptions?.imageUrl,
           goalCode: createOfferOptions?.goalCode,
-          routing,
+          invitationDid,
         })
 
         createOfferOobRecord = {
@@ -1342,7 +1431,8 @@ export class MultiTenancyController extends Controller {
           }),
           outOfBandRecord: outOfBandRecord.toJSON(),
           outOfBandRecordId: outOfBandRecord.id,
-          recipientKey: createOfferOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          credentialRequestThId: offerOob.credentialRecord.threadId,
+          invitationDid: createOfferOptions?.invitationDid ? '' : invitationDid,
         }
       })
       return createOfferOobRecord
@@ -1512,17 +1602,28 @@ export class MultiTenancyController extends Controller {
   ) {
     let oobProofRecord
     try {
-      let routing: Routing
+      let invitationDid: string | undefined
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        if (createRequestOptions?.recipientKey) {
-          routing = {
-            endpoints: tenantAgent.config.endpoints,
-            routingKeys: [],
-            recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
-            mediatorId: undefined,
-          }
+        if (createRequestOptions?.invitationDid) {
+          invitationDid = createRequestOptions?.invitationDid
         } else {
-          routing = await tenantAgent.mediationRecipient.getRouting({})
+          const didRouting = await tenantAgent.mediationRecipient.getRouting({})
+          const didDocument = createPeerDidDocumentFromServices([
+            {
+              id: 'didcomm',
+              recipientKeys: [didRouting.recipientKey],
+              routingKeys: didRouting.routingKeys,
+              serviceEndpoint: didRouting.endpoints[0],
+            },
+          ])
+          const did = await tenantAgent.dids.create<PeerDidNumAlgo2CreateOptions>({
+            didDocument,
+            method: 'peer',
+            options: {
+              numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+            },
+          })
+          invitationDid = did.didState.did
         }
         const proof = await tenantAgent.proofs.createRequest({
           protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
@@ -1537,11 +1638,10 @@ export class MultiTenancyController extends Controller {
         const proofMessage = proof.message
         const outOfBandRecord = await tenantAgent.oob.createInvitation({
           label: createRequestOptions.label,
-          handshakeProtocols: [HandshakeProtocol.Connections],
           messages: [proofMessage],
           autoAcceptConnection: true,
           imageUrl: createRequestOptions?.imageUrl,
-          routing,
+          invitationDid,
           goalCode: createRequestOptions?.goalCode,
         })
 
@@ -1559,9 +1659,7 @@ export class MultiTenancyController extends Controller {
             : proof.message.threadId
             ? proof.message.thread
             : proof.message.id,
-          recipientKey: createRequestOptions?.recipientKey
-            ? {}
-            : { recipientKey: routing.recipientKey.publicKeyBase58 },
+          invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
         }
       })
 

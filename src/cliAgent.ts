@@ -88,6 +88,7 @@ export interface AriesRestConfig {
   label: string
   walletConfig: WalletConfig
   indyLedger: indyLedger[]
+  adminPort: number
   publicDidSeed?: string
   endpoints?: string[]
   autoAcceptConnections?: boolean
@@ -100,13 +101,13 @@ export interface AriesRestConfig {
   connectionImageUrl?: string
   tenancy?: boolean
   webhookUrl?: string
-  adminPort: number
   didRegistryContractAddress?: string
   schemaManagerContractAddress?: string
   rpcUrl?: string
   fileServerUrl?: string
   fileServerToken?: string
   walletScheme?: AskarMultiWalletDatabaseScheme
+  schemaFileServerURL?: string
 }
 
 export async function readRestConfig(path: string) {
@@ -261,6 +262,7 @@ async function generateSecretKey(length: number = 32): Promise<string> {
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
+    schemaFileServerURL,
     logLevel,
     inboundTransports = [],
     outboundTransports = [],
@@ -436,12 +438,12 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
     token = recordWithToken?.content.token as string
   }
-
   const app = await setupServer(
     agent,
     {
       webhookUrl,
       port: adminPort,
+      schemaFileServerURL,
     },
     token
   )

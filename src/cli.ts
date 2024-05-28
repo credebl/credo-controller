@@ -5,6 +5,11 @@ import yargs from 'yargs'
 import { runRestAgent } from './cliAgent'
 import { IDLE_TIMEOUT, CONNECT_TIMEOUT, MAX_CONNECTIONS } from './utils/util'
 
+interface IndyLedger {
+  genesisTransactions: string
+  indyNamespace: string
+}
+
 interface Parsed {
   label: string
   'wallet-id': string
@@ -16,25 +21,28 @@ interface Parsed {
   'wallet-password': string
   'wallet-admin-account': string
   'wallet-admin-password': string
-  'indy-ledger': string[]
+  'indy-ledger': IndyLedger[]
   endpoint?: string[]
   'log-level': number
   'outbound-transport': ('http' | 'ws')[]
-  'inbound-transport': InboundTransport[]
-  'auto-accept-connections': boolean
-  'auto-accept-credentials': 'always' | 'never' | 'contentApproved'
-  'auto-accept-proofs': 'always' | 'never' | 'contentApproved'
+  'inbound-transport'?: InboundTransport[]
+  'auto-accept-connections'?: boolean
+  'auto-accept-credentials'?: 'always' | 'never' | 'contentApproved'
+  'auto-accept-proofs'?: 'always' | 'never' | 'contentApproved'
   'webhook-url'?: string
   'admin-port': number
   tenancy: boolean
   'did-registry-contract-address'?: string
   'schema-manager-contract-address'?: string
-  'rpc-url'?: string
-  'file-server-url'?: string
-  'file-server-token'?: string
   'wallet-connect-timeout'?: number
   'wallet-max-connections'?: number
   'wallet-idle-timeout'?: number
+  schemaFileServerURL?: string
+  didRegistryContractAddress?: string
+  schemaManagerContractAddress?: string
+  rpcUrl?: string
+  fileServerUrl?: string
+  fileServerToken?: string
 }
 
 interface InboundTransport {
@@ -44,153 +52,172 @@ interface InboundTransport {
 
 type Transports = 'http' | 'ws'
 
-const parsed: Parsed = yargs
-  .command('start', 'Start AFJ Rest agent')
-  .option('label', {
-    alias: 'l',
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-id', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-key', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-type', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-url', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-scheme', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-account', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-password', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-admin-account', {
-    string: true,
-    demandOption: true,
-  })
-  .option('wallet-admin-password', {
-    string: true,
-    demandOption: true,
-  })
-  .option('indy-ledger', {
-    array: true,
-    default: [],
-  })
-  .option('endpoint', {
-    array: true,
-  })
-  .option('log-level', {
-    number: true,
-    default: 3,
-  })
-  .option('outbound-transport', {
-    default: [],
-    choices: ['http', 'ws'],
-    array: true,
-  })
-  .option('inbound-transport', {
-    array: true,
-    default: [],
-    coerce: (input: string[]) => {
-      // Configured using config object
-      if (typeof input[0] === 'object') return input
-      if (input.length % 2 !== 0) {
-        throw new Error(
-          'Inbound transport should be specified as transport port pairs (e.g. --inbound-transport http 5000 ws 5001)'
-        )
-      }
-
-      return input.reduce<Array<InboundTransport>>((transports, item, index) => {
-        const isEven = index % 2 === 0
-        // isEven means it is the transport
-        // transport port transport port
-        const isTransport = isEven
-
-        if (isTransport) {
-          transports.push({
-            transport: item as Transports,
-            port: Number(input[index + 1]),
-          })
+async function parseArguments(): Promise<Parsed> {
+  return yargs
+    .command('start', 'Start AFJ Rest agent')
+    .option('label', {
+      alias: 'l',
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-id', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-key', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-type', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-url', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-scheme', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-account', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-password', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-admin-account', {
+      string: true,
+      demandOption: true,
+    })
+    .option('wallet-admin-password', {
+      string: true,
+      demandOption: true,
+    })
+    .option('indy-ledger', {
+      array: true,
+      default: [],
+      coerce: (input) => {
+        return input.map((item: { genesisTransactions: string; indyNamespace: string }) => ({
+          genesisTransactions: item.genesisTransactions,
+          indyNamespace: item.indyNamespace,
+        }))
+      },
+    })
+    .option('endpoint', {
+      array: true,
+      coerce: (input) => {
+        return input.map((item: string) => String(item))
+      },
+    })
+    .option('log-level', {
+      number: true,
+      default: 3,
+    })
+    .option('outbound-transport', {
+      array: true,
+      coerce: (input) => {
+        const validValues = ['http', 'ws']
+        return input.map((item: string) => {
+          const value = String(item).toLowerCase()
+          if (validValues.includes(value)) {
+            return value as 'http' | 'ws'
+          } else {
+            throw new Error(`Invalid value for outbound-transport: ${value}. Valid values are 'http' or 'ws'.`)
+          }
+        })
+      },
+    })
+    .option('inbound-transport', {
+      array: true,
+      coerce: (input) => {
+        const transports: InboundTransport[] = []
+        for (const item of input) {
+          if (
+            typeof item === 'object' &&
+            'transport' in item &&
+            typeof item.transport === 'string' &&
+            'port' in item &&
+            typeof item.port === 'number'
+          ) {
+            const transport: Transports = item.transport as Transports
+            const port: number = item.port
+            transports.push({ transport, port })
+          } else {
+            throw new Error(
+              'Inbound transport should be specified as an array of objects with transport and port properties.'
+            )
+          }
         }
-
         return transports
-      }, [])
-    },
-  })
-  .option('auto-accept-connections', {
-    boolean: true,
-    default: false,
-  })
-  .option('auto-accept-credentials', {
-    choices: ['always', 'never', 'contentApproved'],
-    default: 'never',
-  })
-  .option('auto-accept-proofs', {
-    choices: ['always', 'never', 'contentApproved'],
-    default: 'never',
-  })
-  .option('webhook-url', {
-    string: true,
-  })
-  .option('admin-port', {
-    number: true,
-    demandOption: true,
-  })
-  .option('tenancy', {
-    boolean: true,
-    default: false,
-  })
-  .option('did-registry-contract-address', {
-    string: true,
-  })
-  .option('schema-manager-contract-address', {
-    string: true,
-  })
-  .option('rpc-url', {
-    string: true,
-  })
-  .option('file-server-url', {
-    string: true,
-  })
-  .option('file-server-token', {
-    string: true,
-  })
-  .option('wallet-connect-timeout', {
-    number: true,
-  })
-  .option('wallet-max-connections', {
-    number: true,
-  })
-  .option('wallet-idle-timeout', {
-    number: true,
-  })
-
-  .config()
-  .env('AFJ_REST')
-  .parse()
-
-// const argv = yargs.argv
-// const storageConfig = argv['wallet-type']
-
-// eslint-disable-next-line no-console
-// console.log('Storage Config after YARGS::', storageConfig)
+      },
+    })
+    .option('auto-accept-connections', {
+      boolean: true,
+      default: false,
+    })
+    .option('auto-accept-credentials', {
+      choices: ['always', 'never', 'contentApproved'],
+      coerce: (input: string) => {
+        const value = input.toLowerCase()
+        if (value === 'always' || value === 'never' || value === 'contentapproved') {
+          return value as 'always' | 'never' | 'contentApproved'
+        } else {
+          throw new Error(
+            'Invalid value for auto-accept-credentials. Valid values are "always", "never", or "contentApproved".'
+          )
+        }
+      },
+    })
+    .option('auto-accept-proofs', {
+      choices: ['always', 'never', 'contentApproved'],
+      coerce: (input: string) => {
+        const value = input.toLowerCase()
+        if (value === 'always' || value === 'never' || value === 'contentapproved') {
+          return value as 'always' | 'never' | 'contentApproved'
+        } else {
+          throw new Error(
+            'Invalid value for auto-accept-proofs. Valid values are "always", "never", or "contentApproved".'
+          )
+        }
+      },
+    })
+    .option('webhook-url', {
+      string: true,
+    })
+    .option('admin-port', {
+      number: true,
+      demandOption: true,
+    })
+    .option('tenancy', {
+      boolean: true,
+      default: false,
+    })
+    .option('did-registry-contract-address', {
+      string: true,
+    })
+    .option('schema-manager-contract-address', {
+      string: true,
+    })
+    .option('wallet-connect-timeout', {
+      number: true,
+    })
+    .option('wallet-max-connections', {
+      number: true,
+    })
+    .option('wallet-idle-timeout', {
+      number: true,
+    })
+    .config()
+    .env('AFJ_REST')
+    .parseAsync() as Promise<Parsed>
+}
 
 export async function runCliServer() {
+  const parsed = await parseArguments()
+
   await runRestAgent({
     label: parsed.label,
     walletConfig: {
@@ -222,12 +249,12 @@ export async function runCliServer() {
     outboundTransports: parsed['outbound-transport'],
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
-    tenancy: parsed['tenancy'],
-    didRegistryContractAddress: parsed['did-registry-contract-address'],
-    schemaManagerContractAddress: parsed['schema-manager-contract-address'],
-    rpcUrl: parsed['rpc-url'],
-    fileServerUrl: parsed['file-server-url'],
-    fileServerToken: parsed['file-server-token'],
-    walletScheme: parsed['wallet-scheme'],
-  } as unknown as AriesRestConfig)
+    tenancy: parsed.tenancy,
+    schemaFileServerURL: parsed.schemaFileServerURL,
+    didRegistryContractAddress: parsed.didRegistryContractAddress,
+    schemaManagerContractAddress: parsed.schemaManagerContractAddress,
+    rpcUrl: parsed.rpcUrl,
+    fileServerUrl: parsed.fileServerUrl,
+    fileServerToken: parsed.fileServerToken,
+  } as AriesRestConfig)
 }
