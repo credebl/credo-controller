@@ -213,35 +213,65 @@ export const SchemaExample = {
   seqNo: 351936,
 }
 
+export const CreateSchemaSuccessful = {
+  state: 'finished',
+  schema: {
+    issuerId: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+    name: 'Test Schema',
+    version: '1.0.0',
+    attrNames: ['Name', 'Age'],
+  },
+  schemaId: 'LRCUFcizUL74AGgLqdJHK7:2:Test Schema:1.0.0',
+}
+
+export const CreateDidResponse = {
+  did: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+  didDocument: {
+    '@context': ['https://w3id.org/did/v1', 'https://w3id.org/security/suites/ed25519-2018/v1'],
+    id: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+    verificationMethod: [
+      {
+        id: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey',
+        type: 'Ed25519VerificationKey2018',
+        controller: 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7',
+        publicKeyBase58: 'BapLDK4dEY88vWcQgNbpAPVVP4r3CHs4MvShmmhqkxXM',
+      },
+    ],
+    authentication: ['did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey'],
+  },
+}
+
 export const CredentialDefinitionExample = {
   ver: '1.0',
   id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
   schemaId: '351936',
-  type: 'CL',
-  tag: 'definition',
-  value: {
-    primary: {
-      n: 'string',
-      s: 'string',
-      r: {
-        master_secret: 'string',
-        string: 'string',
+      type: 'CL',
+      tag: 'definition',
+      value: {
+        primary: {
+          n: 'string',
+          s: 'string',
+          r: {
+            master_secret: 'string',
+            string: 'string',
+          },
+          rctxt: 'string',
+          z: 'string',
+        },
+        revocation: {
+          g: '1 string',
+          g_dash: 'string',
+          h: 'string',
+          h0: 'string',
+          h1: 'string',
+          h2: 'string',
+          htilde: 'string',
+          h_cap: 'string',
+          u: 'string',
+          pk: 'string',
+          y: 'string',
+        },
       },
-      rctxt: 'string',
-      z: 'string',
-    },
-    revocation: {
-      g: '1 string',
-      g_dash: 'string',
-      h: 'string',
-      h0: 'string',
-      h1: 'string',
-      h2: 'string',
-      htilde: 'string',
-      h_cap: 'string',
-      u: 'string',
-      pk: 'string',
-      y: 'string',
     },
   },
 }
