@@ -48,16 +48,14 @@
         }
         
     ],
-    "taskRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
-    "networkMode": "host",
     "placementConstraints": [],
     "requiresCompatibilities": [
         "EC2"
     ],
     "cpu": "154",
     "memory": "307",
-"volumes": [
+    "volumes": [
         {
             "name": "config",
             "host": {
