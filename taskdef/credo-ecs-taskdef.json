@@ -24,12 +24,6 @@
                 "--config",
                 "/config.json"
             ],
-            "environment": [
-                {
-                    "name": "AFJ_REST_LOG_LEVEL",
-                    "value": "1"
-                }
-            ],
             "environmentFiles": [
                 {
                     "value": "${S3_ARN}",
