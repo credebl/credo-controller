@@ -6,10 +6,10 @@ import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { NON_ENDORSER_DID_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
-import { SchemaExample } from '../examples'
+import { CreateSchemaSuccessful, SchemaExample } from '../examples'
 import { CreateSchemaInput } from '../types'
 
-import { Example, Get, Post, Route, Tags, Security, Path, Body } from 'tsoa'
+import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller } from 'tsoa'
 @Tags('Schemas')
 @Route('/schemas')
 @Security('apiKey')
@@ -60,8 +60,8 @@ export class SchemaController {
    * @param internalServerError
    * @returns get schema
    */
-  @Example(SchemaExample)
   @Post('/')
+  @Example(CreateSchemaSuccessful)
   public async createSchema(@Body() schema: CreateSchemaInput) {
     try {
       const { issuerId, name, version, attributes } = schema
@@ -110,8 +110,8 @@ export class SchemaController {
           schema: schemaPayload,
         })
 
-        if (createSchemaTxResult.state === CredentialEnum.Failed) {
-          throw new InternalServerError(createSchemaTxResult.reason)
+        if (createSchemaTxResult.schemaState.state === CredentialEnum.Failed) {
+          throw new InternalServerError('Schema creation failed')
         }
 
         return createSchemaTxResult
