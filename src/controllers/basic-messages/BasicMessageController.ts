@@ -1,11 +1,12 @@
 import type { BasicMessageRecord, BasicMessageStorageProps } from '@credo-ts/core'
 
-import { Agent, RecordNotFoundError } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
+import ErrorHandlingService from '../../errorHandlingService'
 import { BasicMessageRecordExample, RecordId } from '../examples'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security } from 'tsoa'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
@@ -28,7 +29,12 @@ export class BasicMessageController extends Controller {
   @Example<BasicMessageStorageProps[]>([BasicMessageRecordExample])
   @Get('/:connectionId')
   public async getBasicMessages(@Path('connectionId') connectionId: RecordId): Promise<BasicMessageRecord[]> {
-    return await this.agent.basicMessages.findAllByQuery({ connectionId })
+    try {
+      this.setStatus(200)
+      return await this.agent.basicMessages.findAllByQuery({ connectionId })
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   /**
@@ -38,20 +44,12 @@ export class BasicMessageController extends Controller {
    * @param content The content of the message
    */
   @Post('/:connectionId')
-  public async sendMessage(
-    @Path('connectionId') connectionId: RecordId,
-    @Body() request: Record<'content', string>,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async sendMessage(@Path('connectionId') connectionId: RecordId, @Body() request: Record<'content', string>) {
     try {
       this.setStatus(204)
       await this.agent.basicMessages.sendMessage(connectionId, request.content)
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
