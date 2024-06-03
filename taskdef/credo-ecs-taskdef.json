@@ -2,7 +2,7 @@
     "family": "DEV_AGENT_SPINUP_TASKDEF",
     "containerDefinitions": [
         {
-            "name": "Platform-admin",
+            "name": "e7cc1515-a197-4580-9e63-dda70c9c7f08-Platform-admin-service-ODg2YmE4ZDU3",
             "image": "%REPOSITORY_URI%:CREDO_v_%BUILD_NUMBER%",
             "cpu": 154,
             "memory": 307,
