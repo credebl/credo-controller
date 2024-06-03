@@ -75,7 +75,8 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   app.use(function errorHandler(err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void {
     if (err instanceof ValidateError) {
       return res.status(422).json({
-        message: err?.fields,
+        message: 'Validation Failed',
+        details: err?.fields,
       })
     }
 

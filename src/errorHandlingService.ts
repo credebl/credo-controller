@@ -1,22 +1,31 @@
 import type { BaseError } from './errors/errors'
 
+import { AnonCredsError, AnonCredsRsError, AnonCredsStoreRecordError } from '@credo-ts/anoncreds'
 import {
-  AnonCredsError,
   CredoError,
   RecordNotFoundError,
   RecordDuplicateError,
-  NotFoundError,
-  BadRequestError,
-  InternalServerError,
-} from './errors/errors'
+  ClassValidationError,
+  MessageSendingError,
+} from '@credo-ts/core'
+
+import { RecordDuplicateError as CustomRecordDuplicateError, NotFoundError, InternalServerError } from './errors/errors'
 import convertError from './utils/errorConverter'
 
 class ErrorHandlingService {
-  public static handle(error: unknown): BaseError {
+  public static handle(error: unknown) {
     if (error instanceof AnonCredsError) {
       throw this.handleAnonCredsError(error)
     } else if (error instanceof CredoError) {
       throw this.handleCredoError(error)
+    } else if (error instanceof AnonCredsRsError) {
+      throw this.handleAnonCredsRsError(error)
+    } else if (error instanceof AnonCredsStoreRecordError) {
+      throw this.handleAnonCredsStoreRecordError(error)
+    } else if (error instanceof ClassValidationError) {
+      throw this.handleClassValidationError(error)
+    } else if (error instanceof MessageSendingError) {
+      throw this.handleMessageSendingError(error)
     } else if (error instanceof RecordNotFoundError) {
       throw this.handleRecordNotFoundError(error)
     } else if (error instanceof RecordDuplicateError) {
@@ -29,23 +38,19 @@ class ErrorHandlingService {
   }
 
   private static handleAnonCredsError(error: AnonCredsError): BaseError {
-    if (error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
-      throw new NotFoundError('Ledger Not Found')
-    } else if (error.cause instanceof AnonCredsError) {
-      if (typeof error.cause.cause === 'string') {
-        switch (error.cause.cause) {
-          case 'LedgerInvalidTransaction':
-            throw new BadRequestError('Ledger Invalid Transaction')
-          case 'CommonInvalidStructure':
-            throw new BadRequestError('Common Invalid Structure')
-        }
-      }
-    }
-    throw new InternalServerError('AnonCreds Error')
+    throw new InternalServerError(`AnonCredsError: ${error.message}`)
+  }
+
+  private static handleAnonCredsRsError(error: AnonCredsRsError): BaseError {
+    throw new InternalServerError(`AnonCredsRsError: ${error.message}`)
+  }
+
+  private static handleAnonCredsStoreRecordError(error: AnonCredsStoreRecordError): BaseError {
+    throw new InternalServerError(`AnonCredsStoreRecordError: ${error.message}`)
   }
 
   private static handleCredoError(error: CredoError): BaseError {
-    throw new InternalServerError(error.message)
+    throw new InternalServerError(`CredoError: ${error}`)
   }
 
   private static handleRecordNotFoundError(error: RecordNotFoundError): BaseError {
@@ -53,7 +58,15 @@ class ErrorHandlingService {
   }
 
   private static handleRecordDuplicateError(error: RecordDuplicateError): BaseError {
-    throw new BadRequestError(error.message)
+    throw new CustomRecordDuplicateError(error.message)
+  }
+
+  private static handleClassValidationError(error: ClassValidationError): BaseError {
+    throw new InternalServerError(`ClassValidationError: ${error.message}`)
+  }
+
+  private static handleMessageSendingError(error: MessageSendingError): BaseError {
+    throw new InternalServerError(`MessageSendingError: ${error.message}`)
   }
 }
 

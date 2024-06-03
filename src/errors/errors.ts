@@ -69,26 +69,8 @@ class CommonInvalidStructureError extends BadRequestError {
   }
 }
 
-class CredoError extends InternalServerError {
-  public constructor(message: string = 'CredoError') {
-    super(message)
-  }
-}
-
-class RecordNotFoundError extends NotFoundError {
-  public constructor(message: string = 'RecordNotFoundError') {
-    super(message)
-  }
-}
-
 class RecordDuplicateError extends ConflictError {
   public constructor(message: string = 'RecordDuplicateError') {
-    super(message)
-  }
-}
-class AnonCredsError extends InternalServerError {
-  public cause: typeof AnonCredsError | undefined
-  public constructor(message: string = 'AnonCreds Error') {
     super(message)
   }
 }
@@ -103,11 +85,8 @@ const errorMap: Record<string, new (message: string) => BaseError> = {
   UnauthorizedError,
   ForbiddenError,
   ConflictError,
-  CredoError,
-  RecordNotFoundError,
   RecordDuplicateError,
   UnprocessableEntityError,
-  AnonCredsError,
 }
 
 export {
@@ -121,10 +100,7 @@ export {
   ForbiddenError,
   ConflictError,
   BaseError,
-  CredoError,
-  RecordNotFoundError,
   RecordDuplicateError,
   UnprocessableEntityError,
-  AnonCredsError,
   errorMap,
 }
