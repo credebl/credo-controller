@@ -2,17 +2,10 @@ import type { RestAgentModules } from '../../cliAgent'
 import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@credo-ts/core'
 
 import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@credo-ts/anoncreds'
-import {
-  CredentialRepository,
-  CredentialState,
-  Agent,
-  RecordNotFoundError,
-  W3cCredentialService,
-  Key,
-  KeyType,
-} from '@credo-ts/core'
+import { CredentialRepository, CredentialState, Agent, W3cCredentialService, Key, KeyType } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
+import ErrorHandlingService from '../../errorHandlingService'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
@@ -25,7 +18,7 @@ import {
   CreateOfferOobOptions,
 } from '../types'
 
-import { Body, Controller, Get, Path, Post, Res, Route, Tags, TsoaResponse, Example, Query, Security } from 'tsoa'
+import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security } from 'tsoa'
 
 @Tags('Credentials')
 @Security('apiKey')
@@ -56,27 +49,39 @@ export class CredentialController extends Controller {
     @Query('connectionId') connectionId?: string,
     @Query('state') state?: CredentialState
   ) {
-    const credentialRepository = this.agent.dependencyManager.resolve(CredentialRepository)
+    try {
+      const credentialRepository = this.agent.dependencyManager.resolve(CredentialRepository)
 
-    const credentials = await credentialRepository.findByQuery(this.agent.context, {
-      connectionId,
-      threadId,
-      state,
-    })
+      const credentials = await credentialRepository.findByQuery(this.agent.context, {
+        connectionId,
+        threadId,
+        state,
+      })
 
-    return credentials.map((c) => c.toJSON())
+      return credentials.map((c) => c.toJSON())
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   @Get('/w3c')
   public async getAllW3c() {
-    const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-    return await w3cCredentialService.getAllCredentialRecords(this.agent.context)
+    try {
+      const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
+      return await w3cCredentialService.getAllCredentialRecords(this.agent.context)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   @Get('/w3c/:id')
   public async getW3cById(@Path('id') id: string) {
-    const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-    return await w3cCredentialService.getCredentialRecordById(this.agent.context, id)
+    try {
+      const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
+      return await w3cCredentialService.getCredentialRecordById(this.agent.context, id)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   /**
@@ -87,21 +92,12 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Get('/:credentialRecordId')
-  public async getCredentialById(
-    @Path('credentialRecordId') credentialRecordId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async getCredentialById(@Path('credentialRecordId') credentialRecordId: RecordId) {
     try {
       const credential = await this.agent.credentials.getById(credentialRecordId)
       return credential.toJSON()
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `credential with credential record id "${credentialRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -114,11 +110,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/propose-credential')
-  public async proposeCredential(
-    @Body() proposeCredentialOptions: ProposeCredentialOptions,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async proposeCredential(@Body() proposeCredentialOptions: ProposeCredentialOptions) {
     try {
       const credential = await this.agent.credentials.proposeCredential({
         connectionId: proposeCredentialOptions.connectionId,
@@ -129,12 +121,7 @@ export class CredentialController extends Controller {
       })
       return credential
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `connection with connection record id "${proposeCredentialOptions.connectionId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -150,8 +137,6 @@ export class CredentialController extends Controller {
   @Post('/accept-proposal')
   public async acceptProposal(
     // @Path('credentialRecordId') credentialRecordId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() acceptCredentialProposal: AcceptCredentialProposalOptions
   ) {
     try {
@@ -164,12 +149,7 @@ export class CredentialController extends Controller {
 
       return credential
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `credential with credential record id "${acceptCredentialProposal.credentialRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -182,10 +162,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
-  public async createOffer(
-    @Body() createOfferOptions: CreateOfferOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
     try {
       const offer = await this.agent.credentials.offerCredential({
         connectionId: createOfferOptions.connectionId,
@@ -195,15 +172,12 @@ export class CredentialController extends Controller {
       })
       return offer
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Post('/create-offer-oob')
-  public async createOfferOob(
-    @Body() outOfBandOption: CreateOfferOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
     try {
       let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
@@ -246,7 +220,7 @@ export class CredentialController extends Controller {
         recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
       }
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -260,11 +234,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-offer')
-  public async acceptOffer(
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredentialOfferOptions: CredentialOfferOptions
-  ) {
+  public async acceptOffer(@Body() acceptCredentialOfferOptions: CredentialOfferOptions) {
     try {
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
@@ -278,12 +248,7 @@ export class CredentialController extends Controller {
       })
       return acceptOffer
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `credential with credential record id "${acceptCredentialOfferOptions.credentialRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -297,11 +262,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-request')
-  public async acceptRequest(
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions
-  ) {
+  public async acceptRequest(@Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions) {
     try {
       const indyCredentialFormat = new LegacyIndyCredentialFormatService()
 
@@ -309,12 +270,7 @@ export class CredentialController extends Controller {
       const credential = await v1CredentialProtocol.acceptRequest(this.agent.context, acceptCredentialRequestOptions)
       return credential
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `credential with credential record "${acceptCredentialRequestOptions.credentialRecord}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -327,11 +283,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-credential')
-  public async acceptCredential(
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Body() acceptCredential: AcceptCredential
-  ) {
+  public async acceptCredential(@Body() acceptCredential: AcceptCredential) {
     try {
       const indyCredentialFormat = new LegacyIndyCredentialFormatService()
 
@@ -339,12 +291,7 @@ export class CredentialController extends Controller {
       const credential = await v1CredentialProtocol.acceptCredential(this.agent.context, acceptCredential)
       return credential
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `credential with credential record id "${acceptCredential.credentialRecord}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
