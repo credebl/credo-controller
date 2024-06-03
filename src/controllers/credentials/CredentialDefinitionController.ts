@@ -1,17 +1,13 @@
 import type { SchemaId } from '../examples'
 
-import {
-  AnonCredsError,
-  getUnqualifiedCredentialDefinitionId,
-  parseIndyCredentialDefinitionId,
-} from '@credo-ts/anoncreds'
-import { Agent, CredoError } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum } from '../../enums/enum'
+import ErrorHandlingService from '../../errorHandlingService'
+import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Response } from 'tsoa'
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
@@ -33,26 +29,29 @@ export class CredentialDefinitionController extends Controller {
   @Example(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
   public async getCredentialDefinitionById(
-    @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId
   ) {
     try {
-      return await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
-    } catch (error) {
-      if (error instanceof CredoError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
-        return notFoundError(404, {
-          reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
-        })
-      } else if (error instanceof AnonCredsError && error.cause instanceof CredoError) {
-        if ((error.cause.cause, 'CommonInvalidStructure')) {
-          return badRequestError(400, {
-            reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,
-          })
-        }
+      const credentialDefinitionResult = await this.agent.modules.anoncreds.getCredentialDefinition(
+        credentialDefinitionId
+      )
+
+      if (credentialDefinitionResult.resolutionMetadata?.error === 'notFound') {
+        throw new NotFoundError(credentialDefinitionResult.resolutionMetadata.message)
       }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      const error = credentialDefinitionResult.resolutionMetadata?.error
+
+      if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
+        throw new BadRequestError(credentialDefinitionResult.resolutionMetadata.message)
+      }
+
+      if (error !== undefined || credentialDefinitionResult.credentialDefinition === undefined) {
+        throw new InternalServerError(credentialDefinitionResult.resolutionMetadata.message)
+      }
+
+      return credentialDefinitionResult
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -63,6 +62,8 @@ export class CredentialDefinitionController extends Controller {
    * @returns CredDef
    */
   @Example(CredentialDefinitionExample)
+  @Response(200, 'Action required')
+  @Response(202, 'Wait for action to complete')
   @Post('/')
   public async createCredentialDefinition(
     @Body()
@@ -72,9 +73,7 @@ export class CredentialDefinitionController extends Controller {
       tag: string
       endorse?: boolean
       endorserDid?: string
-    },
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    }
   ) {
     try {
       const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
@@ -84,46 +83,51 @@ export class CredentialDefinitionController extends Controller {
         tag,
         type: 'CL',
       }
+      let registerCredentialDefinitionResult
       if (!endorse) {
-        const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
+        registerCredentialDefinitionResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
           credentialDefinition: credentialDefinitionPyload,
           options: {},
         })
-
-        const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
-        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
-          indyCredDefId.namespaceIdentifier,
-          indyCredDefId.schemaSeqNo,
-          indyCredDefId.tag
-        )
-
-        if (credentialDefinitionState.state === CredentialEnum.Finished) {
-          credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
-        }
-        return credentialDefinitionState
       } else {
         if (!endorserDid) {
-          throw new Error('Please provide the endorser DID')
+          throw new BadRequestError('Please provide the endorser DID')
         }
 
-        const createCredDefTxResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
+        registerCredentialDefinitionResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
           credentialDefinition: credentialDefinitionPyload,
           options: {
             endorserMode: 'external',
             endorserDid: endorserDid ? endorserDid : '',
           },
         })
+      }
 
-        return createCredDefTxResult
+      if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'failed') {
+        throw new InternalServerError('Falied to register credef on ledger')
+      }
+
+      if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'wait') {
+        // The request has been accepted for processing, but the processing has not been completed.
+        return {
+          ...registerCredentialDefinitionResult,
+          credentialDefinitionState: registerCredentialDefinitionResult.credentialDefinitionState,
+        }
+      }
+
+      if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'action') {
+        return {
+          ...registerCredentialDefinitionResult,
+          credentialDefinitionState: registerCredentialDefinitionResult.credentialDefinitionState,
+        }
+      }
+
+      return {
+        ...registerCredentialDefinitionResult,
+        credentialDefinitionState: registerCredentialDefinitionResult.credentialDefinitionState,
       }
     } catch (error) {
-      if (error instanceof notFoundError) {
-        return notFoundError(404, {
-          reason: `schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`,
-        })
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
