@@ -3,6 +3,8 @@ import type { AgentInfo } from '../types'
 import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
+import ErrorHandlingService from '../../errorHandlingService'
+
 import { Controller, Delete, Get, Route, Tags, Security } from 'tsoa'
 
 @Tags('Agent')
@@ -35,7 +37,11 @@ export class AgentController extends Controller {
   @Security('apiKey')
   @Delete('/wallet')
   public async deleteWallet() {
-    const deleteWallet = await this.agent.wallet.delete()
-    return deleteWallet
+    try {
+      const deleteWallet = await this.agent.wallet.delete()
+      return deleteWallet
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 }
