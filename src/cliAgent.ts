@@ -26,7 +26,7 @@ import {
   KeyDidRegistrar,
   KeyDidResolver,
   CacheModule,
-  InMemoryLruCache,
+  // InMemoryLruCache,
   WebDidResolver,
   HttpOutboundTransport,
   WsOutboundTransport,
@@ -34,6 +34,7 @@ import {
   Agent,
   JsonLdCredentialFormatService,
   DifPresentationExchangeProofFormatService,
+  SingleContextStorageLruCache,
 } from '@credo-ts/core'
 import {
   IndyVdrAnonCredsRegistry,
@@ -172,7 +173,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
-      cache: new InMemoryLruCache({ limit: Infinity }),
+      cache: new SingleContextStorageLruCache({ limit: 200 }),
     }),
 
     questionAnswer: new QuestionAnswerModule(),
@@ -191,8 +192,8 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
-      sessionLimit: Infinity,
+      sessionAcquireTimeout: 2000,
+      sessionLimit: 10000,
     }),
     ...modules,
   }
