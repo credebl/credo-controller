@@ -17,7 +17,8 @@ export class BasicMessageController extends Controller {
   public constructor(agent: Agent) {
     super()
     this.agent = agent
-  }
+  } 
+  //This is cluster agent
 
   /**
    * Retrieve basic messages by connection id
