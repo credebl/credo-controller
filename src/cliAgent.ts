@@ -191,7 +191,7 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
+      sessionAcquireTimeout: 1000,
       sessionLimit: Infinity,
     }),
     ...modules,
