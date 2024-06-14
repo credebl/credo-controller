@@ -1,6 +1,7 @@
+import type { RestAgentModules } from '../../cliAgent'
 import type { ConnectionRecordProps } from '@credo-ts/core'
 
-import { ConnectionRepository, DidExchangeState, Agent } from '@credo-ts/core'
+import { DidExchangeState, Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -13,9 +14,9 @@ import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Secur
 @Route()
 @injectable()
 export class ConnectionController extends Controller {
-  private agent: Agent
+  private agent: Agent<RestAgentModules>
 
-  public constructor(agent: Agent) {
+  public constructor(agent: Agent<RestAgentModules>) {
     super()
     this.agent = agent
   }
@@ -41,29 +42,14 @@ export class ConnectionController extends Controller {
     @Query('theirLabel') theirLabel?: string
   ) {
     try {
-      let connections
-
-      if (outOfBandId) {
-        connections = await this.agent.connections.findAllByOutOfBandId(outOfBandId)
-      } else {
-        const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
-
-        const connections = await connectionRepository.findByQuery(this.agent.context, {
-          alias,
-          myDid,
-          theirDid,
-          theirLabel,
-          state,
-        })
-
-        return connections.map((c) => c.toJSON())
-      }
-
-      // if (alias) connections = connections.filter((c) => c.alias === alias)
-      // if (state) connections = connections.filter((c) => c.state === state)
-      // if (myDid) connections = connections.filter((c) => c.did === myDid)
-      // if (theirDid) connections = connections.filter((c) => c.theirDid === theirDid)
-      // if (theirLabel) connections = connections.filter((c) => c.theirLabel === theirLabel)
+      const connections = await this.agent.connections.findAllByQuery({
+        outOfBandId,
+        alias,
+        myDid,
+        theirDid,
+        theirLabel,
+        state,
+      })
 
       return connections.map((c) => c.toJSON())
     } catch (error) {
@@ -83,7 +69,7 @@ export class ConnectionController extends Controller {
     try {
       const connection = await this.agent.connections.findById(connectionId)
 
-      if (!connection) throw new NotFoundError(`connection with connection id "${connectionId}" not found.`)
+      if (!connection) throw new NotFoundError(`Connection with connection id "${connectionId}" not found.`)
 
       return connection.toJSON()
     } catch (error) {
