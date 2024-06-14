@@ -43,6 +43,7 @@ export class BasicMessageController extends Controller {
    * @param connectionId Connection identifier
    * @param content The content of the message
    */
+  @Example<BasicMessageStorageProps>(BasicMessageRecordExample)
   @Post('/:connectionId')
   public async sendMessage(@Path('connectionId') connectionId: RecordId, @Body() request: Record<'content', string>) {
     try {
