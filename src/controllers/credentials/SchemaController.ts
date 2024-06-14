@@ -14,10 +14,11 @@ import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller } fro
 @Route('/schemas')
 @Security('apiKey')
 @injectable()
-export class SchemaController {
+export class SchemaController extends Controller {
   private agent: Agent
 
   public constructor(agent: Agent) {
+    super()
     this.agent = agent
   }
 
@@ -72,50 +73,53 @@ export class SchemaController {
         version,
         attrNames: attributes,
       }
+      const createSchemaPayload = {
+        schema: schemaPayload,
+        options: {
+          endorserMode: '',
+          endorserDid: '',
+        },
+      }
 
       if (!schema.endorse) {
-        const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
-          schema: schemaPayload,
-          options: {
-            endorserMode: EndorserMode.Internal,
-            endorserDid: issuerId,
-          },
-        })
-
-        if (schemaState.state === CredentialEnum.Failed) {
-          throw new InternalServerError(schemaState.reason)
+        createSchemaPayload.options.endorserMode = EndorserMode.Internal
+        createSchemaPayload.options.endorserDid = issuerId
+      } else {
+        if (!schema.endorserDid) {
+          throw new BadRequestError(NON_ENDORSER_DID_PRESENT)
         }
+        createSchemaPayload.options.endorserMode = EndorserMode.External
+        createSchemaPayload.options.endorserDid = schema.endorserDid ? schema.endorserDid : ''
+      }
 
-        const indySchemaId = await parseIndySchemaId(schemaState.schemaId)
+      const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema(createSchemaPayload)
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Failed) {
+        throw new InternalServerError('Schema creation failed')
+      }
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Wait) {
+        this.setStatus(202)
+        return createSchemaTxResult
+      }
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Action) {
+        return createSchemaTxResult
+      }
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Finished) {
+        const indySchemaId = parseIndySchemaId(createSchemaTxResult.schemaState.schemaId as string)
 
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
           indySchemaId.namespaceIdentifier,
           indySchemaId.schemaName,
           indySchemaId.schemaVersion
         )
-        if (schemaState.state === CredentialEnum.Finished) {
-          schemaState.schemaId = getSchemaUnqualifiedId
-        }
-        return schemaState
-      } else {
-        if (!schema.endorserDid) {
-          throw new BadRequestError(NON_ENDORSER_DID_PRESENT)
-        }
 
-        const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema({
-          options: {
-            endorserMode: EndorserMode.External,
-            endorserDid: schema.endorserDid ? schema.endorserDid : '',
-          },
-          schema: schemaPayload,
-        })
-
-        if (createSchemaTxResult.schemaState.state === CredentialEnum.Failed) {
-          throw new InternalServerError('Schema creation failed')
-        }
-
-        return createSchemaTxResult
+        createSchemaTxResult.schemaState.schemaId = getSchemaUnqualifiedId
       }
+
+      return createSchemaTxResult
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
