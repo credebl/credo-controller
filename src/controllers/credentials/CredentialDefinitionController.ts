@@ -1,9 +1,12 @@
+import type { RestAgentModules } from '../../cliAgent'
 import type { SchemaId } from '../examples'
 
 import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
+import { EndorserMode } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
+import { ENDORSER_DID_ABSENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
 
@@ -14,8 +17,9 @@ import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Resp
 @Security('apiKey')
 @injectable()
 export class CredentialDefinitionController extends Controller {
-  private agent: Agent
-  public constructor(agent: Agent) {
+  // TODO: Currently this only works if Extensible from credo-ts is renamed to something else, since there are two references to Extensible
+  private agent: Agent<RestAgentModules>
+  public constructor(agent: Agent<RestAgentModules>) {
     super()
     this.agent = agent
   }
@@ -77,31 +81,34 @@ export class CredentialDefinitionController extends Controller {
   ) {
     try {
       const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
-      const credentialDefinitionPyload = {
+      const credDef = {
         issuerId,
         schemaId,
         tag,
         type: 'CL',
       }
-      let registerCredentialDefinitionResult
+      const credentialDefinitionPyload = {
+        credentialDefinition: credDef,
+        options: {
+          endorserMode: '',
+          endorserDid: '',
+          supportRevocation: false,
+        },
+      }
       if (!endorse) {
-        registerCredentialDefinitionResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
-          credentialDefinition: credentialDefinitionPyload,
-          options: {},
-        })
+        credentialDefinitionPyload.options.endorserMode = EndorserMode.Internal
+        credentialDefinitionPyload.options.endorserDid = issuerId
       } else {
         if (!endorserDid) {
-          throw new BadRequestError('Please provide the endorser DID')
+          throw new BadRequestError(ENDORSER_DID_ABSENT)
         }
-
-        registerCredentialDefinitionResult = await this.agent.modules.anoncreds.registerCredentialDefinition({
-          credentialDefinition: credentialDefinitionPyload,
-          options: {
-            endorserMode: 'external',
-            endorserDid: endorserDid ? endorserDid : '',
-          },
-        })
+        credentialDefinitionPyload.options.endorserMode = EndorserMode.External
+        credentialDefinitionPyload.options.endorserDid = endorserDid ? endorserDid : ''
       }
+
+      const registerCredentialDefinitionResult = await this.agent.modules.anoncreds.registerCredentialDefinition(
+        credentialDefinitionPyload
+      )
 
       if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'failed') {
         throw new InternalServerError('Falied to register credef on ledger')
@@ -109,6 +116,7 @@ export class CredentialDefinitionController extends Controller {
 
       if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'wait') {
         // The request has been accepted for processing, but the processing has not been completed.
+        this.setStatus(202)
         return {
           ...registerCredentialDefinitionResult,
           credentialDefinitionState: registerCredentialDefinitionResult.credentialDefinitionState,
