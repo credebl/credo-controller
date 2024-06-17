@@ -264,7 +264,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     }
 
     if (ledgerConfig.indyNamespace.includes('indicio')) {
-      if (ledgerConfig.indyNamespace === 'indicio:testnet' || ledgerConfig.indyNamespace === 'indicio:mainnet') {
+      if (ledgerConfig.indyNamespace === 'indicio:mainnet') {
         networkConfig.transactionAuthorAgreement = {
           version: '1.0',
           acceptanceMechanism: 'wallet_agreement',
