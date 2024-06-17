@@ -107,10 +107,14 @@ export class QuestionAnswerController extends Controller {
    */
   @Get('/:id')
   public async getQuestionAnswerRecordById(@Path('id') id: RecordId) {
-    const record = await this.agent.modules.questionAnswer.findById(id)
+    try {
+      const record = await this.agent.modules.questionAnswer.findById(id)
 
-    if (!record) throw new NotFoundError(`Question Answer Record with id "${id}" not found.`)
+      if (!record) throw new NotFoundError(`Question Answer Record with id "${id}" not found.`)
 
-    return record.toJSON()
+      return record.toJSON()
+    } catch (error) {
+      ErrorHandlingService.handle(error)
+    }
   }
 }
