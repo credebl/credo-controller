@@ -6,7 +6,7 @@ import { injectable } from 'tsyringe'
 
 import { EndorserMode } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
-import { ENDORSER_DID_ABSENT } from '../../errorMessages'
+import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
 
@@ -100,7 +100,7 @@ export class CredentialDefinitionController extends Controller {
         credentialDefinitionPyload.options.endorserDid = issuerId
       } else {
         if (!endorserDid) {
-          throw new BadRequestError(ENDORSER_DID_ABSENT)
+          throw new BadRequestError(ENDORSER_DID_NOT_PRESENT)
         }
         credentialDefinitionPyload.options.endorserMode = EndorserMode.External
         credentialDefinitionPyload.options.endorserDid = endorserDid ? endorserDid : ''

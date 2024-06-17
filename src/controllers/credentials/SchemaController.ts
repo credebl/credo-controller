@@ -86,7 +86,7 @@ export class SchemaController extends Controller {
         createSchemaPayload.options.endorserDid = issuerId
       } else {
         if (!schema.endorserDid) {
-          throw new BadRequestError(NON_ENDORSER_DID_PRESENT)
+          throw new BadRequestError(ENDORSER_DID_NOT_PRESENT)
         }
         createSchemaPayload.options.endorserMode = EndorserMode.External
         createSchemaPayload.options.endorserDid = schema.endorserDid ? schema.endorserDid : ''
