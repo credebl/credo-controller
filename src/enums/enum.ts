@@ -2,7 +2,6 @@ export enum CredentialEnum {
   Finished = 'finished',
   Action = 'action',
   Failed = 'failed',
-  Wait = 'wait',
 }
 
 export enum Role {
@@ -25,6 +24,7 @@ export enum NetworkName {
 
 export enum IndicioTransactionAuthorAgreement {
   Indicio_Testnet_Mainnet_Version = '1.0',
+  // To do: now testnet has also moved to version 1.3 of TAA
   Indicio_Demonet_Version = '1.3',
 }
 
