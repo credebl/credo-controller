@@ -4,7 +4,7 @@ import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
-import { NON_ENDORSER_DID_PRESENT } from '../../errorMessages'
+import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
 import { CreateSchemaSuccessful, SchemaExample } from '../examples'
 import { CreateSchemaInput } from '../types'
