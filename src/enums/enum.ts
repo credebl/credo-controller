@@ -2,6 +2,7 @@ export enum CredentialEnum {
   Finished = 'finished',
   Action = 'action',
   Failed = 'failed',
+  Wait = 'wait',
 }
 
 export enum Role {
