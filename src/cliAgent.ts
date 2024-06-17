@@ -317,10 +317,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     }
 
     if (ledgerConfig.indyNamespace.includes(NetworkName.Indicio)) {
-      if (
-        ledgerConfig.indyNamespace === (Network.Indicio_Testnet as string) ||
-        ledgerConfig.indyNamespace === (Network.Indicio_Mainnet as string)
-      ) {
+      if (ledgerConfig.indyNamespace === (Network.Indicio_Mainnet as string)) {
         networkConfig.transactionAuthorAgreement = {
           version: IndicioTransactionAuthorAgreement.Indicio_Testnet_Mainnet_Version,
           acceptanceMechanism: IndicioAcceptanceMechanism.Wallet_Agreement,
