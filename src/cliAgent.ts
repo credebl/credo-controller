@@ -209,6 +209,7 @@ const getModules = (
   }
 }
 
+// TODO: add object
 const getWithTenantModules = (
   networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]],
   didRegistryContractAddress: string,
