@@ -121,6 +121,7 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
+// TODO: add object
 const getModules = (
   networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]],
   didRegistryContractAddress: string,
@@ -142,8 +143,7 @@ const getModules = (
   return {
     askar: new AskarModule({
       ariesAskar,
-      multiWalletDatabaseScheme:
-        (walletScheme as AskarMultiWalletDatabaseScheme) || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
+      multiWalletDatabaseScheme: walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
     }),
 
     indyVdr: new IndyVdrModule({
@@ -165,7 +165,7 @@ const getModules = (
       autoAcceptConnections: autoAcceptConnections || true,
     }),
     proofs: new ProofsModule({
-      autoAcceptProofs: (autoAcceptProofs as AutoAcceptProof) || AutoAcceptProof.ContentApproved,
+      autoAcceptProofs: autoAcceptProofs || AutoAcceptProof.ContentApproved,
       proofProtocols: [
         new V1ProofProtocol({
           indyProofFormat: legacyIndyProofFormat,
@@ -176,7 +176,7 @@ const getModules = (
       ],
     }),
     credentials: new CredentialsModule({
-      autoAcceptCredentials: (autoAcceptCredentials as AutoAcceptCredential) || AutoAcceptCredential.Always,
+      autoAcceptCredentials: autoAcceptCredentials || AutoAcceptCredential.Always,
       credentialProtocols: [
         new V1CredentialProtocol({
           indyCredentialFormat: legacyIndyCredentialFormat,
@@ -197,14 +197,11 @@ const getModules = (
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: (didRegistryContractAddress as string)
-        ? (didRegistryContractAddress as string)
-        : (DID_CONTRACT_ADDRESS as string),
-      schemaManagerContractAddress:
-        (schemaManagerContractAddress as string) || (SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
-      fileServerToken: (fileServerToken as string) ? (fileServerToken as string) : (FILE_SERVER_TOKEN as string),
-      rpcUrl: (rpcUrl as string) ? (rpcUrl as string) : (RPC_URL as string),
-      serverUrl: (fileServerUrl as string) ? (fileServerUrl as string) : (SERVER_URL as string),
+      didContractAddress: didRegistryContractAddress ? didRegistryContractAddress : (DID_CONTRACT_ADDRESS as string),
+      schemaManagerContractAddress: schemaManagerContractAddress || (SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
+      fileServerToken: fileServerToken ? fileServerToken : (FILE_SERVER_TOKEN as string),
+      rpcUrl: rpcUrl ? rpcUrl : (RPC_URL as string),
+      serverUrl: fileServerUrl ? fileServerUrl : (SERVER_URL as string),
     }),
   }
 }
