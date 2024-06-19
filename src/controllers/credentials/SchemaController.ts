@@ -95,7 +95,7 @@ export class SchemaController extends Controller {
       const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema(createSchemaPayload)
 
       if (createSchemaTxResult.schemaState.state === CredentialEnum.Failed) {
-        throw new InternalServerError('Schema creation failed')
+        throw new InternalServerError(`Schema creation failed. Reason: ${createSchemaTxResult.schemaState.reason}`)
       }
 
       if (createSchemaTxResult.schemaState.state === CredentialEnum.Wait) {
