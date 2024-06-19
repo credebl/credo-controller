@@ -87,7 +87,7 @@ export class CredentialDefinitionController extends Controller {
         tag,
         type: 'CL',
       }
-      const credentialDefinitionPyload = {
+      const credentialDefinitionPayload = {
         credentialDefinition: credDef,
         options: {
           endorserMode: '',
@@ -96,18 +96,18 @@ export class CredentialDefinitionController extends Controller {
         },
       }
       if (!endorse) {
-        credentialDefinitionPyload.options.endorserMode = EndorserMode.Internal
-        credentialDefinitionPyload.options.endorserDid = issuerId
+        credentialDefinitionPayload.options.endorserMode = EndorserMode.Internal
+        credentialDefinitionPayload.options.endorserDid = issuerId
       } else {
         if (!endorserDid) {
           throw new BadRequestError(ENDORSER_DID_NOT_PRESENT)
         }
-        credentialDefinitionPyload.options.endorserMode = EndorserMode.External
-        credentialDefinitionPyload.options.endorserDid = endorserDid ? endorserDid : ''
+        credentialDefinitionPayload.options.endorserMode = EndorserMode.External
+        credentialDefinitionPayload.options.endorserDid = endorserDid ? endorserDid : ''
       }
 
       const registerCredentialDefinitionResult = await this.agent.modules.anoncreds.registerCredentialDefinition(
-        credentialDefinitionPyload
+        credentialDefinitionPayload
       )
 
       if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'failed') {
