@@ -35,18 +35,18 @@ export class SchemaController extends Controller {
   @Get('/:schemaId')
   public async getSchemaById(@Path('schemaId') schemaId: string) {
     try {
-      const getSchemBySchemaId = await this.agent.modules.anoncreds.getSchema(schemaId)
+      const schemBySchemaId = await this.agent.modules.anoncreds.getSchema(schemaId)
 
       if (
-        (getSchemBySchemaId &&
-          getSchemBySchemaId?.resolutionMetadata &&
-          getSchemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound) ||
-        getSchemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
+        (schemBySchemaId &&
+          schemBySchemaId?.resolutionMetadata &&
+          schemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound) ||
+        schemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
       ) {
-        throw new NotFoundError(getSchemBySchemaId?.resolutionMetadata?.message)
+        throw new NotFoundError(schemBySchemaId?.resolutionMetadata?.message)
       }
 
-      return getSchemBySchemaId
+      return schemBySchemaId
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
