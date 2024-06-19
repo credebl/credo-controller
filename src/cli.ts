@@ -54,7 +54,7 @@ type Transports = 'http' | 'ws'
 
 async function parseArguments(): Promise<Parsed> {
   return yargs
-    .command('start', 'Start AFJ Rest agent')
+    .command('start', 'Start Credo Rest agent')
     .option('label', {
       alias: 'l',
       string: true,
