@@ -89,7 +89,7 @@ export class SchemaController extends Controller {
           throw new BadRequestError(ENDORSER_DID_NOT_PRESENT)
         }
         createSchemaPayload.options.endorserMode = EndorserMode.External
-        createSchemaPayload.options.endorserDid = schema.endorserDid ? schema.endorserDid : ''
+        createSchemaPayload.options.endorserDid = schema.endorserDid
       }
 
       const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema(createSchemaPayload)
