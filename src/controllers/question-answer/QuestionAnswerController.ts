@@ -48,7 +48,7 @@ export class QuestionAnswerController extends Controller {
       })
       return questionAnswerRecords.map((record) => record.toJSON())
     } catch (error) {
-      ErrorHandlingService.handle(error)
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -80,7 +80,7 @@ export class QuestionAnswerController extends Controller {
 
       return record.toJSON()
     } catch (error) {
-      ErrorHandlingService.handle(error)
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -96,7 +96,7 @@ export class QuestionAnswerController extends Controller {
       const record = await this.agent.modules.questionAnswer.sendAnswer(id, request.response)
       return record.toJSON()
     } catch (error) {
-      ErrorHandlingService.handle(error)
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -114,7 +114,7 @@ export class QuestionAnswerController extends Controller {
 
       return record.toJSON()
     } catch (error) {
-      ErrorHandlingService.handle(error)
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
