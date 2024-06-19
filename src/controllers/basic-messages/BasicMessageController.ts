@@ -31,8 +31,8 @@ export class BasicMessageController extends Controller {
   @Get('/:connectionId')
   public async getBasicMessages(@Path('connectionId') connectionId: RecordId): Promise<BasicMessageRecord[]> {
     try {
-      this.setStatus(200)
       const basicMessageRecords = await this.agent.basicMessages.findAllByQuery({ connectionId })
+      this.setStatus(200)
       return basicMessageRecords
     } catch (error) {
       throw ErrorHandlingService.handle(error)
