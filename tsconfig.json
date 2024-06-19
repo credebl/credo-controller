@@ -7,7 +7,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@credo-ts/*": ["*/src"]
+      "credo-controller/*": ["*/src"]
     },
     "lib": ["ES2021.Promise"],
     "experimentalDecorators": true,
