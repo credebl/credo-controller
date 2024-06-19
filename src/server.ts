@@ -79,11 +79,16 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
         message: 'Validation Failed',
         details: err?.fields,
       })
-    }
-
-    if (err instanceof BaseError) {
+    } else if (err instanceof BaseError) {
       return res.status(err.statusCode).json({
         message: err.message,
+      })
+    } else if (err instanceof Error) {
+      // Extend the Error type with custom properties
+      const error = err as Error & { statusCode?: number; status?: number; stack?: string }
+      const statusCode = error.statusCode || error.status || 500
+      return res.status(statusCode).json({
+        message: error.message || 'Internal Server Error',
       })
     }
     next()
