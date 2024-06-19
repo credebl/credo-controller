@@ -1,3 +1,5 @@
+import type { RestAgentModules } from '../../cliAgent'
+
 import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
@@ -15,9 +17,9 @@ import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller } fro
 @Security('apiKey')
 @injectable()
 export class SchemaController extends Controller {
-  private agent: Agent
+  private agent: Agent<RestAgentModules>
 
-  public constructor(agent: Agent) {
+  public constructor(agent: Agent<RestAgentModules>) {
     super()
     this.agent = agent
   }
