@@ -12,6 +12,7 @@ import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
 import { setDynamicApiKey } from './authentication'
+import { BaseError } from './errors/errors'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
@@ -21,7 +22,7 @@ import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
 import { maxRateLimit, windowMs } from './utils/util'
 
-import { ValidateError, type Exception } from 'tsoa'
+import { ValidateError } from 'tsoa'
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
@@ -79,20 +80,16 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
         message: 'Validation Failed',
         details: err?.fields,
       })
-    }
-
-    if (err instanceof Error) {
-      const exceptionError = err as Exception
-      if (exceptionError.status === 400) {
-        return res.status(400).json({
-          message: `Bad Request`,
-          details: err.message,
-        })
-      }
-
-      agent.config.logger.error('Internal Server Error.', err)
-      return res.status(500).json({
-        message: 'Internal Server Error. Check server logging.',
+    } else if (err instanceof BaseError) {
+      return res.status(err.statusCode).json({
+        message: err.message,
+      })
+    } else if (err instanceof Error) {
+      // Extend the Error type with custom properties
+      const error = err as Error & { statusCode?: number; status?: number; stack?: string }
+      const statusCode = error.statusCode || error.status || 500
+      return res.status(statusCode).json({
+        message: error.message || 'Internal Server Error',
       })
     }
     next()
