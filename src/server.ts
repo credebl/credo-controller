@@ -95,11 +95,5 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     next()
   })
 
-  app.use(function notFoundHandler(_req, res: ExResponse) {
-    res.status(404).send({
-      message: 'Not Found',
-    })
-  })
-
   return app
 }
