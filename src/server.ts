@@ -59,10 +59,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   // apply rate limiter to all requests
   app.use(limiter)
 
-  const securityMiddleware = new SecurityMiddleware()
-  app.use(securityMiddleware.use)
-  RegisterRoutes(app)
-
+  // Note: Having used it above, redirects accordingly
   app.use((req, res, next) => {
     if (req.url == '/') {
       res.redirect('/docs')
@@ -70,6 +67,10 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     }
     next()
   })
+
+  const securityMiddleware = new SecurityMiddleware()
+  app.use(securityMiddleware.use)
+  RegisterRoutes(app)
 
   app.use(function errorHandler(err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void {
     if (err instanceof ValidateError) {
