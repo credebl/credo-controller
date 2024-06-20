@@ -52,9 +52,17 @@ import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
 import jwt from 'jsonwebtoken'
 
+import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums/enum'
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { BCOVRIN_TEST_GENESIS } from './utils/util'
+import {
+  BCOVRIN_TEST_GENESIS,
+  DID_CONTRACT_ADDRESS,
+  FILE_SERVER_TOKEN,
+  RPC_URL,
+  SCHEMA_MANAGER_CONTRACT_ADDRESS,
+  SERVER_URL,
+} from './utils/util'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -86,7 +94,6 @@ export interface AriesRestConfig {
   autoAcceptConnections?: boolean
   autoAcceptCredentials?: AutoAcceptCredential
   autoAcceptProofs?: AutoAcceptProof
-  useLegacyDidSovPrefix?: boolean
   logLevel?: LogLevel
   inboundTransports?: InboundTransport[]
   outboundTransports?: Transports[]
@@ -99,6 +106,7 @@ export interface AriesRestConfig {
   rpcUrl?: string
   fileServerUrl?: string
   fileServerToken?: string
+  walletScheme?: AskarMultiWalletDatabaseScheme
   schemaFileServerURL?: string
 }
 
@@ -113,7 +121,19 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
-const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+// TODO: add object
+const getModules = (
+  networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]],
+  didRegistryContractAddress: string,
+  fileServerToken: string,
+  fileServerUrl: string,
+  rpcUrl: string,
+  schemaManagerContractAddress: string,
+  autoAcceptConnections: boolean,
+  autoAcceptCredentials: AutoAcceptCredential,
+  autoAcceptProofs: AutoAcceptProof,
+  walletScheme: AskarMultiWalletDatabaseScheme
+) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
@@ -123,7 +143,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
   return {
     askar: new AskarModule({
       ariesAskar,
-      multiWalletDatabaseScheme: AskarMultiWalletDatabaseScheme.ProfilePerWallet,
+      multiWalletDatabaseScheme: walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
     }),
 
     indyVdr: new IndyVdrModule({
@@ -142,10 +162,10 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
 
     connections: new ConnectionsModule({
-      autoAcceptConnections: true,
+      autoAcceptConnections: autoAcceptConnections || true,
     }),
     proofs: new ProofsModule({
-      autoAcceptProofs: AutoAcceptProof.ContentApproved,
+      autoAcceptProofs: autoAcceptProofs || AutoAcceptProof.ContentApproved,
       proofProtocols: [
         new V1ProofProtocol({
           indyProofFormat: legacyIndyProofFormat,
@@ -156,7 +176,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       ],
     }),
     credentials: new CredentialsModule({
-      autoAcceptCredentials: AutoAcceptCredential.Always,
+      autoAcceptCredentials: autoAcceptCredentials || AutoAcceptCredential.Always,
       credentialProtocols: [
         new V1CredentialProtocol({
           indyCredentialFormat: legacyIndyCredentialFormat,
@@ -177,18 +197,40 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: '0xcB80F37eDD2bE3570c6C9D5B0888614E04E1e49E',
-      schemaManagerContractAddress: '0x4742d43C2dFCa5a1d4238240Afa8547Daf87Ee7a',
-      fileServerToken:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
-      rpcUrl: 'https://rpc-amoy.polygon.technology',
-      serverUrl: 'https://schema.credebl.id',
+      didContractAddress: didRegistryContractAddress ? didRegistryContractAddress : (DID_CONTRACT_ADDRESS as string),
+      schemaManagerContractAddress: schemaManagerContractAddress || (SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
+      fileServerToken: fileServerToken ? fileServerToken : (FILE_SERVER_TOKEN as string),
+      rpcUrl: rpcUrl ? rpcUrl : (RPC_URL as string),
+      serverUrl: fileServerUrl ? fileServerUrl : (SERVER_URL as string),
     }),
   }
 }
 
-const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
-  const modules = getModules(networkConfig)
+// TODO: add object
+const getWithTenantModules = (
+  networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]],
+  didRegistryContractAddress: string,
+  fileServerToken: string,
+  fileServerUrl: string,
+  rpcUrl: string,
+  schemaManagerContractAddress: string,
+  autoAcceptConnections: boolean,
+  autoAcceptCredentials: AutoAcceptCredential,
+  autoAcceptProofs: AutoAcceptProof,
+  walletScheme: AskarMultiWalletDatabaseScheme
+) => {
+  const modules = getModules(
+    networkConfig,
+    didRegistryContractAddress,
+    fileServerToken,
+    fileServerUrl,
+    rpcUrl,
+    schemaManagerContractAddress,
+    autoAcceptConnections,
+    autoAcceptCredentials,
+    autoAcceptProofs,
+    walletScheme
+  )
   return {
     tenants: new TenantsModule<typeof modules>({
       sessionAcquireTimeout: Infinity,
@@ -224,7 +266,16 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     outboundTransports = [],
     webhookUrl,
     adminPort,
+    didRegistryContractAddress,
+    fileServerToken,
+    fileServerUrl,
+    rpcUrl,
+    schemaManagerContractAddress,
     walletConfig,
+    autoAcceptConnections,
+    autoAcceptCredentials,
+    autoAcceptProofs,
+    walletScheme,
     ...afjConfig
   } = restConfig
 
@@ -263,16 +314,16 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       connectOnStartup: true,
     }
 
-    if (ledgerConfig.indyNamespace.includes('indicio')) {
-      if (ledgerConfig.indyNamespace === 'indicio:mainnet') {
+    if (ledgerConfig.indyNamespace.includes(NetworkName.Indicio)) {
+      if (ledgerConfig.indyNamespace === (Network.Indicio_Mainnet as string)) {
         networkConfig.transactionAuthorAgreement = {
-          version: '1.0',
-          acceptanceMechanism: 'wallet_agreement',
+          version: IndicioTransactionAuthorAgreement.Indicio_Testnet_Mainnet_Version,
+          acceptanceMechanism: IndicioAcceptanceMechanism.Wallet_Agreement,
         }
       } else {
         networkConfig.transactionAuthorAgreement = {
-          version: '1.3',
-          acceptanceMechanism: 'wallet_agreement',
+          version: IndicioTransactionAuthorAgreement.Indicio_Demonet_Version,
+          acceptanceMechanism: IndicioAcceptanceMechanism.Wallet_Agreement,
         }
       }
     }
@@ -292,15 +343,37 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     networkConfig = [
       {
         genesisTransactions: BCOVRIN_TEST_GENESIS,
-        indyNamespace: 'bcovrin:testnet',
+        indyNamespace: Network.Bcovrin_Testnet,
         isProduction: false,
         connectOnStartup: true,
       },
     ]
   }
 
-  const tenantModule = await getWithTenantModules(networkConfig)
-  const modules = getModules(networkConfig)
+  const tenantModule = await getWithTenantModules(
+    networkConfig,
+    didRegistryContractAddress || '',
+    fileServerToken || '',
+    fileServerUrl || '',
+    rpcUrl || '',
+    schemaManagerContractAddress || '',
+    autoAcceptConnections || true,
+    autoAcceptCredentials || AutoAcceptCredential.Always,
+    autoAcceptProofs || AutoAcceptProof.ContentApproved,
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+  )
+  const modules = getModules(
+    networkConfig,
+    didRegistryContractAddress || '',
+    fileServerToken || '',
+    fileServerUrl || '',
+    rpcUrl || '',
+    schemaManagerContractAddress || '',
+    autoAcceptConnections || true,
+    autoAcceptCredentials || AutoAcceptCredential.Always,
+    autoAcceptProofs || AutoAcceptProof.ContentApproved,
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+  )
   const agent = new Agent({
     config: agentConfig,
     modules: {
@@ -357,6 +430,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     })
   } else {
     const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
+
     token = recordWithToken?.content.token as string
   }
   const app = await setupServer(
