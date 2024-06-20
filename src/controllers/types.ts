@@ -384,6 +384,15 @@ export interface RecipientKeyOption {
   recipientKey?: string
 }
 
+export interface CreateSchemaInput {
+  issuerId: string
+  name: string
+  version: Version
+  attributes: string[]
+  endorse?: boolean
+  endorserDid?: string
+}
+
 export interface SchemaMetadata {
   did: string
   schemaId: string
