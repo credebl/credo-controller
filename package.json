@@ -1,5 +1,5 @@
 {
-  "name": "@aries-framework/rest",
+  "name": "credo-controller",
   "main": "build/index",
   "types": "build/index",
   "version": "0.9.4",
