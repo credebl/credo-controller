@@ -1,143 +1,129 @@
-import type { Version } from '../examples'
+import type { RestAgentModules } from '../../cliAgent'
 
-import { AnonCredsError, getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
-import { Agent, CredoError } from '@credo-ts/core'
+import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
+import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum } from '../../enums/enum'
-import { SchemaId, SchemaExample } from '../examples'
+import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
+import ErrorHandlingService from '../../errorHandlingService'
+import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
+import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
+import { CreateSchemaSuccessful, SchemaExample } from '../examples'
+import { CreateSchemaInput } from '../types'
 
-import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
-
+import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller } from 'tsoa'
 @Tags('Schemas')
 @Route('/schemas')
 @Security('apiKey')
 @injectable()
-export class SchemaController {
-  private agent: Agent
-  // private anonCredsSchema: AnonCredsApi
+export class SchemaController extends Controller {
+  private agent: Agent<RestAgentModules>
 
-  public constructor(agent: Agent) {
+  public constructor(agent: Agent<RestAgentModules>) {
+    super()
     this.agent = agent
-    // this.anonCredsSchema = anonCredsSchema
   }
 
   /**
-   * Retrieve schema by schema id
-   *
+   * Get schema by schemaId
    * @param schemaId
-   * @returns Schema
+   * @param notFoundErrormessage
+   * @param forbiddenError
+   * @param badRequestError
+   * @param internalServerError
+   * @returns get schema by Id
    */
   @Example(SchemaExample)
   @Get('/:schemaId')
-  public async getSchemaById(
-    @Path('schemaId') schemaId: SchemaId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() forbiddenError: TsoaResponse<403, { reason: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async getSchemaById(@Path('schemaId') schemaId: string) {
     try {
-      return await this.agent.modules.anoncreds.getSchema(schemaId)
-    } catch (errorMessage) {
+      const schemBySchemaId = await this.agent.modules.anoncreds.getSchema(schemaId)
+
       if (
-        errorMessage instanceof AnonCredsError &&
-        errorMessage.message === 'IndyError(LedgerNotFound): LedgerNotFound'
+        (schemBySchemaId &&
+          schemBySchemaId?.resolutionMetadata &&
+          schemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound) ||
+        schemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
       ) {
-        return notFoundError(404, {
-          reason: `schema definition with schemaId "${schemaId}" not found.`,
-        })
-      } else if (errorMessage instanceof AnonCredsError && errorMessage.cause instanceof AnonCredsError) {
-        if ((errorMessage.cause.cause, 'LedgerInvalidTransaction')) {
-          return forbiddenError(403, {
-            reason: `schema definition with schemaId "${schemaId}" can not be returned.`,
-          })
-        }
-        if ((errorMessage.cause.cause, 'CommonInvalidStructure')) {
-          return badRequestError(400, {
-            reason: `schemaId "${schemaId}" has invalid structure.`,
-          })
-        }
+        throw new NotFoundError(schemBySchemaId?.resolutionMetadata?.message)
       }
 
-      return internalServerError(500, { message: `something went wrong: ${errorMessage}` })
+      return schemBySchemaId
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   /**
-   * Creates a new schema and registers schema on ledger
-   *
+   * Create schema
    * @param schema
-   * @returns schema
+   * @param notFoundError
+   * @param forbiddenError
+   * @param badRequestError
+   * @param internalServerError
+   * @returns get schema
    */
-  @Example(SchemaExample)
   @Post('/')
-  public async createSchema(
-    @Body()
-    schema: {
-      issuerId: string
-      name: string
-      version: Version
-      attributes: string[]
-      endorse?: boolean
-      endorserDid?: string
-    },
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  @Example(CreateSchemaSuccessful)
+  public async createSchema(@Body() schema: CreateSchemaInput) {
     try {
       const { issuerId, name, version, attributes } = schema
 
       const schemaPayload = {
-        issuerId: issuerId,
-        name: name,
-        version: version,
+        issuerId,
+        name,
+        version,
         attrNames: attributes,
+      }
+      const createSchemaPayload = {
+        schema: schemaPayload,
+        options: {
+          endorserMode: '',
+          endorserDid: '',
+        },
       }
 
       if (!schema.endorse) {
-        const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
-          schema: schemaPayload,
-          options: {
-            endorserMode: 'internal',
-            endorserDid: issuerId,
-          },
-        })
+        createSchemaPayload.options.endorserMode = EndorserMode.Internal
+        createSchemaPayload.options.endorserDid = issuerId
+      } else {
+        if (!schema.endorserDid) {
+          throw new BadRequestError(ENDORSER_DID_NOT_PRESENT)
+        }
+        createSchemaPayload.options.endorserMode = EndorserMode.External
+        createSchemaPayload.options.endorserDid = schema.endorserDid
+      }
 
-        const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+      const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema(createSchemaPayload)
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Failed) {
+        throw new InternalServerError(`Schema creation failed. Reason: ${createSchemaTxResult.schemaState.reason}`)
+      }
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Wait) {
+        this.setStatus(202)
+        return createSchemaTxResult
+      }
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Action) {
+        return createSchemaTxResult
+      }
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Finished) {
+        const indySchemaId = parseIndySchemaId(createSchemaTxResult.schemaState.schemaId as string)
+
         const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
           indySchemaId.namespaceIdentifier,
           indySchemaId.schemaName,
           indySchemaId.schemaVersion
         )
-        if (schemaState.state === CredentialEnum.Finished) {
-          schemaState.schemaId = getSchemaUnqualifiedId
-        }
-        return schemaState
-      } else {
-        if (!schema.endorserDid) {
-          throw new Error('Please provide the endorser DID')
-        }
 
-        const createSchemaTxResult = await this.agent.modules.anoncreds.registerSchema({
-          options: {
-            endorserMode: 'external',
-            endorserDid: schema.endorserDid ? schema.endorserDid : '',
-          },
-          schema: schemaPayload,
-        })
-
-        return createSchemaTxResult
+        createSchemaTxResult.schemaState.schemaId = getSchemaUnqualifiedId
       }
+
+      return createSchemaTxResult
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
