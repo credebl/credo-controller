@@ -993,7 +993,7 @@ export class MultiTenancyController extends Controller {
     },
     @Path('tenantId') tenantId: string,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ): Promise<SchemaMetadata | string> {
+  ): Promise<SchemaMetadata> {
     try {
       const { did, schemaName, schema } = createSchemaRequest
       if (!did || !schemaName || !schema) {
