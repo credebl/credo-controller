@@ -110,18 +110,21 @@ export class SchemaController extends Controller {
       }
 
       if (createSchemaTxResult.schemaState.state === CredentialEnum.Finished) {
-        const indySchemaId = parseIndySchemaId(createSchemaTxResult.schemaState.schemaId as string)
+        // TODO: Return uniform response for both Internally and Externally endorsed Schemas
+        if (!schema.endorse) {
+          const indySchemaId = parseIndySchemaId(createSchemaTxResult.schemaState.schemaId as string)
 
-        const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
-          indySchemaId.namespaceIdentifier,
-          indySchemaId.schemaName,
-          indySchemaId.schemaVersion
-        )
+          const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+            indySchemaId.namespaceIdentifier,
+            indySchemaId.schemaName,
+            indySchemaId.schemaVersion
+          )
 
-        createSchemaTxResult.schemaState.schemaId = getSchemaUnqualifiedId
+          createSchemaTxResult.schemaState.schemaId = getSchemaUnqualifiedId
+          return createSchemaTxResult.schemaState
+        }
+        return createSchemaTxResult
       }
-
-      return createSchemaTxResult
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
