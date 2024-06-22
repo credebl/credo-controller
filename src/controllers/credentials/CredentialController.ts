@@ -1,8 +1,7 @@
 import type { RestAgentModules } from '../../cliAgent'
 import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@credo-ts/core'
 
-import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@credo-ts/anoncreds'
-import { CredentialRepository, CredentialState, Agent, W3cCredentialService, Key, KeyType } from '@credo-ts/core'
+import { CredentialState, Agent, W3cCredentialService, Key, KeyType, CredentialRole } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -16,6 +15,7 @@ import {
   CreateOfferOptions,
   AcceptCredential,
   CreateOfferOobOptions,
+  ThreadId,
 } from '../types'
 
 import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security } from 'tsoa'
@@ -42,17 +42,19 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps[]>([CredentialExchangeRecordExample])
   @Get('/')
   public async getAllCredentials(
-    @Query('threadId') threadId?: string,
-    @Query('connectionId') connectionId?: string,
-    @Query('state') state?: CredentialState
+    @Query('threadId') threadId?: ThreadId,
+    @Query('parentThreadId') parentThreadId?: ThreadId,
+    @Query('connectionId') connectionId?: RecordId,
+    @Query('state') state?: CredentialState,
+    @Query('role') role?: CredentialRole
   ) {
     try {
-      const credentialRepository = this.agent.dependencyManager.resolve(CredentialRepository)
-
-      const credentials = await credentialRepository.findByQuery(this.agent.context, {
+      const credentials = await this.agent.credentials.findAllByQuery({
         connectionId,
         threadId,
         state,
+        parentThreadId,
+        role,
       })
 
       return credentials.map((c) => c.toJSON())
@@ -67,7 +69,8 @@ export class CredentialController extends Controller {
   public async getAllW3c() {
     try {
       const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-      return await w3cCredentialService.getAllCredentialRecords(this.agent.context)
+      const w3cCredentialRecords = await w3cCredentialService.getAllCredentialRecords(this.agent.context)
+      return w3cCredentialRecords
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -79,7 +82,8 @@ export class CredentialController extends Controller {
   public async getW3cById(@Path('id') id: string) {
     try {
       const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-      return await w3cCredentialService.getCredentialRecordById(this.agent.context, id)
+      const w3cRecord = await w3cCredentialService.getCredentialRecordById(this.agent.context, id)
+      return w3cRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -113,13 +117,7 @@ export class CredentialController extends Controller {
   @Post('/propose-credential')
   public async proposeCredential(@Body() proposeCredentialOptions: ProposeCredentialOptions) {
     try {
-      const credential = await this.agent.credentials.proposeCredential({
-        connectionId: proposeCredentialOptions.connectionId,
-        protocolVersion: 'v1' as CredentialProtocolVersionType<[]>,
-        credentialFormats: proposeCredentialOptions.credentialFormats,
-        autoAcceptCredential: proposeCredentialOptions.autoAcceptCredential,
-        comment: proposeCredentialOptions.comment,
-      })
+      const credential = await this.agent.credentials.proposeCredential(proposeCredentialOptions)
       return credential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -138,12 +136,7 @@ export class CredentialController extends Controller {
   @Post('/accept-proposal')
   public async acceptProposal(@Body() acceptCredentialProposal: AcceptCredentialProposalOptions) {
     try {
-      const credential = await this.agent.credentials.acceptProposal({
-        credentialRecordId: acceptCredentialProposal.credentialRecordId,
-        credentialFormats: acceptCredentialProposal.credentialFormats,
-        autoAcceptCredential: acceptCredentialProposal.autoAcceptCredential,
-        comment: acceptCredentialProposal.comment,
-      })
+      const credential = await this.agent.credentials.acceptProposal(acceptCredentialProposal)
 
       return credential
     } catch (error) {
@@ -162,12 +155,7 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
     try {
-      const offer = await this.agent.credentials.offerCredential({
-        connectionId: createOfferOptions.connectionId,
-        protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
-        credentialFormats: createOfferOptions.credentialFormats,
-        autoAcceptCredential: createOfferOptions.autoAcceptCredential,
-      })
+      const offer = await this.agent.credentials.offerCredential(createOfferOptions)
       return offer
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -238,12 +226,7 @@ export class CredentialController extends Controller {
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
       }
-      const acceptOffer = await this.agent.credentials.acceptOffer({
-        credentialRecordId: acceptCredentialOfferOptions.credentialRecordId,
-        credentialFormats: acceptCredentialOfferOptions.credentialFormats,
-        autoAcceptCredential: acceptCredentialOfferOptions.autoAcceptCredential,
-        comment: acceptCredentialOfferOptions.comment,
-      })
+      const acceptOffer = await this.agent.credentials.acceptOffer(acceptCredentialOfferOptions)
       return acceptOffer
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -262,10 +245,7 @@ export class CredentialController extends Controller {
   @Post('/accept-request')
   public async acceptRequest(@Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService()
-
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat })
-      const credential = await v1CredentialProtocol.acceptRequest(this.agent.context, acceptCredentialRequestOptions)
+      const credential = await this.agent.credentials.acceptRequest(acceptCredentialRequestOptions)
       return credential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -283,10 +263,7 @@ export class CredentialController extends Controller {
   @Post('/accept-credential')
   public async acceptCredential(@Body() acceptCredential: AcceptCredential) {
     try {
-      const indyCredentialFormat = new LegacyIndyCredentialFormatService()
-
-      const v1CredentialProtocol = new V1CredentialProtocol({ indyCredentialFormat })
-      const credential = await v1CredentialProtocol.acceptCredential(this.agent.context, acceptCredential)
+      const credential = await this.agent.credentials.acceptCredential(acceptCredential)
       return credential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
