@@ -1,10 +1,11 @@
 import type { RestAgentModules } from '../../cliAgent'
 import type { SchemaId } from '../examples'
 
+import { getUnqualifiedCredentialDefinitionId, parseIndyCredentialDefinitionId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
-import { EndorserMode } from '../../enums/enum'
+import { CredentialEnum, EndorserMode } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
@@ -110,30 +111,34 @@ export class CredentialDefinitionController extends Controller {
         credentialDefinitionPayload
       )
 
-      if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'failed') {
+      if (registerCredentialDefinitionResult.credentialDefinitionState.state === CredentialEnum.Failed) {
         throw new InternalServerError('Falied to register credef on ledger')
       }
 
-      if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'wait') {
+      if (registerCredentialDefinitionResult.credentialDefinitionState.state === CredentialEnum.Wait) {
         // The request has been accepted for processing, but the processing has not been completed.
         this.setStatus(202)
-        return {
-          ...registerCredentialDefinitionResult,
-          credentialDefinitionState: registerCredentialDefinitionResult.credentialDefinitionState,
-        }
+        return registerCredentialDefinitionResult
       }
 
-      if (registerCredentialDefinitionResult.credentialDefinitionState.state === 'action') {
-        return {
-          ...registerCredentialDefinitionResult,
-          credentialDefinitionState: registerCredentialDefinitionResult.credentialDefinitionState,
-        }
+      if (registerCredentialDefinitionResult.credentialDefinitionState.state === CredentialEnum.Action) {
+        return registerCredentialDefinitionResult
       }
 
-      return {
-        ...registerCredentialDefinitionResult,
-        credentialDefinitionState: registerCredentialDefinitionResult.credentialDefinitionState,
+      // TODO: Return uniform response for both Internally and Externally endorsed Schemas
+      if (!endorse) {
+        const indyCredDefId = parseIndyCredentialDefinitionId(
+          registerCredentialDefinitionResult.credentialDefinitionState.credentialDefinitionId as string
+        )
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+          indyCredDefId.namespaceIdentifier,
+          indyCredDefId.schemaSeqNo,
+          indyCredDefId.tag
+        )
+        registerCredentialDefinitionResult.credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
+        return registerCredentialDefinitionResult.credentialDefinitionState
       }
+      return registerCredentialDefinitionResult
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
