@@ -135,10 +135,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-proposal')
-  public async acceptProposal(
-    // @Path('credentialRecordId') credentialRecordId: RecordId,
-    @Body() acceptCredentialProposal: AcceptCredentialProposalOptions
-  ) {
+  public async acceptProposal(@Body() acceptCredentialProposal: AcceptCredentialProposalOptions) {
     try {
       const credential = await this.agent.credentials.acceptProposal({
         credentialRecordId: acceptCredentialProposal.credentialRecordId,
