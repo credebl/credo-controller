@@ -1,3 +1,4 @@
+import type { RestAgentModules } from '../../cliAgent'
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
 import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../types'
 import type {
@@ -6,7 +7,6 @@ import type {
   PeerDidNumAlgo2CreateOptions,
   Routing,
 } from '@credo-ts/core'
-import type { RestAgentModules } from 'src/cliAgent'
 
 import {
   AgentMessage,
@@ -20,25 +20,12 @@ import {
 } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
+import ErrorHandlingService from '../../errorHandlingService'
+import { NotFoundError } from '../../errors'
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
 import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
 
-import ErrorHandlingService from 'src/errorHandlingService'
-import {
-  Body,
-  Controller,
-  Delete,
-  Example,
-  Get,
-  Path,
-  Post,
-  Query,
-  Res,
-  Route,
-  Tags,
-  TsoaResponse,
-  Security,
-} from 'tsoa'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 
 @Tags('Out Of Band')
 @Security('apiKey')
@@ -78,15 +65,11 @@ export class OutOfBandController extends Controller {
    */
   @Example<OutOfBandRecordWithInvitationProps>(outOfBandRecordExample)
   @Get('/:outOfBandId')
-  public async getOutOfBandRecordById(
-    @Path('outOfBandId') outOfBandId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
-  ) {
+  public async getOutOfBandRecordById(@Path('outOfBandId') outOfBandId: RecordId) {
     try {
       const outOfBandRecord = await this.agent.oob.findById(outOfBandId)
 
-      if (!outOfBandRecord)
-        return notFoundError(404, { reason: `Out of band record with id "${outOfBandId}" not found.` })
+      if (!outOfBandRecord) throw new NotFoundError(`Out of band record with id "${outOfBandId}" not found.`)
 
       return outOfBandRecord.toJSON()
     } catch (error) {
@@ -111,7 +94,6 @@ export class OutOfBandController extends Controller {
   })
   @Post('/create-invitation')
   public async createInvitation(
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
   ) {
     try {
@@ -169,7 +151,6 @@ export class OutOfBandController extends Controller {
   })
   @Post('/create-legacy-invitation')
   public async createLegacyInvitation(
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
   ) {
     try {
