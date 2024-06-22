@@ -1200,38 +1200,12 @@
 				"type": "string",
 				"example": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
 			},
-			"AutoAcceptCredential": {
-				"description": "Typing of the state for auto acceptance",
+			"ProtocolVersion": {
 				"enum": [
-					"always",
-					"contentApproved",
-					"never"
+					"v1",
+					"v2"
 				],
 				"type": "string"
-			},
-			"CreateOfferOptions": {
-				"properties": {
-					"protocolVersion": {
-						"type": "string"
-					},
-					"connectionId": {
-						"type": "string"
-					},
-					"credentialFormats": {},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"protocolVersion",
-					"connectionId",
-					"credentialFormats"
-				],
-				"type": "object",
-				"additionalProperties": false
 			},
 			"CredentialPreviewAttributeOptions": {
 				"properties": {
@@ -1412,6 +1386,56 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CredentialFormatPayload_CredentialFormats.createOffer_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"AutoAcceptCredential": {
+				"description": "Typing of the state for auto acceptance",
+				"enum": [
+					"always",
+					"contentApproved",
+					"never"
+				],
+				"type": "string"
+			},
+			"CreateOfferOptions": {
+				"properties": {
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProtocolVersion"
+					},
+					"connectionId": {
+						"$ref": "#/components/schemas/RecordId"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.createOffer_"
+					},
+					"autoAcceptCredential": {
+						"$ref": "#/components/schemas/AutoAcceptCredential"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"protocolVersion",
+					"connectionId",
+					"credentialFormats"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialFormatPayload_CredentialFormatType-Array.createOffer_": {
 				"properties": {
 					"indy": {
@@ -1555,6 +1579,122 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
+			"DidRegistrationSecretOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidOperationStateWait": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidOperationStateActionBase": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state",
+					"action"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidOperationStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state",
+					"did",
+					"didDocument"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidOperationStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidRegistrationMetadata": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"DidResolutionMetadata": {
 				"properties": {
 					"contentType": {
@@ -1583,6 +1723,42 @@
 						"type": "boolean"
 					}
 				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidCreateResult_DidOperationStateActionBase_": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"didState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/DidOperationStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateActionBase"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateFailed"
+							}
+						]
+					},
+					"didRegistrationMetadata": {
+						"$ref": "#/components/schemas/DidRegistrationMetadata"
+					},
+					"didDocumentMetadata": {
+						"$ref": "#/components/schemas/DidResolutionMetadata"
+					}
+				},
+				"required": [
+					"didState",
+					"didRegistrationMetadata",
+					"didDocumentMetadata"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -1621,74 +1797,581 @@
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
-			"W3cCredentialRecord": {
+			"DidRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
-			"ConnectionRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"ProposeCredentialOptions": {
+			"AnonCredsSchema": {
 				"properties": {
-					"connectionRecord": {
-						"$ref": "#/components/schemas/ConnectionRecord"
+					"issuerId": {
+						"type": "string"
 					},
-					"credentialFormats": {
+					"name": {
+						"type": "string"
+					},
+					"version": {
+						"type": "string"
+					},
+					"attrNames": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"issuerId",
+					"name",
+					"version",
+					"attrNames"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsResolutionMetadata": {
+				"properties": {
+					"error": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"enum": [
+									"invalid",
+									"notFound",
+									"unsupportedAnonCredsMethod"
+								]
+							}
+						]
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredoExtensible": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"GetSchemaReturn": {
+				"properties": {
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"resolutionMetadata": {
+						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
+					},
+					"schemaMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"schemaId",
+					"resolutionMetadata",
+					"schemaMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateWait": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateAction": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"action",
+					"schema",
+					"schemaId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"schema",
+					"schemaId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"reason": {
+						"type": "string"
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturn": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"schemaState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateAction"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateFailed"
+							}
+						]
+					},
+					"schemaMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					},
+					"registrationMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"schemaState",
+					"schemaMetadata",
+					"registrationMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateSchemaInput": {
+				"properties": {
+					"issuerId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"version": {
+						"$ref": "#/components/schemas/Version"
+					},
+					"attributes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"endorse": {
+						"type": "boolean"
+					},
+					"endorserDid": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"issuerId",
+					"name",
+					"version",
+					"attributes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsCredentialDefinition": {
+				"properties": {
+					"issuerId": {
+						"type": "string"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"CL"
+						],
+						"nullable": false
+					},
+					"tag": {
+						"type": "string"
+					},
+					"value": {
 						"properties": {
-							"indy": {
-								"properties": {
-									"attributes": {
-										"items": {
-											"properties": {
-												"value": {
-													"type": "string"
-												},
-												"name": {
-													"type": "string"
-												}
-											},
-											"required": [
-												"value",
-												"name"
-											],
-											"type": "object"
-										},
-										"type": "array"
-									},
-									"issuerDid": {
-										"type": "string"
-									},
-									"credentialDefinitionId": {
-										"type": "string"
-									},
-									"schemaVersion": {
-										"type": "string"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"schemaId": {
-										"type": "string"
-									},
-									"schemaIssuerDid": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"issuerDid",
-									"credentialDefinitionId",
-									"schemaVersion",
-									"schemaName",
-									"schemaId",
-									"schemaIssuerDid"
-								],
-								"type": "object"
+							"revocation": {},
+							"primary": {
+								"$ref": "#/components/schemas/Record_string.unknown_"
 							}
 						},
 						"required": [
-							"indy"
+							"primary"
 						],
 						"type": "object"
+					}
+				},
+				"required": [
+					"issuerId",
+					"schemaId",
+					"type",
+					"tag",
+					"value"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"GetCredentialDefinitionReturn": {
+				"properties": {
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"resolutionMetadata": {
+						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
+					},
+					"credentialDefinitionMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"credentialDefinitionId",
+					"resolutionMetadata",
+					"credentialDefinitionMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateWait": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateAction": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					}
+				},
+				"required": [
+					"state",
+					"action",
+					"credentialDefinitionId",
+					"credentialDefinition"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"credentialDefinition",
+					"credentialDefinitionId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"reason": {
+						"type": "string"
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturn": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"credentialDefinitionState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateAction"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFailed"
+							}
+						]
+					},
+					"credentialDefinitionMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					},
+					"registrationMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"credentialDefinitionState",
+					"credentialDefinitionMetadata",
+					"registrationMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ThreadId": {
+				"type": "string",
+				"example": "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
+			},
+			"CredentialRole": {
+				"enum": [
+					"issuer",
+					"holder"
+				],
+				"type": "string"
+			},
+			"W3cCredentialRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"CredentialExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__": {
+				"properties": {
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_": {
+				"$ref": "#/components/schemas/Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"LegacyIndyProposeCredentialFormat": {
+				"$ref": "#/components/schemas/Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_",
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer\n\nNOTE: This doesn't include the `issuerId` and `schemaIssuerId` properties that are present in the newer format."
+			},
+			"AnonCredsProposeCredentialFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer",
+				"properties": {
+					"schemaIssuerId": {
+						"type": "string"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"issuerId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_CredentialFormatType-Array.createProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/LegacyIndyProposeCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsProposeCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"ProposeCredentialOptions": {
+				"properties": {
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProtocolVersion"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormatType-Array.createProposal_"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -1697,20 +2380,66 @@
 						"type": "string"
 					},
 					"connectionId": {
-						"type": "string"
+						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"connectionRecord",
+					"protocolVersion",
 					"credentialFormats",
 					"connectionId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+			"AnonCredsAcceptProposalFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptProposal",
+				"properties": {
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryIndex": {
+						"type": "number",
+						"format": "double"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Record_string.never_": {
 				"properties": {},
-				"additionalProperties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"EmptyObject": {
+				"$ref": "#/components/schemas/Record_string.never_"
+			},
+			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
@@ -1735,16 +2464,35 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"AnonCredsAcceptOfferFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptOffer. No options are available for this\nmethod, so it's an empty object",
+				"properties": {
+					"linkSecretId": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialFormatPayload_CredentialFormats.acceptOffer_": {
-				"properties": {},
-				"additionalProperties": {},
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"CredentialOfferOptions": {
 				"properties": {
 					"credentialRecordId": {
-						"type": "string"
+						"$ref": "#/components/schemas/RecordId"
 					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
@@ -1762,19 +2510,39 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialExchangeRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
+			"AnonCredsAcceptRequestFormat": {
+				"$ref": "#/components/schemas/Record_string.never_",
+				"description": "This defines the module payload for calling CredentialsApi.acceptRequest. No options are available for this\nmethod, so it's an empty object"
+			},
+			"JsonLdAcceptRequestFormat": {
+				"description": "Format for accepting a jsonld credential request. Optionally allows the verification\nmethod to use to sign the credential.",
+				"properties": {
+					"verificationMethod": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
-				"properties": {},
-				"additionalProperties": {},
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdAcceptRequestFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"AcceptCredentialRequestOptions": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
 					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptRequest_"
@@ -1787,19 +2555,19 @@
 					}
 				},
 				"required": [
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"AcceptCredential": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -1854,7 +2622,7 @@
 		}
 	},
 	"info": {
-		"title": "@aries-framework/rest",
+		"title": "credo-controller",
 		"version": "0.9.4",
 		"description": "Rest endpoint wrapper for using your agent over HTTP",
 		"license": {
@@ -4848,14 +5616,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"anyOf": [
-										{
-											"$ref": "#/components/schemas/SchemaMetadata"
-										},
-										{
-											"type": "string"
-										}
-									]
+									"$ref": "#/components/schemas/SchemaMetadata"
 								}
 							}
 						}
@@ -6858,40 +7619,12 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
-											"type": "string"
-										}
+										"signedTransaction": {}
 									},
 									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
+										"signedTransaction"
 									],
 									"type": "object"
 								}
@@ -6928,24 +7661,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/DidCreateResult_DidOperationStateActionBase_"
 								}
 							}
 						}
@@ -7051,37 +7768,23 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"anyOf": [
-										{
-											"properties": {
-												"importDid": {}
-											},
-											"required": [
-												"importDid"
-											],
-											"type": "object"
+									"properties": {
+										"didDocumentMetadata": {
+											"$ref": "#/components/schemas/DIDDocumentMetadata"
 										},
-										{
-											"properties": {
-												"importDid": {},
-												"didDocumentMetadata": {
-													"$ref": "#/components/schemas/DIDDocumentMetadata"
-												},
-												"didResolutionMetadata": {
-													"$ref": "#/components/schemas/DidResolutionMetadata"
-												},
-												"didDocument": {
-													"$ref": "#/components/schemas/Record_string.any_"
-												}
-											},
-											"required": [
-												"didDocumentMetadata",
-												"didResolutionMetadata",
-												"didDocument"
-											],
-											"type": "object"
+										"didResolutionMetadata": {
+											"$ref": "#/components/schemas/DidResolutionMetadata"
+										},
+										"didDocument": {
+											"$ref": "#/components/schemas/Record_string.any_"
 										}
-									]
+									},
+									"required": [
+										"didDocumentMetadata",
+										"didResolutionMetadata",
+										"didDocument"
+									],
+									"type": "object"
 								},
 								"examples": {
 									"Example 1": {
@@ -7163,24 +7866,31 @@
 						"description": "DidResolutionResult",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"did": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
+											"didDocument": {
+												"@context": [
+													"https://w3id.org/did/v1",
+													"https://w3id.org/security/suites/ed25519-2018/v1"
+												],
+												"id": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
+												"verificationMethod": [
+													{
+														"id": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey",
+														"type": "Ed25519VerificationKey2018",
+														"controller": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
+														"publicKeyBase58": "BapLDK4dEY88vWcQgNbpAPVVP4r3CHs4MvShmmhqkxXM"
+													}
+												],
+												"authentication": [
+													"did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7#verkey"
+												]
+											}
 										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									}
 								}
 							}
 						}
@@ -7216,24 +7926,11 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
+									"items": {
+										"$ref": "#/components/schemas/DidRecord"
 									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"type": "array"
 								}
 							}
 						}
@@ -7255,10 +7952,12 @@
 				"operationId": "GetSchemaById",
 				"responses": {
 					"200": {
-						"description": "Schema",
+						"description": "get schema by Id",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/GetSchemaReturn"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -7275,81 +7974,9 @@
 								}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
-				"description": "Retrieve schema by schema id",
+				"description": "Get schema by schemaId",
 				"tags": [
 					"Schemas"
 				],
@@ -7364,7 +7991,7 @@
 						"name": "schemaId",
 						"required": true,
 						"schema": {
-							"$ref": "#/components/schemas/SchemaId"
+							"type": "string"
 						}
 					}
 				]
@@ -7375,65 +8002,41 @@
 				"operationId": "CreateSchema",
 				"responses": {
 					"200": {
-						"description": "schema",
+						"description": "get schema",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturn"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
+										}
+									]
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0",
-											"name": "schema",
-											"version": "1.0",
-											"attrNames": [
-												"string"
-											],
-											"seqNo": 351936
+											"state": "finished",
+											"schema": {
+												"issuerId": "did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7",
+												"name": "Test Schema",
+												"version": "1.0.0",
+												"attrNames": [
+													"Name",
+													"Age"
+												]
+											},
+											"schemaId": "LRCUFcizUL74AGgLqdJHK7:2:Test Schema:1.0.0"
 										}
 									}
 								}
 							}
 						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
-				"description": "Creates a new schema and registers schema on ledger",
+				"description": "Create schema",
 				"tags": [
 					"Schemas"
 				],
@@ -7448,36 +8051,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"endorserDid": {
-										"type": "string"
-									},
-									"endorse": {
-										"type": "boolean"
-									},
-									"attributes": {
-										"items": {
-											"type": "string"
-										},
-										"type": "array"
-									},
-									"version": {
-										"$ref": "#/components/schemas/Version"
-									},
-									"name": {
-										"type": "string"
-									},
-									"issuerId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"version",
-									"name",
-									"issuerId"
-								],
-								"type": "object"
+								"$ref": "#/components/schemas/CreateSchemaInput"
 							}
 						}
 					}
@@ -7492,7 +8066,9 @@
 						"description": "CredDef",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/GetCredentialDefinitionReturn"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -7528,60 +8104,6 @@
 											}
 										}
 									}
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -7616,7 +8138,16 @@
 						"description": "CredDef",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturn"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
+										}
+									]
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -7656,41 +8187,8 @@
 							}
 						}
 					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
+					"202": {
+						"description": "Wait for action to complete"
 					}
 				},
 				"description": "Creates a new credential definition.",
@@ -7796,7 +8294,15 @@
 						"name": "threadId",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/ThreadId"
+						}
+					},
+					{
+						"in": "query",
+						"name": "parentThreadId",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ThreadId"
 						}
 					},
 					{
@@ -7804,7 +8310,7 @@
 						"name": "connectionId",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/RecordId"
 						}
 					},
 					{
@@ -7813,6 +8319,14 @@
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/CredentialState"
+						}
+					},
+					{
+						"in": "query",
+						"name": "role",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/CredentialRole"
 						}
 					}
 				]
@@ -7890,7 +8404,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -7914,42 +8430,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -7984,7 +8464,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8008,42 +8490,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8079,7 +8525,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8103,42 +8551,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8174,7 +8586,9 @@
 						"description": "AgentMessage, CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8198,24 +8612,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8251,22 +8647,44 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
 									"properties": {
-										"message": {
+										"recipientKey": {
+											"anyOf": [
+												{
+													"properties": {
+														"recipientKey": {}
+													},
+													"type": "object"
+												},
+												{
+													"properties": {
+														"recipientKey": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"recipientKey"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
 											"type": "string"
 										}
 									},
 									"required": [
-										"message"
+										"recipientKey",
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
 									],
 									"type": "object"
 								}
@@ -8303,7 +8721,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8327,42 +8747,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8398,7 +8782,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8422,42 +8808,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8493,7 +8843,9 @@
 						"description": "CredentialExchangeRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8517,42 +8869,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8588,7 +8904,12 @@
 						"description": "ConnectionRecord[]",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Record_string.unknown_"
+									},
+									"type": "array"
+								},
 								"examples": {
 									"Example 1": {
 										"value": [
@@ -8688,7 +9009,9 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8707,24 +9030,6 @@
 											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8754,49 +9059,8 @@
 			"delete": {
 				"operationId": "DeleteConnection",
 				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
+					"204": {
+						"description": "No content"
 					}
 				},
 				"description": "Deletes a connection record from the connection repository.",
@@ -8829,7 +9093,9 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8848,42 +9114,6 @@
 											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -8919,7 +9149,9 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -8938,42 +9170,6 @@
 											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -9009,42 +9205,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/PlaintextMessage"
 								}
 							}
 						}
@@ -9130,42 +9292,24 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
+									"$ref": "#/components/schemas/BasicMessageRecord"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"_tags": {
+												"role": "sender",
+												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
+											},
+											"metadata": {},
+											"id": "74bcf865-1fdc-45b4-b517-9def02dfd25f",
+											"createdAt": "2022-08-18T08:38:40.216Z",
+											"content": "string",
+											"sentTime": "2022-08-18T08:38:40.216Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
 										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									}
 								}
 							}
 						}
@@ -9321,42 +9465,11 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}
@@ -9420,42 +9533,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/Record_string.unknown_"
 								}
 							}
 						}
@@ -9501,24 +9580,8 @@
 						"description": "ConnectionRecord",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/Record_string.unknown_"
 								}
 							}
 						}

@@ -7,10 +7,11 @@ import {
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
 } from '@credo-ts/anoncreds'
-import { Agent, CredoError } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum } from '../../enums/enum'
+import ErrorHandlingService from '../../errorHandlingService'
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
 
 import { Body, Controller, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
@@ -28,11 +29,7 @@ export class EndorserTransactionController extends Controller {
   }
 
   @Post('/endorse')
-  public async endorserTransaction(
-    @Body() endorserTransaction: EndorserTransaction,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>
-  ) {
+  public async endorserTransaction(@Body() endorserTransaction: EndorserTransaction) {
     try {
       const signedTransaction = await this.agent.modules.indyVdr.endorseTransaction(
         endorserTransaction.transaction,
@@ -41,22 +38,12 @@ export class EndorserTransactionController extends Controller {
 
       return { signedTransaction }
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Post('/set-endorser-role')
-  public async didNymTransaction(
-    @Body() didNymTransaction: DidNymTransaction,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async didNymTransaction(@Body() didNymTransaction: DidNymTransaction) {
     try {
       const didCreateSubmitResult = await this.agent.dids.create<IndyVdrDidCreateOptions>({
         did: didNymTransaction.did,
@@ -70,7 +57,7 @@ export class EndorserTransactionController extends Controller {
 
       return didCreateSubmitResult
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -98,14 +85,7 @@ export class EndorserTransactionController extends Controller {
         throw new Error('Please provide valid schema or credential-def!')
       }
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -144,7 +124,7 @@ export class EndorserTransactionController extends Controller {
       }
       return schemaState
     } catch (error) {
-      return error
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -181,7 +161,7 @@ export class EndorserTransactionController extends Controller {
       }
       return credentialDefinitionState
     } catch (error) {
-      return error
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
