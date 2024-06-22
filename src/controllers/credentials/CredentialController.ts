@@ -61,6 +61,8 @@ export class CredentialController extends Controller {
     }
   }
 
+  // TODO: Fix W3cCredentialRecordExample from example
+  // @Example<W3cCredentialRecordOptions[]>([W3cCredentialRecordExample])
   @Get('/w3c')
   public async getAllW3c() {
     try {
@@ -71,6 +73,8 @@ export class CredentialController extends Controller {
     }
   }
 
+  // TODO: Fix W3cCredentialRecordExample from example
+  // @Example<W3cCredentialRecordOptions[]>([W3cCredentialRecordExample])
   @Get('/w3c/:id')
   public async getW3cById(@Path('id') id: string) {
     try {

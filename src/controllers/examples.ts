@@ -164,6 +164,35 @@ export const outOfBandRecordExample = {
   reusable: false,
 }
 
+// TODO: Fix example to satisfy W3cCredentialRecordOptions
+export const W3cCredentialRecordExample = {
+  credential: {
+    // Populate with the required properties for a W3cVerifiableCredential
+    // Example:
+    '@context': ['https://www.w3.org/2018/credentials/v1'],
+    type: ['VerifiableCredential'],
+    issuer: 'https://example.com',
+    issuanceDate: '2023-01-01T00:00:00Z',
+    credentialSubject: {
+      id: 'did:example:1234567890',
+      name: 'John Doe',
+    },
+    proof: {
+      type: 'Ed25519Signature2018',
+      created: '2023-01-01T00:00:00Z',
+      proofPurpose: 'assertionMethod',
+      verificationMethod: 'https://example.com/keys/1',
+      jws: '...',
+    },
+  },
+  tags: {
+    // Populate with the required properties for CustomW3cCredentialTags
+    // Example:
+    tag1: 'value1',
+    tag2: 'value2',
+  },
+}
+
 export const CredentialExchangeRecordExample = {
   _tags: {
     state: 'offer-sent',
