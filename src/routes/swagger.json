@@ -5425,7 +5425,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/SchemaMetadata"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/SchemaMetadata"
+										},
+										{
+											"type": "string"
+										}
+									]
 								}
 							}
 						}
