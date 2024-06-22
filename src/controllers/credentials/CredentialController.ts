@@ -28,13 +28,10 @@ export class CredentialController extends Controller {
   private agent: Agent<RestAgentModules>
   private outOfBandController: OutOfBandController
 
-  // private v1CredentialProtocol: V1CredentialProtocol
-
   public constructor(agent: Agent<RestAgentModules>, outOfBandController: OutOfBandController) {
     super()
     this.agent = agent
     this.outOfBandController = outOfBandController
-    // this.v1CredentialProtocol = v1CredentialProtocol
   }
 
   /**
