@@ -1200,38 +1200,12 @@
 				"type": "string",
 				"example": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
 			},
-			"AutoAcceptCredential": {
-				"description": "Typing of the state for auto acceptance",
+			"ProtocolVersion": {
 				"enum": [
-					"always",
-					"contentApproved",
-					"never"
+					"v1",
+					"v2"
 				],
 				"type": "string"
-			},
-			"CreateOfferOptions": {
-				"properties": {
-					"protocolVersion": {
-						"type": "string"
-					},
-					"connectionId": {
-						"type": "string"
-					},
-					"credentialFormats": {},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"protocolVersion",
-					"connectionId",
-					"credentialFormats"
-				],
-				"type": "object",
-				"additionalProperties": false
 			},
 			"CredentialPreviewAttributeOptions": {
 				"properties": {
@@ -1408,6 +1382,56 @@
 				"required": [
 					"credential",
 					"options"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_CredentialFormats.createOffer_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsOfferCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"AutoAcceptCredential": {
+				"description": "Typing of the state for auto acceptance",
+				"enum": [
+					"always",
+					"contentApproved",
+					"never"
+				],
+				"type": "string"
+			},
+			"CreateOfferOptions": {
+				"properties": {
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProtocolVersion"
+					},
+					"connectionId": {
+						"$ref": "#/components/schemas/RecordId"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.createOffer_"
+					},
+					"autoAcceptCredential": {
+						"$ref": "#/components/schemas/AutoAcceptCredential"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"protocolVersion",
+					"connectionId",
+					"credentialFormats"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -2160,77 +2184,194 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"RegisterCredentialDefinitionReturnStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"reason": {
+						"type": "string"
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturn": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"credentialDefinitionState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateAction"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFailed"
+							}
+						]
+					},
+					"credentialDefinitionMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					},
+					"registrationMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"credentialDefinitionState",
+					"credentialDefinitionMetadata",
+					"registrationMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ThreadId": {
+				"type": "string",
+				"example": "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
+			},
+			"CredentialRole": {
+				"enum": [
+					"issuer",
+					"holder"
+				],
+				"type": "string"
+			},
 			"W3cCredentialRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"CredentialExchangeRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
-			"ConnectionRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
+			"Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__": {
+				"properties": {
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_": {
+				"$ref": "#/components/schemas/Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"LegacyIndyProposeCredentialFormat": {
+				"$ref": "#/components/schemas/Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_",
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer\n\nNOTE: This doesn't include the `issuerId` and `schemaIssuerId` properties that are present in the newer format."
+			},
+			"AnonCredsProposeCredentialFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer",
+				"properties": {
+					"schemaIssuerId": {
+						"type": "string"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"issuerId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_CredentialFormatType-Array.createProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/LegacyIndyProposeCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsProposeCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"ProposeCredentialOptions": {
 				"properties": {
-					"connectionRecord": {
-						"$ref": "#/components/schemas/ConnectionRecord"
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProtocolVersion"
 					},
 					"credentialFormats": {
-						"properties": {
-							"indy": {
-								"properties": {
-									"attributes": {
-										"items": {
-											"properties": {
-												"value": {
-													"type": "string"
-												},
-												"name": {
-													"type": "string"
-												}
-											},
-											"required": [
-												"value",
-												"name"
-											],
-											"type": "object"
-										},
-										"type": "array"
-									},
-									"issuerDid": {
-										"type": "string"
-									},
-									"credentialDefinitionId": {
-										"type": "string"
-									},
-									"schemaVersion": {
-										"type": "string"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"schemaId": {
-										"type": "string"
-									},
-									"schemaIssuerDid": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"issuerDid",
-									"credentialDefinitionId",
-									"schemaVersion",
-									"schemaName",
-									"schemaId",
-									"schemaIssuerDid"
-								],
-								"type": "object"
-							}
-						},
-						"required": [
-							"indy"
-						],
-						"type": "object"
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormatType-Array.createProposal_"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -2239,20 +2380,66 @@
 						"type": "string"
 					},
 					"connectionId": {
-						"type": "string"
+						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"connectionRecord",
+					"protocolVersion",
 					"credentialFormats",
 					"connectionId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+			"AnonCredsAcceptProposalFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptProposal",
+				"properties": {
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryIndex": {
+						"type": "number",
+						"format": "double"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Record_string.never_": {
 				"properties": {},
-				"additionalProperties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"EmptyObject": {
+				"$ref": "#/components/schemas/Record_string.never_"
+			},
+			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
@@ -2277,16 +2464,35 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"AnonCredsAcceptOfferFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptOffer. No options are available for this\nmethod, so it's an empty object",
+				"properties": {
+					"linkSecretId": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialFormatPayload_CredentialFormats.acceptOffer_": {
-				"properties": {},
-				"additionalProperties": {},
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"CredentialOfferOptions": {
 				"properties": {
 					"credentialRecordId": {
-						"type": "string"
+						"$ref": "#/components/schemas/RecordId"
 					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
@@ -2304,35 +2510,39 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"V1IssueCredentialMessage": {
-				"$ref": "#/components/schemas/PlaintextMessage"
+			"AnonCredsAcceptRequestFormat": {
+				"$ref": "#/components/schemas/Record_string.never_",
+				"description": "This defines the module payload for calling CredentialsApi.acceptRequest. No options are available for this\nmethod, so it's an empty object"
 			},
-			"CredentialProtocolMsgReturnType_V1IssueCredentialMessage_": {
+			"JsonLdAcceptRequestFormat": {
+				"description": "Format for accepting a jsonld credential request. Optionally allows the verification\nmethod to use to sign the credential.",
 				"properties": {
-					"message": {
-						"$ref": "#/components/schemas/V1IssueCredentialMessage"
-					},
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"verificationMethod": {
+						"type": "string"
 					}
 				},
-				"required": [
-					"message",
-					"credentialRecord"
-				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
-				"properties": {},
-				"additionalProperties": {},
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdAcceptRequestFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
 			"AcceptCredentialRequestOptions": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
 					},
 					"credentialFormats": {
 						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptRequest_"
@@ -2345,38 +2555,19 @@
 					}
 				},
 				"required": [
-					"credentialRecord"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"V1CredentialAckMessage": {
-				"$ref": "#/components/schemas/PlaintextMessage"
-			},
-			"CredentialProtocolMsgReturnType_V1CredentialAckMessage_": {
-				"properties": {
-					"message": {
-						"$ref": "#/components/schemas/V1CredentialAckMessage"
-					},
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
-					}
-				},
-				"required": [
-					"message",
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"AcceptCredential": {
 				"properties": {
-					"credentialRecord": {
-						"$ref": "#/components/schemas/CredentialExchangeRecord"
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"credentialRecord"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -5425,14 +5616,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"anyOf": [
-										{
-											"$ref": "#/components/schemas/SchemaMetadata"
-										},
-										{
-											"type": "string"
-										}
-									]
+									"$ref": "#/components/schemas/SchemaMetadata"
 								}
 							}
 						}
@@ -7822,7 +8006,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/RegisterSchemaReturn"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturn"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
+										}
+									]
 								},
 								"examples": {
 									"Example 1": {
@@ -7950,70 +8141,10 @@
 								"schema": {
 									"anyOf": [
 										{
-											"properties": {
-												"registrationMetadata": {
-													"$ref": "#/components/schemas/CredoExtensible"
-												},
-												"credentialDefinitionMetadata": {
-													"$ref": "#/components/schemas/CredoExtensible"
-												},
-												"jobId": {
-													"type": "string"
-												},
-												"credentialDefinitionState": {
-													"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateWait"
-												}
-											},
-											"required": [
-												"registrationMetadata",
-												"credentialDefinitionMetadata",
-												"credentialDefinitionState"
-											],
-											"type": "object"
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturn"
 										},
 										{
-											"properties": {
-												"registrationMetadata": {
-													"$ref": "#/components/schemas/CredoExtensible"
-												},
-												"credentialDefinitionMetadata": {
-													"$ref": "#/components/schemas/CredoExtensible"
-												},
-												"jobId": {
-													"type": "string"
-												},
-												"credentialDefinitionState": {
-													"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateAction"
-												}
-											},
-											"required": [
-												"registrationMetadata",
-												"credentialDefinitionMetadata",
-												"credentialDefinitionState"
-											],
-											"type": "object"
-										},
-										{
-											"properties": {
-												"registrationMetadata": {
-													"$ref": "#/components/schemas/CredoExtensible"
-												},
-												"credentialDefinitionMetadata": {
-													"$ref": "#/components/schemas/CredoExtensible"
-												},
-												"jobId": {
-													"type": "string"
-												},
-												"credentialDefinitionState": {
-													"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
-												}
-											},
-											"required": [
-												"registrationMetadata",
-												"credentialDefinitionMetadata",
-												"credentialDefinitionState"
-											],
-											"type": "object"
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
 										}
 									]
 								},
@@ -8163,7 +8294,15 @@
 						"name": "threadId",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/ThreadId"
+						}
+					},
+					{
+						"in": "query",
+						"name": "parentThreadId",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ThreadId"
 						}
 					},
 					{
@@ -8171,7 +8310,7 @@
 						"name": "connectionId",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/RecordId"
 						}
 					},
 					{
@@ -8180,6 +8319,14 @@
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/CredentialState"
+						}
+					},
+					{
+						"in": "query",
+						"name": "role",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/CredentialRole"
 						}
 					}
 				]
@@ -8636,7 +8783,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/CredentialProtocolMsgReturnType_V1IssueCredentialMessage_"
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
 								},
 								"examples": {
 									"Example 1": {
@@ -8697,7 +8844,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/CredentialProtocolMsgReturnType_V1CredentialAckMessage_"
+									"$ref": "#/components/schemas/CredentialExchangeRecord"
 								},
 								"examples": {
 									"Example 1": {
