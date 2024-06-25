@@ -261,14 +261,6 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"HandshakeProtocol": {
-				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
-				"enum": [
-					"https://didcomm.org/didexchange/1.x",
-					"https://didcomm.org/connections/1.x"
-				],
-				"type": "string"
-			},
 			"PlaintextMessage": {
 				"properties": {
 					"@type": {
@@ -299,6 +291,14 @@
 				],
 				"type": "object",
 				"additionalProperties": {}
+			},
+			"HandshakeProtocol": {
+				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
+				"enum": [
+					"https://didcomm.org/didexchange/1.x",
+					"https://didcomm.org/connections/1.x"
+				],
+				"type": "string"
 			},
 			"AgentMessage": {
 				"$ref": "#/components/schemas/PlaintextMessage"
@@ -583,10 +583,10 @@
 			},
 			"Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -605,6 +605,9 @@
 			"Omit_CreateLegacyInvitationConfig.routing_": {
 				"$ref": "#/components/schemas/Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__",
 				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"OutOfBandRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"AgentMessageType": {
 				"properties": {
@@ -717,10 +720,10 @@
 			},
 			"Pick_ReceiveOutOfBandInvitationConfig.Exclude_keyofReceiveOutOfBandInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -752,10 +755,10 @@
 			},
 			"ReceiveInvitationProps": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -789,10 +792,10 @@
 			},
 			"ReceiveInvitationByUrlProps": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -987,10 +990,10 @@
 			},
 			"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -1043,10 +1046,10 @@
 			},
 			"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -3731,7 +3734,9 @@
 						"description": "OutOfBandRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3776,24 +3781,6 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Retrieve an out of band record by id",
@@ -3819,49 +3806,8 @@
 			"delete": {
 				"operationId": "DeleteOutOfBandRecord",
 				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
+					"204": {
+						"description": "No content"
 					}
 				},
 				"description": "Deletes an out of band record from the repository.",
@@ -3894,7 +3840,29 @@
 						"description": "Out of band record",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"invitationDid": {
+											"type": "string"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"invitationDid",
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3966,24 +3934,6 @@
 								}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Creates an outbound out-of-band record containing out-of-band invitation message defined in\nAries RFC 0434: Out-of-Band Protocol 1.1.",
@@ -4025,7 +3975,28 @@
 						"description": "out-of-band record and invitation",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
+											"type": "string"
+										},
+										"recipientKey": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -4096,24 +4067,6 @@
 								}
 							}
 						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
 				"description": "Creates an outbound out-of-band record in the same way how `createInvitation` method does it,\nbut it also converts out-of-band invitation message to an \"legacy\" invitation message defined\nin RFC 0160: Connection Protocol and returns it together with out-of-band record.",
@@ -4155,7 +4108,25 @@
 						"description": "a message and a invitationUrl",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/OutOfBandRecord"
+										},
+										"invitationUrl": {
+											"type": "string"
+										},
+										"message": {
+											"$ref": "#/components/schemas/AgentMessage"
+										}
+									},
+									"required": [
+										"outOfBandRecord",
+										"invitationUrl",
+										"message"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -4166,42 +4137,6 @@
 											"invitationUrl": "http://example.com/invitation_url"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -4255,7 +4190,21 @@
 						"description": "out-of-band record and connection record if one has been created.",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"connectionRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										}
+									},
+									"required": [
+										"connectionRecord",
+										"outOfBandRecord"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -4314,24 +4263,6 @@
 											}
 										}
 									}
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -4367,7 +4298,21 @@
 						"description": "out-of-band record and connection record if one has been created.",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"connectionRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										}
+									},
+									"required": [
+										"connectionRecord",
+										"outOfBandRecord"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -4426,24 +4371,6 @@
 											}
 										}
 									}
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -4479,7 +4406,21 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"properties": {
+										"connectionRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										}
+									},
+									"required": [
+										"connectionRecord",
+										"outOfBandRecord"
+									],
+									"type": "object"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -4538,42 +4479,6 @@
 											}
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
