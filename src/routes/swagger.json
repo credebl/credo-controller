@@ -16,6 +16,9 @@
 				"type": "string",
 				"example": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
 			},
+			"ProofExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"ProofFormat": {
 				"properties": {
 					"formatKey": {
@@ -220,6 +223,37 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"PlaintextMessage": {
+				"properties": {
+					"@type": {
+						"type": "string"
+					},
+					"@id": {
+						"type": "string"
+					},
+					"~thread": {
+						"properties": {
+							"pthid": {
+								"type": "string"
+							},
+							"thid": {
+								"type": "string"
+							}
+						},
+						"type": "object"
+					},
+					"messageType": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"@type",
+					"@id",
+					"messageType"
+				],
+				"type": "object",
+				"additionalProperties": {}
+			},
 			"CreateProofRequestOobOptions": {
 				"properties": {
 					"protocolVersion": {
@@ -260,37 +294,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"PlaintextMessage": {
-				"properties": {
-					"@type": {
-						"type": "string"
-					},
-					"@id": {
-						"type": "string"
-					},
-					"~thread": {
-						"properties": {
-							"pthid": {
-								"type": "string"
-							},
-							"thid": {
-								"type": "string"
-							}
-						},
-						"type": "object"
-					},
-					"messageType": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"@type",
-					"@id",
-					"messageType"
-				],
-				"type": "object",
-				"additionalProperties": {}
 			},
 			"HandshakeProtocol": {
 				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
@@ -2695,7 +2698,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2707,42 +2712,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -2777,7 +2746,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2789,42 +2760,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -2860,7 +2795,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2872,42 +2809,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -2943,7 +2844,9 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -2958,44 +2861,9 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
+				"description": "Creates a presentation request bound to existing connection",
 				"tags": [
 					"Proofs"
 				],
@@ -3025,29 +2893,64 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
 									"properties": {
-										"message": {
+										"recipientKey": {
+											"anyOf": [
+												{
+													"properties": {
+														"recipientKey": {}
+													},
+													"type": "object"
+												},
+												{
+													"properties": {
+														"recipientKey": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"recipientKey"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"outOfBandRecord": {
+											"$ref": "#/components/schemas/Record_string.unknown_"
+										},
+										"invitation": {
+											"$ref": "#/components/schemas/PlaintextMessage"
+										},
+										"invitationUrl": {
 											"type": "string"
 										}
 									},
 									"required": [
-										"message"
+										"recipientKey",
+										"outOfBandRecord",
+										"invitation",
+										"invitationUrl"
 									],
 									"type": "object"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"metadata": {},
+											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
+										}
+									}
 								}
 							}
 						}
 					}
 				},
+				"description": "Creates a presentation request not bound to any proposal or existing connection",
 				"tags": [
 					"Proofs"
 				],
@@ -3077,7 +2980,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3089,42 +2994,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -3180,7 +3049,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/ProofExchangeRecord"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -3192,42 +3063,6 @@
 											"protocolVersion": "v1"
 										}
 									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
 								}
 							}
 						}
@@ -3259,7 +3094,7 @@
 				"operationId": "ProofFormData",
 				"responses": {
 					"200": {
-						"description": "Ok",
+						"description": "ProofRecord",
 						"content": {
 							"application/json": {
 								"schema": {},
@@ -3277,44 +3112,9 @@
 								}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
+				"description": "Return proofRecord",
 				"tags": [
 					"Proofs"
 				],
