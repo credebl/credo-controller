@@ -316,7 +316,8 @@
 					"p256",
 					"p384",
 					"p521",
-					"k256"
+					"k256",
+					"secp256k1"
 				],
 				"type": "string"
 			},
@@ -854,6 +855,9 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"TenantRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
 			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
 				"properties": {
 					"label": {
@@ -877,21 +881,6 @@
 				"properties": {
 					"config": {
 						"$ref": "#/components/schemas/Omit_TenantConfig.walletConfig_"
-					},
-					"seed": {
-						"type": "string"
-					},
-					"method": {
-						"type": "string"
-					},
-					"role": {
-						"type": "string"
-					},
-					"endorserDid": {
-						"type": "string"
-					},
-					"did": {
-						"type": "string"
 					}
 				},
 				"required": [
@@ -951,6 +940,9 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"DidRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"DidNymTransaction": {
 				"properties": {
@@ -1109,6 +1101,39 @@
 			"Version": {
 				"type": "string",
 				"example": "1.0.0"
+			},
+			"CreateSchemaInput": {
+				"properties": {
+					"issuerId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"version": {
+						"$ref": "#/components/schemas/Version"
+					},
+					"attributes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"endorse": {
+						"type": "boolean"
+					},
+					"endorserDid": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"issuerId",
+					"name",
+					"version",
+					"attributes"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"SchemaMetadata": {
 				"properties": {
@@ -1803,9 +1828,6 @@
 				"type": "string",
 				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
 			},
-			"DidRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
 			"AnonCredsSchema": {
 				"properties": {
 					"issuerId": {
@@ -2015,39 +2037,6 @@
 					"schemaState",
 					"schemaMetadata",
 					"registrationMetadata"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CreateSchemaInput": {
-				"properties": {
-					"issuerId": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"version": {
-						"$ref": "#/components/schemas/Version"
-					},
-					"attributes": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"endorse": {
-						"type": "boolean"
-					},
-					"endorserDid": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"issuerId",
-					"name",
-					"version",
-					"attributes"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -4323,42 +4312,8 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/TenantRecord"
 								}
 							}
 						}
@@ -4394,42 +4349,6 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
 							}
 						}
 					}
@@ -4472,24 +4391,11 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
 								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
+									"items": {
+										"$ref": "#/components/schemas/DidRecord"
 									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"type": "array"
 								}
 							}
 						}
@@ -5276,36 +5182,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"endorserDid": {
-										"type": "string"
-									},
-									"endorse": {
-										"type": "boolean"
-									},
-									"attributes": {
-										"items": {
-											"type": "string"
-										},
-										"type": "array"
-									},
-									"version": {
-										"$ref": "#/components/schemas/Version"
-									},
-									"name": {
-										"type": "string"
-									},
-									"issuerId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"version",
-									"name",
-									"issuerId"
-								],
-								"type": "object"
+								"$ref": "#/components/schemas/CreateSchemaInput"
 							}
 						}
 					}
