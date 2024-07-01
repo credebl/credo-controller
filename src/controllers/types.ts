@@ -340,6 +340,7 @@ export interface CreateInvitationOptions {
   invitationDid?: string
 }
 
+//todo:Add transaction type
 export interface EndorserTransaction {
   transaction: string | Record<string, unknown>
   endorserDid: string
@@ -350,6 +351,7 @@ export interface DidNymTransaction {
   nymRequest: string
 }
 
+//todo:Add endorsedTransaction type
 export interface WriteTransaction {
   endorsedTransaction: string
   endorserDid?: string
