@@ -52,6 +52,8 @@ import axios from 'axios'
 import * as fs from 'fs'
 
 import { CredentialEnum, DidMethod, Network, Role } from '../../enums/enum'
+import ErrorHandlingService from '../../errorHandlingService'
+import { NotFoundError } from '../../errors'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
 import {
@@ -1350,6 +1352,8 @@ export class MultiTenancyController extends Controller {
     }
   }
 
+  ////My APIs
+
   @Security('apiKey')
   @Post('/credentials/create-offer/:tenantId')
   public async createOffer(
@@ -1899,16 +1903,20 @@ export class MultiTenancyController extends Controller {
     @Query('state') state?: QuestionAnswerState,
     @Query('threadId') threadId?: string
   ) {
-    let questionAnswerRecords: QuestionAnswerRecord[] = []
-    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      questionAnswerRecords = await tenantAgent.modules.questionAnswer.findAllByQuery({
-        connectionId,
-        role,
-        state,
-        threadId,
+    try {
+      let questionAnswerRecords: QuestionAnswerRecord[] = []
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        questionAnswerRecords = await tenantAgent.modules.questionAnswer.findAllByQuery({
+          connectionId,
+          role,
+          state,
+          threadId,
+        })
       })
-    })
-    return questionAnswerRecords.map((record) => record.toJSON())
+      return questionAnswerRecords.map((record) => record.toJSON())
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   /**
@@ -1928,9 +1936,7 @@ export class MultiTenancyController extends Controller {
       question: string
       validResponses: ValidResponse[]
       detail?: string
-    },
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    }
   ) {
     try {
       const { question, validResponses, detail } = config
@@ -1943,13 +1949,9 @@ export class MultiTenancyController extends Controller {
         })
         questionAnswerRecord = questionAnswerRecord?.toJSON()
       })
-
       return questionAnswerRecord
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1965,9 +1967,7 @@ export class MultiTenancyController extends Controller {
   public async sendAnswer(
     @Path('id') id: RecordId,
     @Path('tenantId') tenantId: string,
-    @Body() request: Record<'response', string>,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Body() request: Record<'response', string>
   ) {
     try {
       let questionAnswerRecord
@@ -1977,10 +1977,7 @@ export class MultiTenancyController extends Controller {
       })
       return questionAnswerRecord
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, { reason: `record with connection id "${id}" not found.` })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1993,23 +1990,19 @@ export class MultiTenancyController extends Controller {
    */
   @Security('apiKey')
   @Get('/question-answer/:id/:tenantId')
-  public async getQuestionAnswerRecordById(
-    @Path('id') id: RecordId,
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
-  ) {
-    let questionAnswerRecord
-    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      const record = await tenantAgent.modules.questionAnswer.findById(id)
-      questionAnswerRecord = record
-    })
-
-    if (!questionAnswerRecord) {
-      return notFoundError(404, {
-        reason: `Question Answer Record with id "${id}" not found.`,
+  public async getQuestionAnswerRecordById(@Path('id') id: RecordId, @Path('tenantId') tenantId: string) {
+    try {
+      let questionAnswerRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const record = await tenantAgent.modules.questionAnswer.findById(id)
+        questionAnswerRecord = record
       })
+      if (!questionAnswerRecord) {
+        throw new NotFoundError(`Question Answer Record with id "${id}" not found.`)
+      }
+      return questionAnswerRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
     }
-
-    return questionAnswerRecord
   }
 }
