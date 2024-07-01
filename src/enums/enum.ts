@@ -36,6 +36,12 @@ export enum Network {
   Indicio_Mainnet = 'indicio:mainnet',
 }
 
+export enum NetworkTypes {
+  Testnet = 'testnet',
+  Demonet = 'demonet',
+  Mainnet = 'mainnet',
+}
+
 export enum IndicioAcceptanceMechanism {
   Wallet_Agreement = 'wallet_agreement',
   Accept = 'accept',
