@@ -1849,6 +1849,7 @@ export class MultiTenancyController extends Controller {
           throw new BadRequestError('Seed is required')
         }
         didCreateResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
+          //TODO enum for method
           method: 'key',
           options: {
             keyType: KeyType.Ed25519,
