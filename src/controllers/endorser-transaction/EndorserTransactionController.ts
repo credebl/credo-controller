@@ -10,7 +10,7 @@ import {
 import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum } from '../../enums/enum'
+import { CredentialEnum, EndorserMode } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError } from '../../errors'
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
@@ -55,7 +55,7 @@ export class EndorserTransactionController extends Controller {
       const didCreateSubmitResult = await this.agent.dids.create<IndyVdrDidCreateOptions>({
         did: didNymTransaction.did,
         options: {
-          endorserMode: 'external',
+          endorserMode: EndorserMode.External,
           endorsedTransaction: {
             nymRequest: didNymTransaction.nymRequest,
           },
@@ -118,7 +118,7 @@ export class EndorserTransactionController extends Controller {
     const { issuerId, name, version, attributes } = schema
     const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
       options: {
-        endorserMode: 'external',
+        endorserMode: EndorserMode.External,
         endorsedTransaction,
       },
       schema: {
@@ -169,7 +169,7 @@ export class EndorserTransactionController extends Controller {
     const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
       credentialDefinition,
       options: {
-        endorserMode: 'external',
+        endorserMode: EndorserMode.External,
         endorsedTransaction: endorsedTransaction,
       },
     })
