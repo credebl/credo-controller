@@ -53,7 +53,7 @@ import * as fs from 'fs'
 
 import { CredentialEnum, DidMethod, Network, Role } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
-import { NotFoundError } from '../../errors'
+import { BadRequestError, NotFoundError } from '../../errors'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
 import {
@@ -1352,8 +1352,6 @@ export class MultiTenancyController extends Controller {
     }
   }
 
-  ////My APIs
-
   @Security('apiKey')
   @Post('/credentials/create-offer/:tenantId')
   public async createOffer(
@@ -1778,7 +1776,7 @@ export class MultiTenancyController extends Controller {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
-  //done
+
   @Security('apiKey')
   @Delete(':tenantId')
   public async deleteTenantById(@Path('tenantId') tenantId: string) {
@@ -1800,10 +1798,10 @@ export class MultiTenancyController extends Controller {
           throw Error('Seed is required')
         }
         if (!didOptions.keyType) {
-          throw Error('keyType is required')
+          throw new BadRequestError('keyType is required')
         }
         if (!didOptions.domain) {
-          throw Error('domain is required')
+          throw new BadRequestError('domain is required')
         }
         if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
           throw Error('Only ed25519 and bls12381g2 key type supported')
@@ -1914,7 +1912,8 @@ export class MultiTenancyController extends Controller {
     @Path('connectionId') connectionId: RecordId,
     @Path('tenantId') tenantId: string,
     @Body()
-    config: {
+    config: //TODO type for config
+    {
       question: string
       validResponses: ValidResponse[]
       detail?: string
