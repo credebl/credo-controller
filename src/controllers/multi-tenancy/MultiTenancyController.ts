@@ -1778,34 +1778,21 @@ export class MultiTenancyController extends Controller {
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
-
+  //done
   @Security('apiKey')
   @Delete(':tenantId')
-  public async deleteTenantById(
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async deleteTenantById(@Path('tenantId') tenantId: string) {
     try {
       const deleteTenant = await this.agent.modules.tenants.deleteTenantById(tenantId)
       return JsonTransformer.toJSON(deleteTenant)
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `Tenant with id: ${tenantId} not found.`,
-        })
-      }
-      return internalServerError(500, { message: `Something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/did/web/:tenantId')
-  public async createDidWeb(
-    @Path('tenantId') tenantId: string,
-    @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createDidWeb(@Path('tenantId') tenantId: string, @Body() didOptions: DidCreate) {
     try {
       let didDoc
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1814,6 +1801,9 @@ export class MultiTenancyController extends Controller {
         }
         if (!didOptions.keyType) {
           throw Error('keyType is required')
+        }
+        if (!didOptions.domain) {
+          throw Error('domain is required')
         }
         if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
           throw Error('Only ed25519 and bls12381g2 key type supported')
@@ -1847,24 +1837,18 @@ export class MultiTenancyController extends Controller {
       })
       return didDoc
     } catch (error) {
-      return internalServerError(500, {
-        message: `something went wrong: ${error}`,
-      })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/did/key:tenantId')
-  public async createDidKey(
-    @Path('tenantId') tenantId: string,
-    @Body() didOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createDidKey(@Path('tenantId') tenantId: string, @Body() didOptions: DidCreate) {
     try {
       let didCreateResponse
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         if (!didOptions.seed) {
-          throw Error('Seed is required')
+          throw new BadRequestError('Seed is required')
         }
         didCreateResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
           method: 'key',
@@ -1878,9 +1862,7 @@ export class MultiTenancyController extends Controller {
       })
       return didCreateResponse
     } catch (error) {
-      return internalServerError(500, {
-        message: `something went wrong: ${error}`,
-      })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
