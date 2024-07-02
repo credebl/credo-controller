@@ -3,11 +3,14 @@ import type { SchemaMetadata } from '../types'
 
 import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
 import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
-import { Agent, CredoError } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
 import * as fs from 'fs'
 import { injectable } from 'tsyringe'
 
-import { Route, Tags, Security, Controller, Post, TsoaResponse, Res, Body, Get, Path } from 'tsoa'
+import ErrorHandlingService from '../../errorHandlingService'
+import { BadRequestError, UnprocessableEntityError } from '../../errors'
+
+import { Route, Tags, Security, Controller, Post, Body, Get, Path } from 'tsoa'
 
 @Tags('Polygon')
 @Security('apiKey')
@@ -27,7 +30,7 @@ export class Polygon extends Controller {
    * @returns Secp256k1KeyPair
    */
   @Post('create-keys')
-  public async createKeyPair(@Res() internalServerError: TsoaResponse<500, { message: string }>): Promise<{
+  public async createKeyPair(): Promise<{
     privateKey: string
     publicKeyBase58: string
     address: string
@@ -36,7 +39,7 @@ export class Polygon extends Controller {
       return await generateSecp256k1KeyPair()
     } catch (error) {
       // Handle the error here
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -52,16 +55,12 @@ export class Polygon extends Controller {
       did: string
       schemaName: string
       schema: { [key: string]: any }
-    },
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>
+    }
   ): Promise<unknown> {
     try {
       const { did, schemaName, schema } = createSchemaRequest
       if (!did || !schemaName || !schema) {
-        return badRequestError(400, {
-          reason: `One or more parameters are empty or undefined.`,
-        })
+        throw new BadRequestError('One or more parameters are empty or undefined.')
       }
 
       const schemaResponse = await this.agent.modules.polygon.createSchema({
@@ -72,7 +71,9 @@ export class Polygon extends Controller {
       if (schemaResponse.schemaState?.state === 'failed') {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
-          throw new Error('Insufficient funds to the address, Please add funds to perform this operation')
+          throw new UnprocessableEntityError(
+            'Insufficient funds to the address, Please add funds to perform this operation'
+          )
         } else {
           throw new Error(schemaResponse.schemaState?.reason)
         }
@@ -84,7 +85,7 @@ export class Polygon extends Controller {
       }
 
       if (!schemaResponse?.schemaId) {
-        throw new Error('Invalid schema response')
+        throw new BadRequestError('Invalid schema response')
       }
       const schemaPayload: SchemaMetadata = {
         schemaUrl: configJson.schemaFileServerURL + schemaResponse?.schemaId,
@@ -94,7 +95,7 @@ export class Polygon extends Controller {
       }
       return schemaPayload
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -109,17 +110,13 @@ export class Polygon extends Controller {
     estimateTransactionRequest: {
       operation: any
       transaction: any
-    },
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>
+    }
   ): Promise<unknown> {
     try {
       const { operation } = estimateTransactionRequest
 
       if (!(operation in DidOperation)) {
-        return badRequestError(400, {
-          reason: `Invalid method parameter!`,
-        })
+        throw new BadRequestError('Invalid method parameter!')
       }
       if (operation === DidOperation.Create) {
         return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
@@ -127,7 +124,7 @@ export class Polygon extends Controller {
         return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
       }
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -137,23 +134,11 @@ export class Polygon extends Controller {
    * @returns Schema Object
    */
   @Get(':did/:schemaId')
-  public async getSchemaById(
-    @Path('did') did: string,
-    @Path('schemaId') schemaId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() forbiddenError: TsoaResponse<401, { reason: string }>
-  ): Promise<unknown> {
+  public async getSchemaById(@Path('did') did: string, @Path('schemaId') schemaId: string): Promise<unknown> {
     try {
       return this.agent.modules.polygon.getSchemaById(did, schemaId)
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(401, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
