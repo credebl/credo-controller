@@ -195,7 +195,7 @@ export class MultiTenancyController extends Controller {
           break
 
         default:
-          throw new Error(`Invalid network for 'indy' method: ${network}`)
+          throw new BadRequestError(`Invalid network for 'indy' method: ${network}`)
       }
     })
     return result
@@ -832,10 +832,6 @@ export class MultiTenancyController extends Controller {
             theirLabel,
             state,
           })
-
-          if (connections.length === 0) {
-            throw new NotFoundError('connection records not found')
-          }
           connectionRecord = connections.map((c: any) => c.toJSON())
         }
       })
@@ -1258,12 +1254,12 @@ export class MultiTenancyController extends Controller {
         credentialDefinitionResult = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
       })
 
-      if (credentialDefinitionResult.resolutionMetadata?.error === 'notFound') {
+      if (credentialDefinitionResult.resolutionMetadata?.error === SchemaError.NotFound) {
         throw new NotFoundError(credentialDefinitionResult.resolutionMetadata.message)
       }
       const error = credentialDefinitionResult.resolutionMetadata?.error
 
-      if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
+      if (error === 'invalid' || error === SchemaError.UnSupportedAnonCredsMethod) {
         throw new BadRequestError(credentialDefinitionResult.resolutionMetadata.message)
       }
 
