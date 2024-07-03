@@ -402,7 +402,13 @@ export class DidController extends Controller {
   public async handlePolygon(createDidOptions: DidCreate) {
     // need to discuss try catch logic
     const { endpoint, network, privatekey } = createDidOptions
+
+    if (!network) {
+      throw new BadRequestError('Network is required for Polygon method')
+    }
+
     const networkName = network?.split(':')[1]
+
     if (networkName !== 'mainnet' && networkName !== 'testnet') {
       throw new BadRequestError('Invalid network type')
     }

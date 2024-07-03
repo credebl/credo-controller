@@ -36,6 +36,12 @@ export enum Network {
   Indicio_Mainnet = 'indicio:mainnet',
 }
 
+export enum NetworkTypes {
+  Testnet = 'testnet',
+  Demonet = 'demonet',
+  Mainnet = 'mainnet',
+}
+
 export enum IndicioAcceptanceMechanism {
   Wallet_Agreement = 'wallet_agreement',
   Accept = 'accept',
@@ -59,4 +65,9 @@ export enum HttpStatusCode {
   Forbidden = 403,
   NotFound = 404,
   InternalServerError = 500,
+}
+
+export declare enum CustomHandshakeProtocol {
+  DidExchange = 'https://didcomm.org/didexchange/1.1',
+  Connections = 'https://didcomm.org/connections/1.0',
 }

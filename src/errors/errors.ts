@@ -33,6 +33,12 @@ class UnauthorizedError extends BaseError {
   }
 }
 
+class PaymentRequiredError extends BaseError {
+  public constructor(message: string = 'Payment Required') {
+    super(message, 402)
+  }
+}
+
 class ForbiddenError extends BaseError {
   public constructor(message: string = 'Forbidden') {
     super(message, 403)
@@ -83,6 +89,7 @@ const errorMap: Record<string, new (message: string) => BaseError> = {
   LedgerInvalidTransactionError,
   CommonInvalidStructureError,
   UnauthorizedError,
+  PaymentRequiredError,
   ForbiddenError,
   ConflictError,
   RecordDuplicateError,
@@ -97,6 +104,7 @@ export {
   LedgerInvalidTransactionError,
   CommonInvalidStructureError,
   UnauthorizedError,
+  PaymentRequiredError,
   ForbiddenError,
   ConflictError,
   BaseError,

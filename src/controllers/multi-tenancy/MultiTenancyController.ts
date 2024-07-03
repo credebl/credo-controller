@@ -24,12 +24,10 @@ import {
   getUnqualifiedCredentialDefinitionId,
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
-  AnonCredsError,
 } from '@credo-ts/anoncreds'
 import {
   AcceptCredentialOfferOptions,
   Agent,
-  CredoError,
   ConnectionRepository,
   CredentialRepository,
   CredentialState,
@@ -51,9 +49,16 @@ import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answ
 import axios from 'axios'
 import * as fs from 'fs'
 
-import { CredentialEnum, DidMethod, Network, Role } from '../../enums/enum'
+import { CredentialEnum, DidMethod, EndorserMode, Network, NetworkTypes, Role, SchemaError } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
-import { BadRequestError, NotFoundError } from '../../errors'
+import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
+import {
+  BadRequestError,
+  InternalServerError,
+  NotFoundError,
+  PaymentRequiredError,
+  UnprocessableEntityError,
+} from '../../errors'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
 import {
@@ -68,6 +73,7 @@ import {
   WriteTransaction,
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
+  CreateSchemaInput,
 } from '../types'
 
 import {
@@ -84,6 +90,7 @@ import {
   Path,
   Example,
   Security,
+  Response,
 } from 'tsoa'
 
 @Tags('MultiTenancy')
@@ -100,34 +107,19 @@ export class MultiTenancyController extends Controller {
   //create wallet
   @Security('apiKey')
   @Post('/create-tenant')
-  public async createTenant(
-    @Body() createTenantOptions: CreateTenantOptions,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createTenant(@Body() createTenantOptions: CreateTenantOptions) {
     const { config } = createTenantOptions
     try {
       const tenantRecord: TenantRecord = await this.agent.modules.tenants.createTenant({ config })
       return tenantRecord
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `Tenant not created`,
-        })
-      }
-
-      return internalServerError(500, { message: `Something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/create-did/:tenantId')
-  public async createDid(
-    @Body() createDidOptions: DidCreate,
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createDid(@Body() createDidOptions: DidCreate, @Path('tenantId') tenantId: string) {
     let didRes
     try {
       if (!createDidOptions.method) {
@@ -157,65 +149,53 @@ export class MultiTenancyController extends Controller {
           break
 
         default:
-          return internalServerError(500, { message: `Invalid method: ${createDidOptions.method}` })
+          throw new InternalServerError(`Invalid method: ${createDidOptions.method}`)
       }
 
       didRes = { ...result }
 
       return didRes
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `Did not created`,
-        })
-      }
-
-      return internalServerError(500, { message: `Something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   private async handleIndy(createDidOptions: DidCreate, tenantId: string) {
+    const { keyType, seed, network, method } = createDidOptions
+
     let result
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      if (!createDidOptions.keyType) {
+      if (!keyType) {
         throw Error('keyType is required')
       }
 
-      if (!createDidOptions.seed) {
+      if (!seed) {
         throw Error('Seed is required')
       }
 
-      if (!createDidOptions.network) {
+      if (!network) {
         throw Error('For indy method network is required')
       }
 
-      if (createDidOptions.keyType !== KeyType.Ed25519) {
+      if (keyType !== KeyType.Ed25519) {
         throw Error('Only ed25519 key type supported')
       }
 
       if (!Network.Bcovrin_Testnet && !Network.Indicio_Demonet && !Network.Indicio_Testnet) {
-        throw Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
+        throw Error(`Invalid network for 'indy' method: ${network}`)
       }
-      switch (createDidOptions?.network?.toLowerCase()) {
+      switch (network?.toLowerCase()) {
         case Network.Bcovrin_Testnet:
-          result = await this.handleBcovrin(
-            createDidOptions,
-            tenantAgent,
-            `did:${createDidOptions.method}:${createDidOptions.network}`
-          )
+          result = await this.handleBcovrin(createDidOptions, tenantAgent, `did:${method}:${network}`)
           break
 
         case Network.Indicio_Demonet:
         case Network.Indicio_Testnet:
-          result = await this.handleIndicio(
-            createDidOptions,
-            tenantAgent,
-            `did:${createDidOptions.method}:${createDidOptions.network}`
-          )
+          result = await this.handleIndicio(createDidOptions, tenantAgent, `did:${method}:${network}`)
           break
 
         default:
-          throw new Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
+          throw new BadRequestError(`Invalid network for 'indy' method: ${network}`)
       }
     })
     return result
@@ -226,40 +206,41 @@ export class MultiTenancyController extends Controller {
     tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
+    const { seed, did, network, method, role, endorserDid } = createDidOptions
     let didDocument
-    if (!createDidOptions.seed) {
+    if (!seed) {
       throw Error('Seed is required')
     }
-    if (createDidOptions.did) {
-      await this.importDid(didMethod, createDidOptions.did, createDidOptions.seed, tenantAgent)
+    if (did) {
+      await this.importDid(didMethod, did, seed, tenantAgent)
       const getDid = await tenantAgent.dids.getCreatedDids({
-        method: createDidOptions.method,
-        did: `did:${createDidOptions.method}:${createDidOptions.network}:${createDidOptions.did}`,
+        method: method,
+        did: `did:${method}:${network}:${did}`,
       })
       if (getDid.length > 0) {
         didDocument = getDid[0].didDocument
       }
       return {
-        did: `${didMethod}:${createDidOptions.did}`,
+        did: `${didMethod}:${did}`,
         didDocument: didDocument,
       }
     } else {
-      if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
+      if (role?.toLowerCase() === Role.Endorser) {
         await tenantAgent.wallet.createKey({
-          privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
+          privateKey: TypedArrayEncoder.fromString(seed),
           keyType: KeyType.Ed25519,
         })
 
         const body = {
           role: 'ENDORSER',
           alias: 'Alias',
-          seed: createDidOptions.seed,
+          seed: seed,
         }
 
         const res = await axios.post(BCOVRIN_REGISTER_URL, body)
         if (res) {
           const { did } = res?.data || {}
-          await this.importDid(didMethod, did, createDidOptions.seed, tenantAgent)
+          await this.importDid(didMethod, did, seed, tenantAgent)
           const didRecord = await tenantAgent.dids.getCreatedDids({
             method: DidMethod.Indy,
             did: `did:${DidMethod.Indy}:${Network.Bcovrin_Testnet}:${res.data.did}`,
@@ -275,7 +256,7 @@ export class MultiTenancyController extends Controller {
           }
         }
       } else {
-        if (!createDidOptions.endorserDid) {
+        if (!endorserDid) {
           throw Error('endorserDid or role is required')
         }
 
@@ -283,7 +264,7 @@ export class MultiTenancyController extends Controller {
           method: DidMethod.Indy,
           options: {
             endorserMode: 'external',
-            endorserDid: createDidOptions.endorserDid ? createDidOptions.endorserDid : '',
+            endorserDid: endorserDid,
           },
         })) as IndyVdrDidCreateResult
         return { did: didCreateTxResult.didState.did, didDocument: didCreateTxResult.didState.didDocument }
@@ -296,27 +277,28 @@ export class MultiTenancyController extends Controller {
     tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
+    const { seed, did, method, network, role } = createDidOptions
     let didDocument
-    if (!createDidOptions.seed) {
+    if (!seed) {
       throw Error('Seed is required')
     }
 
-    if (createDidOptions.did) {
-      await this.importDid(didMethod, createDidOptions?.did, createDidOptions.seed, tenantAgent)
+    if (did) {
+      await this.importDid(didMethod, did, seed, tenantAgent)
       const getDid = await tenantAgent.dids.getCreatedDids({
-        method: createDidOptions.method,
-        did: `did:${createDidOptions.method}:${createDidOptions.network}:${createDidOptions.did}`,
+        method: method,
+        did: `did:${method}:${network}:${did}`,
       })
       if (getDid.length > 0) {
         didDocument = getDid[0].didDocument
       }
 
       return {
-        did: `${didMethod}:${createDidOptions.did}`,
+        did: `${didMethod}:${did}`,
         didDocument: didDocument,
       }
     } else {
-      if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
+      if (role?.toLowerCase() === Role.Endorser) {
         return await this.handleEndorserCreation(createDidOptions, tenantAgent, didMethod)
       } else {
         return await this.handleIndyDidCreation(createDidOptions, tenantAgent)
@@ -329,12 +311,13 @@ export class MultiTenancyController extends Controller {
     tenantAgent: TenantAgent<RestAgentModules>,
     didMethod: string
   ) {
+    const { seed, network } = createDidOptions
     let didDocument
-    if (!createDidOptions.seed) {
+    if (!seed) {
       throw Error('Seed is required')
     }
     const key = await tenantAgent.wallet.createKey({
-      privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
+      privateKey: TypedArrayEncoder.fromString(seed),
       keyType: KeyType.Ed25519,
     })
     const buffer = TypedArrayEncoder.fromBase58(key.publicKeyBase58)
@@ -342,22 +325,22 @@ export class MultiTenancyController extends Controller {
     const did = TypedArrayEncoder.toBase58(buffer.slice(0, 16))
 
     let body
-    if (createDidOptions.network === Network.Indicio_Testnet) {
+    if (network === Network.Indicio_Testnet) {
       body = {
-        network: 'testnet',
+        network: NetworkTypes.Testnet,
         did,
         verkey: TypedArrayEncoder.toBase58(buffer),
       }
-    } else if (createDidOptions.network === Network.Indicio_Demonet) {
+    } else if (network === Network.Indicio_Demonet) {
       body = {
-        network: 'demonet',
+        network: NetworkTypes.Demonet,
         did,
         verkey: TypedArrayEncoder.toBase58(buffer),
       }
     }
     const res = await axios.post(INDICIO_NYM_URL, body)
     if (res.data.statusCode === 200) {
-      await this.importDid(didMethod, did, createDidOptions.seed, tenantAgent)
+      await this.importDid(didMethod, did, seed, tenantAgent)
       const didRecord = await tenantAgent.dids.getCreatedDids({
         method: DidMethod.Indy,
         did: `${didMethod}:${body?.did}`,
@@ -389,26 +372,27 @@ export class MultiTenancyController extends Controller {
   }
 
   private async handleKey(createDidOptions: DidCreate, tenantId: string) {
+    const { seed, keyType } = createDidOptions
     let didResponse
     let did: string
     let didDocument: any
 
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      if (!createDidOptions.seed) {
+      if (!seed) {
         throw Error('Seed is required')
       }
-      if (!createDidOptions.keyType) {
+      if (!keyType) {
         throw Error('keyType is required')
       }
 
-      if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
+      if (keyType !== KeyType.Ed25519 && keyType !== KeyType.Bls12381g2) {
         throw Error('Only ed25519 and bls12381g2 key type supported')
       }
 
       if (!createDidOptions.did) {
         await tenantAgent.wallet.createKey({
           keyType: createDidOptions.keyType,
-          seed: TypedArrayEncoder.fromString(createDidOptions.seed),
+          seed: TypedArrayEncoder.fromString(seed),
         })
         const didKeyResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
           method: DidMethod.Key,
@@ -416,7 +400,7 @@ export class MultiTenancyController extends Controller {
             keyType: KeyType.Ed25519,
           },
           secret: {
-            privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
+            privateKey: TypedArrayEncoder.fromString(seed),
           },
         })
         did = `${didKeyResponse.didState.did}`
@@ -479,40 +463,41 @@ export class MultiTenancyController extends Controller {
   }
 
   private async handleWeb(createDidOptions: DidCreate, tenantId: string) {
+    const { domain, keyType, seed, method } = createDidOptions
     let did
     let didDocument: any
 
-    if (!createDidOptions.domain) {
+    if (!domain) {
       throw Error('For web method domain is required')
     }
 
-    if (!createDidOptions.keyType) {
+    if (!keyType) {
       throw Error('keyType is required')
     }
 
-    if (createDidOptions.keyType !== KeyType.Ed25519 && createDidOptions.keyType !== KeyType.Bls12381g2) {
+    if (keyType !== KeyType.Ed25519 && keyType !== KeyType.Bls12381g2) {
       throw Error('Only ed25519 and bls12381g2 key type supported')
     }
 
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      if (!createDidOptions.seed) {
+      if (!seed) {
         throw Error('Seed is required')
       }
 
-      did = `did:${createDidOptions.method}:${createDidOptions.domain}`
+      did = `did:${method}:${domain}`
       const keyId = `${did}#key-1`
       const key = await tenantAgent.wallet.createKey({
-        keyType: createDidOptions.keyType,
-        seed: TypedArrayEncoder.fromString(createDidOptions.seed),
+        keyType: keyType,
+        seed: TypedArrayEncoder.fromString(seed),
       })
-      if (createDidOptions.keyType === KeyType.Ed25519) {
+      if (keyType === KeyType.Ed25519) {
         didDocument = new DidDocumentBuilder(did)
           .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
           .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
           .addAuthentication(keyId)
           .build()
       }
-      if (createDidOptions.keyType === KeyType.Bls12381g2) {
+      if (keyType === KeyType.Bls12381g2) {
         didDocument = new DidDocumentBuilder(did)
           .addContext('https://w3id.org/security/bbs/v1')
           .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
@@ -579,10 +564,7 @@ export class MultiTenancyController extends Controller {
 
   @Security('apiKey')
   @Get('/dids/:tenantId')
-  public async getDids(
-    @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async getDids(@Path('tenantId') tenantId: string) {
     try {
       let getDids
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -590,17 +572,13 @@ export class MultiTenancyController extends Controller {
       })
       return getDids
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/transactions/set-endorser-role/:tenantId')
-  public async didNymTransaction(
-    @Path('tenantId') tenantId: string,
-    @Body() didNymTransaction: DidNymTransaction,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async didNymTransaction(@Path('tenantId') tenantId: string, @Body() didNymTransaction: DidNymTransaction) {
     let didCreateSubmitResult
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -621,7 +599,7 @@ export class MultiTenancyController extends Controller {
 
       return didCreateSubmitResult
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -629,9 +607,7 @@ export class MultiTenancyController extends Controller {
   @Post('/transactions/endorse/:tenantId')
   public async endorserTransaction(
     @Path('tenantId') tenantId: string,
-    @Body() endorserTransaction: EndorserTransaction,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>
+    @Body() endorserTransaction: EndorserTransaction
   ) {
     let signedTransaction
     try {
@@ -644,42 +620,32 @@ export class MultiTenancyController extends Controller {
 
       return { signedTransaction }
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Security('apiKey')
   @Get('/connections/:connectionId/:tenantId')
-  public async getConnectionById(
-    @Path('tenantId') tenantId: string,
-    @Path('connectionId') connectionId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
-  ) {
-    let connectionRecord
-    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      const connection = await tenantAgent.connections.findById(connectionId)
+  public async getConnectionById(@Path('tenantId') tenantId: string, @Path('connectionId') connectionId: RecordId) {
+    try {
+      let connectionRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const connection = await tenantAgent.connections.findById(connectionId)
 
-      if (!connection)
-        return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
-      connectionRecord = connection.toJSON()
-    })
+        if (!connection) throw new NotFoundError(`connection with connection id "${connectionId}" not found.`)
+        connectionRecord = connection.toJSON()
+      })
 
-    return connectionRecord
+      return connectionRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   @Security('apiKey')
   @Post('/create-invitation/:tenantId')
   public async createInvitation(
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
     @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
   ) {
@@ -707,6 +673,10 @@ export class MultiTenancyController extends Controller {
             },
           })
           invitationDid = did.didState.did
+
+          if (!invitationDid) {
+            throw new InternalServerError('Error in creating invitationDid')
+          }
         }
 
         outOfBandRecord = await tenantAgent.oob.createInvitation({ ...config, invitationDid })
@@ -723,14 +693,13 @@ export class MultiTenancyController extends Controller {
         invitationDid: config?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/create-legacy-invitation/:tenantId')
   public async createLegacyInvitation(
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
     @Body()
     config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> & RecipientKeyOption // props removed because of issues with serialization
@@ -765,7 +734,7 @@ export class MultiTenancyController extends Controller {
 
       return getInvitation
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -773,8 +742,7 @@ export class MultiTenancyController extends Controller {
   @Post('/receive-invitation/:tenantId')
   public async receiveInvitation(
     @Body() invitationRequest: ReceiveInvitationProps,
-    @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('tenantId') tenantId: string
   ) {
     let receiveInvitationRes
     try {
@@ -790,7 +758,7 @@ export class MultiTenancyController extends Controller {
 
       return receiveInvitationRes
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -798,8 +766,7 @@ export class MultiTenancyController extends Controller {
   @Post('/receive-invitation-url/:tenantId')
   public async receiveInvitationFromUrl(
     @Body() invitationRequest: ReceiveInvitationByUrlProps,
-    @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('tenantId') tenantId: string
   ) {
     let receiveInvitationUrl
     try {
@@ -814,20 +781,15 @@ export class MultiTenancyController extends Controller {
           connectionRecord: connectionRecord?.toJSON(),
         }
       })
-
       return receiveInvitationUrl
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Get('/oob/:invitationId/:tenantId')
-  public async getAllOutOfBandRecords(
-    @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Path('invitationId') invitationId?: string
-  ) {
+  public async getAllOutOfBandRecords(@Path('tenantId') tenantId: string, @Path('invitationId') invitationId?: string) {
     let outOfBandRecordsRes
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -841,7 +803,7 @@ export class MultiTenancyController extends Controller {
 
       return outOfBandRecordsRes
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -849,7 +811,6 @@ export class MultiTenancyController extends Controller {
   @Get('/connections/:tenantId')
   public async getAllConnections(
     @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Query('outOfBandId') outOfBandId?: string,
     @Query('alias') alias?: string,
     @Query('state') state?: DidExchangeState,
@@ -864,7 +825,6 @@ export class MultiTenancyController extends Controller {
           connectionRecord = await tenantAgent.connections.findAllByOutOfBandId(outOfBandId)
         } else {
           const connectionRepository = tenantAgent.dependencyManager.resolve(ConnectionRepository)
-
           const connections = await connectionRepository.findByQuery(tenantAgent.context, {
             alias,
             myDid,
@@ -872,115 +832,102 @@ export class MultiTenancyController extends Controller {
             theirLabel,
             state,
           })
-
           connectionRecord = connections.map((c: any) => c.toJSON())
         }
       })
       return connectionRecord
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Get('/url/:tenantId/:invitationId')
-  public async getInvitation(
-    @Path('invitationId') invitationId: string,
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>
-  ) {
-    let invitationJson
-    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      const outOfBandRecord = await tenantAgent.oob.findByCreatedInvitationId(invitationId)
+  public async getInvitation(@Path('invitationId') invitationId: string, @Path('tenantId') tenantId: string) {
+    try {
+      let invitationJson
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const outOfBandRecord = await tenantAgent.oob.findByCreatedInvitationId(invitationId)
 
-      if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
-        return notFoundError(404, { reason: `connection with invitationId "${invitationId}" not found.` })
+        if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
+          throw new NotFoundError(`connection with invitationId "${invitationId}" not found.`)
 
-      invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
-    })
-    return invitationJson
+        invitationJson = outOfBandRecord.outOfBandInvitation.toJSON({ useDidSovPrefixWhereAllowed: true })
+      })
+      return invitationJson
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   @Security('apiKey')
   @Post('/schema/:tenantId')
   public async createSchema(
     @Body()
-    schema: {
-      issuerId: string
-      name: string
-      version: Version
-      attributes: string[]
-      endorse?: boolean
-      endorserDid?: string
-    },
-    @Path('tenantId') tenantId: string,
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    schema: CreateSchemaInput,
+    @Path('tenantId') tenantId: string
   ) {
-    let schemaRecord
     try {
+      let createSchemaTxResult: any
+      const { issuerId, name, version, attributes, endorserDid, endorse } = schema
+
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        if (!schema.endorse) {
-          const { schemaState } = await tenantAgent.modules.anoncreds.registerSchema({
-            schema: {
-              issuerId: schema.issuerId,
-              name: schema.name,
-              version: schema.version,
-              attrNames: schema.attributes,
-            },
-            options: {
-              endorserMode: 'internal',
-              endorserDid: schema.issuerId,
-            },
-          })
+        const schemaPayload = {
+          issuerId,
+          name,
+          version,
+          attrNames: attributes,
+        }
 
-          if (!schemaState.schemaId) {
-            throw Error('SchemaId not found')
+        const options = {
+          endorserMode: '',
+          endorserDid: '',
+        }
+
+        if (!endorse) {
+          options.endorserMode = EndorserMode.Internal
+          options.endorserDid = issuerId
+        } else {
+          if (!endorserDid) {
+            throw new BadRequestError(ENDORSER_DID_NOT_PRESENT)
           }
+          options.endorserMode = EndorserMode.External
+          options.endorserDid = endorserDid
+        }
 
-          const indySchemaId = parseIndySchemaId(schemaState.schemaId)
-          const getSchemaId = await getUnqualifiedSchemaId(
+        createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
+          schema: schemaPayload,
+          options: options,
+        })
+      })
+      if (createSchemaTxResult?.schemaState.state === CredentialEnum.Failed) {
+        throw new InternalServerError(`Schema creation failed. Reason: ${createSchemaTxResult?.schemaState.reason}`)
+      }
+
+      if (createSchemaTxResult?.schemaState.state === CredentialEnum.Wait) {
+        this.setStatus(202)
+        return createSchemaTxResult
+      }
+
+      if (createSchemaTxResult?.schemaState.state === CredentialEnum.Action) {
+        return createSchemaTxResult
+      }
+
+      if (createSchemaTxResult.schemaState.state === CredentialEnum.Finished) {
+        // TODO: Return uniform response for both Internally and Externally endorsed Schemas
+        if (!endorse) {
+          const indySchemaId = parseIndySchemaId(createSchemaTxResult.schemaState.schemaId as string)
+          const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
             indySchemaId.namespaceIdentifier,
             indySchemaId.schemaName,
             indySchemaId.schemaVersion
           )
-          if (schemaState.state === CredentialEnum.Finished) {
-            schemaState.schemaId = getSchemaId
-          }
-
-          schemaRecord = schemaState
-        } else {
-          if (!schema.endorserDid) {
-            throw new Error('Please provide the endorser DID')
-          }
-
-          const createSchemaTxResult = await tenantAgent.modules.anoncreds.registerSchema({
-            options: {
-              endorserMode: 'external',
-              endorserDid: schema.endorserDid ? schema.endorserDid : '',
-            },
-            schema: {
-              attrNames: schema.attributes,
-              issuerId: schema.issuerId,
-              name: schema.name,
-              version: schema.version,
-            },
-          })
-
-          schemaRecord = createSchemaTxResult
+          createSchemaTxResult.schemaState.schemaId = getSchemaUnqualifiedId
+          return createSchemaTxResult.schemaState
         }
-      })
-
-      return schemaRecord
-    } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
+        return createSchemaTxResult
       }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -993,13 +940,12 @@ export class MultiTenancyController extends Controller {
       schemaName: string
       schema: { [key: string]: any }
     },
-    @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('tenantId') tenantId: string
   ): Promise<SchemaMetadata> {
     try {
       const { did, schemaName, schema } = createSchemaRequest
       if (!did || !schemaName || !schema) {
-        throw Error('One or more parameters are empty or undefined.')
+        throw new BadRequestError('One or more parameters are empty or undefined.')
       }
 
       const schemaResponse = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1009,23 +955,24 @@ export class MultiTenancyController extends Controller {
           schema,
         })
       })
-      if (schemaResponse.schemaState?.state === 'failed') {
+      if (schemaResponse.schemaState?.state === CredentialEnum.Failed) {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
-          throw new Error('Insufficient funds to the address, Please add funds to perform this operation')
+          throw new PaymentRequiredError(
+            'Insufficient funds to the address, Please add funds to perform this operation'
+          )
         } else {
-          throw new Error(schemaResponse.schemaState?.reason)
+          throw new InternalServerError(schemaResponse.schemaState?.reason)
         }
       }
-
       const configFileData = fs.readFileSync('config.json', 'utf-8')
       const config = JSON.parse(configFileData)
       if (!config.schemaFileServerURL) {
-        throw new Error('Please provide valid schema file server URL')
+        throw new UnprocessableEntityError('Please provide valid schema file server URL')
       }
 
       if (!schemaResponse?.schemaId) {
-        throw new Error('Invalid schema response')
+        throw new InternalServerError('Error in getting schema response')
       }
       const schemaPayload: SchemaMetadata = {
         schemaUrl: config.schemaFileServerURL + schemaResponse?.schemaId,
@@ -1036,7 +983,7 @@ export class MultiTenancyController extends Controller {
 
       return schemaPayload
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1045,28 +992,20 @@ export class MultiTenancyController extends Controller {
   public async getPolygonW3CSchemaById(
     @Path('tenantId') tenantId: string,
     @Path('did') did: string,
-    @Path('schemaId') schemaId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() forbiddenError: TsoaResponse<401, { reason: string }>
-  ): Promise<unknown> {
-    if (!tenantId || !did || !schemaId) {
-      return badRequestError(400, { reason: 'Missing or invalid parameters.' })
-    }
-
+    @Path('schemaId') schemaId: string
+  ) {
     try {
-      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        return tenantAgent.modules.polygon.getSchemaById(did, schemaId)
-      })
-    } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(401, {
-            reason: 'this action is not allowed.',
-          })
-        }
+      let schemaDetails
+
+      if (!tenantId || !did || !schemaId) {
+        throw new BadRequestError('Missing or invalid parameters.')
       }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        schemaDetails = await tenantAgent.modules.polygon.getSchemaById(did, schemaId)
+      })
+      return schemaDetails
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1074,8 +1013,6 @@ export class MultiTenancyController extends Controller {
   @Post('/transactions/write/:tenantId')
   public async writeSchemaAndCredDefOnLedger(
     @Path('tenantId') tenantId: string,
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body()
     writeTransaction: WriteTransaction
   ) {
@@ -1098,14 +1035,7 @@ export class MultiTenancyController extends Controller {
         throw new Error('Please provide valid schema or credential-def!')
       }
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1200,45 +1130,32 @@ export class MultiTenancyController extends Controller {
 
   @Security('apiKey')
   @Get('/schema/:schemaId/:tenantId')
-  public async getSchemaById(
-    @Path('schemaId') schemaId: SchemaId,
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() forbiddenError: TsoaResponse<403, { reason: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    let getSchema
+  public async getSchemaById(@Path('schemaId') schemaId: SchemaId, @Path('tenantId') tenantId: string) {
+    let schemBySchemaId
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        getSchema = await tenantAgent.modules.anoncreds.getSchema(schemaId)
+        schemBySchemaId = await tenantAgent.modules.anoncreds.getSchema(schemaId)
+
+        if (
+          schemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound ||
+          schemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
+        ) {
+          throw new NotFoundError(
+            schemBySchemaId?.resolutionMetadata?.message || `schema details with schema id "${schemaId}" not found.`
+          )
+        }
       })
 
-      return getSchema
+      return schemBySchemaId
     } catch (error) {
-      if (error instanceof AnonCredsError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
-        return notFoundError(404, {
-          reason: `schema definition with schemaId "${schemaId}" not found.`,
-        })
-      } else if (error instanceof AnonCredsError && error.cause instanceof AnonCredsError) {
-        if ((error.cause.cause, 'LedgerInvalidTransaction')) {
-          return forbiddenError(403, {
-            reason: `schema definition with schemaId "${schemaId}" can not be returned.`,
-          })
-        }
-        if ((error.cause.cause, 'CommonInvalidStructure')) {
-          return badRequestError(400, {
-            reason: `schemaId "${schemaId}" has invalid structure.`,
-          })
-        }
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/credential-definition/:tenantId')
+  @Response(200, 'Action required')
+  @Response(202, 'Wait for action to complete')
   public async createCredentialDefinition(
     @Body()
     credentialDefinitionRequest: {
@@ -1248,74 +1165,80 @@ export class MultiTenancyController extends Controller {
       endorse?: boolean
       endorserDid?: string
     },
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('tenantId') tenantId: string
   ) {
-    let credentialDefinitionRecord
     try {
+      let registerCredentialDefinitionResult: any
+      const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse
           ? credentialDefinitionRequest.endorse
           : false
 
-        if (!credentialDefinitionRequest.endorse) {
-          const { credentialDefinitionState } = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
-            credentialDefinition: {
-              issuerId: credentialDefinitionRequest.issuerId,
-              schemaId: credentialDefinitionRequest.schemaId,
-              tag: credentialDefinitionRequest.tag,
-            },
-            options: {
-              // TODO: update this later
-              supportRevocation: false,
-            },
-          })
-
-          if (!credentialDefinitionState?.credentialDefinitionId) {
-            throw new Error('Credential Definition Id not found')
-          }
-          const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
-          const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
-            indyCredDefId.namespaceIdentifier,
-            indyCredDefId.schemaSeqNo,
-            indyCredDefId.tag
-          )
-          if (credentialDefinitionState.state === CredentialEnum.Finished) {
-            credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
-          }
-
-          credentialDefinitionRecord = credentialDefinitionState
-        } else {
-          const createCredDefTxResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition({
-            credentialDefinition: {
-              issuerId: credentialDefinitionRequest.issuerId,
-              tag: credentialDefinitionRequest.tag,
-              schemaId: credentialDefinitionRequest.schemaId,
-              // TODO: Need to check this
-              // type: 'CL',
-            },
-            options: {
-              // TODO: update this later
-              supportRevocation: false,
-              endorserMode: 'external',
-              endorserDid: credentialDefinitionRequest.endorserDid ? credentialDefinitionRequest.endorserDid : '',
-            },
-          })
-
-          credentialDefinitionRecord = createCredDefTxResult
+        const credDef = {
+          issuerId,
+          schemaId,
+          tag,
+          // TODO: Need to check this
+          // type: 'CL',
         }
+        const credentialDefinitionPayload = {
+          credentialDefinition: credDef,
+          options: {
+            endorserMode: '',
+            endorserDid: '',
+            // TODO: update this later
+            supportRevocation: false,
+          },
+        }
+
+        if (!endorse) {
+          credentialDefinitionPayload.options.endorserMode = EndorserMode.Internal
+          credentialDefinitionPayload.options.endorserDid = issuerId
+        } else {
+          if (!endorserDid) {
+            throw new BadRequestError(ENDORSER_DID_NOT_PRESENT)
+          }
+          credentialDefinitionPayload.options.endorserMode = EndorserMode.External
+          credentialDefinitionPayload.options.endorserDid = endorserDid
+        }
+
+        registerCredentialDefinitionResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition(
+          credentialDefinitionPayload
+        )
       })
 
-      return credentialDefinitionRecord
-    } catch (error) {
-      if (error instanceof notFoundError) {
-        return notFoundError(404, {
-          reason: `schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`,
-        })
+      if (registerCredentialDefinitionResult?.credentialDefinitionState.state === CredentialEnum.Failed) {
+        throw new InternalServerError('Falied to register credef on ledger')
       }
 
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      if (registerCredentialDefinitionResult?.credentialDefinitionState.state === CredentialEnum.Wait) {
+        // The request has been accepted for processing, but the processing has not been completed.
+        this.setStatus(202)
+        return registerCredentialDefinitionResult
+      }
+
+      if (registerCredentialDefinitionResult?.credentialDefinitionState.state === CredentialEnum.Action) {
+        return registerCredentialDefinitionResult
+      }
+      // TODO: Return uniform response for both Internally and Externally endorsed Schemas
+      if (!endorse) {
+        const indyCredDefId = parseIndyCredentialDefinitionId(
+          registerCredentialDefinitionResult?.credentialDefinitionState.credentialDefinitionId as string
+        )
+
+        const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+          indyCredDefId.namespaceIdentifier,
+          indyCredDefId.schemaSeqNo,
+          indyCredDefId.tag
+        )
+
+        registerCredentialDefinitionResult.credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
+        return registerCredentialDefinitionResult?.credentialDefinitionState
+      }
+      return registerCredentialDefinitionResult
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1323,32 +1246,30 @@ export class MultiTenancyController extends Controller {
   @Get('/credential-definition/:credentialDefinitionId/:tenantId')
   public async getCredentialDefinitionById(
     @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
-    @Path('tenantId') tenantId: string,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('tenantId') tenantId: string
   ) {
-    let getCredDef
+    let credentialDefinitionResult: any
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        getCredDef = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
+        credentialDefinitionResult = await tenantAgent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
       })
 
-      return getCredDef
-    } catch (error) {
-      if (error instanceof CredoError && error.message === 'IndyError(LedgerNotFound): LedgerNotFound') {
-        return notFoundError(404, {
-          reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
-        })
-      } else if (error instanceof AnonCredsError && error.cause instanceof CredoError) {
-        if ((error.cause.cause, 'CommonInvalidStructure')) {
-          return badRequestError(400, {
-            reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,
-          })
-        }
+      if (credentialDefinitionResult.resolutionMetadata?.error === SchemaError.NotFound) {
+        throw new NotFoundError(credentialDefinitionResult.resolutionMetadata.message)
+      }
+      const error = credentialDefinitionResult.resolutionMetadata?.error
+
+      if (error === 'invalid' || error === SchemaError.UnSupportedAnonCredsMethod) {
+        throw new BadRequestError(credentialDefinitionResult.resolutionMetadata.message)
       }
 
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      if (error !== undefined || credentialDefinitionResult.credentialDefinition === undefined) {
+        throw new InternalServerError(credentialDefinitionResult.resolutionMetadata.message)
+      }
+
+      return credentialDefinitionResult
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
     }
   }
 
