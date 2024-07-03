@@ -66,3 +66,8 @@ export enum HttpStatusCode {
   NotFound = 404,
   InternalServerError = 500,
 }
+
+export declare enum CustomHandshakeProtocol {
+  DidExchange = 'https://didcomm.org/didexchange/1.1',
+  Connections = 'https://didcomm.org/connections/1.0',
+}
