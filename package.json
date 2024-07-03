@@ -48,6 +48,7 @@
     "@credo-ts/push-notifications": "^0.7.0",
     "@credo-ts/question-answer": "0.5.3",
     "@credo-ts/tenants": "0.5.3",
+    "@digitalbazaar/vc-status-list": "^7.1.0",
     "@hyperledger/anoncreds-nodejs": "0.2.2",
     "@hyperledger/aries-askar-nodejs": "0.2.1",
     "@hyperledger/indy-vdr-nodejs": "0.2.2",
