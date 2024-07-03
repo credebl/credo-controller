@@ -1354,11 +1354,7 @@ export class MultiTenancyController extends Controller {
 
   @Security('apiKey')
   @Post('/credentials/create-offer/:tenantId')
-  public async createOffer(
-    @Body() createOfferOptions: CreateOfferOptions,
-    @Path('tenantId') tenantId: string,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createOffer(@Body() createOfferOptions: CreateOfferOptions, @Path('tenantId') tenantId: string) {
     let offer
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1372,17 +1368,13 @@ export class MultiTenancyController extends Controller {
 
       return offer
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/credentials/create-offer-oob/:tenantId')
-  public async createOfferOob(
-    @Path('tenantId') tenantId: string,
-    @Body() createOfferOptions: CreateOfferOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async createOfferOob(@Path('tenantId') tenantId: string, @Body() createOfferOptions: CreateOfferOobOptions) {
     let createOfferOobRecord
 
     try {
@@ -1447,15 +1439,13 @@ export class MultiTenancyController extends Controller {
       })
       return createOfferOobRecord
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/credentials/accept-offer/:tenantId')
   public async acceptOffer(
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Path('tenantId') tenantId: string,
     @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
   ) {
@@ -1476,13 +1466,7 @@ export class MultiTenancyController extends Controller {
 
       return acceptOffer
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `credential with credential record id "${acceptCredentialOfferOptions.credentialRecordId}" not found.`,
-        })
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1490,9 +1474,7 @@ export class MultiTenancyController extends Controller {
   @Get('/credentials/:credentialRecordId/:tenantId')
   public async getCredentialById(
     @Path('credentialRecordId') credentialRecordId: RecordId,
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('tenantId') tenantId: string
   ) {
     let credentialRecord
     try {
@@ -1503,13 +1485,7 @@ export class MultiTenancyController extends Controller {
 
       return credentialRecord
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `credential with credential record id "${credentialRecordId}" not found.`,
-        })
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1522,39 +1498,42 @@ export class MultiTenancyController extends Controller {
     @Query('state') state?: CredentialState
   ) {
     let credentialRecord
-    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      const credentialRepository = tenantAgent.dependencyManager.resolve(CredentialRepository)
-      const credentials = await credentialRepository.findByQuery(tenantAgent.context, {
-        connectionId,
-        threadId,
-        state,
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const credentialRepository = tenantAgent.dependencyManager.resolve(CredentialRepository)
+        const credentials = await credentialRepository.findByQuery(tenantAgent.context, {
+          connectionId,
+          threadId,
+          state,
+        })
+        credentialRecord = credentials.map((c: any) => c.toJSON())
       })
-      credentialRecord = credentials.map((c: any) => c.toJSON())
-    })
-    return credentialRecord
+      return credentialRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   @Security('apiKey')
   @Get('/proofs/:tenantId')
   public async getAllProofs(@Path('tenantId') tenantId: string, @Query('threadId') threadId?: string) {
     let proofRecord
-    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-      let proofs = await tenantAgent.proofs.getAll()
-      if (threadId) proofs = proofs.filter((p: any) => p.threadId === threadId)
-      proofRecord = proofs.map((proof: any) => proof.toJSON())
-    })
-    return proofRecord
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        let proofs = await tenantAgent.proofs.getAll()
+        if (threadId) proofs = proofs.filter((p: any) => p.threadId === threadId)
+        proofRecord = proofs.map((proof: any) => proof.toJSON())
+      })
+      return proofRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   @Security('apiKey')
   @Get('/form-data/:tenantId/:proofRecordId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async proofFormData(
-    @Path('proofRecordId') proofRecordId: string,
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async proofFormData(@Path('proofRecordId') proofRecordId: string, @Path('tenantId') tenantId: string) {
     let proof
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1562,25 +1541,14 @@ export class MultiTenancyController extends Controller {
       })
       return proof
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/proofs/request-proof/:tenantId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async requestProof(
-    @Body() requestProofOptions: RequestProofOptions,
-    @Path('tenantId') tenantId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async requestProof(@Body() requestProofOptions: RequestProofOptions, @Path('tenantId') tenantId: string) {
     let proof
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1599,7 +1567,7 @@ export class MultiTenancyController extends Controller {
 
       return proof
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1607,8 +1575,7 @@ export class MultiTenancyController extends Controller {
   @Post('/proofs/create-request-oob/:tenantId')
   public async createRequest(
     @Path('tenantId') tenantId: string,
-    @Body() createRequestOptions: CreateProofRequestOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Body() createRequestOptions: CreateProofRequestOobOptions
   ) {
     let oobProofRecord
     try {
@@ -1675,7 +1642,7 @@ export class MultiTenancyController extends Controller {
 
       return oobProofRecord
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -1686,13 +1653,12 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Path('proofRecordId') proofRecordId: string,
     @Body()
-    request: {
+    request: //TODO type for request
+    {
       filterByPresentationPreview?: boolean
       filterByNonRevocationRequirements?: boolean
       comment?: string
-    },
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    }
   ) {
     let proofRecord
     try {
@@ -1700,65 +1666,40 @@ export class MultiTenancyController extends Controller {
         const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
           proofRecordId,
         })
-
         const acceptProofRequest: AcceptProofRequestOptions = {
           proofRecordId,
           comment: request.comment,
           proofFormats: requestedCredentials.proofFormats,
         }
-
         const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
 
         proofRecord = proof.toJSON()
       })
       return proofRecord
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Post('/proofs/:proofRecordId/accept-presentation/:tenantId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async acceptPresentation(
-    @Path('tenantId') tenantId: string,
-    @Path('proofRecordId') proofRecordId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async acceptPresentation(@Path('tenantId') tenantId: string, @Path('proofRecordId') proofRecordId: string) {
     let proof
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         proof = await tenantAgent.proofs.acceptPresentation({ proofRecordId })
       })
-
       return proof
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Security('apiKey')
   @Get('/proofs/:proofRecordId/:tenantId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async getProofById(
-    @Path('tenantId') tenantId: string,
-    @Path('proofRecordId') proofRecordId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async getProofById(@Path('tenantId') tenantId: string, @Path('proofRecordId') proofRecordId: RecordId) {
     let proofRecord
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1767,13 +1708,7 @@ export class MultiTenancyController extends Controller {
       })
       return proofRecord
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
