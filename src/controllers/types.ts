@@ -1,4 +1,5 @@
 import type { RecordId, Version } from './examples'
+import type { CustomHandshakeProtocol } from '../enums/enum'
 import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptCredential,
@@ -205,7 +206,7 @@ export interface OutOfBandInvitationSchema {
   goalCode?: string
   goal?: string
   accept?: string[]
-  handshake_protocols?: HandshakeProtocol[]
+  handshake_protocols?: CustomHandshakeProtocol[]
   services: Array<OutOfBandDidCommService | string>
   imageUrl?: string
 }
@@ -302,11 +303,6 @@ export interface DidCreate {
 
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>
-  seed?: string
-  method?: string
-  role?: string
-  endorserDid?: string
-  did?: string
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
