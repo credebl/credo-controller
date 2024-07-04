@@ -1,9 +1,10 @@
 import type { RestAgentModules } from '../../cliAgent'
+import type { StatusList } from '../types'
 
 import { Agent } from '@credo-ts/core'
-import { createList } from '@digitalbazaar/vc-status-list'
 import { injectable } from 'tsyringe'
 
+import { loadStatusList } from '../../lib/nonEsModule'
 import { RecordId } from '../examples'
 
 import { Tags, Route, Controller, Post, Get, Path, Security } from 'tsoa'
@@ -19,18 +20,22 @@ export class StatusController extends Controller {
     super()
     this.agent = agent
   }
+  private statusList: any
+  private list!: StatusList
 
   /**
    * Create Status List Credential
    */
   // Creates a new StatusListCredential that can be used for revocation
   @Post('/createStatusListCredential')
+  // accepts size, minimum 131,072
   public async createStatusListCredential() {
-    // createCredential({ id, list, statusPurpose }: { id: string; list: vc.StatusList; statusPurpose: string; }
-    // vc.createCredential()
+    // Maintain an incremental index for statusListCredential
+    // Add Id with agentEndpoint/status/number
+    // Note: This endpoint should actually be an API to get StatusListCredential with id(as path param)
     const list = await this.createBitStringStatusList()
-    console.log('this is list in createStatusListCredential', list)
-    return 'success'
+    const listCred = await this._createStatusListCredential(list)
+    return listCred
     // const bitstring = new Bitstring({ length: 10 })
   }
 
@@ -72,9 +77,12 @@ export class StatusController extends Controller {
   }
 
   private async createBitStringStatusList() {
-    const list = createList({ length: 100000 })
-    console.log('vcStatusList', JSON.stringify(list))
-    return list
-    // return list
+    this.statusList = await loadStatusList()
+    this.list = await this.statusList.createList({ length: 100000 })
+    return this.list
+  }
+
+  private async _createStatusListCredential(list: StatusList) {
+    return this.statusList.createCredential({ id: '1', list: list, statusPurpose: 'suspension' })
   }
 }

@@ -392,3 +392,12 @@ export interface SchemaMetadata {
  * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
  */
 export type ThreadId = string
+
+export interface StatusList {
+  decode({ encodedList }: { encodedList: any }): Promise<StatusList>
+  bitstring: any
+  length: any
+  setStatus(index: any, status: any): any
+  getStatus(index: any): any
+  encode(): Promise<any>
+}
