@@ -18,6 +18,7 @@ import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { questionAnswerEvents } from './events/QuestionAnswerEvents'
+import { reuseConnectionEvents } from './events/ReuseConnectionEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
 import { maxRateLimit, windowMs } from './utils/util'
@@ -36,6 +37,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     connectionEvents(agent, config)
     credentialEvents(agent, config)
     proofEvents(agent, config)
+    reuseConnectionEvents(agent, config)
   }
 
   // Use body parser to read sent json payloads
