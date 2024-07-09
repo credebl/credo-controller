@@ -4,8 +4,7 @@
         {
             "name": "Platform-admin",
             "image": "%REPOSITORY_URI%:CREDO_v_%BUILD_NUMBER%",
-            "cpu": 256,
-            "memory": 512,
+            "cpu": 0,
             "portMappings": [
                 {
                     "containerPort": 8004,
@@ -22,7 +21,7 @@
             "command": [
                 "--auto-accept-connections",
                 "--config",
-                "/config/d208988a-0bb0-4620-89af-b948987dd74c_Platform-admin.json"
+                "/config/c15f48c9-1d0e-46b6-8915-b7689e255a22_Platform-admin.json"
             ],
             "environment": [
                 {
@@ -38,9 +37,9 @@
             ],
             "mountPoints": [
                 {
-                    "sourceVolume": "agent-config",
+                    "sourceVolume": "config",
                     "containerPath": "/config",
-                    "readOnly": true
+                    "readOnly": false
                 }
             ],
             "volumesFrom": [],
@@ -48,35 +47,29 @@
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
+                    "awslogs-group": "/ecs/QA-AFJ-TASKDEFINITION",
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/AGENT_Platform-admin_TASKDEFIITION",
-                    "awslogs-region": "me-central-1",
+                    "awslogs-region": "ap-south-1",
                     "awslogs-stream-prefix": "ecs"
                 }
             }
         }
         
     ],
-    "taskRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "placementConstraints": [],
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "256",
-    "memory": "512",
+    "cpu": "2048",
+    "memory": "4096",
   "volumes": [
         {
-            "name": "agent-config",
+            "name": "config",
             "efsVolumeConfiguration": {
                 "fileSystemId": "${EFS}",
-                "rootDirectory": "/",
-                "transitEncryption": "ENABLED",
-                "authorizationConfig": {
-                    "accessPointId": "${AGENT_CONFIG_ACCESS_POINT}",
-                    "iam": "DISABLED"
-                }
+                "rootDirectory": "/"
             }
         }
     ]
