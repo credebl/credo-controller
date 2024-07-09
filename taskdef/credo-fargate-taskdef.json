@@ -1,5 +1,5 @@
 {
-    "family": "AGENT_Platform-admin_TASKDEFIITION",
+    "family": "QA-AFJ-TASKDEFINITION",
     "containerDefinitions": [
         {
             "name": "Platform-admin",
