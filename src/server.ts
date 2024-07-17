@@ -21,7 +21,6 @@ import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { reuseConnectionEvents } from './events/ReuseConnectionEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
-// Needed here, before app init
 import dotenv from 'dotenv';
 
 dotenv.config();
