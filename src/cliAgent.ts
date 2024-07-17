@@ -113,7 +113,6 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
-
   const didContractAddress = process.env.DID_CONTRACT_ADDRESS as string
   const schemaManagerContractAddress = process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string
   const fileServerToken = process.env.FILE_SERVER_TOKEN
@@ -296,7 +295,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   } else {
     networkConfig = [
       {
-        genesisTransactions: (process.env.BCOVRIN_TEST_GENESIS) as string,
+        genesisTransactions: process.env.BCOVRIN_TEST_GENESIS as string,
         indyNamespace: 'bcovrin:testnet',
         isProduction: false,
         connectOnStartup: true,

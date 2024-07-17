@@ -38,7 +38,7 @@ import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import { TsLogger } from './logger'
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
-  const BCOVRIN_TEST_GENESIS = (process.env.BCOVRIN_TEST_GENESIS) as string
+  const BCOVRIN_TEST_GENESIS = process.env.BCOVRIN_TEST_GENESIS as string
   const logger = new TsLogger(LogLevel.debug)
 
   const config: InitConfig = {
@@ -62,7 +62,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
           {
             isProduction: false,
             indyNamespace: 'bcovrin:test',
-            genesisTransactions: (process.env.BCOVRIN_TEST_GENESIS) as string,
+            genesisTransactions: process.env.BCOVRIN_TEST_GENESIS as string,
             connectOnStartup: true,
           },
         ],
