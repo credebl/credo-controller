@@ -21,7 +21,10 @@ import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { reuseConnectionEvents } from './events/ReuseConnectionEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
-import { maxRateLimit, windowMs } from './utils/util'
+// Needed here, before app init
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 import { ValidateError } from 'tsoa'
 
@@ -54,6 +57,10 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
 
+  const windowMs = process.env.windowMs as unknown as number
+  const maxRateLimit = process.env.maxRateLimit as unknown as number
+  console.log('this is windowMs 1',windowMs)
+  console.log('this is maxRateLimit 1',maxRateLimit)
   const limiter = rateLimit({
     windowMs, // 1 second
     max: maxRateLimit, // max 800 requests per second

@@ -36,9 +36,13 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
 import { TsLogger } from './logger'
-import { BCOVRIN_TEST_GENESIS } from './util'
+// import dotenv from 'dotenv';
+
+// dotenv.config();
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
+  const BCOVRIN_TEST_GENESIS = (process.env.BCOVRIN_TEST_GENESIS) as string
+  console.log('thsi is BCOVRIN_TEST_GENESIS', BCOVRIN_TEST_GENESIS)
   const logger = new TsLogger(LogLevel.debug)
 
   const config: InitConfig = {
@@ -53,6 +57,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
 
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
+  console.log('this is (process.env.BCOVRIN_TEST_GENESIS) as string', (process.env.BCOVRIN_TEST_GENESIS) as string)
   const agent = new Agent({
     config: config,
     modules: {
@@ -62,7 +67,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
           {
             isProduction: false,
             indyNamespace: 'bcovrin:test',
-            genesisTransactions: BCOVRIN_TEST_GENESIS,
+            genesisTransactions: (process.env.BCOVRIN_TEST_GENESIS) as string,
             connectOnStartup: true,
           },
         ],
