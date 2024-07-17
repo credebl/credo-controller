@@ -51,11 +51,11 @@ WORKDIR /app
 # Copy package.json and yarn.lock files
 COPY package.json yarn.lock ./
 
-# Install dependencies
-RUN yarn install --frozen-lockfile
-
 # Copy the rest of the application code
 COPY . .
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
 
 RUN yarn global add patch-package
 
