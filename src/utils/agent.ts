@@ -42,7 +42,6 @@ import { TsLogger } from './logger'
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const BCOVRIN_TEST_GENESIS = (process.env.BCOVRIN_TEST_GENESIS) as string
-  console.log('thsi is BCOVRIN_TEST_GENESIS', BCOVRIN_TEST_GENESIS)
   const logger = new TsLogger(LogLevel.debug)
 
   const config: InitConfig = {
@@ -57,7 +56,6 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
 
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
-  console.log('this is (process.env.BCOVRIN_TEST_GENESIS) as string', (process.env.BCOVRIN_TEST_GENESIS) as string)
   const agent = new Agent({
     config: config,
     modules: {

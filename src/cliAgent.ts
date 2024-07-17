@@ -117,27 +117,12 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
-  console.log('--------------------------------From ENV-------------------------------------')
-  console.log('this is didContractAddress: process.env.DID_CONTRACT_ADDRESS', process.env["DID_CONTRACT_ADDRESS"]);
-  console.log('this is schemaManagerContractAddress: process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS', process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS);
-  console.log('this is fileServerToken: process.env.FILE_SERVER_TOKEN', process.env.FILE_SERVER_TOKEN);
-  console.log('this is rpcUrl: process.env.RPC_URL', process.env.RPC_URL);
-  console.log('this is serverUrl: process.env.SERVER_URL', process.env.SERVER_URL);
-  console.log('---------------------------------------------------------------------')
 
   const didContractAddress = process.env.DID_CONTRACT_ADDRESS as string;
   const schemaManagerContractAddress = process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string;
   const fileServerToken= process.env.FILE_SERVER_TOKEN;
   const rpcUrl= process.env.RPC_URL;
   const serverUrl= process.env.SERVER_URL;
-
-  console.log('--------------------------------From var-------------------------------------')
-  console.log('this is didContractAddress: process.env.DID_CONTRACT_ADDRESS', didContractAddress);
-  console.log('this is schemaManagerContractAddress: process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS', schemaManagerContractAddress);
-  console.log('this is fileServerToken: process.env.FILE_SERVER_TOKEN', fileServerToken);
-  console.log('this is rpcUrl: process.env.RPC_URL', rpcUrl);
-  console.log('this is serverUrl: process.env.SERVER_URL', serverUrl);
-  console.log('---------------------------------------------------------------------')
 
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()

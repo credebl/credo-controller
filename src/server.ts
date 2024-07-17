@@ -56,8 +56,6 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
 
   const windowMs = Number(process.env.windowMs)
   const maxRateLimit = Number(process.env.maxRateLimit)
-  console.log('this is windowMs 1',windowMs)
-  console.log('this is maxRateLimit 1',maxRateLimit)
   const limiter = rateLimit({
     windowMs, // 1 second
     max: maxRateLimit, // max 800 requests per second

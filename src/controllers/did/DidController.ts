@@ -166,7 +166,6 @@ export class DidController extends Controller {
         }
       } else {
         const BCOVRIN_REGISTER_URL = process.env.BCOVRIN_REGISTER_URL as string
-        console.log('this is BCOVRIN_REGISTER_URL', BCOVRIN_REGISTER_URL)
         const res = await axios.post(BCOVRIN_REGISTER_URL, {
           role: 'ENDORSER',
           alias: 'Alias',
@@ -221,7 +220,6 @@ export class DidController extends Controller {
       } else {
         const key = await this.createIndicioKey(createDidOptions)
         const INDICIO_NYM_URL = process.env.INDICIO_NYM_URL as string
-        console.log('this is INDICIO_NYM_URL', INDICIO_NYM_URL)
         const res = await axios.post(INDICIO_NYM_URL, key)
         if (res.data.statusCode === 200) {
           await this.importDid(didMethod, key.did, createDidOptions.seed)
