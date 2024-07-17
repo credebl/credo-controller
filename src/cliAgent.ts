@@ -54,7 +54,6 @@ import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { BCOVRIN_TEST_GENESIS } from './utils/util'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -114,6 +113,12 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+  const didContractAddress = process.env.DID_CONTRACT_ADDRESS as string
+  const schemaManagerContractAddress = process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string
+  const fileServerToken = process.env.FILE_SERVER_TOKEN
+  const rpcUrl = process.env.RPC_URL
+  const serverUrl = process.env.SERVER_URL
+
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
@@ -172,17 +177,16 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
-      cache: new InMemoryLruCache({ limit: Infinity }),
+      cache: new InMemoryLruCache({ limit: Number(process.env.INMEMORY_LRU_CACHE_LIMIT) }),
     }),
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: '0x1adeA199dCf07E17232415Cb232442BE52517Add',
-      schemaManagerContractAddress: '0x289c7Bd4C7d38cC54bff370d6f9f01b74Df51b11',
-      fileServerToken:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
-      rpcUrl: 'https://rpc-amoy.polygon.technology',
-      serverUrl: 'https://schema.credebl.id',
+      didContractAddress: didContractAddress,
+      schemaManagerContractAddress: schemaManagerContractAddress,
+      fileServerToken: fileServerToken,
+      rpcUrl: rpcUrl,
+      serverUrl: serverUrl,
     }),
   }
 }
@@ -191,8 +195,8 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
-      sessionLimit: Infinity,
+      sessionAcquireTimeout: Number(process.env.SESSION_ACQUIRE_TIMEOUT),
+      sessionLimit: Number(process.env.SESSION_LIMIT),
     }),
     ...modules,
   }
@@ -291,7 +295,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   } else {
     networkConfig = [
       {
-        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        genesisTransactions: process.env.BCOVRIN_TEST_GENESIS as string,
         indyNamespace: 'bcovrin:testnet',
         isProduction: false,
         connectOnStartup: true,
