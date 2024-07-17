@@ -1,13 +1,15 @@
 import type {
   AcceptProofRequestOptions,
+  PeerDidNumAlgo2CreateOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
+import { Agent, PeerDidNumAlgo, createPeerDidDocumentFromServices } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
+import ErrorHandlingService from '../../errorHandlingService'
 import { ProofRecordExample, RecordId } from '../examples'
 import {
   AcceptProofProposal,
@@ -16,7 +18,7 @@ import {
   RequestProofProposalOptions,
 } from '../types'
 
-import { Body, Controller, Example, Get, Path, Post, Query, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 
 @Tags('Proofs')
 @Route('/proofs')
@@ -38,11 +40,15 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
   public async getAllProofs(@Query('threadId') threadId?: string) {
-    let proofs = await this.agent.proofs.getAll()
+    try {
+      let proofs = await this.agent.proofs.getAll()
 
-    if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
+      if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
 
-    return proofs.map((proof) => proof.toJSON())
+      return proofs.map((proof) => proof.toJSON())
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   /**
@@ -53,22 +59,13 @@ export class ProofController extends Controller {
    */
   @Get('/:proofRecordId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async getProofById(
-    @Path('proofRecordId') proofRecordId: RecordId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async getProofById(@Path('proofRecordId') proofRecordId: RecordId) {
     try {
       const proof = await this.agent.proofs.getById(proofRecordId)
 
       return proof.toJSON()
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -81,11 +78,7 @@ export class ProofController extends Controller {
    */
   @Post('/propose-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async proposeProof(
-    @Body() requestProofProposalOptions: RequestProofProposalOptions,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async proposeProof(@Body() requestProofProposalOptions: RequestProofProposalOptions) {
     try {
       const proof = await this.agent.proofs.proposeProof({
         connectionId: requestProofProposalOptions.connectionId,
@@ -99,12 +92,7 @@ export class ProofController extends Controller {
 
       return proof
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `connection with connection id "${requestProofProposalOptions.connectionId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -118,32 +106,22 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-proposal')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async acceptProposal(
-    @Body() acceptProposal: AcceptProofProposal,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async acceptProposal(@Body() acceptProposal: AcceptProofProposal) {
     try {
       const proof = await this.agent.proofs.acceptProposal(acceptProposal)
 
       return proof
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proof record  "${acceptProposal.proofRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
+  /**
+   * Creates a presentation request bound to existing connection
+   */
   @Post('/request-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async requestProof(
-    @Body() requestProofOptions: RequestProofOptions,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async requestProof(@Body() requestProofOptions: RequestProofOptions) {
     try {
       const requestProofPayload = {
         connectionId: requestProofOptions.connectionId,
@@ -159,27 +137,42 @@ export class ProofController extends Controller {
 
       return proof
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
+  /**
+   * Creates a presentation request not bound to any proposal or existing connection
+   */
   @Post('create-request-oob')
-  public async createRequest(
-    @Body() createRequestOptions: CreateProofRequestOobOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  public async createRequest(@Body() createRequestOptions: CreateProofRequestOobOptions) {
     try {
       let routing: Routing
-      if (createRequestOptions?.recipientKey) {
-        routing = {
-          endpoints: this.agent.config.endpoints,
-          routingKeys: [],
-          recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
-          mediatorId: undefined,
-        }
+      let invitationDid: string | undefined
+
+      if (createRequestOptions?.invitationDid) {
+        invitationDid = createRequestOptions?.invitationDid
       } else {
         routing = await this.agent.mediationRecipient.getRouting({})
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [routing.recipientKey],
+            routingKeys: routing.routingKeys,
+            serviceEndpoint: routing.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        invitationDid = did.didState.did
       }
+
       const proof = await this.agent.proofs.createRequest({
         protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
@@ -195,8 +188,7 @@ export class ProofController extends Controller {
         messages: [proofMessage],
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
-        routing,
-        routing,
+        invitationDid,
       })
 
       return {
@@ -207,10 +199,10 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+        invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -231,9 +223,7 @@ export class ProofController extends Controller {
       filterByPresentationPreview?: boolean
       filterByNonRevocationRequirements?: boolean
       comment?: string
-    },
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    }
   ) {
     try {
       const requestedCredentials = await this.agent.proofs.selectCredentialsForRequest({
@@ -250,12 +240,7 @@ export class ProofController extends Controller {
 
       return proof.toJSON()
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -268,41 +253,30 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-presentation')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async acceptPresentation(
-    @Path('proofRecordId') proofRecordId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async acceptPresentation(@Path('proofRecordId') proofRecordId: string) {
     try {
       const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
       return proof
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
+  /**
+   * Return proofRecord
+   *
+   * @param proofRecordId
+   * @returns ProofRecord
+   */
   @Get('/:proofRecordId/form-data')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async proofFormData(
-    @Path('proofRecordId') proofRecordId: string,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  // TODO: Add return type
+  public async proofFormData(@Path('proofRecordId') proofRecordId: string): Promise<any> {
     try {
       const proof = await this.agent.proofs.getFormatData(proofRecordId)
       return proof
     } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, {
-          reason: `proof with proofRecordId "${proofRecordId}" not found.`,
-        })
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
