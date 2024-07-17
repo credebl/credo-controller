@@ -3,6 +3,10 @@ import type { InboundTransport, Transports, AriesRestConfig } from './cliAgent'
 import yargs from 'yargs'
 
 import { runRestAgent } from './cliAgent'
+// Needed here, before app init
+// import dotenv from 'dotenv';
+
+// dotenv.config();
 
 const parsed = yargs
   .command('start', 'Start AFJ Rest agent')
@@ -166,9 +170,9 @@ export async function runCliServer() {
         type: parsed['wallet-type'],
         config: {
           host: parsed['wallet-url'],
-          connectTimeout: 10,
-          maxConnections: 1000,
-          idleTimeout: 30000,
+          connectTimeout: process.env.CONNECT_TIMEOUT as unknown as number,
+          maxConnections: process.env.MAX_CONNECTIONS as unknown as number,
+          idleTimeout: process.env.IDLE_TIMEOUT as unknown as number,
         },
         credentials: {
           account: parsed['wallet-account'],

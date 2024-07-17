@@ -54,7 +54,10 @@ import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import { BCOVRIN_TEST_GENESIS } from './utils/util'
+// Needed here, before app init
+// import dotenv from 'dotenv';
+
+// dotenv.config();
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -114,6 +117,28 @@ export type RestMultiTenantAgentModules = Awaited<ReturnType<typeof getWithTenan
 export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
+  console.log('--------------------------------From ENV-------------------------------------')
+  console.log('this is didContractAddress: process.env.DID_CONTRACT_ADDRESS', process.env["DID_CONTRACT_ADDRESS"]);
+  console.log('this is schemaManagerContractAddress: process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS', process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS);
+  console.log('this is fileServerToken: process.env.FILE_SERVER_TOKEN', process.env.FILE_SERVER_TOKEN);
+  console.log('this is rpcUrl: process.env.RPC_URL', process.env.RPC_URL);
+  console.log('this is serverUrl: process.env.SERVER_URL', process.env.SERVER_URL);
+  console.log('---------------------------------------------------------------------')
+
+  const didContractAddress = process.env.DID_CONTRACT_ADDRESS as string;
+  const schemaManagerContractAddress = process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string;
+  const fileServerToken= process.env.FILE_SERVER_TOKEN;
+  const rpcUrl= process.env.RPC_URL;
+  const serverUrl= process.env.SERVER_URL;
+
+  console.log('--------------------------------From var-------------------------------------')
+  console.log('this is didContractAddress: process.env.DID_CONTRACT_ADDRESS', didContractAddress);
+  console.log('this is schemaManagerContractAddress: process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS', schemaManagerContractAddress);
+  console.log('this is fileServerToken: process.env.FILE_SERVER_TOKEN', fileServerToken);
+  console.log('this is rpcUrl: process.env.RPC_URL', rpcUrl);
+  console.log('this is serverUrl: process.env.SERVER_URL', serverUrl);
+  console.log('---------------------------------------------------------------------')
+
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
   const jsonLdCredentialFormatService = new JsonLdCredentialFormatService()
@@ -177,12 +202,11 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: '0x1adeA199dCf07E17232415Cb232442BE52517Add',
-      schemaManagerContractAddress: '0x289c7Bd4C7d38cC54bff370d6f9f01b74Df51b11',
-      fileServerToken:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk',
-      rpcUrl: 'https://rpc-amoy.polygon.technology',
-      serverUrl: 'https://schema.credebl.id',
+      didContractAddress: didContractAddress,
+      schemaManagerContractAddress: schemaManagerContractAddress,
+      fileServerToken: fileServerToken,
+      rpcUrl: rpcUrl,
+      serverUrl: serverUrl,
     }),
   }
 }
@@ -291,7 +315,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   } else {
     networkConfig = [
       {
-        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        genesisTransactions: (process.env.BCOVRIN_TEST_GENESIS) as string,
         indyNamespace: 'bcovrin:testnet',
         isProduction: false,
         connectOnStartup: true,

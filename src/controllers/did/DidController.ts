@@ -14,11 +14,13 @@ import axios from 'axios'
 import { injectable } from 'tsyringe'
 
 import { DidMethod, Network, Role } from '../../enums/enum'
-import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
 
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+// import dotenv from 'dotenv';
+
+// dotenv.config();
 
 @Tags('Dids')
 @Route('/dids')
@@ -163,6 +165,8 @@ export class DidController extends Controller {
           didDocument: didDocument,
         }
       } else {
+        const BCOVRIN_REGISTER_URL = process.env.BCOVRIN_REGISTER_URL as string
+        console.log('this is BCOVRIN_REGISTER_URL', BCOVRIN_REGISTER_URL)
         const res = await axios.post(BCOVRIN_REGISTER_URL, {
           role: 'ENDORSER',
           alias: 'Alias',
@@ -216,6 +220,8 @@ export class DidController extends Controller {
         }
       } else {
         const key = await this.createIndicioKey(createDidOptions)
+        const INDICIO_NYM_URL = process.env.INDICIO_NYM_URL as string
+        console.log('this is INDICIO_NYM_URL', INDICIO_NYM_URL)
         const res = await axios.post(INDICIO_NYM_URL, key)
         if (res.data.statusCode === 200) {
           await this.importDid(didMethod, key.did, createDidOptions.seed)
