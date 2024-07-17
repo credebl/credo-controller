@@ -57,8 +57,8 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
 
-  const windowMs = process.env.windowMs as unknown as number
-  const maxRateLimit = process.env.maxRateLimit as unknown as number
+  const windowMs = Number(process.env.windowMs)
+  const maxRateLimit = Number(process.env.maxRateLimit)
   console.log('this is windowMs 1',windowMs)
   console.log('this is maxRateLimit 1',maxRateLimit)
   const limiter = rateLimit({
