@@ -114,11 +114,11 @@ export type RestAgentModules = Awaited<ReturnType<typeof getModules>>
 
 const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) => {
 
-  const didContractAddress = process.env.DID_CONTRACT_ADDRESS as string;
-  const schemaManagerContractAddress = process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string;
-  const fileServerToken= process.env.FILE_SERVER_TOKEN;
-  const rpcUrl= process.env.RPC_URL;
-  const serverUrl= process.env.SERVER_URL;
+  const didContractAddress = process.env.DID_CONTRACT_ADDRESS as string
+  const schemaManagerContractAddress = process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string
+  const fileServerToken = process.env.FILE_SERVER_TOKEN
+  const rpcUrl = process.env.RPC_URL
+  const serverUrl = process.env.SERVER_URL
 
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
