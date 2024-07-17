@@ -82,9 +82,6 @@ import {
   Example,
   Security,
 } from 'tsoa'
-// import dotenv from 'dotenv';
-
-// dotenv.config();
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')

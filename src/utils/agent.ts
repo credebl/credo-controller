@@ -36,9 +36,6 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 
 import { TsLogger } from './logger'
-// import dotenv from 'dotenv';
-
-// dotenv.config();
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const BCOVRIN_TEST_GENESIS = (process.env.BCOVRIN_TEST_GENESIS) as string

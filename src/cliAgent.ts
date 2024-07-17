@@ -54,10 +54,6 @@ import jwt from 'jsonwebtoken'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-// Needed here, before app init
-// import dotenv from 'dotenv';
-
-// dotenv.config();
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -182,7 +178,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
-      cache: new InMemoryLruCache({ limit: Infinity }),
+      cache: new InMemoryLruCache({ limit: Number(process.env.INMEMORY_LRU_CACHE_LIMIT) }),
     }),
 
     questionAnswer: new QuestionAnswerModule(),
@@ -200,8 +196,8 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
-      sessionLimit: Infinity,
+      sessionAcquireTimeout: Number(process.env.SESSION_ACQUIRE_TIMEOUT),
+      sessionLimit: Number(process.env.SESSION_LIMIT),
     }),
     ...modules,
   }

@@ -3,10 +3,6 @@ import type { InboundTransport, Transports, AriesRestConfig } from './cliAgent'
 import yargs from 'yargs'
 
 import { runRestAgent } from './cliAgent'
-// Needed here, before app init
-// import dotenv from 'dotenv';
-
-// dotenv.config();
 
 const parsed = yargs
   .command('start', 'Start AFJ Rest agent')

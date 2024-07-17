@@ -18,9 +18,6 @@ import { Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
 
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
-// import dotenv from 'dotenv';
-
-// dotenv.config();
 
 @Tags('Dids')
 @Route('/dids')
