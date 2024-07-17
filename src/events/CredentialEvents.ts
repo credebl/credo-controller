@@ -15,6 +15,7 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
       ...record.toJSON(),
       ...event.metadata,
       outOfBandId: null,
+      credentialData: null,
     }
 
     if (event.metadata.contextCorrelationId !== 'default' && record?.connectionId) {
@@ -22,10 +23,16 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
         { tenantId: event.metadata.contextCorrelationId },
         async (tenantAgent) => {
           const connectionRecord = await tenantAgent.connections.findById(record.connectionId!)
-
+          const data = await tenantAgent.credentials.getFormatData(record.id)
+          body.credentialData = data
           body.outOfBandId = connectionRecord?.outOfBandId
         }
       )
+    }
+
+    if (event.metadata.contextCorrelationId === 'default') {
+      const data = await agent.credentials.getFormatData(record.id)
+      body.credentialData = data
     }
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {

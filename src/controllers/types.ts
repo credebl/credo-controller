@@ -1,11 +1,11 @@
-import type { Version } from './examples'
+import type { RecordId, Version } from './examples'
+import type { CustomHandshakeProtocol } from '../enums/enum'
 import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
   CredentialFormatPayload,
   HandshakeProtocol,
-  CredentialFormat,
   ReceiveOutOfBandInvitationConfig,
   OutOfBandDidCommService,
   DidResolutionMetadata,
@@ -17,7 +17,6 @@ import type {
   DidRegistrationSecretOptions,
   InitConfig,
   WalletConfig,
-  ConnectionRecord,
   CredentialExchangeRecord,
   DidResolutionOptions,
   JsonCredential,
@@ -61,29 +60,19 @@ export interface ProofRequestMessageResponse {
   proofRecord: ProofExchangeRecord
 }
 
-type CredentialFormats = [CredentialFormat]
+// type CredentialFormats = [CredentialFormat]
+type CredentialFormats = [LegacyIndyCredentialFormat, AnonCredsCredentialFormat, JsonLdCredentialFormat]
 
-// TODO: added type in protocolVersion
+enum ProtocolVersion {
+  v1 = 'v1',
+  v2 = 'v2',
+}
 export interface ProposeCredentialOptions {
-  // protocolVersion: T extends never ? 'v1' | 'v2' : 'v1' | 'v2' | T
-  connectionRecord: ConnectionRecord
-  credentialFormats: {
-    indy: {
-      schemaIssuerDid: string
-      schemaId: string
-      schemaName: string
-      schemaVersion: string
-      credentialDefinitionId: string
-      issuerDid: string
-      attributes: {
-        name: string
-        value: string
-      }[]
-    }
-  }
+  protocolVersion: ProtocolVersion
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  connectionId: string
+  connectionId: RecordId
 }
 
 // export interface ProposeCredentialOptions<CPs extends CredentialProtocol[] = CredentialProtocol[]> extends BaseOptions {
@@ -99,11 +88,10 @@ export interface AcceptCredentialProposalOptions {
   comment?: string
 }
 
-// TODO: added type in protocolVersion
 export interface CreateOfferOptions {
-  protocolVersion: string
-  connectionId: string
-  credentialFormats: any
+  protocolVersion: ProtocolVersion
+  connectionId: RecordId
+  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
@@ -175,18 +163,18 @@ export interface V2OfferCredentialOptions {
 }
 
 export interface AcceptCredential {
-  credentialRecord: CredentialExchangeRecord
+  credentialRecordId: RecordId
 }
 
 export interface CredentialOfferOptions {
-  credentialRecordId: string
+  credentialRecordId: RecordId
   credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
 
 export interface AcceptCredentialRequestOptions {
-  credentialRecord: CredentialExchangeRecord
+  credentialRecordId: RecordId
   credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptRequest'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
@@ -218,7 +206,7 @@ export interface OutOfBandInvitationSchema {
   goalCode?: string
   goal?: string
   accept?: string[]
-  handshake_protocols?: HandshakeProtocol[]
+  handshake_protocols?: CustomHandshakeProtocol[]
   services: Array<OutOfBandDidCommService | string>
   imageUrl?: string
 }
@@ -315,11 +303,6 @@ export interface DidCreate {
 
 export interface CreateTenantOptions {
   config: Omit<TenantConfig, 'walletConfig'>
-  seed?: string
-  method?: string
-  role?: string
-  endorserDid?: string
-  did?: string
 }
 
 // export type WithTenantAgentCallback<AgentModules extends ModulesMap> = (
@@ -353,6 +336,7 @@ export interface CreateInvitationOptions {
   invitationDid?: string
 }
 
+//todo:Add transaction type
 export interface EndorserTransaction {
   transaction: string | Record<string, unknown>
   endorserDid: string
@@ -363,6 +347,7 @@ export interface DidNymTransaction {
   nymRequest: string
 }
 
+//todo:Add endorsedTransaction type
 export interface WriteTransaction {
   endorserDid?: string
   endorsedTransaction?: string
@@ -384,9 +369,22 @@ export interface RecipientKeyOption {
   recipientKey?: string
 }
 
+export interface CreateSchemaInput {
+  issuerId: string
+  name: string
+  version: Version
+  attributes: string[]
+  endorse?: boolean
+  endorserDid?: string
+}
+
 export interface SchemaMetadata {
   did: string
   schemaId: string
   schemaTxnHash?: string
   schemaUrl?: string
 }
+/**
+ * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
+ */
+export type ThreadId = string
