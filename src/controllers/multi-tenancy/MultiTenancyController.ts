@@ -4,6 +4,7 @@ import type { RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
+  BasicMessageStorageProps,
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
   CredentialProtocolVersionType,
@@ -37,7 +38,6 @@ import {
   Key,
   KeyType,
   OutOfBandInvitation,
-  RecordNotFoundError,
   TypedArrayEncoder,
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
@@ -60,7 +60,14 @@ import {
   UnprocessableEntityError,
 } from '../../errors'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
-import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
+import {
+  SchemaId,
+  CredentialDefinitionId,
+  RecordId,
+  ProofRecordExample,
+  ConnectionRecordExample,
+  BasicMessageRecordExample,
+} from '../examples'
 import {
   RequestProofOptions,
   CreateOfferOptions,
@@ -76,22 +83,7 @@ import {
   CreateSchemaInput,
 } from '../types'
 
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Post,
-  Query,
-  Res,
-  Route,
-  Tags,
-  TsoaResponse,
-  Path,
-  Example,
-  Security,
-  Response,
-} from 'tsoa'
+import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
@@ -1839,6 +1831,56 @@ export class MultiTenancyController extends Controller {
         throw new NotFoundError(`Question Answer Record with id "${id}" not found.`)
       }
       return questionAnswerRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Retrieve basic messages by connection id
+   *
+   * @param connectionId Connection identifier
+   * @returns BasicMessageRecord[]
+   */
+  @Example<BasicMessageStorageProps[]>([BasicMessageRecordExample])
+  @Security('apiKey')
+  @Get('/basic-messages/:connectionId/:tenantId')
+  public async getBasicMessages(@Path('connectionId') connectionId: RecordId, @Path('tenantId') tenantId: string) {
+    try {
+      let basicMessageRecords
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        basicMessageRecords = await tenantAgent.basicMessages.findAllByQuery({ connectionId })
+      })
+      if (!basicMessageRecords) {
+        throw new NotFoundError(`Basic message with id "${connectionId}" not found.`)
+      }
+
+      return basicMessageRecords
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Send a basic message to a connection
+   *
+   * @param connectionId Connection identifier
+   * @param content The content of the message
+   */
+  @Example<BasicMessageStorageProps>(BasicMessageRecordExample)
+  @Security('apiKey')
+  @Post('/basic-messages/:connectionId/:tenantId')
+  public async sendMessage(
+    @Path('connectionId') connectionId: RecordId,
+    @Path('tenantId') tenantId: string,
+    @Body() request: Record<'content', string>
+  ) {
+    try {
+      let basicMessageRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        basicMessageRecord = await tenantAgent.basicMessages.sendMessage(connectionId, request.content)
+      })
+      return basicMessageRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
