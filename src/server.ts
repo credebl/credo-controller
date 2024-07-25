@@ -50,7 +50,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
 
   setDynamicApiKey(apiKey ? apiKey : '')
 
-  app.use(bodyParser.json({ limit: '500kb' }))
+  app.use(bodyParser.json({ limit: '50mb' }))
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
