@@ -9,4 +9,5 @@ export interface ServerConfig {
   /* Socket server is used for sending events over websocket to clients */
   socketServer?: Server
   schemaFileServerURL?: string
+  bitStringStatusListURL?: string
 }

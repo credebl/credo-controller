@@ -1,8 +1,17 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@credo-ts/core'
+import type { BitStringCredential } from '../types'
+import type {
+  CredentialExchangeRecordProps,
+  CredentialProtocolVersionType,
+  CredentialStatus,
+  Routing,
+} from '@credo-ts/core'
 
 import { CredentialState, Agent, W3cCredentialService, Key, KeyType, CredentialRole } from '@credo-ts/core'
+import * as fs from 'fs'
 import { injectable } from 'tsyringe'
+import { promisify } from 'util'
+import * as zlib from 'zlib'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
@@ -155,8 +164,57 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
     try {
+      if (createOfferOptions.credentialFormats.jsonld) {
+        if (createOfferOptions.isRevocable) {
+          const credentialStatus = await this.getCredentialStatus(createOfferOptions)
+          createOfferOptions.credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+        }
+      }
       const offer = await this.agent.credentials.offerCredential(createOfferOptions)
       return offer
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async getCredentialStatus(createOfferOptions: CreateOfferOptions) {
+    try {
+      const bitStringStatusListURL = fs.readFileSync('config.json', 'utf-8')
+      const configJson = JSON.parse(bitStringStatusListURL)
+
+      if (!configJson.bitStringStatusListURL) {
+        throw new Error('Please provide valid bitStringStatusList server URL')
+      }
+
+      const bitStringStatusListCredential = await fetch(configJson.bitStringStatusListURL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!bitStringStatusListCredential.ok) {
+        throw new Error(`HTTP error! Status: ${bitStringStatusListCredential.status}`)
+      }
+
+      const bitStringCredential = (await bitStringStatusListCredential.json()) as BitStringCredential
+      const encodedBitString = bitStringCredential.credential.credentialSubject.encodedList
+      const gunzip = promisify(zlib.gunzip)
+
+      const compressedBuffer = Buffer.from(encodedBitString, 'base64')
+      const decompressedBuffer = await gunzip(compressedBuffer)
+      const decodedBitString = decompressedBuffer.toString('binary')
+      const index = decodedBitString.indexOf('0')
+
+      const credentialStatus = {
+        id: `${configJson.bitStringStatusListURL}#${index}`,
+        type: 'BitstringStatusListEntry',
+        statusPurpose: createOfferOptions.statusPurpose,
+        statusListIndex: index.toString(),
+        statusListCredential: configJson.bitStringStatusListURL,
+      } as unknown as CredentialStatus
+
+      return credentialStatus
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

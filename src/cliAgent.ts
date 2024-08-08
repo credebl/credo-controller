@@ -108,6 +108,7 @@ export interface AriesRestConfig {
   fileServerToken?: string
   walletScheme?: AskarMultiWalletDatabaseScheme
   schemaFileServerURL?: string
+  bitStringStatusListURL?: string
 }
 
 export async function readRestConfig(path: string) {
@@ -260,6 +261,7 @@ async function generateSecretKey(length: number = 32): Promise<string> {
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
+    bitStringStatusListURL,
     schemaFileServerURL,
     logLevel,
     inboundTransports = [],
@@ -439,6 +441,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       webhookUrl,
       port: adminPort,
       schemaFileServerURL,
+      bitStringStatusListURL,
     },
     token
   )

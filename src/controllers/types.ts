@@ -25,6 +25,7 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
+  CredentialStatusPurpose,
 } from '@credo-ts/core'
 import type { DIDDocument } from 'did-resolver'
 
@@ -88,12 +89,16 @@ export interface AcceptCredentialProposalOptions {
   comment?: string
 }
 
+export type CredentialStatusType = 'BitstringStatusListEntry'
+
 export interface CreateOfferOptions {
+  isRevocable: boolean
   protocolVersion: ProtocolVersion
   connectionId: RecordId
   credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
+  statusPurpose: CredentialStatusPurpose
 }
 
 type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
@@ -396,4 +401,19 @@ export interface StatusList {
   setStatus(index: any, status: any): any
   getStatus(index: any): any
   encode(): Promise<any>
+}
+
+export interface SignCredentialPayload {
+  id: string
+  issuerId: string
+  statusPurpose: string
+  bitStringLength: number
+}
+
+export interface BitStringCredential {
+  credential: {
+    credentialSubject: {
+      encodedList: string
+    }
+  }
 }
