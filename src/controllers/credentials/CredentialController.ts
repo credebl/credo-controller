@@ -1,5 +1,5 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { BitStringCredential } from '../types'
+import type { BitStringCredential, IndexRecord } from '../types'
 import type {
   CredentialExchangeRecordProps,
   CredentialProtocolVersionType,
@@ -8,12 +8,13 @@ import type {
 } from '@credo-ts/core'
 
 import { CredentialState, Agent, W3cCredentialService, Key, KeyType, CredentialRole } from '@credo-ts/core'
-import * as fs from 'fs'
 import { injectable } from 'tsyringe'
 import { promisify } from 'util'
 import * as zlib from 'zlib'
 
 import ErrorHandlingService from '../../errorHandlingService'
+import { BadRequestError, ConflictError, InternalServerError } from '../../errors/errors'
+import { BIT_STRING_STATUS_INDEX_URL } from '../../utils/util'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
@@ -164,29 +165,46 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
     try {
+      let offer
       if (createOfferOptions.credentialFormats.jsonld) {
         if (createOfferOptions.isRevocable) {
           const credentialStatus = await this.getCredentialStatus(createOfferOptions)
           createOfferOptions.credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+          offer = await this.agent.credentials.offerCredential(createOfferOptions)
+
+          const credentialsIndexes = {
+            index: credentialStatus.statusListIndex,
+            statusListCredentialURL: credentialStatus.statusListCredential,
+            id: offer.id,
+          }
+          await fetch(credentialStatus.statusListCredential, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ credentialsIndexes }),
+          })
         }
       }
-      const offer = await this.agent.credentials.offerCredential(createOfferOptions)
+      offer = await this.agent.credentials.offerCredential(createOfferOptions)
       return offer
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
   }
 
-  private async getCredentialStatus(createOfferOptions: CreateOfferOptions) {
+  private async getCredentialStatus(createOfferOptions: CreateOfferOptions): Promise<CredentialStatus> {
     try {
-      const bitStringStatusListURL = fs.readFileSync('config.json', 'utf-8')
-      const configJson = JSON.parse(bitStringStatusListURL)
-
-      if (!configJson.bitStringStatusListURL) {
-        throw new Error('Please provide valid bitStringStatusList server URL')
+      if (!createOfferOptions.credentialSubjectUrl || !createOfferOptions.statusPurpose) {
+        throw new BadRequestError(`Please provide valid credentialSubjectUrl and statusPurpose`)
+      }
+      const url = createOfferOptions.credentialSubjectUrl
+      const validateUrl = await this.isValidUrl(url)
+      if (!validateUrl) {
+        throw new BadRequestError(`Please provide a valid credentialSubjectUrl`)
       }
 
-      const bitStringStatusListCredential = await fetch(configJson.bitStringStatusListURL, {
+      const bitStringStatusListCredential = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -194,29 +212,98 @@ export class CredentialController extends Controller {
       })
 
       if (!bitStringStatusListCredential.ok) {
-        throw new Error(`HTTP error! Status: ${bitStringStatusListCredential.status}`)
+        throw new InternalServerError(`${bitStringStatusListCredential.statusText}`)
       }
 
       const bitStringCredential = (await bitStringStatusListCredential.json()) as BitStringCredential
+
+      if (!bitStringCredential?.credential && !bitStringCredential?.credential?.credentialSubject) {
+        throw new BadRequestError(`Invalid credentialSubjectUrl`)
+      }
+
+      if (bitStringCredential?.credential?.credentialSubject?.statusPurpose !== createOfferOptions?.statusPurpose) {
+        throw new BadRequestError(
+          `Invalid statusPurpose! Please provide valid statusPurpose. '${createOfferOptions.statusPurpose}'`
+        )
+      }
+
       const encodedBitString = bitStringCredential.credential.credentialSubject.encodedList
       const gunzip = promisify(zlib.gunzip)
 
       const compressedBuffer = Buffer.from(encodedBitString, 'base64')
       const decompressedBuffer = await gunzip(compressedBuffer)
       const decodedBitString = decompressedBuffer.toString('binary')
-      const index = decodedBitString.indexOf('0')
+      // const getIndex = await this.agent.genericRecords.findAllByQuery({
+      //   statusListCredentialURL: createOfferOptions.credentialSubjectUrl,
+      // })
+      const segments = createOfferOptions.credentialSubjectUrl.split('/')
+      const lastSegment = segments[segments.length - 1]
+      const getIndexesList = await fetch(`${BIT_STRING_STATUS_INDEX_URL}/${lastSegment}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      let index
+      const arrayIndex: number[] = []
+      if (getIndexesList.status === 404) {
+        index = decodedBitString.indexOf('0')
+      } else {
+        const getIndex = (await getIndexesList.json()) as IndexRecord[]
+        getIndex.find((record) => {
+          arrayIndex.push(Number(record.content.index))
+        })
+
+        index = await this.getAvailableIndex(decodedBitString, arrayIndex)
+      }
+
+      if (index === -1) {
+        throw new ConflictError(
+          `The provided bit string credential revocation list for ${createOfferOptions.credentialSubjectUrl} has been exhausted. Please supply a valid credentialSubjectUrl.`
+        )
+      }
 
       const credentialStatus = {
-        id: `${configJson.bitStringStatusListURL}#${index}`,
+        id: `${createOfferOptions.credentialSubjectUrl}#${index}`,
         type: 'BitstringStatusListEntry',
         statusPurpose: createOfferOptions.statusPurpose,
         statusListIndex: index.toString(),
-        statusListCredential: configJson.bitStringStatusListURL,
+        statusListCredential: createOfferOptions.credentialSubjectUrl,
       } as unknown as CredentialStatus
 
       return credentialStatus
     } catch (error) {
       throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async getAvailableIndex(str: string, usedIndices: number[]) {
+    // Find all indices of the character '0'
+    const indices = []
+    for (let i = 0; i < str.length; i++) {
+      if (str[i] === '0') {
+        indices.push(i)
+      }
+    }
+
+    // Find the first available index that is not in the usedIndices array
+    for (const index of indices) {
+      if (!usedIndices.includes(index)) {
+        return index
+      }
+    }
+
+    // If no available index is found, return -1 or any indication of 'not found'
+    return -1
+  }
+
+  private async isValidUrl(url: string) {
+    try {
+      new URL(url)
+      return true
+    } catch (err) {
+      return false
     }
   }
 

@@ -92,13 +92,14 @@ export interface AcceptCredentialProposalOptions {
 export type CredentialStatusType = 'BitstringStatusListEntry'
 
 export interface CreateOfferOptions {
-  isRevocable: boolean
   protocolVersion: ProtocolVersion
   connectionId: RecordId
   credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  statusPurpose: CredentialStatusPurpose
+  statusPurpose?: CredentialStatusPurpose
+  credentialSubjectUrl?: string
+  isRevocable?: boolean
 }
 
 type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
@@ -413,7 +414,16 @@ export interface SignCredentialPayload {
 export interface BitStringCredential {
   credential: {
     credentialSubject: {
+      id: string
+      type: string
       encodedList: string
+      statusPurpose: string
     }
+  }
+}
+
+export interface IndexRecord {
+  content: {
+    index: string
   }
 }

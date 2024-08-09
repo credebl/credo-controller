@@ -1,14 +1,20 @@
 import type { RestAgentModules } from '../../cliAgent'
 import type { BitStringCredential } from '../types'
-import type { W3cCredentialRecord, W3cJsonLdSignCredentialOptions } from '@credo-ts/core'
+import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
+import type {
+  GetCredentialFormatDataReturn,
+  JsonLdCredentialFormat,
+  W3cCredentialRecord,
+  W3cJsonLdSignCredentialOptions,
+} from '@credo-ts/core'
 
 import { Agent, ClaimFormat } from '@credo-ts/core'
-import axios from 'axios'
 import { injectable } from 'tsyringe'
 import { promisify } from 'util'
 import * as zlib from 'zlib'
 
 import ErrorHandlingService from '../../errorHandlingService'
+import { BadRequestError, InternalServerError } from '../../errors/errors'
 import { SignCredentialPayload } from '../types'
 
 import { Tags, Route, Controller, Post, Security, Body, Path } from 'tsoa'
@@ -75,15 +81,13 @@ export class StatusController extends Controller {
         proofType: 'Ed25519Signature2018',
       }
 
-      await axios.post(
-        id,
-        { credentialsData: data },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
+      await fetch(id, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credentialsData: data }),
+      })
 
       const signCredential = await this.agent.w3cCredentials.signCredential(
         data as unknown as W3cJsonLdSignCredentialOptions
@@ -98,18 +102,24 @@ export class StatusController extends Controller {
   }
 
   @Post('/revoke-credential/:id')
-  public async revokeW3C(@Path('id') id: string): Promise<any> {
+  public async revokeW3C(
+    @Path('id') id: string
+  ): Promise<
+    GetCredentialFormatDataReturn<(LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat)[]>
+  > {
     try {
       const credential = await this.agent.credentials.getFormatData(id)
       let credentialIndex
       let statusListCredentialURL
+      const revocationStatus = 1
 
-      if (!Array.isArray(credential.credential?.jsonld?.credentialStatus)) {
-        credentialIndex = credential.credential?.jsonld?.credentialStatus?.statusListIndex as string
-        statusListCredentialURL = credential.credential?.jsonld?.credentialStatus?.statusListCredential as string
+      if (!Array.isArray(credential.offer?.jsonld?.credential?.credentialStatus)) {
+        credentialIndex = credential.offer?.jsonld?.credential?.credentialStatus?.statusListIndex as string
+        statusListCredentialURL = credential.offer?.jsonld?.credential?.credentialStatus?.statusListCredential as string
       } else {
-        credentialIndex = credential.credential?.jsonld?.credentialStatus[0].statusListIndex as string
-        statusListCredentialURL = credential.credential?.jsonld?.credentialStatus[0].statusListCredential as string
+        credentialIndex = credential.offer?.jsonld?.credential?.credentialStatus[0].statusListIndex as string
+        statusListCredentialURL = credential.offer?.jsonld?.credential?.credentialStatus[0]
+          .statusListCredential as string
       }
 
       const bitStringStatusListCredential = await fetch(statusListCredentialURL, {
@@ -120,7 +130,7 @@ export class StatusController extends Controller {
       })
 
       if (!bitStringStatusListCredential.ok) {
-        throw new Error(`HTTP error! Status: ${bitStringStatusListCredential.status}`)
+        throw new InternalServerError(`${bitStringStatusListCredential.statusText}`)
       }
 
       const bitStringCredential = (await bitStringStatusListCredential.json()) as BitStringCredential
@@ -128,26 +138,26 @@ export class StatusController extends Controller {
       const decodeBitString = await this.decodeBitSting(encodedBitString)
 
       const findBitStringIndex = decodeBitString.charAt(parseInt(credentialIndex))
-      if (findBitStringIndex === '1') {
-        throw new Error('The credential already revoked')
+      if (findBitStringIndex === revocationStatus.toString()) {
+        throw new BadRequestError('The credential already revoked')
       }
 
       const updateBitString =
-        decodeBitString.slice(0, parseInt(credentialIndex)) + 1 + decodeBitString.slice(parseInt(credentialIndex) + 1)
+        decodeBitString.slice(0, parseInt(credentialIndex)) +
+        revocationStatus +
+        decodeBitString.slice(parseInt(credentialIndex) + 1)
 
       const encodeUpdatedBitString = await this.encodeBitString(updateBitString)
       bitStringCredential.credential.credentialSubject.encodedList = encodeUpdatedBitString
-      await axios.post(
-        statusListCredentialURL,
-        { credentialsData: bitStringCredential },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
+      await fetch(statusListCredentialURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credentialsData: bitStringCredential }),
+      })
 
-      return `Credential revoke successfully`
+      return credential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
