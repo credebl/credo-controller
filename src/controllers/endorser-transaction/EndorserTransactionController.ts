@@ -7,13 +7,15 @@ import {
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
 } from '@credo-ts/anoncreds'
-import { Agent, CredoError } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum } from '../../enums/enum'
+import { CredentialEnum, EndorserMode } from '../../enums/enum'
+import ErrorHandlingService from '../../errorHandlingService'
+import { BadRequestError } from '../../errors'
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
 
-import { Body, Controller, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Post, Route, Tags, Security } from 'tsoa'
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
@@ -28,12 +30,14 @@ export class EndorserTransactionController extends Controller {
   }
 
   @Post('/endorse')
-  public async endorserTransaction(
-    @Body() endorserTransaction: EndorserTransaction,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>
-  ) {
+  public async endorserTransaction(@Body() endorserTransaction: EndorserTransaction) {
     try {
+      if (!endorserTransaction.transaction) {
+        throw new BadRequestError('Transaction is required')
+      }
+      if (!endorserTransaction.endorserDid) {
+        throw new BadRequestError('EndorserDid is required')
+      }
       const signedTransaction = await this.agent.modules.indyVdr.endorseTransaction(
         endorserTransaction.transaction,
         endorserTransaction.endorserDid
@@ -41,27 +45,17 @@ export class EndorserTransactionController extends Controller {
 
       return { signedTransaction }
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Post('/set-endorser-role')
-  public async didNymTransaction(
-    @Body() didNymTransaction: DidNymTransaction,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async didNymTransaction(@Body() didNymTransaction: DidNymTransaction) {
     try {
       const didCreateSubmitResult = await this.agent.dids.create<IndyVdrDidCreateOptions>({
         did: didNymTransaction.did,
         options: {
-          endorserMode: 'external',
+          endorserMode: EndorserMode.External,
           endorsedTransaction: {
             nymRequest: didNymTransaction.nymRequest,
           },
@@ -70,14 +64,12 @@ export class EndorserTransactionController extends Controller {
 
       return didCreateSubmitResult
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   @Post('/write')
   public async writeSchemaAndCredDefOnLedger(
-    @Res() forbiddenError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>,
     @Body()
     writeTransaction: WriteTransaction
   ) {
@@ -98,14 +90,7 @@ export class EndorserTransactionController extends Controller {
         throw new Error('Please provide valid schema or credential-def!')
       }
     } catch (error) {
-      if (error instanceof CredoError) {
-        if (error.message.includes('UnauthorizedClientRequest')) {
-          return forbiddenError(400, {
-            reason: 'this action is not allowed.',
-          })
-        }
-      }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
@@ -118,34 +103,42 @@ export class EndorserTransactionController extends Controller {
     },
     endorsedTransaction?: string
   ) {
-    try {
-      const { issuerId, name, version, attributes } = schema
-      const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
-        options: {
-          endorserMode: 'external',
-          endorsedTransaction,
-        },
-        schema: {
-          attrNames: attributes,
-          issuerId: issuerId,
-          name: name,
-          version: version,
-        },
-      })
-
-      const indySchemaId = parseIndySchemaId(schemaState.schemaId)
-      const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
-        indySchemaId.namespaceIdentifier,
-        indySchemaId.schemaName,
-        indySchemaId.schemaVersion
-      )
-      if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
-        schemaState.schemaId = getSchemaUnqualifiedId
-      }
-      return schemaState
-    } catch (error) {
-      return error
+    if (!schema.issuerId) {
+      throw new BadRequestError('IssuerId is required')
     }
+    if (!schema.name) {
+      throw new BadRequestError('Name is required')
+    }
+    if (!schema.version) {
+      throw new BadRequestError('Version is required')
+    }
+    if (!schema.attributes) {
+      throw new BadRequestError('Attributes is required')
+    }
+    const { issuerId, name, version, attributes } = schema
+    const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
+      options: {
+        endorserMode: EndorserMode.External,
+        endorsedTransaction,
+      },
+      schema: {
+        attrNames: attributes,
+        issuerId: issuerId,
+        name: name,
+        version: version,
+      },
+    })
+
+    const indySchemaId = parseIndySchemaId(schemaState.schemaId)
+    const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
+      indySchemaId.namespaceIdentifier,
+      indySchemaId.schemaName,
+      indySchemaId.schemaVersion
+    )
+    if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
+      schemaState.schemaId = getSchemaUnqualifiedId
+    }
+    return schemaState
   }
 
   public async submitCredDefOnLedger(
@@ -158,30 +151,41 @@ export class EndorserTransactionController extends Controller {
     },
     endorsedTransaction?: string
   ) {
-    try {
-      const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
-        credentialDefinition,
-        options: {
-          endorserMode: 'external',
-          endorsedTransaction: endorsedTransaction,
-        },
-      })
-
-      const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
-      const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
-        indyCredDefId.namespaceIdentifier,
-        indyCredDefId.schemaSeqNo,
-        indyCredDefId.tag
-      )
-      if (
-        credentialDefinitionState.state === CredentialEnum.Finished ||
-        credentialDefinitionState.state === CredentialEnum.Action
-      ) {
-        credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
-      }
-      return credentialDefinitionState
-    } catch (error) {
-      return error
+    if (!credentialDefinition.schemaId) {
+      throw new BadRequestError('SchemaId is required')
     }
+    if (!credentialDefinition.issuerId) {
+      throw new BadRequestError('IssuerId is required')
+    }
+    if (!credentialDefinition.tag) {
+      throw new BadRequestError('Tag is required')
+    }
+    if (!credentialDefinition.value) {
+      throw new BadRequestError('Value is required')
+    }
+    if (!credentialDefinition.type) {
+      throw new BadRequestError('Type is required')
+    }
+    const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
+      credentialDefinition,
+      options: {
+        endorserMode: EndorserMode.External,
+        endorsedTransaction: endorsedTransaction,
+      },
+    })
+
+    const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
+    const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
+      indyCredDefId.namespaceIdentifier,
+      indyCredDefId.schemaSeqNo,
+      indyCredDefId.tag
+    )
+    if (
+      credentialDefinitionState.state === CredentialEnum.Finished ||
+      credentialDefinitionState.state === CredentialEnum.Action
+    ) {
+      credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
+    }
+    return credentialDefinitionState
   }
 }

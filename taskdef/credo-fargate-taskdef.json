@@ -1,0 +1,76 @@
+{
+    "family": "QA-AFJ-TASKDEFINITION",
+    "containerDefinitions": [
+        {
+            "name": "Platform-admin",
+            "image": "%REPOSITORY_URI%:CREDO_v_%BUILD_NUMBER%",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 8004,
+                    "hostPort": 8004,
+                    "protocol": "tcp"
+                },
+                {
+                    "containerPort": 9004,
+                    "hostPort": 9004,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "command": [
+                "--auto-accept-connections",
+                "--config",
+                "/config/c15f48c9-1d0e-46b6-8915-b7689e255a22_Platform-admin.json"
+            ],
+            "environment": [
+                {
+                    "name": "AFJ_REST_LOG_LEVEL",
+                    "value": "1"
+                }
+            ],
+            "environmentFiles": [
+                {
+                    "value": "${S3_ARN}",
+                    "type": "s3"
+                }
+            ],
+            "mountPoints": [
+                {
+                    "sourceVolume": "config",
+                    "containerPath": "/config",
+                    "readOnly": false
+                }
+            ],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/QA-AFJ-TASKDEFINITION",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "ap-south-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+        
+    ],
+    "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "2048",
+    "memory": "4096",
+  "volumes": [
+        {
+            "name": "config",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "${EFS}",
+                "rootDirectory": "/"
+            }
+        }
+    ]
+}
