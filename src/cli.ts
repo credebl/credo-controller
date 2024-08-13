@@ -3,7 +3,6 @@ import type { AriesRestConfig } from './cliAgent'
 import yargs from 'yargs'
 
 import { runRestAgent } from './cliAgent'
-import { IDLE_TIMEOUT, CONNECT_TIMEOUT, MAX_CONNECTIONS } from './utils/util'
 
 interface IndyLedger {
   genesisTransactions: string
@@ -224,9 +223,9 @@ export async function runCliServer() {
         type: parsed['wallet-type'],
         config: {
           host: parsed['wallet-url'],
-          connectTimeout: parsed['wallet-connect-timeout'] || CONNECT_TIMEOUT,
-          maxConnections: parsed['wallet-max-connections'] || MAX_CONNECTIONS,
-          idleTimeout: parsed['wallet-idle-timeout'] || IDLE_TIMEOUT,
+          connectTimeout: parsed['wallet-connect-timeout'] || Number(process.env.CONNECT_TIMEOUT),
+          maxConnections: parsed['wallet-max-connections'] || Number(process.env.MAX_CONNECTIONS),
+          idleTimeout: parsed['wallet-idle-timeout'] || Number(process.env.IDLE_TIMEOUT),
         },
         credentials: {
           account: parsed['wallet-account'],

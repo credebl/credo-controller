@@ -59,7 +59,6 @@ import {
   PaymentRequiredError,
   UnprocessableEntityError,
 } from '../../errors'
-import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import {
   SchemaId,
   CredentialDefinitionId,
@@ -229,6 +228,7 @@ export class MultiTenancyController extends Controller {
           seed: seed,
         }
 
+        const BCOVRIN_REGISTER_URL = process.env.BCOVRIN_REGISTER_URL as string
         const res = await axios.post(BCOVRIN_REGISTER_URL, body)
         if (res) {
           const { did } = res?.data || {}
@@ -330,6 +330,7 @@ export class MultiTenancyController extends Controller {
         verkey: TypedArrayEncoder.toBase58(buffer),
       }
     }
+    const INDICIO_NYM_URL = process.env.INDICIO_NYM_URL as string
     const res = await axios.post(INDICIO_NYM_URL, body)
     if (res.data.statusCode === 200) {
       await this.importDid(didMethod, did, seed, tenantAgent)
