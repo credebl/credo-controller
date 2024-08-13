@@ -1,5 +1,5 @@
 import type { RecordId, Version } from './examples'
-import type { CustomHandshakeProtocol } from '../enums/enum'
+import type { BitStringCredentialStatusPurpose, CustomHandshakeProtocol } from '../enums/enum'
 import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptCredential,
@@ -25,7 +25,6 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
-  CredentialStatusPurpose,
 } from '@credo-ts/core'
 import type { DIDDocument } from 'did-resolver'
 
@@ -97,7 +96,7 @@ export interface CreateOfferOptions {
   credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  statusPurpose?: CredentialStatusPurpose
+  statusPurpose?: BitStringCredentialStatusPurpose
   credentialSubjectUrl?: string
   isRevocable?: boolean
 }
@@ -116,6 +115,9 @@ export interface CreateOfferOobOptions {
   imageUrl?: string
   recipientKey?: string
   invitationDid?: string
+  isRevocable?: boolean
+  credentialSubjectUrl?: string
+  statusPurpose?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -408,7 +410,7 @@ export interface SignCredentialPayload {
   id: string
   issuerId: string
   statusPurpose: string
-  bitStringLength: number
+  bitStringLength?: number
 }
 
 export interface BitStringCredential {
@@ -426,4 +428,9 @@ export interface IndexRecord {
   content: {
     index: string
   }
+}
+
+export interface CredentialStatusList {
+  credentialSubjectUrl: string
+  statusPurpose: BitStringCredentialStatusPurpose
 }

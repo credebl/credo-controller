@@ -169,4 +169,3 @@ export const CONNECT_TIMEOUT = 10
 export const MAX_CONNECTIONS = 1000
 export const IDLE_TIMEOUT = 30000
 export const LOG_LEVEL = 2
-export const BIT_STRING_STATUS_INDEX_URL = 'http://192.168.1.125:5005/credentials/indexes'

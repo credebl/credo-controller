@@ -1,12 +1,7 @@
 import type { RestAgentModules } from '../../cliAgent'
 import type { BitStringCredential } from '../types'
-import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
-import type {
-  GetCredentialFormatDataReturn,
-  JsonLdCredentialFormat,
-  W3cCredentialRecord,
-  W3cJsonLdSignCredentialOptions,
-} from '@credo-ts/core'
+import type { W3cCredentialRecord, W3cJsonLdSignCredentialOptions } from '@credo-ts/core'
+import type { GenericRecord } from '@credo-ts/core/build/modules/generic-records/repository/GenericRecord'
 
 import { Agent, ClaimFormat } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
@@ -17,7 +12,7 @@ import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors/errors'
 import { SignCredentialPayload } from '../types'
 
-import { Tags, Route, Controller, Post, Security, Body, Path } from 'tsoa'
+import { Tags, Route, Controller, Post, Security, Body, Path, Get } from 'tsoa'
 
 @Tags('Status')
 @Route('/w3c/revocation')
@@ -51,13 +46,14 @@ export class StatusController extends Controller {
     return decompressedBuffer.toString('binary')
   }
 
-  @Post('/sign-credential')
+  @Post('/sign/bitstring-credential')
   public async createBitstringStatusListCredential(
     @Body() signCredentialPayload: SignCredentialPayload
   ): Promise<W3cCredentialRecord> {
     try {
       const { id, issuerId, statusPurpose, bitStringLength } = signCredentialPayload
-      const bitStringStatus = await this.generateBitStringStatus(bitStringLength)
+      const bitStringStatusListCredentialListLength = bitStringLength ? bitStringLength : 131072
+      const bitStringStatus = await this.generateBitStringStatus(bitStringStatusListCredentialListLength)
       const encodedList = await this.encodeBitString(bitStringStatus)
       const didIdentifier = issuerId.split(':')[2]
       const data = {
@@ -102,11 +98,9 @@ export class StatusController extends Controller {
   }
 
   @Post('/revoke-credential/:id')
-  public async revokeW3C(
-    @Path('id') id: string
-  ): Promise<
-    GetCredentialFormatDataReturn<(LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat)[]>
-  > {
+  public async revokeW3C(@Path('id') id: string): Promise<{
+    message: string
+  }> {
     try {
       const credential = await this.agent.credentials.getFormatData(id)
       let credentialIndex
@@ -157,113 +151,68 @@ export class StatusController extends Controller {
         body: JSON.stringify({ credentialsData: bitStringCredential }),
       })
 
-      return credential
+      return { message: 'The credential has been revoked' }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
   }
 
-  // /**
-  //  * Create Status List Credential
-  //  */
-  // // Creates a new StatusListCredential that can be used for revocation
-  // @Security('apiKey')
-  // @Post('/createStatusListCredential/:statusId')
-  // // accepts size, minimum 131,072
-  // public async createStatusListCredential(@Path('statusId') statusId: string) {
-  //   // Maintain an incremental index for statusListCredential
-  //   // Add Id with agentEndpoint/status/number
-  //   // Note: This endpoint should actually be an API to get StatusListCredential with id(as path param)
-  //   const agentEndpoints = await this.agent.config
-  //   const list = await this.createBitStringStatusList()
-  //   const configFileData = fs.readFileSync('config.json', 'utf-8')
-  //   const config = JSON.parse(configFileData)
-  //   const statusListCredentialId = `yourIpAndPort:${config.port}/status/${statusId}`
-  //   const listCred = await this._createStatusListCredential(statusListCredentialId, list)
-  //   return listCred
-  // }
+  @Get('bitstring/status-list/:id')
+  public async getBitStringStatusListById(@Path('id') id: string): Promise<{
+    bitStringCredential: BitStringCredential
+    getIndex: GenericRecord[]
+  }> {
+    try {
+      const validateUrl = await this.isValidUrl(id)
+      if (!validateUrl) {
+        throw new BadRequestError(`Please provide a bit string credential id`)
+      }
 
-  // /**
-  //  * Create Entry for status list credential
-  //  */
-  // // Create a new revocable credential
-  // // But do we even need this additional endpoint?
-  // @Security('apiKey')
-  // @Post('/signAndStoreStausListCredential')
-  // // public async createEntryForStatusListCredential')
-  // public async createEntryForStatusListCredential(@Body() credentialPayload: unknown) {
-  //   const storedCredential = await this.storeSighnedCredential()
-  //   return storedCredential
-  // }
+      const bitStringCredentialDetails = await fetch(id, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-  // /**
-  //  * Retrieve status of a credential
-  //  */
-  // // Return if the status is revoked or not
-  // @Security('apiKey')
-  // @Get('/credential/:credentialRecordId')
-  // public async getCredentialStatus(@Path('credentialRecordId') credentialRecordId: RecordId) {
-  //   return `success retrieveing credentialRecordId ${credentialRecordId}`
-  // }
+      if (!bitStringCredentialDetails.ok) {
+        throw new InternalServerError(`${bitStringCredentialDetails.statusText}`)
+      }
 
-  // /**
-  //  * Change status of an entry in a StatusListCredential
-  //  */
-  // // Can this be a PUT operation?
-  // @Security('apiKey')
-  // @Post('/changeCredentialStatus')
-  // public async changeCredentialStatus() {
-  //   return 'success'
-  // }
+      const bitStringCredential = (await bitStringCredentialDetails.json()) as BitStringCredential
+      if (!bitStringCredential?.credential && !bitStringCredential?.credential?.credentialSubject) {
+        throw new BadRequestError(`Invalid credentialSubjectUrl`)
+      }
 
-  // /**
-  //  * Retrieve statusListCredential according to their id
-  //  */
-  // // Get statusListCredential from the id passed
-  // @Get('/:id')
-  // public async getStatusListCredential(@Path('id') id: string) {
-  //   return `success with id: ${id}`
-  // }
+      const getIndex = await this.agent.genericRecords.findAllByQuery({
+        statusListCredentialURL: id,
+      })
 
-  // private async createBitStringStatusList() {
-  //   this.statusList = await loadStatusList()
-  //   this.list = await this.statusList.createList({ length: 100000 })
-  //   return this.list
-  // }
+      return {
+        bitStringCredential,
+        getIndex,
+      }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
 
-  // private async _createStatusListCredential(id: string, list: StatusList): Promise<StatusListCredential> {
-  //   return this.statusList.createCredential({ id: id, list: list, statusPurpose: 'suspension' })
-  // }
+  @Get('bitstring/status-list/')
+  public async getAllBitStringStatusList(): Promise<W3cCredentialRecord[]> {
+    try {
+      const getBitStringCredentialStatusList = await this.agent.w3cCredentials.getAllCredentialRecords()
+      return getBitStringCredentialStatusList
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
 
-  // public async storeSighnedCredential() {
-  //   const signedCred = {
-  //     '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vc/status-list/2021/v1'],
-  //     id: 'http://yopurIp:yopurPort/status/1',
-  //     type: ['VerifiableCredential', 'StatusList2021Credential'],
-  //     issuer: {
-  //       id: 'did:key:z6Mkty8b4M1arFSmxYVtM3nsoQvyFurHPhRxRms7vZ6cVZbN',
-  //     },
-  //     issuanceDate: '2019-10-12T07:20:50.52Z',
-  //     credentialSubject: {
-  //       id: 'http://yopurIp:yopurPort/status/1#list',
-  //       claims: {
-  //         type: 'StatusList2021',
-  //         encodedList: 'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA',
-  //         statusPurpose: 'suspension',
-  //       },
-  //     },
-  //     proof: {
-  //       verificationMethod:
-  //         'did:key:z6Mkty8b4M1arFSmxYVtM3nsoQvyFurHPhRxRms7vZ6cVZbN#z6Mkty8b4M1arFSmxYVtM3nsoQvyFurHPhRxRms7vZ6cVZbN',
-  //       type: 'Ed25519Signature2018',
-  //       created: '2024-07-08T12:24:04Z',
-  //       proofPurpose: 'assertionMethod',
-  //       jws: 'eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..hOr9nyr4dlQx1VOMgBow5AeLNrIQ1We0kvR1dFT0AQKkS_lIu-AruZpNVgVCMVlHiFrj-qFYr36YUTwTzUwiAw',
-  //     },
-  //   }
-  //   console.log('this is before storing')
-  //   const storedCred = await this.agent.w3cCredentials.storeCredential(signedCred as unknown as StoreCredentialOptions)
-  //   console.log('this is storedCred', storedCred)
-  //   return storedCred
-  // }
+  private async isValidUrl(url: string) {
+    try {
+      new URL(url)
+      return true
+    } catch (err) {
+      return false
+    }
+  }
 }

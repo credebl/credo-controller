@@ -1,20 +1,19 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { BitStringCredential, IndexRecord } from '../types'
+import type { CredentialStatusList } from '../types'
 import type {
+  AgentMessage,
   CredentialExchangeRecordProps,
   CredentialProtocolVersionType,
-  CredentialStatus,
   Routing,
 } from '@credo-ts/core'
 
 import { CredentialState, Agent, W3cCredentialService, Key, KeyType, CredentialRole } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
-import { promisify } from 'util'
-import * as zlib from 'zlib'
 
+import { BitStringCredentialStatusPurpose } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
-import { BadRequestError, ConflictError, InternalServerError } from '../../errors/errors'
-import { BIT_STRING_STATUS_INDEX_URL } from '../../utils/util'
+import { BadRequestError } from '../../errors/errors'
+import getCredentialStatus from '../../utils/credentialStatusList'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
@@ -165,193 +164,142 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
     try {
-      let offer
-      if (createOfferOptions.credentialFormats.jsonld) {
-        if (createOfferOptions.isRevocable) {
-          const credentialStatus = await this.getCredentialStatus(createOfferOptions)
-          createOfferOptions.credentialFormats.jsonld.credential.credentialStatus = credentialStatus
-          offer = await this.agent.credentials.offerCredential(createOfferOptions)
+      const { credentialFormats, isRevocable, credentialSubjectUrl, statusPurpose } = createOfferOptions
 
-          const credentialsIndexes = {
-            index: credentialStatus.statusListIndex,
-            statusListCredentialURL: credentialStatus.statusListCredential,
-            id: offer.id,
-          }
-          await fetch(credentialStatus.statusListCredential, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ credentialsIndexes }),
-          })
+      if (!credentialFormats.jsonld) {
+        return await this.agent.credentials.offerCredential(createOfferOptions)
+      }
+
+      if (isRevocable) {
+        if (!credentialSubjectUrl) {
+          throw new BadRequestError('Please provide valid credentialSubjectUrl')
         }
-      }
-      offer = await this.agent.credentials.offerCredential(createOfferOptions)
-      return offer
-    } catch (error) {
-      throw ErrorHandlingService.handle(error)
-    }
-  }
 
-  private async getCredentialStatus(createOfferOptions: CreateOfferOptions): Promise<CredentialStatus> {
-    try {
-      if (!createOfferOptions.credentialSubjectUrl || !createOfferOptions.statusPurpose) {
-        throw new BadRequestError(`Please provide valid credentialSubjectUrl and statusPurpose`)
-      }
-      const url = createOfferOptions.credentialSubjectUrl
-      const validateUrl = await this.isValidUrl(url)
-      if (!validateUrl) {
-        throw new BadRequestError(`Please provide a valid credentialSubjectUrl`)
-      }
-
-      const bitStringStatusListCredential = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!bitStringStatusListCredential.ok) {
-        throw new InternalServerError(`${bitStringStatusListCredential.statusText}`)
-      }
-
-      const bitStringCredential = (await bitStringStatusListCredential.json()) as BitStringCredential
-
-      if (!bitStringCredential?.credential && !bitStringCredential?.credential?.credentialSubject) {
-        throw new BadRequestError(`Invalid credentialSubjectUrl`)
-      }
-
-      if (bitStringCredential?.credential?.credentialSubject?.statusPurpose !== createOfferOptions?.statusPurpose) {
-        throw new BadRequestError(
-          `Invalid statusPurpose! Please provide valid statusPurpose. '${createOfferOptions.statusPurpose}'`
-        )
-      }
-
-      const encodedBitString = bitStringCredential.credential.credentialSubject.encodedList
-      const gunzip = promisify(zlib.gunzip)
-
-      const compressedBuffer = Buffer.from(encodedBitString, 'base64')
-      const decompressedBuffer = await gunzip(compressedBuffer)
-      const decodedBitString = decompressedBuffer.toString('binary')
-      // const getIndex = await this.agent.genericRecords.findAllByQuery({
-      //   statusListCredentialURL: createOfferOptions.credentialSubjectUrl,
-      // })
-      const segments = createOfferOptions.credentialSubjectUrl.split('/')
-      const lastSegment = segments[segments.length - 1]
-      const getIndexesList = await fetch(`${BIT_STRING_STATUS_INDEX_URL}/${lastSegment}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      let index
-      const arrayIndex: number[] = []
-      if (getIndexesList.status === 404) {
-        index = decodedBitString.indexOf('0')
-      } else {
-        const getIndex = (await getIndexesList.json()) as IndexRecord[]
-        getIndex.find((record) => {
-          arrayIndex.push(Number(record.content.index))
+        const bitStringCredentialStatusPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
+        const credentialStatusData = {
+          credentialSubjectUrl,
+          statusPurpose: bitStringCredentialStatusPurpose,
+        } as unknown as CredentialStatusList
+        const getIndex = await this.agent.genericRecords.findAllByQuery({
+          statusListCredentialURL: credentialSubjectUrl,
         })
 
-        index = await this.getAvailableIndex(decodedBitString, arrayIndex)
+        const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+        credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+
+        const offer = await this.agent.credentials.offerCredential(createOfferOptions)
+
+        await this.agent.genericRecords.save({
+          content: { index: credentialStatus.statusListIndex },
+          tags: { statusListCredentialURL: credentialStatus.statusListCredential },
+          id: offer.id,
+        })
+
+        return offer
       }
 
-      if (index === -1) {
-        throw new ConflictError(
-          `The provided bit string credential revocation list for ${createOfferOptions.credentialSubjectUrl} has been exhausted. Please supply a valid credentialSubjectUrl.`
-        )
-      }
-
-      const credentialStatus = {
-        id: `${createOfferOptions.credentialSubjectUrl}#${index}`,
-        type: 'BitstringStatusListEntry',
-        statusPurpose: createOfferOptions.statusPurpose,
-        statusListIndex: index.toString(),
-        statusListCredential: createOfferOptions.credentialSubjectUrl,
-      } as unknown as CredentialStatus
-
-      return credentialStatus
+      return await this.agent.credentials.offerCredential(createOfferOptions)
     } catch (error) {
       throw ErrorHandlingService.handle(error)
-    }
-  }
-
-  private async getAvailableIndex(str: string, usedIndices: number[]) {
-    // Find all indices of the character '0'
-    const indices = []
-    for (let i = 0; i < str.length; i++) {
-      if (str[i] === '0') {
-        indices.push(i)
-      }
-    }
-
-    // Find the first available index that is not in the usedIndices array
-    for (const index of indices) {
-      if (!usedIndices.includes(index)) {
-        return index
-      }
-    }
-
-    // If no available index is found, return -1 or any indication of 'not found'
-    return -1
-  }
-
-  private async isValidUrl(url: string) {
-    try {
-      new URL(url)
-      return true
-    } catch (err) {
-      return false
     }
   }
 
   @Post('/create-offer-oob')
   public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
     try {
-      let routing: Routing
+      const {
+        recipientKey,
+        credentialFormats,
+        isRevocable,
+        credentialSubjectUrl,
+        statusPurpose,
+        protocolVersion,
+        autoAcceptCredential,
+        comment,
+      } = outOfBandOption
+
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
       }
-      if (outOfBandOption?.recipientKey) {
-        routing = {
-          endpoints: this.agent.config.endpoints,
-          routingKeys: [],
-          recipientKey: Key.fromPublicKeyBase58(outOfBandOption.recipientKey, KeyType.Ed25519),
-          mediatorId: undefined,
+
+      const routing = recipientKey
+        ? {
+            endpoints: this.agent.config.endpoints,
+            routingKeys: [],
+            recipientKey: Key.fromPublicKeyBase58(recipientKey, KeyType.Ed25519),
+            mediatorId: undefined,
+          }
+        : await this.agent.mediationRecipient.getRouting({})
+
+      if (credentialFormats.jsonld && isRevocable) {
+        if (!credentialSubjectUrl) {
+          throw new BadRequestError('Please provide valid credentialSubjectUrl')
         }
-      } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+
+        const bitStringCredentialStatusPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
+
+        const credentialStatusData = {
+          credentialSubjectUrl,
+          statusPurpose: bitStringCredentialStatusPurpose,
+        } as unknown as CredentialStatusList
+        const getIndex = await this.agent.genericRecords.findAllByQuery({
+          statusListCredentialURL: credentialSubjectUrl,
+        })
+        const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+        credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+
+        const offerOob = await this.agent.credentials.createOffer({
+          protocolVersion: protocolVersion as CredentialProtocolVersionType<[]>,
+          credentialFormats,
+          autoAcceptCredential,
+          comment,
+        })
+
+        await this.agent.genericRecords.save({
+          content: { index: credentialStatus.statusListIndex },
+          tags: { statusListCredentialURL: credentialStatus.statusListCredential },
+          id: offerOob.credentialRecord.id,
+        })
+
+        return this.createOutOfBandInvitation(outOfBandOption, routing, offerOob.message)
       }
+
       const offerOob = await this.agent.credentials.createOffer({
-        protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
-        credentialFormats: outOfBandOption.credentialFormats,
-        autoAcceptCredential: outOfBandOption.autoAcceptCredential,
-        comment: outOfBandOption.comment,
+        protocolVersion: protocolVersion as CredentialProtocolVersionType<[]>,
+        credentialFormats,
+        autoAcceptCredential,
+        comment,
       })
 
-      const credentialMessage = offerOob.message
-      const outOfBandRecord = await this.agent.oob.createInvitation({
-        label: outOfBandOption.label,
-        messages: [credentialMessage],
-        autoAcceptConnection: true,
-        imageUrl: outOfBandOption?.imageUrl,
-        routing,
-      })
-      return {
-        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-        }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-        recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
-      }
+      return this.createOutOfBandInvitation(outOfBandOption, routing, offerOob.message)
     } catch (error) {
       throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async createOutOfBandInvitation(
+    outOfBandOption: CreateOfferOobOptions,
+    routing: Routing,
+    credentialMessage: AgentMessage
+  ) {
+    const outOfBandRecord = await this.agent.oob.createInvitation({
+      label: outOfBandOption.label,
+      messages: [credentialMessage],
+      autoAcceptConnection: true,
+      imageUrl: outOfBandOption?.imageUrl,
+      routing,
+    })
+
+    return {
+      invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+        domain: this.agent.config.endpoints[0],
+      }),
+      invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+      }),
+      outOfBandRecord: outOfBandRecord.toJSON(),
+      recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
     }
   }
 

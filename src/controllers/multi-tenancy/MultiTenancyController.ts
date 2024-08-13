@@ -1,6 +1,6 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption, SchemaMetadata } from '../types'
+import type { CredentialStatusList, RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -37,7 +37,6 @@ import {
   Key,
   KeyType,
   OutOfBandInvitation,
-  RecordNotFoundError,
   TypedArrayEncoder,
   getBls12381G2Key2020,
   getEd25519VerificationKey2018,
@@ -49,7 +48,16 @@ import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answ
 import axios from 'axios'
 import * as fs from 'fs'
 
-import { CredentialEnum, DidMethod, EndorserMode, Network, NetworkTypes, Role, SchemaError } from '../../enums/enum'
+import {
+  BitStringCredentialStatusPurpose,
+  CredentialEnum,
+  DidMethod,
+  EndorserMode,
+  Network,
+  NetworkTypes,
+  Role,
+  SchemaError,
+} from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import {
@@ -59,6 +67,7 @@ import {
   PaymentRequiredError,
   UnprocessableEntityError,
 } from '../../errors'
+import getCredentialStatus from '../../utils/credentialStatusList'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
 import {
@@ -76,22 +85,7 @@ import {
   CreateSchemaInput,
 } from '../types'
 
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Post,
-  Query,
-  Res,
-  Route,
-  Tags,
-  TsoaResponse,
-  Path,
-  Example,
-  Security,
-  Response,
-} from 'tsoa'
+import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
@@ -1279,12 +1273,41 @@ export class MultiTenancyController extends Controller {
     let offer
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        offer = await tenantAgent.credentials.offerCredential({
-          connectionId: createOfferOptions.connectionId,
-          protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
-          credentialFormats: createOfferOptions.credentialFormats,
-          autoAcceptCredential: createOfferOptions.autoAcceptCredential,
-        })
+        const { credentialFormats, isRevocable, credentialSubjectUrl, statusPurpose } = createOfferOptions
+
+        if (!credentialFormats.jsonld) {
+          offer = await this.agent.credentials.offerCredential(createOfferOptions)
+          return
+        }
+
+        if (isRevocable) {
+          if (!credentialSubjectUrl) {
+            throw new BadRequestError('Please provide valid credentialSubjectUrl')
+          }
+
+          const bitStringCredentialStatusPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
+          const credentialStatusData = {
+            credentialSubjectUrl,
+            statusPurpose: bitStringCredentialStatusPurpose,
+          } as unknown as CredentialStatusList
+
+          const getIndex = await tenantAgent.genericRecords.findAllByQuery({
+            statusListCredentialURL: credentialSubjectUrl,
+          })
+
+          const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+          credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+
+          offer = await tenantAgent.credentials.offerCredential(createOfferOptions)
+
+          await tenantAgent.genericRecords.save({
+            content: { index: credentialStatus.statusListIndex },
+            tags: { statusListCredentialURL: credentialStatus.statusListCredential },
+            id: offer.id,
+          })
+        } else {
+          offer = await tenantAgent.credentials.offerCredential(createOfferOptions)
+        }
       })
 
       return offer
@@ -1297,7 +1320,7 @@ export class MultiTenancyController extends Controller {
   @Post('/credentials/create-offer-oob/:tenantId')
   public async createOfferOob(@Path('tenantId') tenantId: string, @Body() createOfferOptions: CreateOfferOobOptions) {
     let createOfferOobRecord
-
+    let offerOob
     try {
       let invitationDid: string | undefined
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1328,12 +1351,44 @@ export class MultiTenancyController extends Controller {
           invitationDid = did.didState.did
         }
 
-        const offerOob = await tenantAgent.credentials.createOffer({
-          protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
-          credentialFormats: createOfferOptions.credentialFormats,
-          autoAcceptCredential: createOfferOptions.autoAcceptCredential,
-          comment: createOfferOptions.comment,
-        })
+        if (createOfferOptions.credentialFormats.jsonld && createOfferOptions.isRevocable) {
+          if (!createOfferOptions.credentialSubjectUrl) {
+            throw new BadRequestError('Please provide valid credentialSubjectUrl')
+          }
+
+          const bitStringCredentialStatusPurpose =
+            createOfferOptions.statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
+
+          const credentialStatusData = {
+            credentialSubjectUrl: createOfferOptions.credentialSubjectUrl,
+            statusPurpose: bitStringCredentialStatusPurpose,
+          } as unknown as CredentialStatusList
+          const getIndex = await this.agent.genericRecords.findAllByQuery({
+            statusListCredentialURL: createOfferOptions.credentialSubjectUrl,
+          })
+          const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+          createOfferOptions.credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+
+          offerOob = await tenantAgent.credentials.createOffer({
+            protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
+            credentialFormats: createOfferOptions.credentialFormats,
+            autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+            comment: createOfferOptions.comment,
+          })
+
+          await this.agent.genericRecords.save({
+            content: { index: credentialStatus.statusListIndex },
+            tags: { statusListCredentialURL: credentialStatus.statusListCredential },
+            id: offerOob.credentialRecord.id,
+          })
+        } else {
+          offerOob = await tenantAgent.credentials.createOffer({
+            protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
+            credentialFormats: createOfferOptions.credentialFormats,
+            autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+            comment: createOfferOptions.comment,
+          })
+        }
 
         const credentialMessage = offerOob.message
         const outOfBandRecord = await tenantAgent.oob.createInvitation({
