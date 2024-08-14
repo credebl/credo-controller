@@ -8,6 +8,33 @@ import * as zlib from 'zlib'
 import ErrorHandlingService from '../errorHandlingService'
 import { BadRequestError, ConflictError, InternalServerError } from '../errors/errors'
 
+async function generateBitStringStatus(length: number): Promise<string> {
+  return Array.from({ length }, () => (Math.random() > 0.5 ? '1' : '0')).join('')
+}
+
+async function encodeBitString(bitString: string): Promise<string> {
+  const gzip = promisify(zlib.gzip)
+  const buffer = Buffer.from(bitString, 'binary')
+  const compressedBuffer = await gzip(buffer)
+  return compressedBuffer.toString('base64')
+}
+
+async function decodeBitSting(bitString: string): Promise<string> {
+  const gunzip = promisify(zlib.gunzip)
+  const compressedBuffer = Buffer.from(bitString, 'base64')
+  const decompressedBuffer = await gunzip(compressedBuffer)
+  return decompressedBuffer.toString('binary')
+}
+
+async function isValidUrl(url: string) {
+  try {
+    new URL(url)
+    return true
+  } catch (err) {
+    return false
+  }
+}
+
 async function getCredentialStatus(
   credentialStatusList: CredentialStatusList,
   getIndex: GenericRecord[]
@@ -104,13 +131,4 @@ function getAvailableIndex(str: string, usedIndices: number[]) {
   return -1
 }
 
-function isValidUrl(url: string) {
-  try {
-    new URL(url)
-    return true
-  } catch (err) {
-    return false
-  }
-}
-
-export default getCredentialStatus
+export default { getCredentialStatus, generateBitStringStatus, encodeBitString, decodeBitSting, isValidUrl }

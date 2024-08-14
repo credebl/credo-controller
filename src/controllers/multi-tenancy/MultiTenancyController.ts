@@ -1,6 +1,6 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { CredentialStatusList, RecipientKeyOption, SchemaMetadata } from '../types'
+import type { BitStringCredential, CredentialStatusList, RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -13,7 +13,10 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
+  W3cCredentialRecord,
+  W3cJsonLdSignCredentialOptions,
 } from '@credo-ts/core'
+import type { GenericRecord } from '@credo-ts/core/build/modules/generic-records/repository/GenericRecord'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
 import type { TenantRecord } from '@credo-ts/tenants'
@@ -43,6 +46,7 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
+  ClaimFormat,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -67,7 +71,7 @@ import {
   PaymentRequiredError,
   UnprocessableEntityError,
 } from '../../errors'
-import getCredentialStatus from '../../utils/credentialStatusList'
+import utils from '../../utils/credentialStatusList'
 import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { SchemaId, CredentialDefinitionId, RecordId, ProofRecordExample, ConnectionRecordExample } from '../examples'
 import {
@@ -83,6 +87,7 @@ import {
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
   CreateSchemaInput,
+  SignCredentialPayload,
 } from '../types'
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
@@ -1295,7 +1300,7 @@ export class MultiTenancyController extends Controller {
             statusListCredentialURL: credentialSubjectUrl,
           })
 
-          const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+          const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
           credentialFormats.jsonld.credential.credentialStatus = credentialStatus
 
           offer = await tenantAgent.credentials.offerCredential(createOfferOptions)
@@ -1366,7 +1371,7 @@ export class MultiTenancyController extends Controller {
           const getIndex = await this.agent.genericRecords.findAllByQuery({
             statusListCredentialURL: createOfferOptions.credentialSubjectUrl,
           })
-          const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+          const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
           createOfferOptions.credentialFormats.jsonld.credential.credentialStatus = credentialStatus
 
           offerOob = await tenantAgent.credentials.createOffer({
@@ -1642,6 +1647,7 @@ export class MultiTenancyController extends Controller {
         const requestedCredentials = await tenantAgent.proofs.selectCredentialsForRequest({
           proofRecordId,
         })
+
         const acceptProofRequest: AcceptProofRequestOptions = {
           proofRecordId,
           comment: request.comment,
@@ -1894,6 +1900,188 @@ export class MultiTenancyController extends Controller {
         throw new NotFoundError(`Question Answer Record with id "${id}" not found.`)
       }
       return questionAnswerRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/sign/bitstring-credential/:tenantId')
+  public async createBitstringStatusListCredential(
+    @Body() signCredentialPayload: SignCredentialPayload,
+    @Path('tenantId') tenantId: string
+  ): Promise<W3cCredentialRecord> {
+    try {
+      const { bitStringCredentialUrl, issuerDid, statusPurpose, bitStringLength } = signCredentialPayload
+      const bitStringStatusListPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
+      const bitStringStatusListCredentialListLength = bitStringLength ? bitStringLength : 131072
+      const bitStringStatus = await utils.generateBitStringStatus(bitStringStatusListCredentialListLength)
+      const encodedList = await utils.encodeBitString(bitStringStatus)
+      const didIdentifier = issuerDid.split(':')[2]
+      const data = {
+        format: ClaimFormat.LdpVc,
+        credential: {
+          '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vc/status-list/2021/v1'],
+          id: bitStringCredentialUrl,
+          type: ['VerifiableCredential', 'BitstringStatusListCredential'],
+          issuer: {
+            id: issuerDid,
+          },
+          issuanceDate: new Date().toISOString(),
+          credentialSubject: {
+            id: bitStringCredentialUrl,
+            type: 'BitstringStatusList',
+            encodedList,
+            statusPurpose: bitStringStatusListPurpose,
+          },
+        },
+        verificationMethod: `${issuerDid}#${didIdentifier}`,
+        proofType: 'Ed25519Signature2018',
+      }
+
+      await fetch(bitStringCredentialUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credentialsData: data }),
+      })
+
+      return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const signCredential = await tenantAgent.w3cCredentials.signCredential(
+          data as unknown as W3cJsonLdSignCredentialOptions
+        )
+
+        return await tenantAgent.w3cCredentials.storeCredential({ credential: signCredential })
+      })
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/revoke-credential/:credentialId/:tenantId')
+  public async revokeW3C(
+    @Path('credentialId') credentialId: string,
+    @Path('tenantId') tenantId: string
+  ): Promise<{
+    message: string
+  }> {
+    try {
+      let credential
+      return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        credential = await tenantAgent.credentials.getFormatData(credentialId)
+
+        let credentialIndex
+        let statusListCredentialURL
+        const revocationStatus = 1
+
+        if (!Array.isArray(credential.offer?.jsonld?.credential?.credentialStatus)) {
+          credentialIndex = credential.offer?.jsonld?.credential?.credentialStatus?.statusListIndex as string
+          statusListCredentialURL = credential.offer?.jsonld?.credential?.credentialStatus
+            ?.statusListCredential as string
+        } else {
+          credentialIndex = credential.offer?.jsonld?.credential?.credentialStatus[0].statusListIndex as string
+          statusListCredentialURL = credential.offer?.jsonld?.credential?.credentialStatus[0]
+            .statusListCredential as string
+        }
+
+        const bitStringStatusListCredential = await fetch(statusListCredentialURL, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!bitStringStatusListCredential.ok) {
+          throw new InternalServerError(`${bitStringStatusListCredential.statusText}`)
+        }
+
+        const bitStringCredential = (await bitStringStatusListCredential.json()) as BitStringCredential
+        const encodedBitString = bitStringCredential.credential.credentialSubject.encodedList
+        const decodeBitString = await utils.decodeBitSting(encodedBitString)
+
+        const findBitStringIndex = decodeBitString.charAt(parseInt(credentialIndex))
+        if (findBitStringIndex === revocationStatus.toString()) {
+          throw new BadRequestError('The credential already revoked')
+        }
+
+        const updateBitString =
+          decodeBitString.slice(0, parseInt(credentialIndex)) +
+          revocationStatus +
+          decodeBitString.slice(parseInt(credentialIndex) + 1)
+
+        const encodeUpdatedBitString = await utils.encodeBitString(updateBitString)
+        bitStringCredential.credential.credentialSubject.encodedList = encodeUpdatedBitString
+        await fetch(statusListCredentialURL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ credentialsData: bitStringCredential }),
+        })
+
+        return { message: 'The credential has been revoked' }
+      })
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Get('bitstring/status-list/:bitCredentialStatusUrl/:tenantId')
+  public async getBitStringStatusListById(
+    @Path('bitCredentialStatusUrl') bitCredentialStatusUrl: string,
+    @Path('tenantId') tenantId: string
+  ): Promise<{
+    bitStringCredential: BitStringCredential
+    getIndex: GenericRecord[]
+  }> {
+    try {
+      const validateUrl = await utils.isValidUrl(bitCredentialStatusUrl)
+      if (!validateUrl) {
+        throw new BadRequestError(`Please provide a bit string credential id`)
+      }
+
+      const bitStringCredentialDetails = await fetch(bitCredentialStatusUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!bitStringCredentialDetails.ok) {
+        throw new InternalServerError(`${bitStringCredentialDetails.statusText}`)
+      }
+
+      const bitStringCredential = (await bitStringCredentialDetails.json()) as BitStringCredential
+      if (!bitStringCredential?.credential && !bitStringCredential?.credential?.credentialSubject) {
+        throw new BadRequestError(`Invalid credentialSubjectUrl`)
+      }
+
+      return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const getIndex = await tenantAgent.genericRecords.findAllByQuery({
+          statusListCredentialURL: bitCredentialStatusUrl,
+        })
+
+        return {
+          bitStringCredential,
+          getIndex,
+        }
+      })
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Get('bitstring/status-list/:tenantId')
+  public async getAllBitStringStatusList(@Path('tenantId') tenantId: string): Promise<W3cCredentialRecord[]> {
+    try {
+      return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const getBitStringCredentialStatusList = await tenantAgent.w3cCredentials.getAllCredentialRecords()
+        return getBitStringCredentialStatusList
+      })
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

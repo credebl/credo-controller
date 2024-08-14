@@ -5,11 +5,11 @@ import type { GenericRecord } from '@credo-ts/core/build/modules/generic-records
 
 import { Agent, ClaimFormat } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
-import { promisify } from 'util'
-import * as zlib from 'zlib'
 
+import { BitStringCredentialStatusPurpose } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors/errors'
+import utils from '../../utils/credentialStatusList'
 import { SignCredentialPayload } from '../types'
 
 import { Tags, Route, Controller, Post, Security, Body, Path, Get } from 'tsoa'
@@ -26,58 +26,39 @@ export class StatusController extends Controller {
     this.agent = agent
   }
 
-  // Function to generate a bit string status
-  public async generateBitStringStatus(length: number): Promise<string> {
-    return Array.from({ length }, () => (Math.random() > 0.5 ? '1' : '0')).join('')
-  }
-
-  // Function to encode the bit string status
-  public async encodeBitString(bitString: string): Promise<string> {
-    const gzip = promisify(zlib.gzip)
-    const buffer = Buffer.from(bitString, 'binary')
-    const compressedBuffer = await gzip(buffer)
-    return compressedBuffer.toString('base64')
-  }
-
-  public async decodeBitSting(bitString: string): Promise<string> {
-    const gunzip = promisify(zlib.gunzip)
-    const compressedBuffer = Buffer.from(bitString, 'base64')
-    const decompressedBuffer = await gunzip(compressedBuffer)
-    return decompressedBuffer.toString('binary')
-  }
-
   @Post('/sign/bitstring-credential')
   public async createBitstringStatusListCredential(
     @Body() signCredentialPayload: SignCredentialPayload
   ): Promise<W3cCredentialRecord> {
     try {
-      const { id, issuerId, statusPurpose, bitStringLength } = signCredentialPayload
+      const { bitStringCredentialUrl, issuerDid, statusPurpose, bitStringLength } = signCredentialPayload
+      const bitStringStatusListPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
       const bitStringStatusListCredentialListLength = bitStringLength ? bitStringLength : 131072
-      const bitStringStatus = await this.generateBitStringStatus(bitStringStatusListCredentialListLength)
-      const encodedList = await this.encodeBitString(bitStringStatus)
-      const didIdentifier = issuerId.split(':')[2]
+      const bitStringStatus = await utils.generateBitStringStatus(bitStringStatusListCredentialListLength)
+      const encodedList = await utils.encodeBitString(bitStringStatus)
+      const didIdentifier = issuerDid.split(':')[2]
       const data = {
         format: ClaimFormat.LdpVc,
         credential: {
           '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/vc/status-list/2021/v1'],
-          id,
+          id: bitStringCredentialUrl,
           type: ['VerifiableCredential', 'BitstringStatusListCredential'],
           issuer: {
-            id: issuerId,
+            id: issuerDid,
           },
           issuanceDate: new Date().toISOString(),
           credentialSubject: {
-            id,
+            id: bitStringCredentialUrl,
             type: 'BitstringStatusList',
             encodedList,
-            statusPurpose,
+            statusPurpose: bitStringStatusListPurpose,
           },
         },
-        verificationMethod: `${issuerId}#${didIdentifier}`,
+        verificationMethod: `${issuerDid}#${didIdentifier}`,
         proofType: 'Ed25519Signature2018',
       }
 
-      await fetch(id, {
+      await fetch(bitStringCredentialUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,12 +78,12 @@ export class StatusController extends Controller {
     }
   }
 
-  @Post('/revoke-credential/:id')
-  public async revokeW3C(@Path('id') id: string): Promise<{
+  @Post('/revoke-credential/:credentialId')
+  public async revokeW3C(@Path('credentialId') credentialId: string): Promise<{
     message: string
   }> {
     try {
-      const credential = await this.agent.credentials.getFormatData(id)
+      const credential = await this.agent.credentials.getFormatData(credentialId)
       let credentialIndex
       let statusListCredentialURL
       const revocationStatus = 1
@@ -129,7 +110,7 @@ export class StatusController extends Controller {
 
       const bitStringCredential = (await bitStringStatusListCredential.json()) as BitStringCredential
       const encodedBitString = bitStringCredential.credential.credentialSubject.encodedList
-      const decodeBitString = await this.decodeBitSting(encodedBitString)
+      const decodeBitString = await utils.decodeBitSting(encodedBitString)
 
       const findBitStringIndex = decodeBitString.charAt(parseInt(credentialIndex))
       if (findBitStringIndex === revocationStatus.toString()) {
@@ -141,7 +122,7 @@ export class StatusController extends Controller {
         revocationStatus +
         decodeBitString.slice(parseInt(credentialIndex) + 1)
 
-      const encodeUpdatedBitString = await this.encodeBitString(updateBitString)
+      const encodeUpdatedBitString = await utils.encodeBitString(updateBitString)
       bitStringCredential.credential.credentialSubject.encodedList = encodeUpdatedBitString
       await fetch(statusListCredentialURL, {
         method: 'POST',
@@ -157,18 +138,18 @@ export class StatusController extends Controller {
     }
   }
 
-  @Get('bitstring/status-list/:id')
-  public async getBitStringStatusListById(@Path('id') id: string): Promise<{
+  @Get('bitstring/status-list/:bitCredentialStatusUrl')
+  public async getBitStringStatusListById(@Path('bitCredentialStatusUrl') bitCredentialStatusUrl: string): Promise<{
     bitStringCredential: BitStringCredential
     getIndex: GenericRecord[]
   }> {
     try {
-      const validateUrl = await this.isValidUrl(id)
+      const validateUrl = await utils.isValidUrl(bitCredentialStatusUrl)
       if (!validateUrl) {
         throw new BadRequestError(`Please provide a bit string credential id`)
       }
 
-      const bitStringCredentialDetails = await fetch(id, {
+      const bitStringCredentialDetails = await fetch(bitCredentialStatusUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +166,7 @@ export class StatusController extends Controller {
       }
 
       const getIndex = await this.agent.genericRecords.findAllByQuery({
-        statusListCredentialURL: id,
+        statusListCredentialURL: bitCredentialStatusUrl,
       })
 
       return {
@@ -204,15 +185,6 @@ export class StatusController extends Controller {
       return getBitStringCredentialStatusList
     } catch (error) {
       throw ErrorHandlingService.handle(error)
-    }
-  }
-
-  private async isValidUrl(url: string) {
-    try {
-      new URL(url)
-      return true
-    } catch (err) {
-      return false
     }
   }
 }

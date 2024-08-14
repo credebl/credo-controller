@@ -13,7 +13,7 @@ import { injectable } from 'tsyringe'
 import { BitStringCredentialStatusPurpose } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError } from '../../errors/errors'
-import getCredentialStatus from '../../utils/credentialStatusList'
+import utils from '../../utils/credentialStatusList'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
@@ -184,7 +184,7 @@ export class CredentialController extends Controller {
           statusListCredentialURL: credentialSubjectUrl,
         })
 
-        const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+        const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
         credentialFormats.jsonld.credential.credentialStatus = credentialStatus
 
         const offer = await this.agent.credentials.offerCredential(createOfferOptions)
@@ -246,7 +246,7 @@ export class CredentialController extends Controller {
         const getIndex = await this.agent.genericRecords.findAllByQuery({
           statusListCredentialURL: credentialSubjectUrl,
         })
-        const credentialStatus = await getCredentialStatus(credentialStatusData, getIndex)
+        const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
         credentialFormats.jsonld.credential.credentialStatus = credentialStatus
 
         const offerOob = await this.agent.credentials.createOffer({

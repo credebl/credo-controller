@@ -407,9 +407,9 @@ export interface StatusList {
 }
 
 export interface SignCredentialPayload {
-  id: string
-  issuerId: string
-  statusPurpose: string
+  bitStringCredentialUrl: string
+  issuerDid: string
+  statusPurpose?: string
   bitStringLength?: number
 }
 

@@ -43,7 +43,6 @@ interface Parsed {
   rpcUrl?: string
   fileServerUrl?: string
   fileServerToken?: string
-  bitStringStatusListURL?: string
 }
 
 interface InboundTransport {
@@ -254,6 +253,5 @@ export async function runCliServer() {
     rpcUrl: parsed.rpcUrl,
     fileServerUrl: parsed.fileServerUrl,
     fileServerToken: parsed.fileServerToken,
-    bitStringStatusListURL: parsed.bitStringStatusListURL,
   } as AriesRestConfig)
 }
