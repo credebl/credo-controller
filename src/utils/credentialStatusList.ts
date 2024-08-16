@@ -2,6 +2,7 @@ import type { BitStringCredential, CredentialStatusList } from '../controllers/t
 import type { CredentialStatus } from '@credo-ts/core'
 import type { GenericRecord } from '@credo-ts/core/build/modules/generic-records/repository/GenericRecord'
 
+import { randomInt } from 'crypto'
 import { promisify } from 'util'
 import * as zlib from 'zlib'
 
@@ -9,7 +10,7 @@ import ErrorHandlingService from '../errorHandlingService'
 import { BadRequestError, ConflictError, InternalServerError } from '../errors/errors'
 
 async function generateBitStringStatus(length: number): Promise<string> {
-  return Array.from({ length }, () => (Math.random() > 0.5 ? '1' : '0')).join('')
+  return Array.from({ length }, () => (randomInt(0, 2) === 1 ? '1' : '0')).join('')
 }
 
 async function encodeBitString(bitString: string): Promise<string> {

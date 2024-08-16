@@ -1,6 +1,12 @@
 import type { RestAgentModules } from '../../cliAgent'
 import type { BitStringCredential } from '../types'
-import type { W3cCredentialRecord, W3cJsonLdSignCredentialOptions } from '@credo-ts/core'
+import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
+import type {
+  GetCredentialFormatDataReturn,
+  JsonLdCredentialFormat,
+  W3cCredentialRecord,
+  W3cJsonLdSignCredentialOptions,
+} from '@credo-ts/core'
 import type { GenericRecord } from '@credo-ts/core/build/modules/generic-records/repository/GenericRecord'
 
 import { Agent, ClaimFormat } from '@credo-ts/core'
@@ -18,7 +24,7 @@ import { Tags, Route, Controller, Post, Security, Body, Path, Get } from 'tsoa'
 @Route('/w3c/revocation')
 @Security('apiKey')
 @injectable()
-export class StatusController extends Controller {
+export class W3CRevocationController extends Controller {
   private agent: Agent<RestAgentModules>
 
   public constructor(agent: Agent<RestAgentModules>) {
@@ -30,6 +36,63 @@ export class StatusController extends Controller {
   public async createBitstringStatusListCredential(
     @Body() signCredentialPayload: SignCredentialPayload
   ): Promise<W3cCredentialRecord> {
+    try {
+      const data = this._createBitstringStatusListCredential(signCredentialPayload)
+      const signCredential = await this.agent.w3cCredentials.signCredential(
+        data as unknown as W3cJsonLdSignCredentialOptions
+      )
+
+      const storCredential = await this.agent.w3cCredentials.storeCredential({ credential: signCredential })
+
+      return storCredential
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Post('/revoke-credential/:credentialId')
+  public async revokeW3C(@Path('credentialId') credentialId: string): Promise<{
+    message: string
+  }> {
+    try {
+      const credential = await this.agent.credentials.getFormatData(credentialId)
+      return await this._revokeW3C(credential)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Get('bitstring/status-list/:bitCredentialStatusUrl')
+  public async getBitStringStatusListById(@Path('bitCredentialStatusUrl') bitCredentialStatusUrl: string): Promise<{
+    bitStringCredential: BitStringCredential
+    getIndex: GenericRecord[]
+  }> {
+    try {
+      const bitStringCredential = await this._getBitStringStatusListById(bitCredentialStatusUrl)
+      const getIndex = await this.agent.genericRecords.findAllByQuery({
+        statusListCredentialURL: bitCredentialStatusUrl,
+      })
+
+      return {
+        bitStringCredential,
+        getIndex,
+      }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Get('bitstring/status-list/')
+  public async getAllBitStringStatusList(): Promise<W3cCredentialRecord[]> {
+    try {
+      const getBitStringCredentialStatusList = await this.agent.w3cCredentials.getAllCredentialRecords()
+      return getBitStringCredentialStatusList
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  public async _createBitstringStatusListCredential(signCredentialPayload: SignCredentialPayload) {
     try {
       const { bitStringCredentialUrl, issuerDid, statusPurpose, bitStringLength } = signCredentialPayload
       const bitStringStatusListPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
@@ -66,24 +129,18 @@ export class StatusController extends Controller {
         body: JSON.stringify({ credentialsData: data }),
       })
 
-      const signCredential = await this.agent.w3cCredentials.signCredential(
-        data as unknown as W3cJsonLdSignCredentialOptions
-      )
-
-      const storCredential = await this.agent.w3cCredentials.storeCredential({ credential: signCredential })
-
-      return storCredential
+      return data
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
   }
 
-  @Post('/revoke-credential/:credentialId')
-  public async revokeW3C(@Path('credentialId') credentialId: string): Promise<{
-    message: string
-  }> {
+  public async _revokeW3C(
+    credential: GetCredentialFormatDataReturn<
+      (LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat)[]
+    >
+  ) {
     try {
-      const credential = await this.agent.credentials.getFormatData(credentialId)
       let credentialIndex
       let statusListCredentialURL
       const revocationStatus = 1
@@ -138,11 +195,7 @@ export class StatusController extends Controller {
     }
   }
 
-  @Get('bitstring/status-list/:bitCredentialStatusUrl')
-  public async getBitStringStatusListById(@Path('bitCredentialStatusUrl') bitCredentialStatusUrl: string): Promise<{
-    bitStringCredential: BitStringCredential
-    getIndex: GenericRecord[]
-  }> {
+  public async _getBitStringStatusListById(bitCredentialStatusUrl: string) {
     try {
       const validateUrl = await utils.isValidUrl(bitCredentialStatusUrl)
       if (!validateUrl) {
@@ -165,24 +218,7 @@ export class StatusController extends Controller {
         throw new BadRequestError(`Invalid credentialSubjectUrl`)
       }
 
-      const getIndex = await this.agent.genericRecords.findAllByQuery({
-        statusListCredentialURL: bitCredentialStatusUrl,
-      })
-
-      return {
-        bitStringCredential,
-        getIndex,
-      }
-    } catch (error) {
-      throw ErrorHandlingService.handle(error)
-    }
-  }
-
-  @Get('bitstring/status-list/')
-  public async getAllBitStringStatusList(): Promise<W3cCredentialRecord[]> {
-    try {
-      const getBitStringCredentialStatusList = await this.agent.w3cCredentials.getAllCredentialRecords()
-      return getBitStringCredentialStatusList
+      return bitStringCredential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
