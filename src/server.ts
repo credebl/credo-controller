@@ -5,6 +5,7 @@ import type { Response as ExResponse, Request as ExRequest, NextFunction } from 
 import { Agent } from '@credo-ts/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
+import dotenv from 'dotenv'
 import express from 'express'
 import { rateLimit } from 'express-rate-limit'
 import * as fs from 'fs'
@@ -21,9 +22,10 @@ import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { reuseConnectionEvents } from './events/ReuseConnectionEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
-import { maxRateLimit, windowMs } from './utils/util'
 
 import { ValidateError } from 'tsoa'
+
+dotenv.config()
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
@@ -55,6 +57,8 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     return res.send(generateHTML(await import('./routes/swagger.json')))
   })
 
+  const windowMs = Number(process.env.windowMs)
+  const maxRateLimit = Number(process.env.maxRateLimit)
   const limiter = rateLimit({
     windowMs, // 1 second
     max: maxRateLimit, // max 800 requests per second

@@ -55,14 +55,6 @@ import jwt from 'jsonwebtoken'
 import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums/enum'
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
-import {
-  BCOVRIN_TEST_GENESIS,
-  DID_CONTRACT_ADDRESS,
-  FILE_SERVER_TOKEN,
-  RPC_URL,
-  SCHEMA_MANAGER_CONTRACT_ADDRESS,
-  SERVER_URL,
-} from './utils/util'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -192,16 +184,16 @@ const getModules = (
     }),
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
-      cache: new InMemoryLruCache({ limit: Infinity }),
+      cache: new InMemoryLruCache({ limit: Number(process.env.INMEMORY_LRU_CACHE_LIMIT) || Infinity }),
     }),
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: didRegistryContractAddress ? didRegistryContractAddress : (DID_CONTRACT_ADDRESS as string),
-      schemaManagerContractAddress: schemaManagerContractAddress || (SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
-      fileServerToken: fileServerToken ? fileServerToken : (FILE_SERVER_TOKEN as string),
-      rpcUrl: rpcUrl ? rpcUrl : (RPC_URL as string),
-      serverUrl: fileServerUrl ? fileServerUrl : (SERVER_URL as string),
+      didContractAddress: didRegistryContractAddress ? didRegistryContractAddress : (process.env.DID_CONTRACT_ADDRESS as string),
+      schemaManagerContractAddress: schemaManagerContractAddress || (process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
+      fileServerToken: fileServerToken ? fileServerToken : (process.env.FILE_SERVER_TOKEN as string),
+      rpcUrl: rpcUrl ? rpcUrl : (process.env.RPC_URL as string),
+      serverUrl: fileServerUrl ? fileServerUrl : (process.env.SERVER_URL as string),
     }),
   }
 }
@@ -233,8 +225,8 @@ const getWithTenantModules = (
   )
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
-      sessionLimit: Infinity,
+      sessionAcquireTimeout: Number(process.env.SESSION_ACQUIRE_TIMEOUT) || Infinity,
+      sessionLimit: Number(process.env.SESSION_LIMIT) || Infinity,
     }),
     ...modules,
   }
@@ -342,7 +334,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   } else {
     networkConfig = [
       {
-        genesisTransactions: BCOVRIN_TEST_GENESIS,
+        genesisTransactions: process.env.BCOVRIN_TEST_GENESIS as string,
         indyNamespace: Network.Bcovrin_Testnet,
         isProduction: false,
         connectOnStartup: true,
