@@ -37,7 +37,7 @@ export class W3CRevocationController extends Controller {
     @Body() signCredentialPayload: SignCredentialPayload
   ): Promise<W3cCredentialRecord> {
     try {
-      const data = this._createBitstringStatusListCredential(signCredentialPayload)
+      const data = await this._createBitstringStatusListCredential(signCredentialPayload)
       const signCredential = await this.agent.w3cCredentials.signCredential(
         data as unknown as W3cJsonLdSignCredentialOptions
       )
