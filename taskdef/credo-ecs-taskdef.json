@@ -2,19 +2,19 @@
     "family": "DEV_AGENT_SPINUP_TASKDEF",
     "containerDefinitions": [
         {
-            "name": "e7cc1515-a197-4580-9e63-dda70c9c7f08-Platform-admin-service-ODg2YmE4ZDU3",
+            "name": "Platform-admin",
             "image": "%REPOSITORY_URI%:CREDO_v_%BUILD_NUMBER%",
             "cpu": 154,
             "memory": 307,
             "portMappings": [
                 {
-                    "containerPort": 8004,
-                    "hostPort": 8004,
+                    "containerPort": 8001,
+                    "hostPort": 8001,
                     "protocol": "tcp"
                 },
                 {
-                    "containerPort": 9004,
-                    "hostPort": 9004,
+                    "containerPort": 9001,
+                    "hostPort": 9001,
                     "protocol": "tcp"
                 }
             ],
@@ -59,7 +59,7 @@
         {
             "name": "config",
             "host": {
-                "sourcePath": "/home/ec2-user/config/e7cc1515-a197-4580-9e63-dda70c9c7f08_Platform-admin.json"
+                "sourcePath": "/home/ec2-user/config/3423ec9d-0667-4510-811b-5b016a33ed42_Platform-admin.json"
             }
         }
     ]
