@@ -1,5 +1,5 @@
 {
-    "family": "DEV_AGENT_SPINUP_TASKDEF",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
             "name": "Platform-admin",
@@ -59,7 +59,7 @@
         {
             "name": "config",
             "host": {
-                "sourcePath": "/home/ec2-user/config/3423ec9d-0667-4510-811b-5b016a33ed42_Platform-admin.json"
+                "sourcePath": "${SourcePath}"
             }
         }
     ]
