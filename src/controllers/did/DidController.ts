@@ -16,7 +16,6 @@ import { injectable } from 'tsyringe'
 import { DidMethod, Network, Role } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors'
-import { BCOVRIN_REGISTER_URL, INDICIO_NYM_URL } from '../../utils/util'
 import { CreateDidResponse, Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
 
@@ -166,6 +165,7 @@ export class DidController extends Controller {
           didDocument: didDocument,
         }
       } else {
+        const BCOVRIN_REGISTER_URL = process.env.BCOVRIN_REGISTER_URL as string
         const res = await axios.post(BCOVRIN_REGISTER_URL, {
           role: 'ENDORSER',
           alias: 'Alias',
@@ -219,6 +219,7 @@ export class DidController extends Controller {
         }
       } else {
         const key = await this.createIndicioKey(createDidOptions)
+        const INDICIO_NYM_URL = process.env.INDICIO_NYM_URL as string
         const res = await axios.post(INDICIO_NYM_URL, key)
         if (res.data.statusCode === 200) {
           await this.importDid(didMethod, key.did, createDidOptions.seed)
@@ -381,6 +382,7 @@ export class DidController extends Controller {
         .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
         .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
         .addAuthentication(keyId)
+        .addAssertionMethod(keyId)
         .build()
     }
     if (didOptions.keyType === KeyType.Bls12381g2) {
@@ -388,6 +390,7 @@ export class DidController extends Controller {
         .addContext('https://w3id.org/security/bbs/v1')
         .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
         .addAuthentication(keyId)
+        .addAssertionMethod(keyId)
         .build()
     }
 
