@@ -3,8 +3,10 @@ import type { CredentialStatus } from '@credo-ts/core'
 import type { GenericRecord } from '@credo-ts/core/build/modules/generic-records/repository/GenericRecord'
 
 import { randomInt } from 'crypto'
-import { promisify } from 'util'
-import * as zlib from 'zlib'
+// import { promisify } from 'util'
+// import * as zlib from 'zlib'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import pako from 'pako'
 
 import ErrorHandlingService from '../errorHandlingService'
 import { BadRequestError, ConflictError, InternalServerError } from '../errors/errors'
@@ -14,17 +16,25 @@ async function generateBitStringStatus(length: number): Promise<string> {
 }
 
 async function encodeBitString(bitString: string): Promise<string> {
-  const gzip = promisify(zlib.gzip)
-  const buffer = Buffer.from(bitString, 'binary')
-  const compressedBuffer = await gzip(buffer)
-  return compressedBuffer.toString('base64')
+  // const gzip = promisify(zlib.gzip)
+  // const buffer = Buffer.from(bitString, 'binary')
+  // const compressedBuffer = await gzip(buffer)
+  // return compressedBuffer.toString('base64')
+
+  // Convert the bitString to a Uint8Array
+  const buffer = new TextEncoder().encode(bitString)
+  const compressedBuffer = pako.gzip(buffer)
+  // Convert the compressed buffer to a base64 string
+  return Buffer.from(compressedBuffer).toString('base64')
 }
 
 async function decodeBitSting(bitString: string): Promise<string> {
-  const gunzip = promisify(zlib.gunzip)
-  const compressedBuffer = Buffer.from(bitString, 'base64')
-  const decompressedBuffer = await gunzip(compressedBuffer)
-  return decompressedBuffer.toString('binary')
+  // Decode base64 string to Uint8Array
+  const compressedBuffer = Uint8Array.from(atob(bitString), (c) => c.charCodeAt(0))
+
+  // Decompress using pako
+  const decompressedBuffer = pako.ungzip(compressedBuffer, { to: 'string' })
+  return decompressedBuffer
 }
 
 async function isValidUrl(url: string) {
@@ -74,22 +84,21 @@ async function getCredentialStatus(
     }
 
     const encodedBitString = bitStringCredential.credential.credentialSubject.encodedList
-    const gunzip = promisify(zlib.gunzip)
+    const compressedBuffer = Uint8Array.from(atob(encodedBitString), (c) => c.charCodeAt(0))
 
-    const compressedBuffer = Buffer.from(encodedBitString, 'base64')
-    const decompressedBuffer = await gunzip(compressedBuffer)
-    const decodedBitString = decompressedBuffer.toString('binary')
+    const decompressedBuffer = pako.ungzip(compressedBuffer, { to: 'string' })
+    // const decodedBitString = decompressedBuffer.toString('binary')
 
     let index
     const arrayIndex: number[] = []
     if (getIndex.length === 0) {
-      index = decodedBitString.indexOf('0')
+      index = decompressedBuffer.indexOf('0')
     } else {
       getIndex.find((record) => {
         arrayIndex.push(Number(record.content.index))
       })
 
-      index = await getAvailableIndex(decodedBitString, arrayIndex)
+      index = await getAvailableIndex(decompressedBuffer, arrayIndex)
     }
 
     if (index === -1) {

@@ -1,13 +1,13 @@
 diff --git a/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormat.d.ts b/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormat.d.ts
-index 09bd3b1..b902670 100644
+index 78253b5..0b3dd52 100644
 --- a/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormat.d.ts
 +++ b/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormat.d.ts
 @@ -12,6 +12,8 @@ export interface JsonCredential {
      credentialSubject: SingleOrArray<JsonObject>;
+     [key: string]: unknown;
      credentialStatus?: SingleOrArray<CredentialStatus>
-     [key: string]: unknown
 +    //TODO change type
 +    prettyVc?: any;
  }
- type CredentialStatusType = 'BitstringStatusListEntry'
  
+ type CredentialStatusType = 'BitstringStatusListEntry'
