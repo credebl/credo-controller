@@ -1,5 +1,5 @@
 {
-    "family": "QA-AFJ-TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
             "name": "Platform-admin",
@@ -21,7 +21,7 @@
             "command": [
                 "--auto-accept-connections",
                 "--config",
-                "/config/c15f48c9-1d0e-46b6-8915-b7689e255a22_Platform-admin.json"
+                "/config/${CONFIG_FILE}"
             ],
             "environment": [
                 {
@@ -47,7 +47,7 @@
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/QA-AFJ-TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-create-group": "true",
                     "awslogs-region": "ap-south-1",
                     "awslogs-stream-prefix": "ecs"
@@ -62,8 +62,8 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "2048",
-    "memory": "4096",
+    "cpu": "1024",
+    "memory": "2048",
   "volumes": [
         {
             "name": "config",
