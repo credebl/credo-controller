@@ -1,7 +1,19 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@credo-ts/core'
+import type {
+  CredentialExchangeRecordProps,
+  CredentialProtocolVersionType,
+  PeerDidNumAlgo2CreateOptions,
+  Routing,
+} from '@credo-ts/core'
 
-import { CredentialState, Agent, W3cCredentialService, Key, KeyType, CredentialRole } from '@credo-ts/core'
+import {
+  CredentialState,
+  Agent,
+  W3cCredentialService,
+  CredentialRole,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
+} from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -165,21 +177,35 @@ export class CredentialController extends Controller {
   @Post('/create-offer-oob')
   public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
     try {
+      let invitationDid: string | undefined
       let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
       }
-      if (outOfBandOption?.recipientKey) {
-        routing = {
-          endpoints: this.agent.config.endpoints,
-          routingKeys: [],
-          recipientKey: Key.fromPublicKeyBase58(outOfBandOption.recipientKey, KeyType.Ed25519),
-          mediatorId: undefined,
-        }
+
+      if (outOfBandOption?.invitationDid) {
+        invitationDid = outOfBandOption?.invitationDid
       } else {
         routing = await this.agent.mediationRecipient.getRouting({})
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [routing.recipientKey],
+            routingKeys: routing.routingKeys,
+            serviceEndpoint: routing.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        invitationDid = did.didState.did
       }
+
       const offerOob = await this.agent.credentials.createOffer({
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: outOfBandOption.credentialFormats,
@@ -193,7 +219,7 @@ export class CredentialController extends Controller {
         messages: [credentialMessage],
         autoAcceptConnection: true,
         imageUrl: outOfBandOption?.imageUrl,
-        routing,
+        invitationDid,
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -203,7 +229,7 @@ export class CredentialController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+        invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
