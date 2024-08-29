@@ -219,7 +219,6 @@ export class CredentialController extends Controller {
         messages: [credentialMessage],
         autoAcceptConnection: true,
         imageUrl: outOfBandOption?.imageUrl,
-        goalCode: outOfBandOption?.goalCode,
         invitationDid,
       })
       return {
