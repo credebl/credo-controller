@@ -7,8 +7,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "afj-controller/*": ["src"]
+      "credo-controller/*": ["*/src"]
     },
+    "lib": ["ES2021.Promise"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "types": ["jest", "node"]
