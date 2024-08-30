@@ -14,10 +14,12 @@ import axios from 'axios'
 import { injectable } from 'tsyringe'
 
 import { DidMethod, Network, Role } from '../../enums/enum'
-import { Did, DidRecordExample } from '../examples'
+import ErrorHandlingService from '../../errorHandlingService'
+import { BadRequestError, InternalServerError } from '../../errors'
+import { CreateDidResponse, Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
 
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse, Security } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security } from 'tsoa'
 
 @Tags('Dids')
 @Route('/dids')
@@ -39,17 +41,20 @@ export class DidController extends Controller {
   @Example<DidResolutionResultProps>(DidRecordExample)
   @Get('/:did')
   public async getDidRecordByDid(@Path('did') did: Did) {
-    const resolveResult = await this.agent.dids.resolve(did)
-    const importDid = await this.agent.dids.import({
-      did,
-      overwrite: true,
-    })
-    if (!resolveResult.didDocument) {
-      this.setStatus(500)
-      return { importDid }
-    }
+    try {
+      const resolveResult = await this.agent.dids.resolve(did)
+      const importDid = await this.agent.dids.import({
+        did,
+        overwrite: true,
+      })
+      if (!resolveResult.didDocument) {
+        throw new InternalServerError(`Error resolving DID docs for did: ${importDid}`)
+      }
 
-    return { ...resolveResult, didDocument: resolveResult.didDocument.toJSON() }
+      return { ...resolveResult, didDocument: resolveResult.didDocument.toJSON() }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
   }
 
   /**
@@ -59,16 +64,14 @@ export class DidController extends Controller {
    */
   // @Example<DidResolutionResultProps>(DidRecordExample)
 
+  @Example(CreateDidResponse)
   @Post('/write')
-  public async writeDid(
-    @Body() createDidOptions: DidCreate,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  public async writeDid(@Body() createDidOptions: DidCreate) {
     let didRes
 
     try {
       if (!createDidOptions.method) {
-        throw Error('Method is required')
+        throw new BadRequestError('Method is required')
       }
 
       let result
@@ -90,33 +93,33 @@ export class DidController extends Controller {
           break
 
         default:
-          return internalServerError(500, { message: `Invalid method: ${createDidOptions.method}` })
+          throw new BadRequestError(`Invalid method: ${createDidOptions.method}`)
       }
 
       didRes = { ...result }
 
       return didRes
     } catch (error) {
-      return internalServerError(500, { message: `Something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 
   private async handleIndy(createDidOptions: DidCreate) {
     let result
     if (!createDidOptions.keyType) {
-      throw Error('keyType is required')
+      throw new BadRequestError('keyType is required')
     }
 
     if (!createDidOptions.network) {
-      throw Error('For indy method network is required')
+      throw new BadRequestError('For indy method network is required')
     }
 
     if (createDidOptions.keyType !== KeyType.Ed25519) {
-      throw Error('Only ed25519 key type supported')
+      throw new BadRequestError('Only ed25519 key type supported')
     }
 
     if (!Network.Bcovrin_Testnet && !Network.Indicio_Demonet && !Network.Indicio_Testnet) {
-      throw Error(`Invalid network for 'indy' method: ${createDidOptions.network}`)
+      throw new BadRequestError(`Invalid network for 'indy' method: ${createDidOptions.network}`)
     }
 
     switch (createDidOptions?.network?.toLowerCase()) {
@@ -136,7 +139,7 @@ export class DidController extends Controller {
         break
 
       default:
-        throw new Error(`Network does not exists`)
+        throw new BadRequestError(`Network does not exists`)
     }
     return result
   }
@@ -144,7 +147,7 @@ export class DidController extends Controller {
   private async handleBcovrin(createDidOptions: DidCreate, didMethod: string) {
     let didDocument
     if (!createDidOptions.seed) {
-      throw Error('Seed is required')
+      throw new BadRequestError('Seed is required')
     }
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
       if (createDidOptions.did) {
@@ -186,7 +189,7 @@ export class DidController extends Controller {
       }
     } else {
       if (!createDidOptions.endorserDid) {
-        throw new Error('Please provide the endorser DID or role')
+        throw new BadRequestError('Please provide the endorser DID or role')
       }
       const didCreateTxResult = await this.createEndorserDid(createDidOptions.endorserDid)
       return { did: didCreateTxResult.didState.did, didDocument: didCreateTxResult.didState.didDocument }
@@ -196,7 +199,7 @@ export class DidController extends Controller {
   private async handleIndicio(createDidOptions: DidCreate, didMethod: string) {
     let didDocument
     if (!createDidOptions.seed) {
-      throw Error('Seed is required')
+      throw new BadRequestError('Seed is required')
     }
     if (createDidOptions?.role?.toLowerCase() === Role.Endorser) {
       if (createDidOptions.did) {
@@ -237,7 +240,7 @@ export class DidController extends Controller {
       }
     } else {
       if (!createDidOptions.endorserDid) {
-        throw new Error('Please provide the endorser DID or role')
+        throw new BadRequestError('Please provide the endorser DID or role')
       }
       const didCreateTxResult = await this.createEndorserDid(createDidOptions.endorserDid)
       return didCreateTxResult
@@ -256,7 +259,7 @@ export class DidController extends Controller {
 
   private async createIndicioKey(createDidOptions: DidCreate) {
     if (!createDidOptions.seed) {
-      throw Error('Seed is required')
+      throw new BadRequestError('Seed is required')
     }
     const key = await this.agent.wallet.createKey({
       privateKey: TypedArrayEncoder.fromString(createDidOptions.seed),
@@ -280,7 +283,7 @@ export class DidController extends Controller {
         verkey: TypedArrayEncoder.toBase58(buffer),
       }
     } else {
-      throw new Error('Please provide a valid did method')
+      throw new BadRequestError('Please provide a valid did method')
     }
     return body
   }
@@ -304,13 +307,13 @@ export class DidController extends Controller {
     let didDocument
 
     if (!didOptions.seed) {
-      throw Error('Seed is required')
+      throw new BadRequestError('Seed is required')
     }
     if (!didOptions.keyType) {
-      throw Error('keyType is required')
+      throw new BadRequestError('keyType is required')
     }
     if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
-      throw Error('Only ed25519 and bls12381g2 key type supported')
+      throw new BadRequestError('Only ed25519 and bls12381g2 key type supported')
     }
 
     if (!didOptions.did) {
@@ -350,19 +353,19 @@ export class DidController extends Controller {
   public async handleWeb(didOptions: DidCreate) {
     let didDocument: any
     if (!didOptions.domain) {
-      throw Error('domain is required')
+      throw new BadRequestError('domain is required')
     }
 
     if (!didOptions.seed) {
-      throw Error('Seed is required')
+      throw new BadRequestError('Seed is required')
     }
 
     if (!didOptions.keyType) {
-      throw Error('keyType is required')
+      throw new BadRequestError('keyType is required')
     }
 
     if (didOptions.keyType !== KeyType.Ed25519 && didOptions.keyType !== KeyType.Bls12381g2) {
-      throw Error('Only ed25519 and bls12381g2 key type supported')
+      throw new BadRequestError('Only ed25519 and bls12381g2 key type supported')
     }
 
     const domain = didOptions.domain
@@ -379,6 +382,7 @@ export class DidController extends Controller {
         .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
         .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
         .addAuthentication(keyId)
+        .addAssertionMethod(keyId)
         .build()
     }
     if (didOptions.keyType === KeyType.Bls12381g2) {
@@ -386,6 +390,7 @@ export class DidController extends Controller {
         .addContext('https://w3id.org/security/bbs/v1')
         .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
         .addAuthentication(keyId)
+        .addAssertionMethod(keyId)
         .build()
     }
 
@@ -400,12 +405,18 @@ export class DidController extends Controller {
   public async handlePolygon(createDidOptions: DidCreate) {
     // need to discuss try catch logic
     const { endpoint, network, privatekey } = createDidOptions
+
+    if (!network) {
+      throw new BadRequestError('Network is required for Polygon method')
+    }
+
     const networkName = network?.split(':')[1]
+
     if (networkName !== 'mainnet' && networkName !== 'testnet') {
-      throw Error('Invalid network type')
+      throw new BadRequestError('Invalid network type')
     }
     if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
-      throw Error('Invalid private key or not supported')
+      throw new BadRequestError('Invalid private key or not supported')
     }
 
     return this.agent.dids.create<PolygonDidCreateOptions>({
@@ -421,12 +432,12 @@ export class DidController extends Controller {
   }
 
   @Get('/')
-  public async getDids(@Res() internalServerError: TsoaResponse<500, { message: string }>) {
+  public async getDids() {
     try {
       const createdDids = await this.agent.dids.getCreatedDids()
       return createdDids
     } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw ErrorHandlingService.handle(error)
     }
   }
 }
