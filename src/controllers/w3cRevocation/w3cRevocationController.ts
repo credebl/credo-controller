@@ -57,12 +57,12 @@ export class W3CRevocationController extends Controller {
     try {
       const credential = await this.agent.credentials.getFormatData(credentialId)
       const { credentialIndex, statusListCredentialURL } = await this._revokeW3C(credential)
-      const revocationFormat = `${statusListCredentialURL}::${credentialIndex}`
+      const revocationId = `${statusListCredentialURL}::${credentialIndex}`
 
       sendNotification = await this.agent.credentials.sendRevocationNotification({
         credentialRecordId: credentialId,
-        revocationId: statusListCredentialURL,
-        revocationFormat,
+        revocationId,
+        revocationFormat: 'jsonld',
       })
       return sendNotification
     } catch (error) {

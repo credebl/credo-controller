@@ -1993,12 +1993,12 @@ export class MultiTenancyController extends Controller {
       return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const credential = await tenantAgent.credentials.getFormatData(credentialId)
         const { credentialIndex, statusListCredentialURL } = await this.w3CRevocationController._revokeW3C(credential)
-        const revocationFormat = `${statusListCredentialURL}::${credentialIndex}`
+        const revocationId = `${statusListCredentialURL}::${credentialIndex}`
 
         sendNotification = await tenantAgent.credentials.sendRevocationNotification({
           credentialRecordId: credentialId,
-          revocationId: statusListCredentialURL,
-          revocationFormat,
+          revocationId,
+          revocationFormat: 'jsonld',
         })
         return sendNotification
       })
