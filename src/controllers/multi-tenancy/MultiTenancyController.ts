@@ -1987,16 +1987,20 @@ export class MultiTenancyController extends Controller {
 
   @Security('apiKey')
   @Post('/revoke-credential/:credentialId/:tenantId')
-  public async revokeW3C(
-    @Path('credentialId') credentialId: string,
-    @Path('tenantId') tenantId: string
-  ): Promise<{
-    message: string
-  }> {
+  public async revokeW3C(@Path('credentialId') credentialId: string, @Path('tenantId') tenantId: string) {
+    let sendNotification
     try {
       return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const credential = await tenantAgent.credentials.getFormatData(credentialId)
-        return await this.w3CRevocationController._revokeW3C(credential)
+        const { credentialIndex, statusListCredentialURL } = await this.w3CRevocationController._revokeW3C(credential)
+        const revocationFormat = `${statusListCredentialURL}::${credentialIndex}`
+
+        sendNotification = await tenantAgent.credentials.sendRevocationNotification({
+          credentialRecordId: credentialId,
+          revocationId: statusListCredentialURL,
+          revocationFormat,
+        })
+        return sendNotification
       })
     } catch (error) {
       throw ErrorHandlingService.handle(error)

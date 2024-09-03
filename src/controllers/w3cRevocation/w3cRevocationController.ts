@@ -38,6 +38,7 @@ export class W3CRevocationController extends Controller {
   ): Promise<W3cCredentialRecord> {
     try {
       const data = await this._createBitstringStatusListCredential(signCredentialPayload)
+
       const signCredential = await this.agent.w3cCredentials.signCredential(
         data as unknown as W3cJsonLdSignCredentialOptions
       )
@@ -51,12 +52,19 @@ export class W3CRevocationController extends Controller {
   }
 
   @Post('/revoke-credential/:credentialId')
-  public async revokeW3C(@Path('credentialId') credentialId: string): Promise<{
-    message: string
-  }> {
+  public async revokeW3C(@Path('credentialId') credentialId: string) {
+    let sendNotification
     try {
       const credential = await this.agent.credentials.getFormatData(credentialId)
-      return await this._revokeW3C(credential)
+      const { credentialIndex, statusListCredentialURL } = await this._revokeW3C(credential)
+      const revocationFormat = `${statusListCredentialURL}::${credentialIndex}`
+
+      sendNotification = await this.agent.credentials.sendRevocationNotification({
+        credentialRecordId: credentialId,
+        revocationId: statusListCredentialURL,
+        revocationFormat,
+      })
+      return sendNotification
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -189,7 +197,7 @@ export class W3CRevocationController extends Controller {
         body: JSON.stringify({ credentialsData: bitStringCredential }),
       })
 
-      return { message: 'The credential has been revoked' }
+      return { credentialIndex, statusListCredentialURL }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
