@@ -1,0 +1,127 @@
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormatService.js b/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormatService.js
+index 83f99b7..152cf2a 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormatService.js
++++ b/node_modules/@credo-ts/core/build/modules/credentials/formats/jsonld/JsonLdCredentialFormatService.js
+@@ -75,7 +75,7 @@ class JsonLdCredentialFormatService {
+      * @returns object containing associated attachment, formats and offersAttach elements
+      *
+      */
+-    async createOffer(agentContext, { credentialFormats, attachmentId }) {
++    async createOffer(agentContext, { credentialFormats, attachmentId, credentialRecord }) {
+         // if the offer has an attachment Id use that, otherwise the generated id of the formats object
+         const format = new CredentialFormatSpec_1.CredentialFormatSpec({
+             attachmentId,
+@@ -88,6 +88,12 @@ class JsonLdCredentialFormatService {
+         // validate
+         JsonTransformer_1.JsonTransformer.fromJSON(jsonLdFormat.credential, JsonLdCredentialDetail_1.JsonLdCredentialDetail);
+         const attachment = this.getFormatData(jsonLdFormat, format.attachmentId);
++        if (jsonLdFormat.credential.credentialStatus) {
++            credentialRecord.setTags({
++                statusListCredential: jsonLdFormat.credential.credentialStatus.statusListCredential,
++                statusListIndex: jsonLdFormat.credential.credentialStatus.statusListIndex,
++            })
++        }
+         return { format, attachment };
+     }
+     async processOffer(agentContext, { attachment }) {
+@@ -136,7 +142,7 @@ class JsonLdCredentialFormatService {
+         // validate
+         JsonTransformer_1.JsonTransformer.fromJSON(requestJson, JsonLdCredentialDetail_1.JsonLdCredentialDetail);
+     }
+-    async acceptRequest(agentContext, { credentialFormats, attachmentId, requestAttachment }) {
++    async acceptRequest(agentContext, { credentialFormats, attachmentId, requestAttachment, credentialRecord }) {
+         var _a, _b;
+         const w3cJsonLdCredentialService = agentContext.dependencyManager.resolve(W3cJsonLdCredentialService_1.W3cJsonLdCredentialService);
+         // sign credential here. credential to be signed is received as the request attachment
+@@ -164,6 +170,13 @@ class JsonLdCredentialFormatService {
+             proofType: credentialRequest.options.proofType,
+             verificationMethod: verificationMethod,
+         });
++        // If the credential is revocable, store the revocation identifiers in the credential record
++        if (credential.credentialStatus) {
++            credentialRecord.setTags({
++                statusListCredential: credential.credentialStatus.statusListCredential,
++                statusListIndex: credential.credentialStatus.statusListIndex,
++            })
++        }
+         const attachment = this.getFormatData(JsonTransformer_1.JsonTransformer.toJSON(verifiableCredential), format.attachmentId);
+         return { format, attachment };
+     }
+@@ -216,6 +229,12 @@ class JsonLdCredentialFormatService {
+         const verifiableCredential = await w3cCredentialService.storeCredential(agentContext, {
+             credential,
+         });
++        if (credential.credentialStatus) {
++            credentialRecord.setTags({
++                statusListCredential: credential.credentialStatus.statusListCredential,
++                statusListIndex: credential.credentialStatus.statusListIndex,
++            })
++        }
+         credentialRecord.credentials.push({
+             credentialRecordType: this.credentialRecordType,
+             credentialRecordId: verifiableCredential.id,
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js b/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js
+index 66ed4e5..083dfce 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js
++++ b/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js
+@@ -32,10 +32,17 @@ let RevocationNotificationService = class RevocationNotificationService {
+         this.registerMessageHandlers(messageHandlerRegistry);
+     }
+     async processRevocationNotification(agentContext, anonCredsRevocationRegistryId, anonCredsCredentialRevocationId, connection, comment) {
++        let credentialRecord;
++
+         // TODO: can we extract support for this revocation notification handler to the anoncreds module?
+         const query = { anonCredsRevocationRegistryId, anonCredsCredentialRevocationId, connectionId: connection.id };
++
+         this.logger.trace(`Getting record by query for revocation notification:`, query);
+-        const credentialRecord = await this.credentialRepository.getSingleByQuery(agentContext, query);
++        if(new URL(anonCredsRevocationRegistryId)){
++            credentialRecord = await this.credentialRepository.getSingleByQuery(agentContext, { connectionId: connection.id, statusListCredential: anonCredsRevocationRegistryId, statusListIndex: anonCredsCredentialRevocationId });
++        } else {
++            credentialRecord = await this.credentialRepository.getSingleByQuery(agentContext, query);
++        }
+         credentialRecord.revocationNotification = new RevocationNotification_1.RevocationNotification(comment);
+         await this.credentialRepository.update(agentContext, credentialRecord);
+         this.logger.trace('Emitting RevocationNotificationReceivedEvent');
+@@ -96,11 +103,16 @@ let RevocationNotificationService = class RevocationNotificationService {
+         var _a;
+         this.logger.info('Processing revocation notification v2', { message: messageContext.message });
+         const credentialId = messageContext.message.credentialId;
+-        if (![revocationIdentifier_1.v2IndyRevocationFormat, revocationIdentifier_1.v2AnonCredsRevocationFormat].includes(messageContext.message.revocationFormat)) {
++        if (![revocationIdentifier_1.v2IndyRevocationFormat, revocationIdentifier_1.v2AnonCredsRevocationFormat, revocationIdentifier_1.v2JsonLdRevocationFormat].includes(messageContext.message.revocationFormat)) {
+             throw new CredoError_1.CredoError(`Unknown revocation format: ${messageContext.message.revocationFormat}. Supported formats are indy-anoncreds and anoncreds`);
+         }
+         try {
+-            const credentialIdGroups = (_a = credentialId.match(revocationIdentifier_1.v2IndyRevocationIdentifierRegex)) !== null && _a !== void 0 ? _a : credentialId.match(revocationIdentifier_1.v2AnonCredsRevocationIdentifierRegex);
++            const credentialIdGroups = (
++                (_a = credentialId.match(revocationIdentifier_1.v2IndyRevocationIdentifierRegex)) !== null && _a !== void 0
++                  ? _a
++                  : credentialId.match(revocationIdentifier_1.v2AnonCredsRevocationIdentifierRegex) ?? credentialId.match(revocationIdentifier_1.v2JsonLdRevocationRegex)
++              );
++                 
+             if (!credentialIdGroups) {
+                 throw new CredoError_1.CredoError(`Incorrect revocation notification credentialId format: \n${credentialId}\ndoes not match\n"<revocation_registry_id>::<credential_revocation_id>"`);
+             }
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.d.ts b/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.d.ts
+index 0cf5132..7b9497a 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.d.ts
++++ b/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.d.ts
+@@ -3,3 +3,5 @@ export declare const v2IndyRevocationIdentifierRegex: RegExp;
+ export declare const v2IndyRevocationFormat = "indy-anoncreds";
+ export declare const v2AnonCredsRevocationIdentifierRegex: RegExp;
+ export declare const v2AnonCredsRevocationFormat = "anoncreds";
++export declare const v2JsonLdRevocationRegex: RegExp;
++export declare const v2JsonLdRevocationFormat = 'jsonld'
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.js b/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.js
+index 55a0cec..95fbe8a 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.js
++++ b/node_modules/@credo-ts/core/build/modules/credentials/protocol/revocation-notification/util/revocationIdentifier.js
+@@ -10,4 +10,7 @@ exports.v2IndyRevocationFormat = 'indy-anoncreds';
+ // CredentialID = <revocation_registry_id>::<credential_revocation_id>
+ exports.v2AnonCredsRevocationIdentifierRegex = /([a-zA-Z0-9+\-.]+:.+)::(\d+)$/;
+ exports.v2AnonCredsRevocationFormat = 'anoncreds';
++
++exports.v2JsonLdRevocationRegex = /^(https?:\/\/)?([\w.-]+)(:\d+)?(\/[^\s]*)?$/
++exports.v2JsonLdRevocationFormat = 'jsonld';
+ //# sourceMappingURL=revocationIdentifier.js.map
+\ No newline at end of file

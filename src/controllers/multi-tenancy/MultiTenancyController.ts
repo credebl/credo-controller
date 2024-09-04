@@ -1999,6 +1999,7 @@ export class MultiTenancyController extends Controller {
           credentialRecordId: credentialId,
           revocationId,
           revocationFormat: 'jsonld',
+          comment: `Your credential has been revoked.`,
         })
         return sendNotification
       })
