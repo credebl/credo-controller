@@ -1,11 +1,12 @@
 import type {
   AcceptProofRequestOptions,
+  PeerDidNumAlgo2CreateOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, Key, KeyType } from '@credo-ts/core'
+import { Agent, PeerDidNumAlgo, createPeerDidDocumentFromServices } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -148,16 +149,30 @@ export class ProofController extends Controller {
   public async createRequest(@Body() createRequestOptions: CreateProofRequestOobOptions) {
     try {
       let routing: Routing
-      if (createRequestOptions?.recipientKey) {
-        routing = {
-          endpoints: this.agent.config.endpoints,
-          routingKeys: [],
-          recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
-          mediatorId: undefined,
-        }
+      let invitationDid: string | undefined
+
+      if (createRequestOptions?.invitationDid) {
+        invitationDid = createRequestOptions?.invitationDid
       } else {
         routing = await this.agent.mediationRecipient.getRouting({})
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [routing.recipientKey],
+            routingKeys: routing.routingKeys,
+            serviceEndpoint: routing.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        invitationDid = did.didState.did
       }
+
       const proof = await this.agent.proofs.createRequest({
         protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
@@ -173,7 +188,7 @@ export class ProofController extends Controller {
         messages: [proofMessage],
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
-        routing,
+        invitationDid,
       })
 
       return {
@@ -184,7 +199,7 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+        invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)

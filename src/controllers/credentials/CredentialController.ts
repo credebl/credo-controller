@@ -1,13 +1,20 @@
 import type { RestAgentModules } from '../../cliAgent'
 import type { CredentialStatusList } from '../types'
 import type {
-  AgentMessage,
   CredentialExchangeRecordProps,
   CredentialProtocolVersionType,
+  PeerDidNumAlgo2CreateOptions,
   Routing,
 } from '@credo-ts/core'
 
-import { CredentialState, Agent, W3cCredentialService, Key, KeyType, CredentialRole } from '@credo-ts/core'
+import {
+  CredentialState,
+  Agent,
+  W3cCredentialService,
+  CredentialRole,
+  createPeerDidDocumentFromServices,
+  PeerDidNumAlgo,
+} from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { BitStringCredentialStatusPurpose } from '../../enums/enum'
@@ -207,38 +214,46 @@ export class CredentialController extends Controller {
   @Post('/create-offer-oob')
   public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
     try {
-      const {
-        recipientKey,
-        credentialFormats,
-        isRevocable,
-        credentialSubjectUrl,
-        statusPurpose,
-        protocolVersion,
-        autoAcceptCredential,
-        comment,
-      } = outOfBandOption
-
+      const { isRevocable, credentialSubjectUrl, statusPurpose, credentialFormats } = outOfBandOption
+      let invitationDid: string | undefined
+      let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
       }
 
-      const routing = recipientKey
-        ? {
-            endpoints: this.agent.config.endpoints,
-            routingKeys: [],
-            recipientKey: Key.fromPublicKeyBase58(recipientKey, KeyType.Ed25519),
-            mediatorId: undefined,
-          }
-        : await this.agent.mediationRecipient.getRouting({})
+      if (outOfBandOption?.invitationDid) {
+        invitationDid = outOfBandOption?.invitationDid
+      } else {
+        routing = await this.agent.mediationRecipient.getRouting({})
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [routing.recipientKey],
+            routingKeys: routing.routingKeys,
+            serviceEndpoint: routing.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        invitationDid = did.didState.did
+      }
 
-      if (credentialFormats.jsonld && isRevocable) {
+      if (isRevocable) {
+        if (!credentialFormats.jsonld) {
+          throw new BadRequestError('This credential is not formatted as JSON-LD')
+        }
+
         if (!credentialSubjectUrl) {
           throw new BadRequestError('Please provide valid credentialSubjectUrl')
         }
 
         const bitStringCredentialStatusPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
-
         const credentialStatusData = {
           credentialSubjectUrl,
           statusPurpose: bitStringCredentialStatusPurpose,
@@ -246,14 +261,24 @@ export class CredentialController extends Controller {
         const getIndex = await this.agent.genericRecords.findAllByQuery({
           statusListCredentialURL: credentialSubjectUrl,
         })
+
         const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
         credentialFormats.jsonld.credential.credentialStatus = credentialStatus
 
         const offerOob = await this.agent.credentials.createOffer({
-          protocolVersion: protocolVersion as CredentialProtocolVersionType<[]>,
-          credentialFormats,
-          autoAcceptCredential,
-          comment,
+          protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
+          credentialFormats: outOfBandOption.credentialFormats,
+          autoAcceptCredential: outOfBandOption.autoAcceptCredential,
+          comment: outOfBandOption.comment,
+        })
+
+        const credentialMessage = offerOob.message
+        const outOfBandRecord = await this.agent.oob.createInvitation({
+          label: outOfBandOption.label,
+          messages: [credentialMessage],
+          autoAcceptConnection: true,
+          imageUrl: outOfBandOption?.imageUrl,
+          invitationDid,
         })
 
         await this.agent.genericRecords.save({
@@ -262,44 +287,45 @@ export class CredentialController extends Controller {
           id: offerOob.credentialRecord.id,
         })
 
-        return this.createOutOfBandInvitation(outOfBandOption, routing, offerOob.message)
+        return {
+          invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+            domain: this.agent.config.endpoints[0],
+          }),
+          invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+            useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          }),
+          outOfBandRecord: outOfBandRecord.toJSON(),
+          invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
+        }
       }
 
       const offerOob = await this.agent.credentials.createOffer({
-        protocolVersion: protocolVersion as CredentialProtocolVersionType<[]>,
-        credentialFormats,
-        autoAcceptCredential,
-        comment,
+        protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
+        credentialFormats: outOfBandOption.credentialFormats,
+        autoAcceptCredential: outOfBandOption.autoAcceptCredential,
+        comment: outOfBandOption.comment,
       })
 
-      return this.createOutOfBandInvitation(outOfBandOption, routing, offerOob.message)
+      const credentialMessage = offerOob.message
+      const outOfBandRecord = await this.agent.oob.createInvitation({
+        label: outOfBandOption.label,
+        messages: [credentialMessage],
+        autoAcceptConnection: true,
+        imageUrl: outOfBandOption?.imageUrl,
+        invitationDid,
+      })
+      return {
+        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+          domain: this.agent.config.endpoints[0],
+        }),
+        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+        }),
+        outOfBandRecord: outOfBandRecord.toJSON(),
+        invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
+      }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
-    }
-  }
-
-  private async createOutOfBandInvitation(
-    outOfBandOption: CreateOfferOobOptions,
-    routing: Routing,
-    credentialMessage: AgentMessage
-  ) {
-    const outOfBandRecord = await this.agent.oob.createInvitation({
-      label: outOfBandOption.label,
-      messages: [credentialMessage],
-      autoAcceptConnection: true,
-      imageUrl: outOfBandOption?.imageUrl,
-      routing,
-    })
-
-    return {
-      invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-        domain: this.agent.config.endpoints[0],
-      }),
-      invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-      }),
-      outOfBandRecord: outOfBandRecord.toJSON(),
-      recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
     }
   }
 

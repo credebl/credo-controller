@@ -504,6 +504,7 @@ export class MultiTenancyController extends Controller {
           .addContext('https://w3id.org/security/suites/ed25519-2018/v1')
           .addVerificationMethod(getEd25519VerificationKey2018({ key, id: keyId, controller: did }))
           .addAuthentication(keyId)
+          .addAssertionMethod(keyId)
           .build()
       }
       if (keyType === KeyType.Bls12381g2) {
@@ -511,6 +512,7 @@ export class MultiTenancyController extends Controller {
           .addContext('https://w3id.org/security/bbs/v1')
           .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
           .addAuthentication(keyId)
+          .addAssertionMethod(keyId)
           .build()
       }
 
