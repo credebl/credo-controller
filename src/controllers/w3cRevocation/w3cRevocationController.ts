@@ -52,20 +52,21 @@ export class W3CRevocationController extends Controller {
   }
 
   @Post('/revoke-credential/:credentialId')
-  public async revokeW3C(@Path('credentialId') credentialId: string) {
-    let sendNotification
+  public async revokeW3C(@Path('credentialId') credentialId: string): Promise<{
+    message: string
+  }> {
     try {
       const credential = await this.agent.credentials.getFormatData(credentialId)
       const { credentialIndex, statusListCredentialURL } = await this._revokeW3C(credential)
       const revocationId = `${statusListCredentialURL}::${credentialIndex}`
 
-      sendNotification = await this.agent.credentials.sendRevocationNotification({
+      await this.agent.credentials.sendRevocationNotification({
         credentialRecordId: credentialId,
         revocationId,
         revocationFormat: 'jsonld',
         comment: `Your credential has been revoked.`,
       })
-      return sendNotification
+      return { message: 'The credential has been successfully revoked.' }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

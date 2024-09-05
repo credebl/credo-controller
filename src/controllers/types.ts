@@ -434,3 +434,8 @@ export interface CredentialStatusList {
   credentialSubjectUrl: string
   statusPurpose: BitStringCredentialStatusPurpose
 }
+
+export interface OobOffer {
+  message: AgentMessage
+  credentialRecord: CredentialExchangeRecord
+}

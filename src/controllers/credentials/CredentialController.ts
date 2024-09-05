@@ -1,8 +1,9 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { CredentialStatusList } from '../types'
+import type { CredentialStatusList, OobOffer } from '../types'
 import type {
   CredentialExchangeRecordProps,
   CredentialProtocolVersionType,
+  OutOfBandRecord,
   PeerDidNumAlgo2CreateOptions,
   Routing,
 } from '@credo-ts/core'
@@ -265,21 +266,8 @@ export class CredentialController extends Controller {
         const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
         credentialFormats.jsonld.credential.credentialStatus = credentialStatus
 
-        const offerOob = await this.agent.credentials.createOffer({
-          protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
-          credentialFormats: outOfBandOption.credentialFormats,
-          autoAcceptCredential: outOfBandOption.autoAcceptCredential,
-          comment: outOfBandOption.comment,
-        })
-
-        const credentialMessage = offerOob.message
-        const outOfBandRecord = await this.agent.oob.createInvitation({
-          label: outOfBandOption.label,
-          messages: [credentialMessage],
-          autoAcceptConnection: true,
-          imageUrl: outOfBandOption?.imageUrl,
-          invitationDid,
-        })
+        const offerOob = await this._createOffer(outOfBandOption)
+        const outOfBandRecord = await this._createInvitation(outOfBandOption, offerOob, invitationDid)
 
         await this.agent.genericRecords.save({
           content: { index: credentialStatus.statusListIndex },
@@ -287,18 +275,19 @@ export class CredentialController extends Controller {
           id: offerOob.credentialRecord.id,
         })
 
-        return {
-          invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-            domain: this.agent.config.endpoints[0],
-          }),
-          invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-            useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-          }),
-          outOfBandRecord: outOfBandRecord.toJSON(),
-          invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
-        }
+        return this._buildOobOfferResponse(outOfBandRecord, outOfBandOption, invitationDid)
       }
 
+      const offerOob = await this._createOffer(outOfBandOption)
+      const outOfBandRecord = await this._createInvitation(outOfBandOption, offerOob, invitationDid)
+      return this._buildOobOfferResponse(outOfBandRecord, outOfBandOption, invitationDid)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async _createOffer(outOfBandOption: CreateOfferOobOptions): Promise<OobOffer> {
+    try {
       const offerOob = await this.agent.credentials.createOffer({
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: outOfBandOption.credentialFormats,
@@ -306,6 +295,18 @@ export class CredentialController extends Controller {
         comment: outOfBandOption.comment,
       })
 
+      return offerOob
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async _createInvitation(
+    outOfBandOption: CreateOfferOobOptions,
+    offerOob: OobOffer,
+    invitationDid?: string
+  ): Promise<OutOfBandRecord> {
+    try {
       const credentialMessage = offerOob.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: outOfBandOption.label,
@@ -314,18 +315,26 @@ export class CredentialController extends Controller {
         imageUrl: outOfBandOption?.imageUrl,
         invitationDid,
       })
-      return {
-        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-        }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-        invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
-      }
+      return outOfBandRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async _buildOobOfferResponse(
+    outOfBandRecord: OutOfBandRecord,
+    outOfBandOption: CreateOfferOobOptions,
+    invitationDid?: string
+  ) {
+    return {
+      invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+        domain: this.agent.config.endpoints[0],
+      }),
+      invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+      }),
+      outOfBandRecord: outOfBandRecord.toJSON(),
+      invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
     }
   }
 
