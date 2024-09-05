@@ -1,7 +1,9 @@
 import type { RestAgentModules } from '../../cliAgent'
+import type { CredentialStatusList, OobOffer } from '../types'
 import type {
   CredentialExchangeRecordProps,
   CredentialProtocolVersionType,
+  OutOfBandRecord,
   PeerDidNumAlgo2CreateOptions,
   Routing,
 } from '@credo-ts/core'
@@ -16,7 +18,10 @@ import {
 } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
+import { BitStringCredentialStatusPurpose } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
+import { BadRequestError } from '../../errors/errors'
+import utils from '../../utils/credentialStatusList'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
@@ -167,8 +172,41 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
     try {
-      const offer = await this.agent.credentials.offerCredential(createOfferOptions)
-      return offer
+      const { credentialFormats, isRevocable, credentialSubjectUrl, statusPurpose } = createOfferOptions
+
+      if (!credentialFormats.jsonld) {
+        return await this.agent.credentials.offerCredential(createOfferOptions)
+      }
+
+      if (isRevocable) {
+        if (!credentialSubjectUrl) {
+          throw new BadRequestError('Please provide valid credentialSubjectUrl')
+        }
+
+        const bitStringCredentialStatusPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
+        const credentialStatusData = {
+          credentialSubjectUrl,
+          statusPurpose: bitStringCredentialStatusPurpose,
+        } as unknown as CredentialStatusList
+        const getIndex = await this.agent.genericRecords.findAllByQuery({
+          statusListCredentialURL: credentialSubjectUrl,
+        })
+
+        const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
+        credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+
+        const offer = await this.agent.credentials.offerCredential(createOfferOptions)
+
+        await this.agent.genericRecords.save({
+          content: { index: credentialStatus.statusListIndex },
+          tags: { statusListCredentialURL: credentialStatus.statusListCredential },
+          id: offer.id,
+        })
+
+        return offer
+      }
+
+      return await this.agent.credentials.offerCredential(createOfferOptions)
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -177,6 +215,7 @@ export class CredentialController extends Controller {
   @Post('/create-offer-oob')
   public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
     try {
+      const { isRevocable, credentialSubjectUrl, statusPurpose, credentialFormats } = outOfBandOption
       let invitationDid: string | undefined
       let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
@@ -206,6 +245,49 @@ export class CredentialController extends Controller {
         invitationDid = did.didState.did
       }
 
+      if (isRevocable) {
+        if (!credentialFormats.jsonld) {
+          throw new BadRequestError('This credential is not formatted as JSON-LD')
+        }
+
+        if (!credentialSubjectUrl) {
+          throw new BadRequestError('Please provide valid credentialSubjectUrl')
+        }
+
+        const bitStringCredentialStatusPurpose = statusPurpose ?? BitStringCredentialStatusPurpose.REVOCATION
+        const credentialStatusData = {
+          credentialSubjectUrl,
+          statusPurpose: bitStringCredentialStatusPurpose,
+        } as unknown as CredentialStatusList
+        const getIndex = await this.agent.genericRecords.findAllByQuery({
+          statusListCredentialURL: credentialSubjectUrl,
+        })
+
+        const credentialStatus = await utils.getCredentialStatus(credentialStatusData, getIndex)
+        credentialFormats.jsonld.credential.credentialStatus = credentialStatus
+
+        const offerOob = await this._createOffer(outOfBandOption)
+        const outOfBandRecord = await this._createInvitation(outOfBandOption, offerOob, invitationDid)
+
+        await this.agent.genericRecords.save({
+          content: { index: credentialStatus.statusListIndex },
+          tags: { statusListCredentialURL: credentialStatus.statusListCredential },
+          id: offerOob.credentialRecord.id,
+        })
+
+        return this._buildOobOfferResponse(outOfBandRecord, outOfBandOption, invitationDid)
+      }
+
+      const offerOob = await this._createOffer(outOfBandOption)
+      const outOfBandRecord = await this._createInvitation(outOfBandOption, offerOob, invitationDid)
+      return this._buildOobOfferResponse(outOfBandRecord, outOfBandOption, invitationDid)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async _createOffer(outOfBandOption: CreateOfferOobOptions): Promise<OobOffer> {
+    try {
       const offerOob = await this.agent.credentials.createOffer({
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: outOfBandOption.credentialFormats,
@@ -213,6 +295,18 @@ export class CredentialController extends Controller {
         comment: outOfBandOption.comment,
       })
 
+      return offerOob
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async _createInvitation(
+    outOfBandOption: CreateOfferOobOptions,
+    offerOob: OobOffer,
+    invitationDid?: string
+  ): Promise<OutOfBandRecord> {
+    try {
       const credentialMessage = offerOob.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
         label: outOfBandOption.label,
@@ -221,18 +315,26 @@ export class CredentialController extends Controller {
         imageUrl: outOfBandOption?.imageUrl,
         invitationDid,
       })
-      return {
-        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: this.agent.config.endpoints[0],
-        }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-        invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
-      }
+      return outOfBandRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async _buildOobOfferResponse(
+    outOfBandRecord: OutOfBandRecord,
+    outOfBandOption: CreateOfferOobOptions,
+    invitationDid?: string
+  ) {
+    return {
+      invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+        domain: this.agent.config.endpoints[0],
+      }),
+      invitation: outOfBandRecord.outOfBandInvitation.toJSON({
+        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+      }),
+      outOfBandRecord: outOfBandRecord.toJSON(),
+      invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
     }
   }
 

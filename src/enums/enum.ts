@@ -71,3 +71,9 @@ export declare enum CustomHandshakeProtocol {
   DidExchange = 'https://didcomm.org/didexchange/1.1',
   Connections = 'https://didcomm.org/connections/1.0',
 }
+
+export enum BitStringCredentialStatusPurpose {
+  REVOCATION = 'revocation',
+  SUSPENSION = 'suspension',
+  MESSAGE = 'message',
+}

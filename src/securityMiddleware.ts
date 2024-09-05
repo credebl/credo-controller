@@ -20,6 +20,7 @@ export class SecurityMiddleware {
         { path: '/url/', method: 'GET' },
         { path: '/multi-tenancy/url/', method: 'GET' },
         { path: '/agent', method: 'GET' },
+        { path: '/status', method: 'GET' },
       ]
 
       // Check if authentication should be skipped for this route or controller

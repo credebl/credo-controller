@@ -1,5 +1,5 @@
 import type { RecordId, Version } from './examples'
-import type { CustomHandshakeProtocol } from '../enums/enum'
+import type { BitStringCredentialStatusPurpose, CustomHandshakeProtocol } from '../enums/enum'
 import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptCredential,
@@ -88,12 +88,17 @@ export interface AcceptCredentialProposalOptions {
   comment?: string
 }
 
+export type CredentialStatusType = 'BitstringStatusListEntry'
+
 export interface CreateOfferOptions {
   protocolVersion: ProtocolVersion
   connectionId: RecordId
   credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
+  statusPurpose?: BitStringCredentialStatusPurpose
+  credentialSubjectUrl?: string
+  isRevocable?: boolean
 }
 
 type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
@@ -110,6 +115,9 @@ export interface CreateOfferOobOptions {
   imageUrl?: string
   recipientKey?: string
   invitationDid?: string
+  isRevocable?: boolean
+  credentialSubjectUrl?: string
+  statusPurpose?: string
 }
 export interface CredentialCreateOfferOptions {
   credentialRecord: CredentialExchangeRecord
@@ -388,3 +396,46 @@ export interface SchemaMetadata {
  * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
  */
 export type ThreadId = string
+
+export interface StatusList {
+  decode({ encodedList }: { encodedList: any }): Promise<StatusList>
+  bitstring: any
+  length: any
+  setStatus(index: any, status: any): any
+  getStatus(index: any): any
+  encode(): Promise<any>
+}
+
+export interface SignCredentialPayload {
+  bitStringCredentialUrl: string
+  issuerDid: string
+  statusPurpose?: string
+  bitStringLength?: number
+}
+
+export interface BitStringCredential {
+  credential: {
+    credentialSubject: {
+      id: string
+      type: string
+      encodedList: string
+      statusPurpose: string
+    }
+  }
+}
+
+export interface IndexRecord {
+  content: {
+    index: string
+  }
+}
+
+export interface CredentialStatusList {
+  credentialSubjectUrl: string
+  statusPurpose: BitStringCredentialStatusPurpose
+}
+
+export interface OobOffer {
+  message: AgentMessage
+  credentialRecord: CredentialExchangeRecord
+}
