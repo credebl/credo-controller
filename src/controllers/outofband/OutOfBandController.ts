@@ -95,7 +95,6 @@ export class OutOfBandController extends Controller {
   @Post('/create-invitation')
   public async createInvitation(
     @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
-    @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
   ) {
     try {
       let invitationDid: string | undefined

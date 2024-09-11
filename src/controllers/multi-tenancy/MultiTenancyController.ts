@@ -1,6 +1,6 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption } from '../types'
+import type { RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -14,11 +14,6 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
-} from '@credo-ts/core'
-import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
-import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
-import type { TenantRecord } from '@credo-ts/tenants'
-import type { TenantAgent } from '@credo-ts/tenants/build/TenantAgent'
 } from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
@@ -939,7 +934,6 @@ export class MultiTenancyController extends Controller {
       did: string
       schemaName: string
       schema: { [key: string]: any }
-      schema: { [key: string]: any }
     },
     @Path('tenantId') tenantId: string
   ): Promise<SchemaMetadata> {
@@ -1102,8 +1096,6 @@ export class MultiTenancyController extends Controller {
         options: {
           endorserMode: 'external',
           endorsedTransaction: endorsedTransaction,
-          // TODO: Update this later
-          supportRevocation: false,
           // TODO: Update this later
           supportRevocation: false,
         },

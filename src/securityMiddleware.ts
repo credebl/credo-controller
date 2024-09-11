@@ -14,7 +14,6 @@ export class SecurityMiddleware {
       // Extract route path or controller name from the request
       const routePath = request.path
       const requestMethod = request.method
-      const requestMethod = request.method
 
       // List of paths for which authentication should be skipped
       const pathsToSkipAuthentication = [
@@ -24,9 +23,6 @@ export class SecurityMiddleware {
       ]
 
       // Check if authentication should be skipped for this route or controller
-      const skipAuthentication = pathsToSkipAuthentication.some(
-        ({ path, method }) => routePath.includes(path) && requestMethod === method
-      )
       const skipAuthentication = pathsToSkipAuthentication.some(
         ({ path, method }) => routePath.includes(path) && requestMethod === method
       )
