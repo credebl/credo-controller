@@ -4,34 +4,23 @@
 import { TsoaRoute, fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ProofController } from './../controllers/proofs/ProofController';
-import { ProofController } from './../controllers/proofs/ProofController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { Polygon } from './../controllers/polygon/PolygonController';
 import { Polygon } from './../controllers/polygon/PolygonController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { OutOfBandController } from './../controllers/outofband/OutOfBandController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { MultiTenancyController } from './../controllers/multi-tenancy/MultiTenancyController';
-import { MultiTenancyController } from './../controllers/multi-tenancy/MultiTenancyController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { EndorserTransactionController } from './../controllers/endorser-transaction/EndorserTransactionController';
 import { EndorserTransactionController } from './../controllers/endorser-transaction/EndorserTransactionController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { DidController } from './../controllers/did/DidController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { SchemaController } from './../controllers/credentials/SchemaController';
-import { SchemaController } from './../controllers/credentials/SchemaController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { CredentialDefinitionController } from './../controllers/credentials/CredentialDefinitionController';
 import { CredentialDefinitionController } from './../controllers/credentials/CredentialDefinitionController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { CredentialController } from './../controllers/credentials/CredentialController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { ConnectionController } from './../controllers/connections/ConnectionController';
-// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { BasicMessageController } from './../controllers/basic-messages/BasicMessageController';
-// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { AgentController } from './../controllers/agent/AgentController';
 import { ConnectionController } from './../controllers/connections/ConnectionController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { BasicMessageController } from './../controllers/basic-messages/BasicMessageController';
@@ -153,7 +142,6 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "HandshakeProtocol": {
         "dataType": "refEnum",
-        "enums": ["https://didcomm.org/didexchange/1.x","https://didcomm.org/connections/1.x"],
         "enums": ["https://didcomm.org/didexchange/1.x","https://didcomm.org/connections/1.x"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -360,7 +348,6 @@ const models: TsoaRoute.Models = {
             "reuseConnection": {"dataType":"boolean"},
             "acceptInvitationTimeoutMs": {"dataType":"double"},
             "ourDid": {"dataType":"string"},
-            "ourDid": {"dataType":"string"},
             "invitation": {"ref":"OutOfBandInvitationSchema","required":true},
         },
         "additionalProperties": false,
@@ -376,7 +363,6 @@ const models: TsoaRoute.Models = {
             "autoAcceptInvitation": {"dataType":"boolean"},
             "reuseConnection": {"dataType":"boolean"},
             "acceptInvitationTimeoutMs": {"dataType":"double"},
-            "ourDid": {"dataType":"string"},
             "ourDid": {"dataType":"string"},
             "invitationUrl": {"dataType":"string","required":true},
         },
@@ -404,17 +390,13 @@ const models: TsoaRoute.Models = {
     "Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Omit_TenantConfig.walletConfig_": {
     "Omit_TenantConfig.walletConfig_": {
         "dataType": "refAlias",
         "type": {"ref":"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__","validators":{}},
-        "type": {"ref":"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateTenantOptions": {
     "CreateTenantOptions": {
         "dataType": "refObject",
         "properties": {
@@ -424,9 +406,7 @@ const models: TsoaRoute.Models = {
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Record_string.any_": {
-    "Record_string.any_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -576,8 +556,6 @@ const models: TsoaRoute.Models = {
             "credentialDefinitionId": {"dataType":"string","required":true},
             "revocationRegistryDefinitionId": {"dataType":"string"},
             "revocationRegistryIndex": {"dataType":"double"},
-            "revocationRegistryDefinitionId": {"dataType":"string"},
-            "revocationRegistryIndex": {"dataType":"double"},
             "attributes": {"dataType":"array","array":{"dataType":"refObject","ref":"CredentialPreviewAttributeOptions"},"required":true},
             "linkedAttachments": {"dataType":"array","array":{"dataType":"refObject","ref":"LinkedAttachment"}},
         },
@@ -607,6 +585,7 @@ const models: TsoaRoute.Models = {
             "issuanceDate": {"dataType":"string","required":true},
             "expirationDate": {"dataType":"string"},
             "credentialSubject": {"ref":"SingleOrArray_JsonObject_","required":true},
+            "prettyVc": {"dataType":"any"},
         },
         "additionalProperties": {"dataType":"any"},
     },
@@ -777,21 +756,6 @@ const models: TsoaRoute.Models = {
             "error": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["invalidDid"]},{"dataType":"enum","enums":["notFound"]},{"dataType":"enum","enums":["representationNotSupported"]},{"dataType":"enum","enums":["unsupportedDidMethod"]},{"dataType":"string"}]},
             "message": {"dataType":"string"},
             "servedFromCache": {"dataType":"boolean"},
-            "contentType": {"dataType":"string"},
-            "error": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["invalidDid"]},{"dataType":"enum","enums":["notFound"]},{"dataType":"enum","enums":["representationNotSupported"]},{"dataType":"enum","enums":["unsupportedDidMethod"]},{"dataType":"string"}]},
-            "message": {"dataType":"string"},
-            "servedFromCache": {"dataType":"boolean"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidCreateResult_DidOperationStateActionBase_": {
-        "dataType": "refObject",
-        "properties": {
-            "jobId": {"dataType":"string"},
-            "didState": {"dataType":"union","subSchemas":[{"ref":"DidOperationStateWait"},{"ref":"DidOperationStateActionBase"},{"ref":"DidOperationStateFinished"},{"ref":"DidOperationStateFailed"}],"required":true},
-            "didRegistrationMetadata": {"ref":"DidRegistrationMetadata","required":true},
-            "didDocumentMetadata": {"ref":"DidResolutionMetadata","required":true},
         },
         "additionalProperties": false,
     },
@@ -808,17 +772,8 @@ const models: TsoaRoute.Models = {
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DIDDocumentMetadata": {
-    "DIDDocumentMetadata": {
         "dataType": "refObject",
         "properties": {
-            "created": {"dataType":"string"},
-            "updated": {"dataType":"string"},
-            "deactivated": {"dataType":"boolean"},
-            "versionId": {"dataType":"string"},
-            "nextUpdate": {"dataType":"string"},
-            "nextVersionId": {"dataType":"string"},
-            "equivalentId": {"dataType":"string"},
-            "canonicalId": {"dataType":"string"},
             "created": {"dataType":"string"},
             "updated": {"dataType":"string"},
             "deactivated": {"dataType":"boolean"},
@@ -834,189 +789,6 @@ const models: TsoaRoute.Models = {
     "Did": {
         "dataType": "refAlias",
         "type": {"dataType":"string","validators":{}},
-    "Did": {
-        "dataType": "refAlias",
-        "type": {"dataType":"string","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidRecord": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "AnonCredsSchema": {
-        "dataType": "refObject",
-        "properties": {
-            "issuerId": {"dataType":"string","required":true},
-            "name": {"dataType":"string","required":true},
-            "version": {"dataType":"string","required":true},
-            "attrNames": {"dataType":"array","array":{"dataType":"string"},"required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "AnonCredsResolutionMetadata": {
-        "dataType": "refObject",
-        "properties": {
-            "error": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["invalid"]},{"dataType":"enum","enums":["notFound"]},{"dataType":"enum","enums":["unsupportedAnonCredsMethod"]},{"dataType":"string"}]},
-            "message": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CredoExtensible": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GetSchemaReturn": {
-        "dataType": "refObject",
-        "properties": {
-            "schema": {"ref":"AnonCredsSchema"},
-            "schemaId": {"dataType":"string","required":true},
-            "resolutionMetadata": {"ref":"AnonCredsResolutionMetadata","required":true},
-            "schemaMetadata": {"ref":"CredoExtensible","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterSchemaReturnStateWait": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["wait"],"required":true},
-            "schema": {"ref":"AnonCredsSchema"},
-            "schemaId": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterSchemaReturnStateAction": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["action"],"required":true},
-            "action": {"dataType":"string","required":true},
-            "schema": {"ref":"AnonCredsSchema","required":true},
-            "schemaId": {"dataType":"string","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterSchemaReturnStateFinished": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["finished"],"required":true},
-            "schema": {"ref":"AnonCredsSchema","required":true},
-            "schemaId": {"dataType":"string","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterSchemaReturnStateFailed": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["failed"],"required":true},
-            "reason": {"dataType":"string","required":true},
-            "schema": {"ref":"AnonCredsSchema"},
-            "schemaId": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterSchemaReturn": {
-        "dataType": "refObject",
-        "properties": {
-            "jobId": {"dataType":"string"},
-            "schemaState": {"dataType":"union","subSchemas":[{"ref":"RegisterSchemaReturnStateWait"},{"ref":"RegisterSchemaReturnStateAction"},{"ref":"RegisterSchemaReturnStateFinished"},{"ref":"RegisterSchemaReturnStateFailed"}],"required":true},
-            "schemaMetadata": {"ref":"CredoExtensible","required":true},
-            "registrationMetadata": {"ref":"CredoExtensible","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "AnonCredsCredentialDefinition": {
-        "dataType": "refObject",
-        "properties": {
-            "issuerId": {"dataType":"string","required":true},
-            "schemaId": {"dataType":"string","required":true},
-            "type": {"dataType":"enum","enums":["CL"],"required":true},
-            "tag": {"dataType":"string","required":true},
-            "value": {"dataType":"nestedObjectLiteral","nestedProperties":{"revocation":{"dataType":"any"},"primary":{"ref":"Record_string.unknown_","required":true}},"required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GetCredentialDefinitionReturn": {
-        "dataType": "refObject",
-        "properties": {
-            "credentialDefinition": {"ref":"AnonCredsCredentialDefinition"},
-            "credentialDefinitionId": {"dataType":"string","required":true},
-            "resolutionMetadata": {"ref":"AnonCredsResolutionMetadata","required":true},
-            "credentialDefinitionMetadata": {"ref":"CredoExtensible","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterCredentialDefinitionReturnStateWait": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["wait"],"required":true},
-            "credentialDefinition": {"ref":"AnonCredsCredentialDefinition"},
-            "credentialDefinitionId": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterCredentialDefinitionReturnStateAction": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["action"],"required":true},
-            "action": {"dataType":"string","required":true},
-            "credentialDefinitionId": {"dataType":"string","required":true},
-            "credentialDefinition": {"ref":"AnonCredsCredentialDefinition","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterCredentialDefinitionReturnStateFinished": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["finished"],"required":true},
-            "credentialDefinition": {"ref":"AnonCredsCredentialDefinition","required":true},
-            "credentialDefinitionId": {"dataType":"string","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterCredentialDefinitionReturnStateFailed": {
-        "dataType": "refObject",
-        "properties": {
-            "state": {"dataType":"enum","enums":["failed"],"required":true},
-            "reason": {"dataType":"string","required":true},
-            "credentialDefinition": {"ref":"AnonCredsCredentialDefinition"},
-            "credentialDefinitionId": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegisterCredentialDefinitionReturn": {
-        "dataType": "refObject",
-        "properties": {
-            "jobId": {"dataType":"string"},
-            "credentialDefinitionState": {"dataType":"union","subSchemas":[{"ref":"RegisterCredentialDefinitionReturnStateWait"},{"ref":"RegisterCredentialDefinitionReturnStateAction"},{"ref":"RegisterCredentialDefinitionReturnStateFinished"},{"ref":"RegisterCredentialDefinitionReturnStateFailed"}],"required":true},
-            "credentialDefinitionMetadata": {"ref":"CredoExtensible","required":true},
-            "registrationMetadata": {"ref":"CredoExtensible","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ThreadId": {
-        "dataType": "refAlias",
-        "type": {"dataType":"string","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CredentialRole": {
-        "dataType": "refEnum",
-        "enums": ["issuer","holder"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidRecord": {
@@ -1378,11 +1150,18 @@ const templateService = new ExpressTemplateService(models, {"noImplicitAdditiona
 
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
+
+
+
 export function RegisterRoutes(app: Router) {
+
     // ###########################################################################################################
     //  NOTE: If you do not see routes for all of your controllers in this file, then you might not have informed tsoa of where to look
     //      Please look into the "controllerPathGlobs" config option described in the readme: https://github.com/lukeautry/tsoa
     // ###########################################################################################################
+
+
+    
         app.get('/proofs',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(ProofController)),
@@ -1437,7 +1216,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ProofController>(ProofController);
                 const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -1511,7 +1289,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1584,7 +1361,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1622,7 +1398,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1659,7 +1434,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1695,7 +1469,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ProofController>(ProofController);
                 const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -1841,7 +1614,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<Polygon>(Polygon);
-                const controller: any = await container.get<Polygon>(Polygon);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1877,7 +1649,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1913,7 +1685,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1949,7 +1721,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -2094,7 +1866,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<OutOfBandController>(OutOfBandController);
-                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -2132,7 +1903,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<OutOfBandController>(OutOfBandController);
-                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -2168,7 +1938,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -3770,7 +3539,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
-                const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -3913,7 +3681,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<DidController>(DidController);
                 const controller: any = await container.get<DidController>(DidController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -4076,10 +3843,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/credentials/w3c/:id',
+        app.get('/credentials',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.getW3cById)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.getAllCredentials)),
 
             async function CredentialController_getAllCredentials(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4116,10 +3883,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/propose-credential',
+        app.get('/credentials/w3c',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.proposeCredential)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.getAllW3c)),
 
             async function CredentialController_getAllW3c(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4151,10 +3918,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/create-offer',
+        app.get('/credentials/w3c/:id',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.createOffer)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.getW3cById)),
 
             async function CredentialController_getW3cById(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4187,10 +3954,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/accept-offer',
+        app.get('/credentials/:credentialRecordId',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptOffer)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.getCredentialById)),
 
             async function CredentialController_getCredentialById(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4223,10 +3990,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/accept-request',
+        app.post('/credentials/propose-credential',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptRequest)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.proposeCredential)),
 
             async function CredentialController_proposeCredential(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4259,10 +4026,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/credentials/accept-credential',
+        app.post('/credentials/accept-proposal',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(CredentialController)),
-            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptCredential)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptProposal)),
 
             async function CredentialController_acceptProposal(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4295,13 +4062,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/connections',
-        app.get('/connections',
+        app.post('/credentials/create-offer',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getAllConnections)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getAllConnections)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.createOffer)),
 
             async function CredentialController_createOffer(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4316,7 +4080,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                const controller: any = await container.get<CredentialController>(CredentialController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -4334,10 +4098,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/connections/:connectionId',
+        app.post('/credentials/create-offer-oob',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getConnectionById)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.createOfferOob)),
 
             async function CredentialController_createOfferOob(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4352,7 +4116,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                const controller: any = await container.get<CredentialController>(CredentialController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -4370,10 +4134,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.delete('/connections/:connectionId',
+        app.post('/credentials/accept-offer',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.deleteConnection)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptOffer)),
 
             async function CredentialController_acceptOffer(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4388,8 +4152,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                const controller: any = await container.get<CredentialController>(CredentialController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -4407,10 +4170,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/connections/:connectionId/accept-request',
+        app.post('/credentials/accept-request',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.acceptRequest)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptRequest)),
 
             async function CredentialController_acceptRequest(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4425,8 +4188,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                const controller: any = await container.get<CredentialController>(CredentialController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -4444,13 +4206,10 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/connections/:connectionId/accept-response',
-        app.post('/connections/:connectionId/accept-response',
+        app.post('/credentials/accept-credential',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.acceptResponse)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.acceptResponse)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController)),
+            ...(fetchMiddlewares<RequestHandler>(CredentialController.prototype.acceptCredential)),
 
             async function CredentialController_acceptCredential(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4465,8 +4224,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
+                const controller: any = await container.get<CredentialController>(CredentialController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -4579,7 +4337,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
                 const controller: any = await container.get<ConnectionController>(ConnectionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
