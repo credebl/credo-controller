@@ -143,7 +143,6 @@ const models: TsoaRoute.Models = {
     "HandshakeProtocol": {
         "dataType": "refEnum",
         "enums": ["https://didcomm.org/didexchange/1.x","https://didcomm.org/connections/1.x"],
-        "enums": ["https://didcomm.org/didexchange/1.x","https://didcomm.org/connections/1.x"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AgentMessage": {
@@ -349,7 +348,6 @@ const models: TsoaRoute.Models = {
             "reuseConnection": {"dataType":"boolean"},
             "acceptInvitationTimeoutMs": {"dataType":"double"},
             "ourDid": {"dataType":"string"},
-            "ourDid": {"dataType":"string"},
             "invitation": {"ref":"OutOfBandInvitationSchema","required":true},
         },
         "additionalProperties": false,
@@ -365,7 +363,6 @@ const models: TsoaRoute.Models = {
             "autoAcceptInvitation": {"dataType":"boolean"},
             "reuseConnection": {"dataType":"boolean"},
             "acceptInvitationTimeoutMs": {"dataType":"double"},
-            "ourDid": {"dataType":"string"},
             "ourDid": {"dataType":"string"},
             "invitationUrl": {"dataType":"string","required":true},
         },
@@ -391,20 +388,15 @@ const models: TsoaRoute.Models = {
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
-    "Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Omit_TenantConfig.walletConfig_": {
-    "Omit_TenantConfig.walletConfig_": {
         "dataType": "refAlias",
-        "type": {"ref":"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__","validators":{}},
         "type": {"ref":"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateTenantOptions": {
     "CreateTenantOptions": {
         "dataType": "refObject",
         "properties": {
@@ -415,7 +407,6 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Record_string.any_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -563,8 +554,6 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "credentialDefinitionId": {"dataType":"string","required":true},
-            "revocationRegistryDefinitionId": {"dataType":"string"},
-            "revocationRegistryIndex": {"dataType":"double"},
             "revocationRegistryDefinitionId": {"dataType":"string"},
             "revocationRegistryIndex": {"dataType":"double"},
             "attributes": {"dataType":"array","array":{"dataType":"refObject","ref":"CredentialPreviewAttributeOptions"},"required":true},
@@ -760,13 +749,8 @@ const models: TsoaRoute.Models = {
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidResolutionMetadata": {
-    "DidResolutionMetadata": {
         "dataType": "refObject",
         "properties": {
-            "contentType": {"dataType":"string"},
-            "error": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["invalidDid"]},{"dataType":"enum","enums":["notFound"]},{"dataType":"enum","enums":["representationNotSupported"]},{"dataType":"enum","enums":["unsupportedDidMethod"]},{"dataType":"string"}]},
-            "message": {"dataType":"string"},
-            "servedFromCache": {"dataType":"boolean"},
             "contentType": {"dataType":"string"},
             "error": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["invalidDid"]},{"dataType":"enum","enums":["notFound"]},{"dataType":"enum","enums":["representationNotSupported"]},{"dataType":"enum","enums":["unsupportedDidMethod"]},{"dataType":"string"}]},
             "message": {"dataType":"string"},
@@ -787,17 +771,8 @@ const models: TsoaRoute.Models = {
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DIDDocumentMetadata": {
-    "DIDDocumentMetadata": {
         "dataType": "refObject",
         "properties": {
-            "created": {"dataType":"string"},
-            "updated": {"dataType":"string"},
-            "deactivated": {"dataType":"boolean"},
-            "versionId": {"dataType":"string"},
-            "nextUpdate": {"dataType":"string"},
-            "nextVersionId": {"dataType":"string"},
-            "equivalentId": {"dataType":"string"},
-            "canonicalId": {"dataType":"string"},
             "created": {"dataType":"string"},
             "updated": {"dataType":"string"},
             "deactivated": {"dataType":"boolean"},
@@ -810,9 +785,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Did": {
-        "dataType": "refAlias",
-        "type": {"dataType":"string","validators":{}},
     "Did": {
         "dataType": "refAlias",
         "type": {"dataType":"string","validators":{}},
@@ -1237,7 +1209,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1309,7 +1280,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ProofController>(ProofController);
                 const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -1383,7 +1353,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1421,7 +1390,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1458,7 +1426,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ProofController>(ProofController);
-                const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1494,7 +1461,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ProofController>(ProofController);
                 const controller: any = await container.get<ProofController>(ProofController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -1640,7 +1606,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<Polygon>(Polygon);
-                const controller: any = await container.get<Polygon>(Polygon);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1676,7 +1641,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1712,7 +1677,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1748,7 +1713,7 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1893,7 +1858,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<OutOfBandController>(OutOfBandController);
-                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1931,7 +1895,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<OutOfBandController>(OutOfBandController);
-                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -1967,7 +1930,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 const controller: any = await container.get<OutOfBandController>(OutOfBandController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -3569,7 +3531,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
-                const controller: any = await container.get<EndorserTransactionController>(EndorserTransactionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -3712,7 +3673,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<DidController>(DidController);
                 const controller: any = await container.get<DidController>(DidController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -4275,10 +4235,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/connections',
-        app.get('/connections',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getAllConnections)),
             ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
             ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.getAllConnections)),
 
@@ -4373,7 +4330,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ConnectionController>(ConnectionController);
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -4410,7 +4366,6 @@ export function RegisterRoutes(app: Router) {
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
                 const controller: any = await container.get<ConnectionController>(ConnectionController);
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -4429,10 +4384,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/connections/:connectionId/accept-response',
-        app.post('/connections/:connectionId/accept-response',
             authenticateMiddleware([{"apiKey":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.acceptResponse)),
             ...(fetchMiddlewares<RequestHandler>(ConnectionController)),
             ...(fetchMiddlewares<RequestHandler>(ConnectionController.prototype.acceptResponse)),
 
@@ -4449,7 +4401,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectionController>(ConnectionController);
                 const controller: any = await container.get<ConnectionController>(ConnectionController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
@@ -4507,8 +4458,6 @@ export function RegisterRoutes(app: Router) {
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(BasicMessageController)),
             ...(fetchMiddlewares<RequestHandler>(BasicMessageController.prototype.getBasicMessages)),
-            ...(fetchMiddlewares<RequestHandler>(BasicMessageController)),
-            ...(fetchMiddlewares<RequestHandler>(BasicMessageController.prototype.getBasicMessages)),
 
             async function BasicMessageController_getBasicMessages(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
@@ -4560,7 +4509,6 @@ export function RegisterRoutes(app: Router) {
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<BasicMessageController>(BasicMessageController);
                 const controller: any = await container.get<BasicMessageController>(BasicMessageController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);

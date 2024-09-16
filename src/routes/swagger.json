@@ -22,66 +22,8 @@
 			"ProofFormat": {
 				"properties": {
 					"formatKey": {
-					"formatKey": {
 						"type": "string"
 					},
-					"proofFormats": {
-						"properties": {
-							"selectCredentialsForRequest": {
-								"properties": {
-									"output": {},
-									"input": {}
-								},
-								"required": [
-									"output",
-									"input"
-								],
-								"type": "object"
-							},
-							"getCredentialsForRequest": {
-								"properties": {
-									"output": {},
-									"input": {}
-								},
-								"required": [
-									"output",
-									"input"
-								],
-								"type": "object"
-							},
-							"acceptRequest": {},
-							"createRequest": {},
-							"acceptProposal": {},
-							"createProposal": {}
-						},
-						"required": [
-							"selectCredentialsForRequest",
-							"getCredentialsForRequest",
-							"acceptRequest",
-							"createRequest",
-							"acceptProposal",
-							"createProposal"
-						],
-						"type": "object"
-					},
-					"formatData": {
-						"properties": {
-							"presentation": {},
-							"request": {},
-							"proposal": {}
-						},
-						"required": [
-							"presentation",
-							"request",
-							"proposal"
-						],
-						"type": "object"
-					}
-				},
-				"required": [
-					"formatKey",
-					"proofFormats",
-					"formatData"
 					"proofFormats": {
 						"properties": {
 							"selectCredentialsForRequest": {
@@ -189,63 +131,14 @@
 						"$ref": "#/components/schemas/AutoAcceptProof"
 					},
 					"comment": {
-			"AutoAcceptProof": {
-				"description": "Typing of the state for auto acceptance",
-				"enum": [
-					"always",
-					"contentApproved",
-					"never"
-				],
-				"type": "string"
-			},
-			"RequestProofProposalOptions": {
-				"properties": {
-					"connectionId": {
-						"type": "string"
-					},
-					"proofFormats": {
-						"properties": {
-							"action": {
-								"type": "string",
-								"enum": [
-									"createProposal"
-								],
-								"nullable": false
-							},
-							"formats": {
-								"items": {
-									"$ref": "#/components/schemas/ProofFormat"
-								},
-								"type": "array"
-							}
-						},
-						"required": [
-							"action",
-							"formats"
-						],
-						"type": "object"
-					},
-					"goalCode": {
-						"type": "string"
-					},
-					"parentThreadId": {
-						"type": "string"
-					},
-					"autoAcceptProof": {
-						"$ref": "#/components/schemas/AutoAcceptProof"
-					},
-					"comment": {
 						"type": "string"
 					}
 				},
 				"required": [
 					"connectionId",
 					"proofFormats"
-					"connectionId",
-					"proofFormats"
 				],
 				"type": "object",
-				"additionalProperties": false
 				"additionalProperties": false
 			},
 			"AcceptProofProposal": {
@@ -404,10 +297,7 @@
 			},
 			"HandshakeProtocol": {
 				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
-				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
 				"enum": [
-					"https://didcomm.org/didexchange/1.x",
-					"https://didcomm.org/connections/1.x"
 					"https://didcomm.org/didexchange/1.x",
 					"https://didcomm.org/connections/1.x"
 				],
@@ -864,9 +754,6 @@
 					},
 					"ourDid": {
 						"type": "string"
-					},
-					"ourDid": {
-						"type": "string"
 					}
 				},
 				"type": "object",
@@ -899,9 +786,6 @@
 					"acceptInvitationTimeoutMs": {
 						"type": "number",
 						"format": "double"
-					},
-					"ourDid": {
-						"type": "string"
 					},
 					"ourDid": {
 						"type": "string"
@@ -939,9 +823,6 @@
 					"acceptInvitationTimeoutMs": {
 						"type": "number",
 						"format": "double"
-					},
-					"ourDid": {
-						"type": "string"
 					},
 					"ourDid": {
 						"type": "string"
@@ -984,9 +865,7 @@
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
-			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
 				"properties": {
-					"label": {
 					"label": {
 						"type": "string"
 					},
@@ -997,22 +876,9 @@
 				"required": [
 					"label"
 				],
-					"connectionImageUrl": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"label"
-				],
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
-				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
-			"Omit_TenantConfig.walletConfig_": {
-				"$ref": "#/components/schemas/Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__",
-				"description": "Construct a type with the properties of T except for those in type K."
-			},
-			"CreateTenantOptions": {
 			"Omit_TenantConfig.walletConfig_": {
 				"$ref": "#/components/schemas/Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__",
 				"description": "Construct a type with the properties of T except for those in type K."
@@ -1026,17 +892,9 @@
 				"required": [
 					"config"
 				],
-				"required": [
-					"config"
-				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Record_string.any_": {
-				"properties": {},
-				"additionalProperties": {},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
 			"Record_string.any_": {
 				"properties": {},
 				"additionalProperties": {},
@@ -1425,13 +1283,6 @@
 				"properties": {
 					"credentialDefinitionId": {
 						"type": "string"
-					},
-					"revocationRegistryDefinitionId": {
-						"type": "string"
-					},
-					"revocationRegistryIndex": {
-						"type": "number",
-						"format": "double"
 					},
 					"revocationRegistryDefinitionId": {
 						"type": "string"
@@ -1891,18 +1742,10 @@
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"DidResolutionMetadata": {
-			"DidResolutionMetadata": {
 				"properties": {
-					"contentType": {
 					"contentType": {
 						"type": "string"
 					},
-					"error": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
 					"error": {
 						"anyOf": [
 							{
@@ -1916,21 +1759,12 @@
 									"representationNotSupported",
 									"unsupportedDidMethod"
 								]
-									"invalidDid",
-									"notFound",
-									"representationNotSupported",
-									"unsupportedDidMethod"
-								]
 							}
 						]
-						]
 					},
-					"message": {
 					"message": {
 						"type": "string"
 					},
-					"servedFromCache": {
-						"type": "boolean"
 					"servedFromCache": {
 						"type": "boolean"
 					}
@@ -1976,11 +1810,8 @@
 			},
 			"DIDDocumentMetadata": {
 				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
-			"DIDDocumentMetadata": {
-				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
 				"properties": {
 					"created": {
-					"created": {
 						"type": "string"
 					},
 					"updated": {
@@ -1994,28 +1825,13 @@
 					},
 					"nextUpdate": {
 						"type": "string"
-					"updated": {
-						"type": "string"
 					},
-					"deactivated": {
-						"type": "boolean"
-					},
-					"versionId": {
-						"type": "string"
-					},
-					"nextUpdate": {
-						"type": "string"
-					},
-					"nextVersionId": {
 					"nextVersionId": {
 						"type": "string"
 					},
 					"equivalentId": {
-					"equivalentId": {
 						"type": "string"
 					},
-					"canonicalId": {
-						"type": "string"
 					"canonicalId": {
 						"type": "string"
 					}
@@ -2796,46 +2612,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"BasicMessageRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"Record_content.string_": {
-				"properties": {
-					"content": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"content"
-				],
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
-			},
-			"AgentInfo": {
-				"properties": {
-					"label": {
-						"type": "string"
-					},
-					"endpoints": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"isInitialized": {
-						"type": "boolean"
-					},
-					"publicDid": {}
-				},
-				"required": [
-					"label",
-					"endpoints",
-					"isInitialized",
-					"publicDid"
-				],
-				"type": "object",
-				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {
@@ -2857,13 +2633,10 @@
 	},
 	"paths": {
 		"/proofs": {
-		"/proofs": {
 			"get": {
-				"operationId": "GetAllProofs",
 				"operationId": "GetAllProofs",
 				"responses": {
 					"200": {
-						"description": "ProofRecord[]",
 						"description": "ProofRecord[]",
 						"content": {
 							"application/json": {
@@ -2889,33 +2662,10 @@
 								}
 							}
 						}
-									"items": {
-										"$ref": "#/components/schemas/Record_string.unknown_"
-									},
-									"type": "array"
-								},
-								"examples": {
-									"Example 1": {
-										"value": [
-											{
-												"metadata": {},
-												"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-												"createdAt": "2022-01-01T00:00:00.000Z",
-												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-												"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-												"protocolVersion": "v1"
-											}
-										]
-									}
-								}
-							}
-						}
 					}
 				},
 				"description": "Retrieve all proof records",
-				"description": "Retrieve all proof records",
 				"tags": [
-					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -2933,26 +2683,13 @@
 						}
 					}
 				]
-				"parameters": [
-					{
-						"in": "query",
-						"name": "threadId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
 			}
 		},
 		"/proofs/{proofRecordId}": {
-		"/proofs/{proofRecordId}": {
 			"get": {
-				"operationId": "GetProofById",
 				"operationId": "GetProofById",
 				"responses": {
 					"200": {
-						"description": "ProofRecord",
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
@@ -2976,9 +2713,7 @@
 					}
 				},
 				"description": "Retrieve proof record by proof record id",
-				"description": "Retrieve proof record by proof record id",
 				"tags": [
-					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -2990,7 +2725,6 @@
 					{
 						"in": "path",
 						"name": "proofRecordId",
-						"name": "proofRecordId",
 						"required": true,
 						"schema": {
 							"$ref": "#/components/schemas/RecordId"
@@ -3000,15 +2734,10 @@
 			}
 		},
 		"/proofs/propose-proof": {
-			}
-		},
-		"/proofs/propose-proof": {
 			"post": {
-				"operationId": "ProposeProof",
 				"operationId": "ProposeProof",
 				"responses": {
 					"200": {
-						"description": "ProofRecord",
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
@@ -3027,27 +2756,12 @@
 										}
 									}
 								}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
 							}
 						}
 					}
 				},
 				"description": "Initiate a new presentation exchange as prover by sending a presentation proposal request\nto the connection with the specified connection id.",
-				"description": "Initiate a new presentation exchange as prover by sending a presentation proposal request\nto the connection with the specified connection id.",
 				"tags": [
-					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -3056,13 +2770,11 @@
 					}
 				],
 				"parameters": [],
-				"parameters": [],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/RequestProofProposalOptions"
 								"$ref": "#/components/schemas/RequestProofProposalOptions"
 							}
 						}
@@ -3073,12 +2785,8 @@
 		"/proofs/{proofRecordId}/accept-proposal": {
 			"post": {
 				"operationId": "AcceptProposal",
-		"/proofs/{proofRecordId}/accept-proposal": {
-			"post": {
-				"operationId": "AcceptProposal",
 				"responses": {
 					"200": {
-						"description": "ProofRecord",
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
@@ -3102,9 +2810,7 @@
 					}
 				},
 				"description": "Accept a presentation proposal as verifier by sending an accept proposal message\nto the connection associated with the proof record.",
-				"description": "Accept a presentation proposal as verifier by sending an accept proposal message\nto the connection associated with the proof record.",
 				"tags": [
-					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -3153,29 +2859,6 @@
 					}
 				},
 				"description": "Creates a presentation request bound to existing connection",
-				"tags": [
-					"Proofs"
-				],
-				"security": [
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
 				"tags": [
 					"Proofs"
 				],
@@ -3267,57 +2950,6 @@
 					"Proofs"
 				],
 				"security": [
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RequestProofOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/proofs/create-request-oob": {
-			"post": {
-				"operationId": "CreateRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Proofs"
-				],
-				"security": [
 					{
 						"apiKey": []
 					}
@@ -3330,32 +2962,16 @@
 							"schema": {
 								"$ref": "#/components/schemas/CreateProofRequestOobOptions"
 							}
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateProofRequestOobOptions"
-							}
 						}
 					}
-				}
 				}
 			}
 		},
 		"/proofs/{proofRecordId}/accept-request": {
 			"post": {
 				"operationId": "AcceptRequest",
-		"/proofs/{proofRecordId}/accept-request": {
-			"post": {
-				"operationId": "AcceptRequest",
 				"responses": {
 					"200": {
-						"description": "ProofRecord",
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
@@ -3371,9 +2987,6 @@
 											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
 											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
 											"protocolVersion": "v1"
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
 										}
 									}
 								}
@@ -3382,29 +2995,7 @@
 					}
 				},
 				"description": "Accept a presentation request as prover by sending an accept request message\nto the connection associated with the proof record.",
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Accept a presentation request as prover by sending an accept request message\nto the connection associated with the proof record.",
 				"tags": [
-					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -3415,7 +3006,6 @@
 				"parameters": [
 					{
 						"in": "path",
-						"name": "proofRecordId",
 						"name": "proofRecordId",
 						"required": true,
 						"schema": {
@@ -3449,39 +3039,8 @@
 		"/proofs/{proofRecordId}/accept-presentation": {
 			"post": {
 				"operationId": "AcceptPresentation",
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"comment": {
-										"type": "string"
-									},
-									"filterByNonRevocationRequirements": {
-										"type": "boolean"
-									},
-									"filterByPresentationPreview": {
-										"type": "boolean"
-									}
-								},
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/proofs/{proofRecordId}/accept-presentation": {
-			"post": {
-				"operationId": "AcceptPresentation",
 				"responses": {
 					"200": {
-						"description": "ProofRecord",
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
@@ -3500,27 +3059,12 @@
 										}
 									}
 								}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
 							}
 						}
 					}
 				},
 				"description": "Accept a presentation as prover by sending an accept presentation message\nto the connection associated with the proof record.",
-				"description": "Accept a presentation as prover by sending an accept presentation message\nto the connection associated with the proof record.",
 				"tags": [
-					"Proofs"
 					"Proofs"
 				],
 				"security": [
@@ -3532,19 +3076,14 @@
 					{
 						"in": "path",
 						"name": "proofRecordId",
-						"name": "proofRecordId",
 						"required": true,
 						"schema": {
-							"type": "string"
 							"type": "string"
 						}
 					}
 				]
 			}
 		},
-		"/proofs/{proofRecordId}/form-data": {
-			"get": {
-				"operationId": "ProofFormData",
 		"/proofs/{proofRecordId}/form-data": {
 			"get": {
 				"operationId": "ProofFormData",
@@ -3563,9 +3102,6 @@
 											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
 											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
 											"protocolVersion": "v1"
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
 										}
 									}
 								}
@@ -3576,7 +3112,6 @@
 				"description": "Return proofRecord",
 				"tags": [
 					"Proofs"
-					"Proofs"
 				],
 				"security": [
 					{
@@ -3587,10 +3122,8 @@
 					{
 						"in": "path",
 						"name": "proofRecordId",
-						"name": "proofRecordId",
 						"required": true,
 						"schema": {
-							"type": "string"
 							"type": "string"
 						}
 					}
@@ -3598,13 +3131,10 @@
 			}
 		},
 		"/polygon/create-keys": {
-		"/polygon/create-keys": {
 			"post": {
-				"operationId": "CreateKeyPair",
 				"operationId": "CreateKeyPair",
 				"responses": {
 					"200": {
-						"description": "Secp256k1KeyPair",
 						"description": "Secp256k1KeyPair",
 						"content": {
 							"application/json": {
@@ -3652,76 +3182,12 @@
 						"content": {
 							"application/json": {
 								"schema": {}
-								"schema": {
-									"properties": {
-										"address": {
-											"type": "string"
-										},
-										"publicKeyBase58": {
-											"type": "string"
-										},
-										"privateKey": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"address",
-										"publicKeyBase58",
-										"privateKey"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Create Secp256k1 key pair for polygon DID",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/polygon/create-schema": {
-			"post": {
-				"operationId": "CreateSchema",
-				"responses": {
-					"200": {
-						"description": "Schema JSON",
-						"content": {
-							"application/json": {
-								"schema": {}
 							}
 						}
 					}
 				},
 				"description": "Create polygon based W3C schema",
-				"description": "Create polygon based W3C schema",
 				"tags": [
-					"Polygon"
 					"Polygon"
 				],
 				"security": [
@@ -3798,125 +3264,16 @@
 								],
 								"type": "object"
 							}
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"schema": {
-										"properties": {},
-										"additionalProperties": {},
-										"type": "object"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"did": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"schema",
-									"schemaName",
-									"did"
-								],
-								"type": "object"
-							}
 						}
 					}
 				}
 			}
 		},
-		"/polygon/estimate-transaction": {
-			"post": {
-				"operationId": "EstimateTransaction",
-				"responses": {
-					"200": {
-						"description": "Transaction Object",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Estimate transaction",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"transaction": {},
-									"operation": {}
-								},
-								"required": [
-									"transaction",
-									"operation"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-				}
-			}
-		},
-		"/polygon/{did}/{schemaId}": {
 		"/polygon/{did}/{schemaId}": {
 			"get": {
 				"operationId": "GetSchemaById",
-				"operationId": "GetSchemaById",
 				"responses": {
 					"200": {
-						"description": "Schema Object",
 						"description": "Schema Object",
 						"content": {
 							"application/json": {
@@ -3926,15 +3283,8 @@
 					}
 				},
 				"description": "Fetch schema details",
-				"description": "Fetch schema details",
 				"tags": [
 					"Polygon"
-					"Polygon"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
 				],
 				"security": [
 					{
@@ -3944,15 +3294,6 @@
 				"parameters": [
 					{
 						"in": "path",
-						"name": "did",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "schemaId",
 						"name": "did",
 						"required": true,
 						"schema": {
@@ -5561,8 +4902,6 @@
 									"schema": {
 										"properties": {},
 										"additionalProperties": {},
-										"properties": {},
-										"additionalProperties": {},
 										"type": "object"
 									},
 									"schemaName": {
@@ -6923,12 +6262,8 @@
 		"/transactions/endorse": {
 			"post": {
 				"operationId": "EndorserTransaction",
-		"/transactions/endorse": {
-			"post": {
-				"operationId": "EndorserTransaction",
 				"responses": {
 					"200": {
-						"description": "Ok",
 						"description": "Ok",
 						"content": {
 							"application/json": {
@@ -6947,7 +6282,6 @@
 				},
 				"tags": [
 					"EndorserTransaction"
-					"EndorserTransaction"
 				],
 				"security": [
 					{
@@ -6965,27 +6299,13 @@
 						}
 					}
 				}
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/EndorserTransaction"
-							}
-						}
-					}
-				}
 			}
 		},
 		"/transactions/set-endorser-role": {
-		"/transactions/set-endorser-role": {
 			"post": {
-				"operationId": "DidNymTransaction",
 				"operationId": "DidNymTransaction",
 				"responses": {
 					"200": {
-						"description": "Ok",
 						"description": "Ok",
 						"content": {
 							"application/json": {
@@ -6998,7 +6318,6 @@
 				},
 				"tags": [
 					"EndorserTransaction"
-					"EndorserTransaction"
 				],
 				"security": [
 					{
@@ -7012,7 +6331,6 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/DidNymTransaction"
-								"$ref": "#/components/schemas/DidNymTransaction"
 							}
 						}
 					}
@@ -7020,18 +6338,13 @@
 			}
 		},
 		"/transactions/write": {
-		"/transactions/write": {
 			"post": {
-				"operationId": "WriteSchemaAndCredDefOnLedger",
 				"operationId": "WriteSchemaAndCredDefOnLedger",
 				"responses": {
 					"200": {
 						"description": "Ok",
-						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
-							}
 								"schema": {}
 							}
 						}
@@ -7039,7 +6352,6 @@
 				},
 				"tags": [
 					"EndorserTransaction"
-					"EndorserTransaction"
 				],
 				"security": [
 					{
@@ -7053,7 +6365,6 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/WriteTransaction"
-								"$ref": "#/components/schemas/WriteTransaction"
 							}
 						}
 					}
@@ -7063,12 +6374,8 @@
 		"/dids/{did}": {
 			"get": {
 				"operationId": "GetDidRecordByDid",
-		"/dids/{did}": {
-			"get": {
-				"operationId": "GetDidRecordByDid",
 				"responses": {
 					"200": {
-						"description": "DidResolutionResult",
 						"description": "DidResolutionResult",
 						"content": {
 							"application/json": {
@@ -7090,39 +6397,6 @@
 										"didDocument"
 									],
 									"type": "object"
-								},
-								"schema": {
-									"anyOf": [
-										{
-											"properties": {
-												"importDid": {}
-											},
-											"required": [
-												"importDid"
-											],
-											"type": "object"
-										},
-										{
-											"properties": {
-												"importDid": {},
-												"didDocumentMetadata": {
-													"$ref": "#/components/schemas/DIDDocumentMetadata"
-												},
-												"didResolutionMetadata": {
-													"$ref": "#/components/schemas/DidResolutionMetadata"
-												},
-												"didDocument": {
-													"$ref": "#/components/schemas/Record_string.any_"
-												}
-											},
-											"required": [
-												"didDocumentMetadata",
-												"didResolutionMetadata",
-												"didDocument"
-											],
-											"type": "object"
-										}
-									]
 								},
 								"examples": {
 									"Example 1": {
@@ -7235,9 +6509,7 @@
 					}
 				},
 				"description": "Did nym registration",
-				"description": "Did nym registration",
 				"tags": [
-					"Dids"
 					"Dids"
 				],
 				"security": [
@@ -7252,16 +6524,12 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/DidCreate"
-								"$ref": "#/components/schemas/DidCreate"
 							}
 						}
 					}
 				}
 			}
 		},
-		"/dids": {
-			"get": {
-				"operationId": "GetDids",
 		"/dids": {
 			"get": {
 				"operationId": "GetDids",
@@ -7282,7 +6550,6 @@
 				},
 				"tags": [
 					"Dids"
-					"Dids"
 				],
 				"security": [
 					{
@@ -7290,12 +6557,8 @@
 					}
 				],
 				"parameters": []
-				"parameters": []
 			}
 		},
-		"/schemas/{schemaId}": {
-			"get": {
-				"operationId": "GetSchemaById",
 		"/schemas/{schemaId}": {
 			"get": {
 				"operationId": "GetSchemaById",
@@ -7318,14 +6581,6 @@
 												"string"
 											],
 											"seqNo": 351936
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0",
-											"name": "schema",
-											"version": "1.0",
-											"attrNames": [
-												"string"
-											],
-											"seqNo": 351936
 										}
 									}
 								}
@@ -7335,7 +6590,6 @@
 				},
 				"description": "Get schema by schemaId",
 				"tags": [
-					"Schemas"
 					"Schemas"
 				],
 				"security": [
@@ -7347,7 +6601,6 @@
 					{
 						"in": "path",
 						"name": "schemaId",
-						"name": "schemaId",
 						"required": true,
 						"schema": {
 							"type": "string"
@@ -7356,9 +6609,6 @@
 				]
 			}
 		},
-		"/schemas": {
-			"post": {
-				"operationId": "CreateSchema",
 		"/schemas": {
 			"post": {
 				"operationId": "CreateSchema",
@@ -7401,7 +6651,6 @@
 				"description": "Create schema",
 				"tags": [
 					"Schemas"
-					"Schemas"
 				],
 				"security": [
 					{
@@ -7417,58 +6666,15 @@
 								"$ref": "#/components/schemas/CreateSchemaInput"
 							}
 						}
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"endorserDid": {
-										"type": "string"
-									},
-									"endorse": {
-										"type": "boolean"
-									},
-									"attributes": {
-										"items": {
-											"type": "string"
-										},
-										"type": "array"
-									},
-									"version": {
-										"$ref": "#/components/schemas/Version"
-									},
-									"name": {
-										"type": "string"
-									},
-									"issuerId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"attributes",
-									"version",
-									"name",
-									"issuerId"
-								],
-								"type": "object"
-							}
-						}
 					}
-				}
 				}
 			}
 		},
 		"/credential-definitions/{credentialDefinitionId}": {
 			"get": {
 				"operationId": "GetCredentialDefinitionById",
-		"/credential-definitions/{credentialDefinitionId}": {
-			"get": {
-				"operationId": "GetCredentialDefinitionById",
 				"responses": {
 					"200": {
-						"description": "CredDef",
 						"description": "CredDef",
 						"content": {
 							"application/json": {
@@ -7511,51 +6717,12 @@
 										}
 									}
 								}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag",
-											"schemaId": "351936",
-											"type": "CL",
-											"tag": "definition",
-											"value": {
-												"primary": {
-													"n": "string",
-													"s": "string",
-													"r": {
-														"master_secret": "string",
-														"string": "string"
-													},
-													"rctxt": "string",
-													"z": "string"
-												},
-												"revocation": {
-													"g": "1 string",
-													"g_dash": "string",
-													"h": "string",
-													"h0": "string",
-													"h1": "string",
-													"h2": "string",
-													"htilde": "string",
-													"h_cap": "string",
-													"u": "string",
-													"pk": "string",
-													"y": "string"
-												}
-											}
-										}
-									}
-								}
 							}
 						}
 					}
 				},
 				"description": "Retrieve credential definition by credential definition id",
-				"description": "Retrieve credential definition by credential definition id",
 				"tags": [
-					"Credential Definitions"
 					"Credential Definitions"
 				],
 				"security": [
@@ -7573,26 +6740,13 @@
 						}
 					}
 				]
-				"parameters": [
-					{
-						"in": "path",
-						"name": "credentialDefinitionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/CredentialDefinitionId"
-						}
-					}
-				]
 			}
 		},
 		"/credential-definitions": {
-		"/credential-definitions": {
 			"post": {
-				"operationId": "CreateCredentialDefinition",
 				"operationId": "CreateCredentialDefinition",
 				"responses": {
 					"200": {
-						"description": "CredDef",
 						"description": "CredDef",
 						"content": {
 							"application/json": {
@@ -7644,54 +6798,13 @@
 								}
 							}
 						}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"ver": "1.0",
-											"id": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag",
-											"schemaId": "351936",
-											"type": "CL",
-											"tag": "definition",
-											"value": {
-												"primary": {
-													"n": "string",
-													"s": "string",
-													"r": {
-														"master_secret": "string",
-														"string": "string"
-													},
-													"rctxt": "string",
-													"z": "string"
-												},
-												"revocation": {
-													"g": "1 string",
-													"g_dash": "string",
-													"h": "string",
-													"h0": "string",
-													"h1": "string",
-													"h2": "string",
-													"htilde": "string",
-													"h_cap": "string",
-													"u": "string",
-													"pk": "string",
-													"y": "string"
-												}
-											}
-										}
-									}
-								}
-							}
-						}
 					},
 					"202": {
 						"description": "Wait for action to complete"
 					}
 				},
 				"description": "Creates a new credential definition.",
-				"description": "Creates a new credential definition.",
 				"tags": [
-					"Credential Definitions"
 					"Credential Definitions"
 				],
 				"security": [
@@ -7705,29 +6818,6 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"endorserDid": {
-										"type": "string"
-									},
-									"endorse": {
-										"type": "boolean"
-									},
-									"tag": {
-										"type": "string"
-									},
-									"schemaId": {
-										"$ref": "#/components/schemas/SchemaId"
-									},
-									"issuerId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"tag",
-									"schemaId",
-									"issuerId"
-								],
-								"type": "object"
 								"properties": {
 									"endorserDid": {
 										"type": "string"
@@ -8421,12 +7511,8 @@
 		"/connections": {
 			"get": {
 				"operationId": "GetAllConnections",
-		"/connections": {
-			"get": {
-				"operationId": "GetAllConnections",
 				"responses": {
 					"200": {
-						"description": "ConnectionRecord[]",
 						"description": "ConnectionRecord[]",
 						"content": {
 							"application/json": {
@@ -8558,33 +7644,10 @@
 									}
 								}
 							}
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": [
-											{
-												"_tags": {
-													"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-													"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-													"invitationKey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz",
-													"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d",
-													"verkey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz"
-												},
-												"metadata": {},
-												"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-												"createdAt": "2022-01-01T00:00:00.000Z",
-												"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-												"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-												"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
-											}
-										]
-									}
-								}
-							}
 						}
 					}
 				},
-				"description": "Retrieve all connections records",
+				"description": "Retrieve connection record by connection id",
 				"tags": [
 					"Connections"
 				],
@@ -8593,41 +7656,6 @@
 						"apiKey": []
 					}
 				],
-				"parameters": [
-					{
-						"in": "query",
-						"name": "outOfBandId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				},
-				"description": "Retrieve connection record by connection id",
-				"description": "Retrieve connection record by connection id",
-				"tags": [
-					"Connections"
-					"Connections"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
-			},
-			"delete": {
-				"operationId": "DeleteConnection",
 				"parameters": [
 					{
 						"description": "Connection identifier",
@@ -8648,9 +7676,7 @@
 					}
 				},
 				"description": "Deletes a connection record from the connection repository.",
-				"description": "Deletes a connection record from the connection repository.",
 				"tags": [
-					"Connections"
 					"Connections"
 				],
 				"security": [
@@ -8728,22 +7754,8 @@
 			}
 		},
 		"/connections/{connectionId}/accept-response": {
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
-			}
-		},
-		"/connections/{connectionId}/accept-request": {
 			"post": {
-				"operationId": "AcceptRequest",
+				"operationId": "AcceptResponse",
 				"responses": {
 					"200": {
 						"description": "ConnectionRecord",
@@ -8775,126 +7787,8 @@
 						}
 					}
 				},
-				"description": "Accept a connection request as inviter by sending a connection response message\nfor the connection with the specified connection id.\n\nThis is not needed when auto accepting of connection is enabled.",
-				"tags": [
-					"Connections"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
-			}
-		},
-		"/connections/{connectionId}/accept-response": {
-			"post": {
-				"operationId": "AcceptResponse",
-				"operationId": "AcceptResponse",
-				"responses": {
-					"200": {
-						"description": "ConnectionRecord",
-						"description": "ConnectionRecord",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"_tags": {
-												"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-												"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-												"invitationKey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz",
-												"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d",
-												"verkey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz"
-											},
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-											"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
-										}
-									}
-								}
-							}
-						}
-					},
-					"404": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"_tags": {
-												"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-												"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-												"invitationKey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz",
-												"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d",
-												"verkey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz"
-											},
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-											"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
-										}
-									}
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Accept a connection response as invitee by sending a trust ping message\nfor the connection with the specified connection id.\n\nThis is not needed when auto accepting of connection is enabled.",
 				"description": "Accept a connection response as invitee by sending a trust ping message\nfor the connection with the specified connection id.\n\nThis is not needed when auto accepting of connection is enabled.",
 				"tags": [
-					"Connections"
 					"Connections"
 				],
 				"security": [
@@ -8947,147 +7841,10 @@
 			}
 		},
 		"/basic-messages/{connectionId}": {
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
-			}
-		},
-		"/url/{invitationId}": {
-			"get": {
-				"operationId": "GetInvitation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Connections"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "invitationId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/basic-messages/{connectionId}": {
 			"get": {
 				"operationId": "GetBasicMessages",
-				"operationId": "GetBasicMessages",
 				"responses": {
 					"200": {
-						"description": "BasicMessageRecord[]",
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/BasicMessageRecord"
-									},
-									"type": "array"
-								},
-								"examples": {
-									"Example 1": {
-										"value": [
-											{
-												"_tags": {
-													"role": "sender",
-													"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
-												},
-												"metadata": {},
-												"id": "74bcf865-1fdc-45b4-b517-9def02dfd25f",
-												"createdAt": "2022-08-18T08:38:40.216Z",
-												"content": "string",
-												"sentTime": "2022-08-18T08:38:40.216Z",
-												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
-											}
-										]
-									}
-								}
-							}
-						}
-					}
-				},
-				"description": "Retrieve basic messages by connection id",
-				"tags": [
-					"Basic Messages"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
-			},
-			"post": {
-				"operationId": "SendMessage",
-				"responses": {
-					"200": {
-						"description": "Ok",
 						"description": "BasicMessageRecord[]",
 						"content": {
 							"application/json": {
@@ -9171,9 +7928,7 @@
 					}
 				},
 				"description": "Send a basic message to a connection",
-				"description": "Send a basic message to a connection",
 				"tags": [
-					"Basic Messages"
 					"Basic Messages"
 				],
 				"security": [
@@ -9184,70 +7939,12 @@
 				"parameters": [
 					{
 						"description": "Connection identifier",
-						"description": "Connection identifier",
 						"in": "path",
-						"name": "connectionId",
 						"name": "connectionId",
 						"required": true,
 						"schema": {
 							"$ref": "#/components/schemas/RecordId"
-							"$ref": "#/components/schemas/RecordId"
 						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/Record_content.string_"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/agent": {
-			"get": {
-				"operationId": "GetAgentInfo",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/AgentInfo"
-								}
-							}
-						}
-					}
-				},
-				"description": "Retrieve basic agent information",
-				"tags": [
-					"Agent"
-				],
-				"security": [],
-				"parameters": []
-			}
-		},
-		"/agent/wallet": {
-			"delete": {
-				"operationId": "DeleteWallet",
-				"responses": {
-					"204": {
-						"description": "No content"
-					}
-				},
-				"description": "Delete wallet",
-				"tags": [
-					"Agent"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": []
 					}
 				],
 				"requestBody": {
