@@ -375,7 +375,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
           }
         : {}),
       ...modules,
-      ...modules,
     },
     dependencies: agentDependencies,
   })

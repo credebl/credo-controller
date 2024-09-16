@@ -179,7 +179,6 @@ export class CredentialController extends Controller {
     try {
       let invitationDid: string | undefined
       let routing: Routing
-      let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
@@ -206,6 +205,7 @@ export class CredentialController extends Controller {
         })
         invitationDid = did.didState.did
       }
+
       const offerOob = await this.agent.credentials.createOffer({
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: outOfBandOption.credentialFormats,

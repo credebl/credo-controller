@@ -349,8 +349,8 @@ export interface DidNymTransaction {
 
 //todo:Add endorsedTransaction type
 export interface WriteTransaction {
+  endorsedTransaction: string
   endorserDid?: string
-  endorsedTransaction?: string
   schema?: {
     issuerId: string
     name: string
