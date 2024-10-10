@@ -27,8 +27,6 @@ import { ValidateError } from 'tsoa'
 
 dotenv.config()
 
-dotenv.config()
-
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
   container.registerInstance(Agent, agent)
   fs.writeFileSync('config.json', JSON.stringify(config, null, 2))
