@@ -1,7 +1,7 @@
 {
-  "label": "AFJ Rest Agent 1",
-  "walletId": "sample",
-  "walletKey": "sample",
+  "label": "AFJ Rest Agent 2",
+  "walletId": "sampleHolder",
+  "walletKey": "sampleHolder",
   "walletType": "postgres",
   "walletUrl": "localhost:5432",
   "walletAccount": "postgres",
@@ -23,7 +23,7 @@
       "indyNamespace": "bcovrin:testnet"
     }
   ],
-  "endpoint": ["http://192.168.1.71:4002"],
+  "endpoint": ["http://192.168.1.71:4004"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "always",
   "autoAcceptProofs": "contentApproved",
@@ -31,11 +31,11 @@
   "inboundTransport": [
     {
       "transport": "http",
-      "port": 4002
+      "port": 4004
     }
   ],
   "outboundTransport": ["http"],
-  "adminPort": 4001,
+  "adminPort": 4003,
   "tenancy": true,
   "schemaFileServerURL": "https://schema.credebl.id/schemas/",
   "didRegistryContractAddress": "0xcB80F37eDD2bE3570c6C9D5B0888614E04E1e49E",

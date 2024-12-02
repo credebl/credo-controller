@@ -41,6 +41,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
   const logger = new TsLogger(LogLevel.debug)
 
   const config: InitConfig = {
+    isPreserveExchangeRecords: (process.env.IS_PRESERVE_EXCHANGE_RECORD as unknown as boolean) || true,
     label: name,
     endpoints: endpoints,
     walletConfig: {

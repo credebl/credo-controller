@@ -177,6 +177,7 @@ export class CredentialController extends Controller {
   @Post('/create-offer-oob')
   public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
     try {
+      // eslint-disable-next-line no-console
       let invitationDid: string | undefined
       let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
@@ -211,6 +212,7 @@ export class CredentialController extends Controller {
         credentialFormats: outOfBandOption.credentialFormats,
         autoAcceptCredential: outOfBandOption.autoAcceptCredential,
         comment: outOfBandOption.comment,
+        isPreserveExchangeRecord: outOfBandOption.isPreserveExchangeRecord,
       })
 
       const credentialMessage = offerOob.message

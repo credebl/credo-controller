@@ -1279,6 +1279,7 @@ export class MultiTenancyController extends Controller {
           protocolVersion: createOfferOptions.protocolVersion as CredentialProtocolVersionType<[]>,
           credentialFormats: createOfferOptions.credentialFormats,
           autoAcceptCredential: createOfferOptions.autoAcceptCredential,
+          isPreserveExchangeRecord: createOfferOptions.isPreserveExchangeRecord,
         })
       })
 
@@ -1328,6 +1329,7 @@ export class MultiTenancyController extends Controller {
           credentialFormats: createOfferOptions.credentialFormats,
           autoAcceptCredential: createOfferOptions.autoAcceptCredential,
           comment: createOfferOptions.comment,
+          isPreserveExchangeRecord: createOfferOptions.isPreserveExchangeRecord,
         })
 
         const credentialMessage = offerOob.message
@@ -1526,6 +1528,7 @@ export class MultiTenancyController extends Controller {
           parentThreadId: createRequestOptions.parentThreadId,
           autoAcceptProof: createRequestOptions.autoAcceptProof,
           comment: createRequestOptions.comment,
+          isPreserveExchangeRecord: createRequestOptions.isPreserveExchangeRecord,
         })
 
         const proofMessage = proof.message

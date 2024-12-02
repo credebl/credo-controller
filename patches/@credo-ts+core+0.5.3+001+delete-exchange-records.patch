@@ -1,0 +1,415 @@
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApi.js b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApi.js
+index b7908e9..f535ec1 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApi.js
++++ b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApi.js
+@@ -243,11 +243,14 @@ let CredentialsApi = class CredentialsApi {
+      */
+     async createOffer(options) {
+         const protocol = this.getProtocol(options.protocolVersion);
++        
+         this.logger.debug(`Got a credentialProtocol object for version ${options.protocolVersion}`);
+         const { message, credentialRecord } = await protocol.createOffer(this.agentContext, {
++
+             credentialFormats: options.credentialFormats,
+             comment: options.comment,
+             autoAcceptCredential: options.autoAcceptCredential,
++            isPreserveExchangeRecord: options.isPreserveExchangeRecord
+         });
+         this.logger.debug('Offer Message successfully created', { message });
+         return { message, credentialRecord };
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApiOptions.d.ts b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApiOptions.d.ts
+index 5f62b59..bb57071 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApiOptions.d.ts
++++ b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsApiOptions.d.ts
+@@ -12,6 +12,7 @@ export type FindCredentialMessageReturn<CPs extends CredentialProtocol[] = Crede
+  */
+ export type CredentialProtocolVersionType<CPs extends CredentialProtocol[] = CredentialProtocol[]> = CPs[number]['version'];
+ interface BaseOptions {
++    isPreserveExchangeRecord?: boolean
+     autoAcceptCredential?: AutoAcceptCredential;
+     comment?: string;
+ }
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.d.ts b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.d.ts
+index 6a01e1d..5f7713c 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.d.ts
++++ b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.d.ts
+@@ -23,6 +23,7 @@ export interface CredentialsModuleConfigOptions<CredentialProtocols extends Cred
+      * ```
+      */
+     credentialProtocols: CredentialProtocols;
++    isPreserveExchangeRecords?: boolean
+ }
+ export declare class CredentialsModuleConfig<CredentialProtocols extends CredentialProtocol[]> {
+     private options;
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.js b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.js
+index e94e1c6..2346aaa 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.js
++++ b/node_modules/@credo-ts/core/build/modules/credentials/CredentialsModuleConfig.js
+@@ -15,6 +15,9 @@ class CredentialsModuleConfig {
+     get credentialProtocols() {
+         return this.options.credentialProtocols;
+     }
++    get isPreserveExchangeRecords() {
++        return this.options.isPreserveExchangeRecords;
++    }
+ }
+ exports.CredentialsModuleConfig = CredentialsModuleConfig;
+ //# sourceMappingURL=CredentialsModuleConfig.js.map
+\ No newline at end of file
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/protocol/v2/V2CredentialProtocol.js b/node_modules/@credo-ts/core/build/modules/credentials/protocol/v2/V2CredentialProtocol.js
+index b519694..b4242a7 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/protocol/v2/V2CredentialProtocol.js
++++ b/node_modules/@credo-ts/core/build/modules/credentials/protocol/v2/V2CredentialProtocol.js
+@@ -226,20 +226,24 @@ class V2CredentialProtocol extends BaseCredentialProtocol_1.BaseCredentialProtoc
+      * @returns Object containing offer message and associated credential record
+      *
+      */
+-    async createOffer(agentContext, { credentialFormats, autoAcceptCredential, comment, goal, goalCode, connectionRecord, }) {
++    async createOffer(agentContext, { credentialFormats, autoAcceptCredential, comment, goal, goalCode, connectionRecord, isPreserveExchangeRecord }) {
+         const credentialRepository = agentContext.dependencyManager.resolve(repository_1.CredentialRepository);
+         const formatServices = this.getFormatServices(credentialFormats);
+         if (formatServices.length === 0) {
+             throw new error_1.CredoError(`Unable to create offer. No supported formats`);
+         }
++        const globalPreserveExchangeRecordFlag = agentContext.config.isPreserveExchangeRecord;
++        console.log("create-offer:flag:", globlePreserveExchangeRecordFlag);
+         const credentialRecord = new repository_1.CredentialExchangeRecord({
+             connectionId: connectionRecord === null || connectionRecord === void 0 ? void 0 : connectionRecord.id,
+             threadId: (0, uuid_1.uuid)(),
+             state: models_1.CredentialState.OfferSent,
+             role: models_1.CredentialRole.Issuer,
+             autoAcceptCredential,
++            isPreserveExchangeRecord: isPreserveExchangeRecord ?? globalPreserveExchangeRecordFlag,
+             protocolVersion: 'v2',
+         });
++        console.log("credentialRecord::", credentialRecord);
+         const offerMessage = await this.credentialFormatCoordinator.createOffer(agentContext, {
+             formatServices,
+             credentialFormats,
+@@ -248,8 +252,10 @@ class V2CredentialProtocol extends BaseCredentialProtocol_1.BaseCredentialProtoc
+             goal,
+             goalCode,
+         });
+-        agentContext.config.logger.debug(`Saving record and emitting state changed for credential exchange record ${credentialRecord.id}`);
++        agentContext.config.logger.debug(`Saving record and emitting state changed for credential exchange record 96789879 ${credentialRecord.id}`);
+         await credentialRepository.save(agentContext, credentialRecord);
++    //     const credentialRecords = await credentialRepository.getById(agentContext, credentialRecord.id)
++    //    agentContext.config.logger.debug(`credentialRecords from Db:::::::::: ${JSON.stringify(credentialRecords)}`);
+         this.emitStateChangedEvent(agentContext, credentialRecord, null);
+         return { credentialRecord, message: offerMessage };
+     }
+@@ -418,7 +424,7 @@ class V2CredentialProtocol extends BaseCredentialProtocol_1.BaseCredentialProtoc
+             goal,
+             goalCode,
+         });
+-        agentContext.config.logger.debug(`Saving record and emitting state changed for credential exchange record ${credentialRecord.id}`);
++        agentContext.config.logger.debug(`Saving record and emitting state changed for credential exchange record 78899098098098908089999999 ${credentialRecord.id}`);
+         await credentialRepository.save(agentContext, credentialRecord);
+         this.emitStateChangedEvent(agentContext, credentialRecord, null);
+         return { credentialRecord, message: requestMessage };
+@@ -648,6 +654,12 @@ class V2CredentialProtocol extends BaseCredentialProtocol_1.BaseCredentialProtoc
+         });
+         // Update record
+         await this.updateState(messageContext.agentContext, credentialRecord, models_1.CredentialState.Done);
++        
++        // Delete credential record
++        if (!credentialRecord.isPreserveExchangeRecord) {
++          await this.delete(agentContext, credentialRecord, { deleteAssociatedDidCommMessages: true });
++         }
++
+         return credentialRecord;
+     }
+     /**
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.d.ts b/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.d.ts
+index 68128b4..745fa0d 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.d.ts
++++ b/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.d.ts
+@@ -22,6 +22,7 @@ export interface CredentialExchangeRecordProps {
+     revocationNotification?: RevocationNotification;
+     errorMessage?: string;
+     credentials?: CredentialRecordBinding[];
++    isPreserveExchangeRecord?: boolean
+ }
+ export type CustomCredentialTags = TagsBase;
+ export type DefaultCredentialTags = {
+diff --git a/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.js b/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.js
+index 1bc4576..07a5449 100644
+--- a/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.js
++++ b/node_modules/@credo-ts/core/build/modules/credentials/repository/CredentialExchangeRecord.js
+@@ -38,6 +38,7 @@ class CredentialExchangeRecord extends BaseRecord_1.BaseRecord {
+             this.revocationNotification = props.revocationNotification;
+             this.errorMessage = props.errorMessage;
+             this.credentials = props.credentials || [];
++            this.isPreserveExchangeRecord = props.isPreserveExchangeRecord
+         }
+     }
+     getTags() {
+diff --git a/node_modules/@credo-ts/core/build/modules/proofs/ProofsApi.js b/node_modules/@credo-ts/core/build/modules/proofs/ProofsApi.js
+index fe7b39e..f61de2d 100644
+--- a/node_modules/@credo-ts/core/build/modules/proofs/ProofsApi.js
++++ b/node_modules/@credo-ts/core/build/modules/proofs/ProofsApi.js
+@@ -256,6 +256,7 @@ let ProofsApi = class ProofsApi {
+             parentThreadId: options.parentThreadId,
+             goalCode: options.goalCode,
+             willConfirm: options.willConfirm,
++            isPreserveExchangeRecord: options.isPreserveExchangeRecord
+         });
+     }
+     /**
+diff --git a/node_modules/@credo-ts/core/build/modules/proofs/ProofsApiOptions.d.ts b/node_modules/@credo-ts/core/build/modules/proofs/ProofsApiOptions.d.ts
+index 5b79e10..b3363ee 100644
+--- a/node_modules/@credo-ts/core/build/modules/proofs/ProofsApiOptions.d.ts
++++ b/node_modules/@credo-ts/core/build/modules/proofs/ProofsApiOptions.d.ts
+@@ -11,6 +11,7 @@ export type FindProofPresentationMessageReturn<PPs extends ProofProtocol[]> = Re
+  */
+ export type ProofsProtocolVersionType<PPs extends ProofProtocol[]> = PPs[number]['version'];
+ interface BaseOptions {
++    isPreserveExchangeRecord?: boolean
+     autoAcceptProof?: AutoAcceptProof;
+     comment?: string;
+ }
+diff --git a/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.d.ts b/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.d.ts
+index b67bad4..895fe46 100644
+--- a/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.d.ts
++++ b/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.d.ts
+@@ -23,6 +23,7 @@ export interface ProofsModuleConfigOptions<ProofProtocols extends ProofProtocol[
+      * ```
+      */
+     proofProtocols: ProofProtocols;
++    isPreserveExchangeRecords?: boolean
+ }
+ export declare class ProofsModuleConfig<ProofProtocols extends ProofProtocol[]> {
+     private options;
+diff --git a/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.js b/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.js
+index 6fcecda..e9bdd20 100644
+--- a/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.js
++++ b/node_modules/@credo-ts/core/build/modules/proofs/ProofsModuleConfig.js
+@@ -15,6 +15,9 @@ class ProofsModuleConfig {
+     get proofProtocols() {
+         return this.options.proofProtocols;
+     }
++    get isPreserveExchangeRecords() {
++        return this.options.isPreserveExchangeRecords;
++    }
+ }
+ exports.ProofsModuleConfig = ProofsModuleConfig;
+ //# sourceMappingURL=ProofsModuleConfig.js.map
+\ No newline at end of file
+diff --git a/node_modules/@credo-ts/core/build/modules/proofs/protocol/v2/V2ProofProtocol.js b/node_modules/@credo-ts/core/build/modules/proofs/protocol/v2/V2ProofProtocol.js
+index 382c097..c8ffcdd 100644
+--- a/node_modules/@credo-ts/core/build/modules/proofs/protocol/v2/V2ProofProtocol.js
++++ b/node_modules/@credo-ts/core/build/modules/proofs/protocol/v2/V2ProofProtocol.js
+@@ -228,7 +228,9 @@ class V2ProofProtocol extends BaseProofProtocol_1.BaseProofProtocol {
+      * @returns Object containing request message and associated credential record
+      *
+      */
+-    async createRequest(agentContext, { proofFormats, autoAcceptProof, comment, connectionRecord, parentThreadId, goalCode, goal, willConfirm, }) {
++    async createRequest(agentContext, { proofFormats, autoAcceptProof, comment, connectionRecord, parentThreadId, goalCode, goal, willConfirm, isPreserveExchangeRecord}) {
++        const globalPreserveExchangeRecordFlag = agentContext.config.isPreserveExchangeRecord;
++        console.log("create-request:flag:", globlePreserveExchangeRecordFlag);
+         const proofRepository = agentContext.dependencyManager.resolve(repository_1.ProofRepository);
+         const formatServices = this.getFormatServices(proofFormats);
+         if (formatServices.length === 0) {
+@@ -242,6 +244,7 @@ class V2ProofProtocol extends BaseProofProtocol_1.BaseProofProtocol {
+             autoAcceptProof,
+             protocolVersion: 'v2',
+             parentThreadId,
++            isPreserveExchangeRecord: isPreserveExchangeRecord ?? globalPreserveExchangeRecordFlag
+         });
+         const requestMessage = await this.proofFormatCoordinator.createRequest(agentContext, {
+             formatServices,
+@@ -583,6 +586,11 @@ class V2ProofProtocol extends BaseProofProtocol_1.BaseProofProtocol {
+         });
+         // Update record
+         await this.updateState(messageContext.agentContext, proofRecord, models_2.ProofState.Done);
++        
++        // Delete credential record
++        if (!proofRecord.isPreserveExchangeRecord) {
++          await this.delete(agentContext, proofRecord, { deleteAssociatedDidCommMessages: true });
++         }
+         return proofRecord;
+     }
+     async createProblemReport(_agentContext, { description, proofRecord }) {
+diff --git a/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.d.ts b/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.d.ts
+index 3ce5f2e..8050d3f 100644
+--- a/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.d.ts
++++ b/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.d.ts
+@@ -15,6 +15,7 @@ export interface ProofExchangeRecordProps {
+     tags?: CustomProofTags;
+     autoAcceptProof?: AutoAcceptProof;
+     errorMessage?: string;
++    isPreserveExchangeRecord?: boolean
+ }
+ export type CustomProofTags = TagsBase;
+ export type DefaultProofTags = {
+diff --git a/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.js b/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.js
+index 3b37eca..404ec64 100644
+--- a/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.js
++++ b/node_modules/@credo-ts/core/build/modules/proofs/repository/ProofExchangeRecord.js
+@@ -22,6 +22,7 @@ class ProofExchangeRecord extends BaseRecord_1.BaseRecord {
+             this.autoAcceptProof = props.autoAcceptProof;
+             this._tags = (_c = props.tags) !== null && _c !== void 0 ? _c : {};
+             this.errorMessage = props.errorMessage;
++            this.isPreserveExchangeRecord = props.isPreserveExchangeRecord
+         }
+     }
+     getTags() {
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates.js b/node_modules/@credo-ts/core/build/storage/migration/updates.js
+index 8abb8c9..62f7ef4 100644
+--- a/node_modules/@credo-ts/core/build/storage/migration/updates.js
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates.js
+@@ -6,6 +6,7 @@ const _0_2_0_3_1 = require("./updates/0.2-0.3");
+ const _0_3_0_3_1_1 = require("./updates/0.3-0.3.1");
+ const _0_3_1_0_4_1 = require("./updates/0.3.1-0.4");
+ const _0_4_0_5_1 = require("./updates/0.4-0.5");
++const _0_4_0_5_6 = require("./updates/0.5-0.6")
+ exports.INITIAL_STORAGE_VERSION = '0.1';
+ exports.DEFAULT_UPDATE_CONFIG = {
+     v0_1ToV0_2: {
+@@ -38,6 +39,11 @@ exports.supportedUpdates = [
+         toVersion: '0.5',
+         doUpdate: _0_4_0_5_1.updateV0_4ToV0_5,
+     },
++    {
++        fromVersion: '0.5',
++        toVersion: '0.6',
++        doUpdate: _0_4_0_5_6.updateV0_5ToV0_6,
++    },
+ ];
+ // Current version is last toVersion from the supported updates
+ exports.CURRENT_FRAMEWORK_STORAGE_VERSION = exports.supportedUpdates[exports.supportedUpdates.length - 1].toVersion;
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates/0.4-0.5/credentialExchangeRecord.js b/node_modules/@credo-ts/core/build/storage/migration/updates/0.4-0.5/credentialExchangeRecord.js
+index 4e797c8..baffc45 100644
+--- a/node_modules/@credo-ts/core/build/storage/migration/updates/0.4-0.5/credentialExchangeRecord.js
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates/0.4-0.5/credentialExchangeRecord.js
+@@ -18,6 +18,7 @@ async function migrateCredentialExchangeRecordToV0_5(agent) {
+     const credentialRepository = agent.dependencyManager.resolve(credentials_1.CredentialRepository);
+     agent.config.logger.debug(`Fetching all credential records from storage`);
+     const credentialRecords = await credentialRepository.getAll(agent.context);
++    console.log("credentialRecords::::::: for migration-----------------------------------", credentialRecords);
+     agent.config.logger.debug(`Found a total of ${credentialRecords.length} credential exchange records to update.`);
+     for (const credentialRecord of credentialRecords) {
+         agent.config.logger.debug(`Migrating credential exchange record with id ${credentialRecord.id} to storage version 0.5`);
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.d.ts b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.d.ts
+new file mode 100644
+index 0000000..35b1e70
+--- /dev/null
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.d.ts
+@@ -0,0 +1,12 @@
++import type { BaseAgent } from '@credo-ts/core/build/agent/BaseAgent';
++import type { CredentialExchangeRecord } from '@credo-ts/core/build/modules/credentials';
++import { CredentialRole } from '@credo-ts/core/build/modules/credentials';
++/**
++ * Migrates the {@link CredentialExchangeRecord} to 0.5 compatible format. It fetches all credential exchange records from
++ *  storage and applies the needed updates to the records. After a record has been transformed, it is updated
++ * in storage and the next record will be transformed.
++ *
++ * The following transformations are applied:
++ *  - {@link migrateRole}
++ */
++export declare function migrateExchangeRecordToV0_6<Agent extends BaseAgent>(agent: Agent): Promise<void>;
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.js b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.js
+new file mode 100644
+index 0000000..f69ceb6
+--- /dev/null
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.js
+@@ -0,0 +1,47 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.migrateRole = exports.getCredentialRole = exports.migrateCredentialExchangeRecordToV0_5 = void 0;
++const credentials_1 = require("@credo-ts/core/build/modules/credentials");
++const proof_1 = require("@credo-ts/core/build/modules/proofs");
++
++/**
++ * Migrates the {@link CredentialExchangeRecord} to 0.5 compatible format. It fetches all credential exchange records from
++ *  storage and applies the needed updates to the records. After a record has been transformed, it is updated
++ * in storage and the next record will be transformed.
++ *
++ * The following transformations are applied:
++ *  - {@link migrateRole}
++ */
++async function migrateExchangeRecordToV0_6(agent) {
++    agent.config.logger.info('Migrating credential exchange records to storage version 0.6');
++
++    // for credentails records:
++    const credentialRepository = agent.dependencyManager.resolve(credentials_1.CredentialRepository);
++    agent.config.logger.debug(`Fetching all credential records from storage`);
++    const credentialRecords = await credentialRepository.getAll(agent.context);
++    console.log("credentialRecords::::::: for migration---------", credentialRecords);
++    agent.config.logger.debug(`Found a total of ${credentialRecords.length} credential exchange records to update.`);
++    
++    for (const credentialRecord of credentialRecords) {
++        agent.config.logger.debug(`Migrating credential exchange record with id ${credentialRecord.id} to storage version 0.6`);
++        credentialRecord.isPreserveExchangeRecord = true
++        // Save updated record
++        await credentialRepository.update(agent.context, credentialRecord);
++        agent.config.logger.debug(`Successfully migrated credential exchange record with id ${credentialRecord.id} to storage version 0.6`);
++    }
++
++    // for proof records:
++    const proofRepository = agent.dependencyManager.resolve(proof_1.ProofRepository);
++    const proofRecords = await proofRepository.getAll(agent.context);
++    console.log("proofRecords::::::: for migration---------", proofRecords);
++    agent.config.logger.debug(`Found a total of ${proofRecords.length} proof exchange records to update.`);
++
++    for (const proofRecord of proofRecords) {
++        agent.config.logger.debug(`Migrating proof exchange record with id ${proofRecord.id} to storage version 0.6`);
++        proofRecord.isPreserveExchangeRecord = true
++        // Save updated record
++        await proofRecords.update(agent.context, proofRecord);
++        agent.config.logger.debug(`Successfully migrated proof exchange record with id ${proofRecord.id} to storage version 0.6`);
++    }
++}
++exports.migrateExchangeRecordToV0_6 = migrateExchangeRecordToV0_6;
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.js.map b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.js.map
+new file mode 100644
+index 0000000..1e26ca9
+--- /dev/null
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"credentialExchangeRecord.js","sourceRoot":"","sources":["../../../../../src/storage/migration/updates/0.4-0.5/credentialExchangeRecord.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.d.ts b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.d.ts
+new file mode 100644
+index 0000000..93b6d35
+--- /dev/null
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.d.ts
+@@ -0,0 +1,2 @@
++import type { BaseAgent } from '@credo-ts/core/build/agent/BaseAgent';
++export declare function updateV0_5ToV0_6<Agent extends BaseAgent>(agent: Agent): Promise<void>;
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.js b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.js
+new file mode 100644
+index 0000000..a12f1c2
+--- /dev/null
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.js
+@@ -0,0 +1,9 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.updateV0_5ToV0_6 = void 0;
++const credentialExchangeRecord = require("@credo-ts/core/build/storage/migration/updates/0.5-0.6/credentialExchangeRecord");
++async function updateV0_5ToV0_6(agent) {
++    await (0, credentialExchangeRecord.migrateExchangeRecordToV0_6)(agent);
++}
++exports.updateV0_5ToV0_6 = updateV0_5ToV0_6;
++//# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.js.map b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.js.map
+new file mode 100644
+index 0000000..690f463
+--- /dev/null
++++ b/node_modules/@credo-ts/core/build/storage/migration/updates/0.5-0.6/index.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../../../src/storage/migration/updates/0.4-0.5/index.ts"],"names":[],"mappings":";;;AAEA,yEAAkF;AAClF,+DAAwE;AACxE,+DAAwE;AAEjE,KAAK,UAAU,gBAAgB,CAA0B,KAAY;IAC1E,MAAM,IAAA,sDAAgC,EAAC,KAAK,CAAC,CAAA;IAC7C,MAAM,IAAA,gEAAqC,EAAC,KAAK,CAAC,CAAA;IAClD,MAAM,IAAA,sDAAgC,EAAC,KAAK,CAAC,CAAA;AAC/C,CAAC;AAJD,4CAIC"}
+\ No newline at end of file
+diff --git a/node_modules/@credo-ts/core/build/types.d.ts b/node_modules/@credo-ts/core/build/types.d.ts
+index 0a669fb..58ade2f 100644
+--- a/node_modules/@credo-ts/core/build/types.d.ts
++++ b/node_modules/@credo-ts/core/build/types.d.ts
+@@ -72,6 +72,7 @@ export interface InitConfig {
+     connectionImageUrl?: string;
+     autoUpdateStorageOnStartup?: boolean;
+     backupBeforeStorageUpdate?: boolean;
++    isPreserveExchangeRecords?: boolean;
+ }
+ export type ProtocolVersion = `${number}.${number}`;
+ export interface PlaintextMessage {
