@@ -89,6 +89,7 @@ export interface AcceptCredentialProposalOptions {
 }
 
 export interface CreateOfferOptions {
+  isPreserveExchangeRecord?: boolean
   protocolVersion: ProtocolVersion
   connectionId: RecordId
   credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
@@ -99,6 +100,7 @@ export interface CreateOfferOptions {
 type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
 
 export interface CreateOfferOobOptions {
+  isPreserveExchangeRecord?: boolean
   protocolVersion: string
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
@@ -119,6 +121,7 @@ export interface CredentialCreateOfferOptions {
 }
 
 export interface CreateProofRequestOobOptions {
+  isPreserveExchangeRecord?: boolean
   protocolVersion: string
   proofFormats: any
   goalCode?: string
@@ -234,6 +237,7 @@ export interface ConnectionInvitationSchema {
 // }
 
 export interface RequestProofOptions {
+  isPreserveExchangeRecord?: boolean
   connectionId: string
   protocolVersion: string
   proofFormats: any

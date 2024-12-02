@@ -211,6 +211,7 @@ export class CredentialController extends Controller {
         credentialFormats: outOfBandOption.credentialFormats,
         autoAcceptCredential: outOfBandOption.autoAcceptCredential,
         comment: outOfBandOption.comment,
+        isPreserveExchangeRecord: outOfBandOption.isPreserveExchangeRecord,
       })
 
       const credentialMessage = offerOob.message

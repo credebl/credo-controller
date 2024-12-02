@@ -181,6 +181,7 @@ export class ProofController extends Controller {
         parentThreadId: createRequestOptions.parentThreadId,
         autoAcceptProof: createRequestOptions.autoAcceptProof,
         comment: createRequestOptions.comment,
+        isPreserveExchangeRecord: createRequestOptions.isPreserveExchangeRecord,
       })
       const proofMessage = proof.message
       const outOfBandRecord = await this.agent.oob.createInvitation({
