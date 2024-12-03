@@ -100,6 +100,7 @@ export interface AriesRestConfig {
   fileServerToken?: string
   walletScheme?: AskarMultiWalletDatabaseScheme
   schemaFileServerURL?: string
+  isPreserveExchangeRecords?: boolean
 }
 
 export async function readRestConfig(path: string) {
@@ -124,7 +125,9 @@ const getModules = (
   autoAcceptConnections: boolean,
   autoAcceptCredentials: AutoAcceptCredential,
   autoAcceptProofs: AutoAcceptProof,
-  walletScheme: AskarMultiWalletDatabaseScheme
+  walletScheme: AskarMultiWalletDatabaseScheme,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isPreserveExchangeRecords: boolean
 ) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
@@ -189,8 +192,11 @@ const getModules = (
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: didRegistryContractAddress ? didRegistryContractAddress : (process.env.DID_CONTRACT_ADDRESS as string),
-      schemaManagerContractAddress: schemaManagerContractAddress || (process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
+      didContractAddress: didRegistryContractAddress
+        ? didRegistryContractAddress
+        : (process.env.DID_CONTRACT_ADDRESS as string),
+      schemaManagerContractAddress:
+        schemaManagerContractAddress || (process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
       fileServerToken: fileServerToken ? fileServerToken : (process.env.FILE_SERVER_TOKEN as string),
       rpcUrl: rpcUrl ? rpcUrl : (process.env.RPC_URL as string),
       serverUrl: fileServerUrl ? fileServerUrl : (process.env.SERVER_URL as string),
@@ -209,7 +215,8 @@ const getWithTenantModules = (
   autoAcceptConnections: boolean,
   autoAcceptCredentials: AutoAcceptCredential,
   autoAcceptProofs: AutoAcceptProof,
-  walletScheme: AskarMultiWalletDatabaseScheme
+  walletScheme: AskarMultiWalletDatabaseScheme,
+  isPreserveExchangeRecords: boolean
 ) => {
   const modules = getModules(
     networkConfig,
@@ -221,7 +228,8 @@ const getWithTenantModules = (
     autoAcceptConnections,
     autoAcceptCredentials,
     autoAcceptProofs,
-    walletScheme
+    walletScheme,
+    isPreserveExchangeRecords
   )
   return {
     tenants: new TenantsModule<typeof modules>({
@@ -268,6 +276,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptProofs,
     walletScheme,
+    isPreserveExchangeRecords,
     ...afjConfig
   } = restConfig
 
@@ -281,6 +290,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     },
     ...afjConfig,
     logger,
+    isPreserveExchangeRecords:
+      isPreserveExchangeRecords || (process.env.IS_PRESERVE_EXCHANGE_RECORD as unknown as boolean) || true,
     autoUpdateStorageOnStartup: true,
     // As backup is only supported for sqlite storage
     // we need to manually take backup of the storage before updating the storage
@@ -352,7 +363,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptConnections || true,
     autoAcceptCredentials || AutoAcceptCredential.Always,
     autoAcceptProofs || AutoAcceptProof.ContentApproved,
-    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
+    isPreserveExchangeRecords || (process.env.IS_PRESERV_EXCHANGE_RECORD as unknown as boolean)
   )
   const modules = getModules(
     networkConfig,
@@ -364,7 +376,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptConnections || true,
     autoAcceptCredentials || AutoAcceptCredential.Always,
     autoAcceptProofs || AutoAcceptProof.ContentApproved,
-    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
+    isPreserveExchangeRecords || (process.env.IS_PRESERV_EXCHANGE_RECORD as unknown as boolean)
   )
   const agent = new Agent({
     config: agentConfig,
