@@ -1424,7 +1424,24 @@ export class MultiTenancyController extends Controller {
         })
         credentialRecord = credentials.map((c: any) => c.toJSON())
       })
+      // eslint-disable-next-line no-console
       return credentialRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+  @Security('apiKey')
+  @Get('/credential/form-data/:tenantId/:credentialRecordId')
+  public async credentialFormData(
+    @Path('tenantId') tenantId: string,
+    @Path('credentialRecordId') credentialRecordId: string
+  ) {
+    let credentialDetails
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        credentialDetails = await tenantAgent.credentials.getFormatData(credentialRecordId)
+      })
+      return credentialDetails
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
