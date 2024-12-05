@@ -1424,7 +1424,6 @@ export class MultiTenancyController extends Controller {
         })
         credentialRecord = credentials.map((c: any) => c.toJSON())
       })
-      // eslint-disable-next-line no-console
       return credentialRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
