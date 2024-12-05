@@ -1430,7 +1430,7 @@ export class MultiTenancyController extends Controller {
     }
   }
   @Security('apiKey')
-  @Get('/credential/form-data/:tenantId/:credentialRecordId')
+  @Get('/credentials/form-data/:tenantId/:credentialRecordId')
   public async credentialFormData(
     @Path('tenantId') tenantId: string,
     @Path('credentialRecordId') credentialRecordId: string
