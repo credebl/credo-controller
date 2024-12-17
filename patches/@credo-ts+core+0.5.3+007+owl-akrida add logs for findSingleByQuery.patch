@@ -1,0 +1,14 @@
+diff --git a/node_modules/@credo-ts/core/build/storage/Repository.js b/node_modules/@credo-ts/core/build/storage/Repository.js
+index 2041e62..fb55ee6 100644
+--- a/node_modules/@credo-ts/core/build/storage/Repository.js
++++ b/node_modules/@credo-ts/core/build/storage/Repository.js
+@@ -91,7 +91,9 @@ class Repository {
+      * @throws {RecordDuplicateError} if multiple records are found for the given query
+      */
+     async findSingleByQuery(agentContext, query) {
++        console.log("Query to get the record 1123:", query);
+         const records = await this.findByQuery(agentContext, query);
++        console.log("Record 46645554:", records)
+         if (records.length > 1) {
+             throw new error_1.RecordDuplicateError(`Multiple records found for given query '${JSON.stringify(query)}'`, {
+                 recordType: this.recordClass.type,
