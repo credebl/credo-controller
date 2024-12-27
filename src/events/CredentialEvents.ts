@@ -3,6 +3,7 @@ import type { ServerConfig } from '../utils/ServerConfig'
 import type { Agent, CredentialStateChangedEvent } from '@credo-ts/core'
 
 import { CredentialEventTypes } from '@credo-ts/core'
+import { uuid } from '@credo-ts/core/build/utils/uuid'
 
 import { sendWebSocketEvent } from './WebSocketEvents'
 import { sendWebhookEvent } from './WebhookEvent'
@@ -23,6 +24,16 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
         { tenantId: event.metadata.contextCorrelationId },
         async (tenantAgent) => {
           const connectionRecord = await tenantAgent.connections.findById(record.connectionId!)
+          const uuidId = uuid()
+          agent.config.logger.debug(
+            `OWL-Debug ----------------------------Received event start---------------------------`
+          )
+          agent.config.logger.debug(`${uuidId} OWL-Debug Received event::::: ${JSON.stringify(event, null, 2)}`)
+          agent.config.logger.debug(`--------------------------Searching Record-----------------------------`)
+          agent.config.logger.debug(`${uuidId} OWL-Debug Searching Record::::: ${JSON.stringify(record, null, 2)}`)
+          agent.config.logger.debug(
+            `OWL-Debug --------------------------Searching Record end-----------------------------`
+          )
           const data = await tenantAgent.credentials.getFormatData(record.id)
           body.credentialData = data
           body.outOfBandId = connectionRecord?.outOfBandId
