@@ -295,4 +295,20 @@ export class CredentialController extends Controller {
       throw ErrorHandlingService.handle(error)
     }
   }
+
+  /**
+   * Return credentialRecord
+   *
+   * @param credentialRecordId
+   * @returns credentialRecord
+   */
+  @Get('/:credentialRecordId/form-data')
+  public async credentialFormData(@Path('credentialRecordId') credentialRecordId: string) {
+    try {
+      const credentialDetails = await this.agent.credentials.getFormatData(credentialRecordId)
+      return credentialDetails
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
 }
