@@ -30,9 +30,12 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
       )
     }
 
-    if (event.metadata.contextCorrelationId === 'default') {
+    if (event.metadata.contextCorrelationId === 'default' && record?.connectionId) {
+      const connectionRecord = await agent.connections.findById(record.connectionId!)
+
       const data = await agent.credentials.getFormatData(record.id)
       body.credentialData = data
+      body.outOfBandId = connectionRecord?.outOfBandId
     }
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
