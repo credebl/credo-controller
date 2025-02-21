@@ -384,7 +384,7 @@ export class MultiTenancyController extends Controller {
 
       if (!createDidOptions.did) {
         await tenantAgent.wallet.createKey({
-          keyType: createDidOptions.keyType,
+          keyType: keyType,
           seed: TypedArrayEncoder.fromString(seed),
         })
         const didKeyResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
