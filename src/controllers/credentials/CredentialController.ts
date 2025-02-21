@@ -219,6 +219,7 @@ export class CredentialController extends Controller {
         messages: [credentialMessage],
         autoAcceptConnection: true,
         imageUrl: outOfBandOption?.imageUrl,
+        goalCode: outOfBandOption?.goalCode,
         invitationDid,
       })
       return {
@@ -229,6 +230,8 @@ export class CredentialController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        outOfBandRecordId: outOfBandRecord.id,
+        credentialRequestThId: offerOob.credentialRecord.threadId,
         invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
