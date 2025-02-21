@@ -431,7 +431,7 @@ export class DidController extends Controller {
     })
     const didResponse = {
       did: createDidResponse?.didState?.did,
-      didDoc: createDidResponse?.didState?.didDocument,
+      didDocument: createDidResponse?.didState?.didDocument,
     }
     return didResponse
   }

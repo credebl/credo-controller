@@ -538,7 +538,7 @@ export class MultiTenancyController extends Controller {
       })
       didResponse = {
         did: createDidResponse?.didState?.did,
-        didDoc: createDidResponse?.didState?.didDocument,
+        didDocument: createDidResponse?.didState?.didDocument,
       }
     })
     return didResponse
