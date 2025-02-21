@@ -230,9 +230,9 @@ export class CredentialController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
         outOfBandRecordId: outOfBandRecord.id,
         credentialRequestThId: offerOob.credentialRecord.threadId,
+        invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
