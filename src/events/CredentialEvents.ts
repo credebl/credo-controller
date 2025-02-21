@@ -18,7 +18,7 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
       credentialData: null,
     }
 
-    if (event.metadata.contextCorrelationId && event.metadata.contextCorrelationId !== 'default') {
+    if (event.metadata.contextCorrelationId !== 'default') {
       await agent.modules.tenants.withTenantAgent(
         { tenantId: event.metadata.contextCorrelationId },
         async (tenantAgent) => {
@@ -32,7 +32,7 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
       )
     }
 
-    if (event.metadata.contextCorrelationId && event.metadata.contextCorrelationId === 'default') {
+    if (event.metadata.contextCorrelationId === 'default') {
       if (record?.connectionId) {
         const connectionRecord = await agent.connections.findById(record.connectionId!)
         body.outOfBandId = connectionRecord?.outOfBandId
