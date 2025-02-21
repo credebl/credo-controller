@@ -10,7 +10,7 @@ export const proofEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
     const record = event.payload.proofRecord
     const body = { ...record.toJSON(), ...event.metadata } as { proofData?: any }
-    if (event.metadata.contextCorrelationId !== 'default' && record.state === 'done') {
+    if (event.metadata.contextCorrelationId !== 'default') {
       const tenantAgent = await agent.modules.tenants.getTenantAgent({
         tenantId: event.metadata.contextCorrelationId,
       })

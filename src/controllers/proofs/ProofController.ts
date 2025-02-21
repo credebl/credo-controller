@@ -188,6 +188,7 @@ export class ProofController extends Controller {
         messages: [proofMessage],
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
+        goalCode: createRequestOptions?.goalCode,
         invitationDid,
       })
 
