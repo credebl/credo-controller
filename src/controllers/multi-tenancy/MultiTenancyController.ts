@@ -927,7 +927,7 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
-  @Post('/polygon-wc3/schema/:tenantId')
+  @Post('/polygon-w3c/schema/:tenantId')
   public async createPolygonW3CSchema(
     @Body()
     createSchemaRequest: {
@@ -983,7 +983,7 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
-  @Get('polygon-wc3/schema/:did/:schemaId/:tenantId')
+  @Get('polygon-w3c/schema/:did/:schemaId/:tenantId')
   public async getPolygonW3CSchemaById(
     @Path('tenantId') tenantId: string,
     @Path('did') did: string,
