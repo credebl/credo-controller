@@ -384,7 +384,7 @@ export class MultiTenancyController extends Controller {
 
       if (!createDidOptions.did) {
         await tenantAgent.wallet.createKey({
-          keyType: createDidOptions.keyType,
+          keyType: keyType,
           seed: TypedArrayEncoder.fromString(seed),
         })
         const didKeyResponse = await tenantAgent.dids.create<KeyDidCreateOptions>({
@@ -538,7 +538,7 @@ export class MultiTenancyController extends Controller {
       })
       didResponse = {
         did: createDidResponse?.didState?.did,
-        didDoc: createDidResponse?.didState?.didDocument,
+        didDocument: createDidResponse?.didState?.didDocument,
       }
     })
     return didResponse
@@ -927,7 +927,7 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
-  @Post('/polygon-wc3/schema/:tenantId')
+  @Post('/polygon-w3c/schema/:tenantId')
   public async createPolygonW3CSchema(
     @Body()
     createSchemaRequest: {
@@ -983,7 +983,7 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
-  @Get('polygon-wc3/schema/:did/:schemaId/:tenantId')
+  @Get('polygon-w3c/schema/:did/:schemaId/:tenantId')
   public async getPolygonW3CSchemaById(
     @Path('tenantId') tenantId: string,
     @Path('did') did: string,
