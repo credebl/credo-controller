@@ -200,6 +200,7 @@ export class ProofController extends Controller {
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
         invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
+        proofRecordThId: proof.proofRecord.threadId,
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
