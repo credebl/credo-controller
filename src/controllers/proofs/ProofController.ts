@@ -7,6 +7,7 @@ import type {
 } from '@credo-ts/core'
 
 import { Agent, PeerDidNumAlgo, createPeerDidDocumentFromServices } from '@credo-ts/core'
+import { Body, Controller, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -17,8 +18,6 @@ import {
   RequestProofOptions,
   RequestProofProposalOptions,
 } from '../types'
-
-import { Body, Controller, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 
 @Tags('Proofs')
 @Route('/proofs')
@@ -200,6 +199,7 @@ export class ProofController extends Controller {
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
         invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
+        proofRecordThId: proof.proofRecord.threadId,
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
