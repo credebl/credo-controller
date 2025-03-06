@@ -189,8 +189,11 @@ const getModules = (
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: didRegistryContractAddress ? didRegistryContractAddress : (process.env.DID_CONTRACT_ADDRESS as string),
-      schemaManagerContractAddress: schemaManagerContractAddress || (process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
+      didContractAddress: didRegistryContractAddress
+        ? didRegistryContractAddress
+        : (process.env.DID_CONTRACT_ADDRESS as string),
+      schemaManagerContractAddress:
+        schemaManagerContractAddress || (process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
       fileServerToken: fileServerToken ? fileServerToken : (process.env.FILE_SERVER_TOKEN as string),
       rpcUrl: rpcUrl ? rpcUrl : (process.env.RPC_URL as string),
       serverUrl: fileServerUrl ? fileServerUrl : (process.env.SERVER_URL as string),
