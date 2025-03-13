@@ -55,6 +55,7 @@ COPY package.json yarn.lock ./
 COPY . .
 
 # Install dependencies
+RUN rm -rf node_modules
 RUN yarn install --frozen-lockfile
 
 RUN yarn global add patch-package
