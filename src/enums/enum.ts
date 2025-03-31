@@ -71,23 +71,3 @@ export declare enum CustomHandshakeProtocol {
   DidExchange = 'https://didcomm.org/didexchange/1.1',
   Connections = 'https://didcomm.org/connections/1.0',
 }
-
-export enum CredentialContext {
-  V1 = 'https://www.w3.org/2018/credentials/v1',
-  V2 = 'https://www.w3.org/ns/credentials/v2',
-}
-
-export enum CredentialType {
-  VerifiableCredential = 'VerifiableCredential',
-  BitstringStatusListCredential = 'BitstringStatusListCredential',
-}
-export enum RevocationListType {
-  Bitstring = 'BitstringStatusList',
-}
-
-export enum CredentialStatusListType {
-  CredentialStatusList2017 = 'CredentialStatusList2017',
-}
-export enum SignatureType {
-  Ed25519Signature2018 = 'Ed25519Signature2018',
-}
