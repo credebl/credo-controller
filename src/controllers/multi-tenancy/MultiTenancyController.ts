@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
 import type { RecipientKeyOption, SchemaMetadata } from '../types'
@@ -44,12 +45,30 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
+  ClaimFormat,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
+import { v4 as uuidv4 } from 'uuid'
+// import * as zlib from 'zlib'
+// import { inflate } from 'pako'
 
-import { CredentialEnum, DidMethod, EndorserMode, Network, NetworkTypes, Role, SchemaError } from '../../enums/enum'
+import { initialBitsEncoded } from '../../constants'
+import {
+  CredentialContext,
+  CredentialEnum,
+  CredentialStatusListType,
+  CredentialType,
+  DidMethod,
+  EndorserMode,
+  Network,
+  NetworkTypes,
+  RevocationListType,
+  Role,
+  SchemaError,
+  SignatureType,
+} from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import {
@@ -1900,6 +1919,142 @@ export class MultiTenancyController extends Controller {
         basicMessageRecord = await tenantAgent.basicMessages.sendMessage(connectionId, request.content)
       })
       return basicMessageRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Create bitstring status list credential
+   *
+   * @param tenantId Id of the tenant
+   * @param request BSLC required details
+   */
+  @Security('apiKey')
+  @Post('/create-bslc/:tenantId')
+  public async createBitstringStatusListCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() request: { issuerDID: string; statusPurpose: string, verificationMethod:string }
+  ) {
+    try {
+      const { issuerDID, statusPurpose, verificationMethod } = request
+      const bslcId = uuidv4()
+      const credentialpayload = {
+        '@context': [`${CredentialContext.V1}`, `${CredentialContext.V2}`],
+        id: `${process.env.BSLC_SERVER_URL}/bitstring/${bslcId}`,
+        type: [`${CredentialType.VerifiableCredential}`, `${CredentialType.BitstringStatusListCredential}`],
+        issuer: {
+          id: issuerDID as string,
+        },
+        issuanceDate: new Date().toISOString(),
+        credentialSubject: {
+          id: `${process.env.BSLC_SERVER_URL}/bitstring/${bslcId}`,
+          type: `${RevocationListType.Bitstring}`,
+          statusPurpose: statusPurpose,
+          encodedList: initialBitsEncoded,
+        },
+        credentialStatus: {
+          id: `${process.env.BSLC_SERVER_URL}/bitstring/${bslcId}`,
+          type: CredentialStatusListType.CredentialStatusList2017,
+        },
+      }
+
+      let signedCredential
+
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        // Step 2: Sign the payload
+        try {
+          //TODO: Add correct type here
+          signedCredential = await tenantAgent.w3cCredentials.signCredential({
+            credential: credentialpayload,
+            format: ClaimFormat.LdpVc,
+            proofType: SignatureType.Ed25519Signature2018,
+            verificationMethod,
+          })
+        } catch (signingError) {
+          throw new InternalServerError(`Failed to sign the BitstringStatusListCredential: ${signingError}`)
+        }
+      })
+      // Step 3: Upload the signed payload to the server
+      const serverUrl = process.env.BSLC_SERVER_URL
+      if (!serverUrl) {
+        throw new Error('BSLC_SERVER_URL is not defined in the environment variables')
+      }
+
+      const token = process.env.BSLC_SERVER_TOKEN
+      if (!token) {
+        throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables')
+      }
+      const url = `${serverUrl}/bitstring`
+      const bslcPayload = {
+        id: bslcId,
+        bslcObject: signedCredential,
+      }
+      try {
+        const response = await axios.post(url, bslcPayload, {
+          headers: {
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (response.status !== 200) {
+          throw new Error('Failed to upload the signed BitstringStatusListCredential')
+        }
+      } catch (error) {
+        throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)
+      }
+      return signedCredential
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/get-empty-index/:BSLCUrl')
+  public async getEmptyIndexForBSLC(@Path('BSLCUrl') BSLCUrl: string) {
+    try {
+      if (!BSLCUrl) {
+        throw new BadRequestError('BSLCUrl is required')
+      }
+
+      const response = await axios.get(BSLCUrl)
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch the BitstringStatusListCredential')
+      }
+
+      const credential = response.data
+      const encodedList = credential?.credentialSubject?.claims.encodedList
+      if (!encodedList) {
+        throw new Error('Encoded list not found in the credential')
+      }
+
+      let bitstring
+      try {
+        const compressedData = Buffer.from(encodedList, 'base64').toString('binary')
+        bitstring = Array.from(compressedData)
+          .map((byte) => byte.padStart(8, '0'))
+          .join('')
+      } catch (error) {
+        throw new Error('Failed to decompress and process the encoded list')
+      }
+
+      const unusedIndexes = []
+      for (let i = 0; i < bitstring.length; i++) {
+        if (bitstring[i] === '0') {
+          unusedIndexes.push(i)
+        }
+      }
+      //TODO: add logic to filter from used indexs, for now returning random index with bit status as 0.
+      if (unusedIndexes.length === 0) {
+        throw new Error('No unused index found in the BitstringStatusList')
+      }
+
+      const randomIndex = unusedIndexes[Math.floor(Math.random() * unusedIndexes.length)]
+      return {
+        index: randomIndex,
+      }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
