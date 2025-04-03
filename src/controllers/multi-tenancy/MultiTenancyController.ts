@@ -45,19 +45,29 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
+  ClaimFormat,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
+import { v4 as uuidv4 } from 'uuid'
+// import * as zlib from 'zlib'
+// import { inflate } from 'pako'
 
+import { initialBitsEncoded } from '../../constants'
 import {
+  CredentialContext,
   CredentialEnum,
+  CredentialStatusListType,
+  CredentialType,
   DidMethod,
   EndorserMode,
   Network,
   NetworkTypes,
+  RevocationListType,
   Role,
   SchemaError,
+  SignatureType,
 } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
@@ -1911,6 +1921,288 @@ export class MultiTenancyController extends Controller {
       return basicMessageRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Create bitstring status list credential
+   *
+   * @param tenantId Id of the tenant
+   * @param request BSLC required details
+   */
+  @Security('apiKey')
+  @Post('/create-bslc/:tenantId')
+  public async createBitstringStatusListCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() request: { issuerDID: string; statusPurpose: string, verificationMethod:string }
+  ) {
+    try {
+      const { issuerDID, statusPurpose, verificationMethod } = request
+      const bslcId = uuidv4()
+      const credentialpayload = {
+        '@context': [`${CredentialContext.V1}`, `${CredentialContext.V2}`],
+        id: `${process.env.BSLC_SERVER_URL}/bitstring/${bslcId}`,
+        type: [`${CredentialType.VerifiableCredential}`, `${CredentialType.BitstringStatusListCredential}`],
+        issuer: {
+          id: issuerDID as string,
+        },
+        issuanceDate: new Date().toISOString(),
+        credentialSubject: {
+          id: `${process.env.BSLC_SERVER_URL}/bitstring/${bslcId}`,
+          type: `${RevocationListType.Bitstring}`,
+          statusPurpose: statusPurpose,
+          encodedList: initialBitsEncoded,
+        },
+        credentialStatus: {
+          id: `${process.env.BSLC_SERVER_URL}/bitstring/${bslcId}`,
+          type: CredentialStatusListType.CredentialStatusList2017,
+        },
+      }
+
+      let signedCredential
+
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        // Step 2: Sign the payload
+        try {
+          //TODO: Add correct type here
+          signedCredential = await tenantAgent.w3cCredentials.signCredential<ClaimFormat.LdpVc>({
+            credential: credentialpayload,
+            format: ClaimFormat.LdpVc,
+            proofType: SignatureType.Ed25519Signature2018,
+            verificationMethod,
+
+          })
+        } catch (signingError) {
+          throw new InternalServerError(`Failed to sign the BitstringStatusListCredential: ${signingError}`)
+        }
+      })
+      // Step 3: Upload the signed payload to the server
+      const serverUrl = process.env.BSLC_SERVER_URL
+      if (!serverUrl) {
+        throw new Error('BSLC_SERVER_URL is not defined in the environment variables')
+      }
+
+      const token = process.env.BSLC_SERVER_TOKEN
+      if (!token) {
+        throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables')
+      }
+      const url = `${serverUrl}/bitstring`
+      const bslcPayload = {
+        id: bslcId,
+        bslcObject: signedCredential,
+      }
+      try {
+        const response = await axios.post(url, bslcPayload, {
+          headers: {
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (response.status !== 200) {
+          throw new Error('Failed to upload the signed BitstringStatusListCredential')
+        }
+      } catch (error) {
+        throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)
+      }
+      return signedCredential
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/get-empty-index/:BSLCUrl')
+  public async getEmptyIndexForBSLC(@Path('BSLCUrl') BSLCUrl: string) {
+    try {
+      if (!BSLCUrl) {
+        throw new BadRequestError('BSLCUrl is required')
+      }
+
+      const response = await axios.get(BSLCUrl)
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch the BitstringStatusListCredential')
+      }
+
+      const credential = response.data
+      const encodedList = credential?.credentialSubject?.claims.encodedList
+      if (!encodedList) {
+        throw new Error('Encoded list not found in the credential')
+      }
+
+      let bitstring
+      try {
+        const compressedData = Buffer.from(encodedList, 'base64').toString('binary')
+        bitstring = Array.from(compressedData)
+          .map((byte) => byte.padStart(8, '0'))
+          .join('')
+      } catch (error) {
+        throw new Error('Failed to decompress and process the encoded list')
+      }
+
+      const unusedIndexes = []
+      for (let i = 0; i < bitstring.length; i++) {
+        if (bitstring[i] === '0') {
+          unusedIndexes.push(i)
+        }
+      }
+      //TODO: add logic to filter from used indexs, for now returning random index with bit status as 0.
+      if (unusedIndexes.length === 0) {
+        throw new Error('No unused index found in the BitstringStatusList')
+      }
+
+      const randomIndex = unusedIndexes[Math.floor(Math.random() * unusedIndexes.length)]
+      return {
+        index: randomIndex,
+      }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/revoke-w3c/:tenantId')
+  public async revokeW3CCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() request: { revocationId: string; revocationType: string }
+  ) {
+    try {
+      let credentialDetailsObject
+      const { revocationId, revocationType } = request;
+
+      if (!revocationId || !revocationType) {
+        throw new BadRequestError('revocationId and revocationType are required');
+      }
+
+      const serverUrl = process.env.BSLC_SERVER_URL;
+      if (!serverUrl) {
+        throw new Error('BSLC_SERVER_URL is not defined in the environment variables');
+      }
+
+      const token = process.env.BSLC_SERVER_TOKEN;
+      if (!token) {
+        throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables');
+      }
+
+      // Fetch the credential details from the server
+      const credentialMetadataURL = `${serverUrl}/credentials/${revocationId}`;
+       
+      try {
+        const response = await axios.get(credentialMetadataURL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status !== 200) {
+          throw new Error('Failed to fetch the credential details');
+        }
+
+        credentialDetailsObject = JSON.parse(response.data);
+       if (credentialDetailsObject.revocationStatus == 'revoked') {
+        throw new Error('The credential is already revoked');
+       }
+       if (!credentialDetailsObject){
+        throw new Error('Credential details not found');
+       }
+
+      } catch (error) {
+        throw new InternalServerError(`Error fetching the BSLC credential: ${error}`);
+      }
+
+      // Fetch the existing BSLC credential from the server
+      let bslcCredential;
+      try {
+        const { bslcUrl } = credentialDetailsObject;
+      
+        if (!bslcUrl) {
+          throw new Error('bslcUrl not found in credential details');
+        }
+        const response = await axios.get(bslcUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status !== 200) {
+          throw new Error('Failed to fetch the BitstringStatusListCredential');
+        }
+
+        bslcCredential = response.data;
+      } catch (error) {
+        throw new InternalServerError(`Error fetching the BSLC credential: ${error}`);
+      }
+
+      // Validate the fetched credential
+      if (!bslcCredential || !bslcCredential.credentialSubject || !bslcCredential.credentialSubject.encodedList) {
+        throw new InternalServerError('Invalid BSLC credential fetched from the server');
+      }
+
+      // Decode the encoded list
+      let bitstring;
+      try {
+        const compressedData = Buffer.from(bslcCredential.credentialSubject.encodedList, 'base64').toString('binary');
+        bitstring = Array.from(compressedData)
+          .map((byte) => byte.padStart(8, '0'))
+          .join('');
+      } catch (error) {
+        throw new InternalServerError('Failed to decode the encoded list');
+      }
+
+      // Update the bitstring based on the revocationId
+      const revocationIndex = parseInt(revocationId, 10);
+      if (isNaN(revocationIndex) || revocationIndex < 0 || revocationIndex >= bitstring.length) {
+        throw new BadRequestError('Invalid revocationId');
+      }
+
+      if (bitstring[revocationIndex] === '1') {
+        throw new BadRequestError('The credential is already revoked');
+      }
+
+      const updatedBitstring = bitstring.substring(0, revocationIndex) + '1' + bitstring.substring(revocationIndex + 1);
+
+      // Re-encode the updated bitstring
+      const updatedEncodedList = Buffer.from(updatedBitstring, 'binary').toString('base64');
+
+      // Update the credential payload
+      bslcCredential.credentialSubject.encodedList = updatedEncodedList;
+
+      // Sign the updated credential
+      let signedCredential;
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        try {
+          signedCredential = await tenantAgent.w3cCredentials.signCredential<ClaimFormat.LdpVc>({
+            credential: bslcCredential,
+            format: ClaimFormat.LdpVc,
+            proofType: SignatureType.Ed25519Signature2018,
+            verificationMethod: bslcCredential.proof.verificationMethod,
+          });
+        } catch (signingError) {
+          throw new InternalServerError(`Failed to sign the updated BSLC credential: ${signingError}`);
+        }
+      });
+      const bslcUrl = ''
+      // Upload the updated credential back to the server
+      try {
+        const response = await axios.put(bslcUrl, signedCredential, {
+          headers: {
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.status !== 200) {
+          throw new Error('Failed to upload the updated BSLC credential');
+        }
+      } catch (error) {
+        throw new InternalServerError(`Error uploading the updated BSLC credential: ${error}`);
+      }
+
+      return signedCredential;
+    } catch (error) {
+      throw ErrorHandlingService.handle(error);
     }
   }
 }

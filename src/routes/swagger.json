@@ -6336,6 +6336,110 @@
 				}
 			}
 		},
+		"/multi-tenancy/create-bslc/{tenantId}": {
+			"post": {
+				"operationId": "CreateBitstringStatusListCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Create bitstring status list credential",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Id of the tenant",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "BSLC required details",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"verificationMethod": {
+										"type": "string"
+									},
+									"statusPurpose": {
+										"type": "string"
+									},
+									"issuerDID": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"verificationMethod",
+									"statusPurpose",
+									"issuerDID"
+								],
+								"type": "object",
+								"description": "BSLC required details"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/get-empty-index/{BSLCUrl}": {
+			"post": {
+				"operationId": "GetEmptyIndexForBSLC",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"index": {}
+									},
+									"required": [
+										"index"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "BSLCUrl",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/transactions/endorse": {
 			"post": {
 				"operationId": "EndorserTransaction",
@@ -7603,6 +7707,100 @@
 					{
 						"in": "path",
 						"name": "credentialRecordId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/credentials/create-bslc": {
+			"post": {
+				"operationId": "CreateBitstringStatusListCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Create bitstring status list credential",
+				"tags": [
+					"Credentials"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"description": "BSLC required details",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"verificationMethod": {
+										"type": "string"
+									},
+									"statusPurpose": {
+										"type": "string"
+									},
+									"issuerDID": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"verificationMethod",
+									"statusPurpose",
+									"issuerDID"
+								],
+								"type": "object",
+								"description": "BSLC required details"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credentials/get-empty-index/{BSLCUrl}": {
+			"post": {
+				"operationId": "GetEmptyIndexForBSLC",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"index": {}
+									},
+									"required": [
+										"index"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Credentials"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "BSLCUrl",
 						"required": true,
 						"schema": {
 							"type": "string"
