@@ -6660,7 +6660,7 @@
 				}
 			}
 		},
-		"/multi-tenancy/get-empty-bslc-index/{bslcUrl}/{bslcId}": {
+		"/multi-tenancy/get-empty-bslc-index/{tenantId}/{bslcUrl}/{bslcId}": {
 			"get": {
 				"operationId": "GetEmptyIndexForBSLC",
 				"responses": {
@@ -6691,6 +6691,15 @@
 					}
 				],
 				"parameters": [
+					{
+						"description": "ID of the tenant",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
 					{
 						"description": "URL of the BSLC",
 						"in": "path",

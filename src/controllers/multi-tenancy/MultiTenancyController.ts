@@ -2250,7 +2250,6 @@ export class MultiTenancyController extends Controller {
       ) {
         throw new InternalServerError('Invalid BSLC credential fetched from the server')
       }
-      credentialDetailsObject
 
       let bitstring
       try {

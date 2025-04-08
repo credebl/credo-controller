@@ -3684,13 +3684,14 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/multi-tenancy/get-empty-bslc-index/:bslcUrl/:bslcId',
+        app.get('/multi-tenancy/get-empty-bslc-index/:tenantId/:bslcUrl/:bslcId',
             authenticateMiddleware([{"apiKey":[]}]),
             ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
             ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getEmptyIndexForBSLC)),
 
             async function MultiTenancyController_getEmptyIndexForBSLC(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
                     bslcUrl: {"in":"path","name":"bslcUrl","required":true,"dataType":"string"},
                     bslcId: {"in":"path","name":"bslcId","required":true,"dataType":"string"},
             };
