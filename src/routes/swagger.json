@@ -6604,7 +6604,19 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/W3cJsonLdVerifiableCredential"
+									"properties": {
+										"bslcId": {
+											"type": "string"
+										},
+										"signedCredential": {
+											"$ref": "#/components/schemas/W3cJsonLdVerifiableCredential"
+										}
+									},
+									"required": [
+										"bslcId",
+										"signedCredential"
+									],
+									"type": "object"
 								}
 							}
 						}
@@ -8063,7 +8075,21 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
+								"schema": {
+									"properties": {
+										"bslcId": {
+											"type": "string"
+										},
+										"signedCredential": {
+											"$ref": "#/components/schemas/W3cJsonLdVerifiableCredential"
+										}
+									},
+									"required": [
+										"bslcId",
+										"signedCredential"
+									],
+									"type": "object"
+								}
 							}
 						}
 					}
@@ -8108,7 +8134,7 @@
 				}
 			}
 		},
-		"/credentials/get-empty-index/{BSLCUrl}": {
+		"/credentials/get-empty-index/{bslcUrl}/{bslcId}": {
 			"post": {
 				"operationId": "GetEmptyIndexForBSLC",
 				"responses": {
@@ -8129,6 +8155,7 @@
 						}
 					}
 				},
+				"description": "Get empty index for BSLC",
 				"tags": [
 					"Credentials"
 				],
@@ -8139,14 +8166,83 @@
 				],
 				"parameters": [
 					{
+						"description": "URL of the BSLC",
 						"in": "path",
-						"name": "BSLCUrl",
+						"name": "bslcUrl",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "ID of the BSLC",
+						"in": "path",
+						"name": "bslcId",
 						"required": true,
 						"schema": {
 							"type": "string"
 						}
 					}
 				]
+			}
+		},
+		"/credentials/revoke-w3c/{tenantId}": {
+			"post": {
+				"operationId": "RevokeW3CCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Revoke a W3C credential by revocationId",
+				"tags": [
+					"Credentials"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Id of the tenant",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Revocation request details",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"credentialId": {
+										"type": "string"
+									},
+									"revocationId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"credentialId",
+									"revocationId"
+								],
+								"type": "object",
+								"description": "Revocation request details"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/connections": {

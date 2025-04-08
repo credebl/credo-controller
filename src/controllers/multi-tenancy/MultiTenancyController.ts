@@ -1,12 +1,7 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type {
-  bslcCredentialPayload,
-  BslCredential,
-  RecipientKeyOption,
-  SchemaMetadata,
-} from '../types'
+import type { bslcCredentialPayload, BslCredential, RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -57,9 +52,9 @@ import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answ
 import axios from 'axios'
 import * as crypto from 'crypto'
 import * as fs from 'fs'
-import { inflate } from 'pako'
 import { v4 as uuidv4 } from 'uuid'
 
+import { customDeflate, customInflate } from '../../../src/utils/helpers'
 import { initialBitsEncoded } from '../../constants'
 import {
   CredentialContext,
@@ -1299,37 +1294,48 @@ export class MultiTenancyController extends Controller {
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions, @Path('tenantId') tenantId: string) {
     let offer
     try {
-      const w3cRevocableCredentials: boolean = Boolean(createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus)
-        if (w3cRevocableCredentials) {
-          const { id, type, statusPurpose, statusListIndex, statusListCredential } =
-            createOfferOptions.credentialFormats.jsonld?.credential.credentialStatus as {
-              id: string;
-              type: string;
-              statusPurpose: string;
-              statusListIndex: number;
-              statusListCredential: string;
-            };
+      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus;
 
-          if (!id || typeof id !== 'string') {
-            throw new BadRequestError('Invalid or missing "id" in credentialStatus');
-          }
-
-          if (!type || type !== 'BitstringStatusListEntry') {
-            throw new BadRequestError('Invalid or missing "type" in credentialStatus');
-          }
-
-          if (!statusPurpose) {
-            throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus');
-          }
-
-          if (!statusListIndex || isNaN(Number(statusListIndex))) {
-            throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus');
-          }
-
-          if (!statusListCredential || typeof statusListCredential !== 'string') {
-            throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus');
-          }
+      if (credentialStatus && Object.keys(credentialStatus).length > 0) {
+        if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
+          throw new BadRequestError('Missing or invalid credentialStatus in the request.');
         }
+
+        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string;
+
+        if (Array.isArray(credentialStatus)) {
+          if (credentialStatus.length === 0) {
+        throw new BadRequestError('Missing or invalid credentialStatus in the request.');
+          }
+          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0]);
+        } else {
+          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
+        id: string;
+        type: string;
+        statusPurpose: string;
+        statusListIndex: string;
+        statusListCredential: string;
+          });
+        }
+        if (!id) {
+          throw new BadRequestError('Invalid or missing "id" in credentialStatus');
+        }
+        if (!type || type !== 'BitstringStatusListEntry') {
+          throw new BadRequestError('Invalid or missing "type" in credentialStatus');
+        }
+
+        if (!statusPurpose) {
+          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus');
+        }
+
+        if (!statusListIndex || isNaN(Number(statusListIndex))) {
+          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus');
+        }
+
+        if (!statusListCredential || typeof statusListCredential !== 'string') {
+          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus');
+        }
+      }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         offer = await tenantAgent.credentials.offerCredential({
           connectionId: createOfferOptions.connectionId,
@@ -1352,37 +1358,48 @@ export class MultiTenancyController extends Controller {
 
     try {
       let invitationDid: string | undefined
-      const w3cRevocableCredentials: boolean = Boolean(createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus)
-        if (w3cRevocableCredentials) {
-          const { id, type, statusPurpose, statusListIndex, statusListCredential } =
-            createOfferOptions.credentialFormats.jsonld?.credential.credentialStatus as {
-              id: string;
-              type: string;
-              statusPurpose: string;
-              statusListIndex: number;
-              statusListCredential: string;
-            };
+      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus;
 
-          if (!id || typeof id !== 'string') {
-            throw new BadRequestError('Invalid or missing "id" in credentialStatus');
-          }
-
-          if (!type || type !== 'BitstringStatusListEntry') {
-            throw new BadRequestError('Invalid or missing "type" in credentialStatus');
-          }
-
-          if (!statusPurpose) {
-            throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus');
-          }
-
-          if (!statusListIndex || isNaN(Number(statusListIndex))) {
-            throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus');
-          }
-
-          if (!statusListCredential || typeof statusListCredential !== 'string') {
-            throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus');
-          }
+      if (credentialStatus && Object.keys(credentialStatus).length > 0) {
+        if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
+          throw new BadRequestError('Missing or invalid credentialStatus in the request.');
         }
+
+        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string;
+
+        if (Array.isArray(credentialStatus)) {
+          if (credentialStatus.length === 0) {
+        throw new BadRequestError('Missing or invalid credentialStatus in the request.');
+          }
+          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0]);
+        } else {
+          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
+        id: string;
+        type: string;
+        statusPurpose: string;
+        statusListIndex: string;
+        statusListCredential: string;
+          });
+        }
+        if (!id) {
+          throw new BadRequestError('Invalid or missing "id" in credentialStatus');
+        }
+        if (!type || type !== 'BitstringStatusListEntry') {
+          throw new BadRequestError('Invalid or missing "type" in credentialStatus');
+        }
+
+        if (!statusPurpose) {
+          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus');
+        }
+
+        if (!statusListIndex || isNaN(Number(statusListIndex))) {
+          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus');
+        }
+
+        if (!statusListCredential || typeof statusListCredential !== 'string') {
+          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus');
+        }
+      }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
         if (linkSecretIds.length === 0) {
@@ -2031,7 +2048,6 @@ export class MultiTenancyController extends Controller {
       let signedCredential: W3cJsonLdVerifiableCredential | undefined
 
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        // Step 2: Sign the payload
         try {
           signedCredential = await tenantAgent.w3cCredentials.signCredential<ClaimFormat.LdpVc>({
             credential: credentialpayload,
@@ -2077,7 +2093,7 @@ export class MultiTenancyController extends Controller {
       } catch (error) {
         throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)
       }
-      return signedCredential
+      return { signedCredential, bslcId }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -2089,11 +2105,15 @@ export class MultiTenancyController extends Controller {
    * @param tenantId ID of the tenant
    * @param bslcUrl URL of the BSLC
    * @param bslcId ID of the BSLC
-   * 
+   *
    */
   @Security('apiKey')
   @Get('/get-empty-bslc-index/:tenantId/:bslcUrl/:bslcId')
-  public async getEmptyIndexForBSLC(@Path('tenantId') tenantId: string, @Path('bslcUrl') bslcUrl: string, @Path('bslcId') bslcId: string) {
+  public async getEmptyIndexForBSLC(
+    @Path('tenantId') tenantId: string,
+    @Path('bslcUrl') bslcUrl: string,
+    @Path('bslcId') bslcId: string
+  ) {
     try {
       if (!bslcUrl) {
         throw new BadRequestError('Bslc URL is required')
@@ -2110,7 +2130,7 @@ export class MultiTenancyController extends Controller {
         throw new Error('Encoded list not found in the credential')
       }
 
-      const bitstring = this.customInflate(encodedList)
+      const bitstring = await customInflate(encodedList)
 
       // Fetch used indexes from the BSLC server
       const bslcCredentialServerUrl = `${process.env.BSLC_SERVER_URL}${process.env.BSLC_CREDENTIAL_INDEXES_ROUTE}/${bslcId}`
@@ -2201,7 +2221,6 @@ export class MultiTenancyController extends Controller {
 
       // Fetch the credential details from the server
       const credentialMetadataURL = `${serverUrl}/credentials/${credentialId}`
-
       try {
         const response = await axios.get(credentialMetadataURL, {
           headers: {
@@ -2231,11 +2250,7 @@ export class MultiTenancyController extends Controller {
         if (!bslcUrl) {
           throw new Error('bslcUrl not found in credential details')
         }
-        const response = await axios.get(bslcUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await axios.get(bslcUrl)
         if (response.status !== 200) {
           throw new Error('Failed to fetch the BitstringStatusListCredential')
         }
@@ -2251,25 +2266,10 @@ export class MultiTenancyController extends Controller {
       ) {
         throw new InternalServerError('Invalid BSLC credential fetched from the server')
       }
-
-      let bitstring
-      try {
-        let decompressedData
-        try {
-          const compressedData = Buffer.from(bslcCredential.credentialSubject.claims.encodedList, 'base64url')
-          decompressedData = inflate(new Uint8Array(compressedData))
-        } catch (error) {
-          throw new InternalServerError('Failed to decompress the encoded list')
-        }
-        bitstring = Array.from(decompressedData)
-          .map((byte) => byte.toString(2).padStart(8, '0'))
-          .join('')
-      } catch (error) {
-        throw new InternalServerError('Failed to decode the encoded list')
-      }
-
+      const encodedList = bslcCredential.credentialSubject.claims.encodedList
+      const bitstring =await customInflate(encodedList)
       // Update the bitstring based on the revocationId
-      const revocationIndex = parseInt(revocationId, 10)
+      const revocationIndex = parseInt(credentialDetailsObject.index, 10)
       if (isNaN(revocationIndex) || revocationIndex < 0 || revocationIndex >= bitstring.length) {
         throw new BadRequestError('Invalid revocationId')
       }
@@ -2281,15 +2281,15 @@ export class MultiTenancyController extends Controller {
       const updatedBitstring = bitstring.substring(0, revocationIndex) + '1' + bitstring.substring(revocationIndex + 1)
       // TODO: add compression method here
       // Re-encode the updated bitstring
-      const updatedEncodedList = Buffer.from(updatedBitstring, 'binary').toString('base64')
+      const updatedEncodedList = await customDeflate(updatedBitstring)
 
       // Update the credential payload
-      bslcCredential.credentialSubject.encodedList = updatedEncodedList
+      bslcCredential.credentialSubject.claims.encodedList = updatedEncodedList
 
-      // Sign the updated credential
       let signedCredential
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         try {
+          //TODO
           signedCredential = await tenantAgent.w3cCredentials.signCredential<ClaimFormat.LdpVc>({
             credential: bslcCredential,
             format: ClaimFormat.LdpVc,
@@ -2346,53 +2346,4 @@ export class MultiTenancyController extends Controller {
       throw ErrorHandlingService.handle(error)
     }
   }
-
-    // Custom decompression logic
-    private customInflate(encodedList: string): string {
-      if (!encodedList || typeof encodedList !== 'string') {
-      throw new BadRequestError('Invalid input: encodedList must be a non-empty string')
-      }
-
-      try {
-      const compressedData = Buffer.from(encodedList, 'base64url')
-      const decompressedData = inflate(new Uint8Array(compressedData))
-      return Array.from(decompressedData)
-        .map((byte) => byte.toString(2).padStart(8, '0'))
-        .join('')
-      } catch (error) {
-      if (error instanceof Error) {
-        throw new InternalServerError(`Failed to decompress and process the encoded list: ${error.message}`)
-      } else {
-        throw new InternalServerError('Failed to decompress and process the encoded list: Unknown error')
-      }
-      }
-    }
-  
-    // Custom recompression logic
-    private customDeflate(data: Uint8Array): Buffer {
-      if (!data || !(data instanceof Uint8Array)) {
-        throw new BadRequestError('Invalid input: data must be a Uint8Array')
-      }
-  
-      try {
-        return Buffer.from(data)
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new InternalServerError(`Failed to compress data: ${error.message}`)
-        } else {
-          throw new InternalServerError('Failed to compress data: Unknown error')
-        }
-      }
-    }
-
-    private updateBitAtIndex(bitstring: string, index: number, value: '0' | '1'): string {
-      if (index < 0 || index >= bitstring.length) {
-        throw new Error('Index out of bounds');
-      }
-      if (value !== '0' && value !== '1') {
-        throw new Error('Invalid value. Only "0" or "1" are allowed.');
-      }
-      return bitstring.substring(0, index) + value + bitstring.substring(index + 1);
-    }
-  
 }

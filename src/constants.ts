@@ -1,1 +1,2 @@
 export const initialBitsEncoded = `uH4sIAAAAAAAAA-3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA`
+export const bitstringStatusListEntry = `BitstringStatusListEntry`
