@@ -25,6 +25,7 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
+  W3cJsonLdVerifiableCredential,
 } from '@credo-ts/core'
 import type { DIDDocument } from 'did-resolver'
 
@@ -388,3 +389,57 @@ export interface SchemaMetadata {
  * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
  */
 export type ThreadId = string
+
+export interface bslcCredentialPayload {
+  '@context': string[]
+  id: string
+  type: string[]
+  issuer: {
+    id: string
+  }
+  issuanceDate: string
+  credentialSubject: {
+    id: string
+    type: string
+    statusPurpose: string
+    encodedList: string
+  }
+  credentialStatus: {
+    id: string
+    type: string
+  }
+}
+
+export interface signedBslCredential {
+  context: string[]
+  id: string
+  type: string[]
+  issuer: {
+    id: string
+  }
+  issuanceDate: string
+  credentialSubject: {
+    id: string
+    claims: {
+      type: string
+      statusPurpose: string
+      encodedList: string
+    }
+  }
+  credentialStatus: {
+    id: string
+    type: string
+  }
+  proof: {
+    verificationMethod: string
+    type: string
+    created: string
+    proofPurpose: string
+    jws: string
+  }
+}
+
+export interface BslCredential {
+  id: string
+  bslcObject: W3cJsonLdVerifiableCredential
+}

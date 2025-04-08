@@ -91,3 +91,8 @@ export enum CredentialStatusListType {
 export enum SignatureType {
   Ed25519Signature2018 = 'Ed25519Signature2018',
 }
+
+export enum W3CRevocationStatus {
+  Revoked = 'REVOCATION',
+  Suspended = 'SUSPENSION',
+}
