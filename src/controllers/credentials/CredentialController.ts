@@ -16,6 +16,7 @@ import {
   ClaimFormat,
 } from '@credo-ts/core'
 import axios from 'axios'
+import * as crypto from 'crypto'
 import { injectable } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -450,7 +451,12 @@ export class CredentialController extends Controller {
         throw new Error('No unused index found in the BitstringStatusList')
       }
 
-      const randomIndex = unusedIndexes[Math.floor(Math.random() * unusedIndexes.length)]
+      if (unusedIndexes.length === 0) {
+        throw new Error('No unused index found in the BitstringStatusList')
+      }
+
+      // Use a cryptographically secure random number generator for selecting the index
+      const randomIndex = unusedIndexes[crypto.getRandomValues(new Uint32Array(1))[0] % unusedIndexes.length]
       return {
         index: randomIndex,
       }

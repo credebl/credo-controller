@@ -55,6 +55,7 @@ import {
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
+import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { inflate } from 'pako'
 import { v4 as uuidv4 } from 'uuid'
@@ -2160,7 +2161,7 @@ export class MultiTenancyController extends Controller {
         throw new Error('No unused index found in the BitstringStatusList')
       }
 
-      const randomIndex = unusedIndexes[Math.floor(Math.random() * unusedIndexes.length)]
+      const randomIndex = unusedIndexes[crypto.getRandomValues(new Uint32Array(1))[0] % unusedIndexes.length]
       return {
         index: randomIndex,
       }
