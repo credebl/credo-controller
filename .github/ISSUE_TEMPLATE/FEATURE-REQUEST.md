@@ -1,7 +1,6 @@
 ## ✅ Preliminary Checks
 
-- [ ] I have searched [existing issues](../issues) and [pull requests](../pulls) to avoid duplicates.
-- [ ] I have read the [contributing guidelines](../blob/main/CONTRIBUTING.md) (if applicable).
+- [ ] I have searched [existing issues](https://github.com/credebl/credo-controller/issues) and [pull requests](https://github.com/credebl/credo-controller/pulls) to avoid duplicates.
 - [ ] I'm willing to create a PR for this feature. (if applicable).
 
 ---
