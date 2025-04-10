@@ -1,0 +1,55 @@
+name: "Feature Request"
+description: Suggest a new idea or improvement for this project.
+title: "[Feature] <Your title here>"
+labels: ["enhancement"]
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Preliminary Checks
+      description: Please ensure you've done the following before submitting a feature request.
+      options:
+        - label: I have searched [existing issues](../issues) and [pull requests](../pulls) to avoid duplicates.
+          required: true
+        - label: I have read the [contributing guidelines](../blob/main/CONTRIBUTING.md) (if applicable).
+          required: false
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe it clearly.
+      placeholder: |
+        Ex: I'm always frustrated when [...]
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: A clear and concise description of what you want to happen.
+      placeholder: |
+        Ex: It would be great if [...]
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or features?
+      placeholder: |
+        Ex: I also thought about [...], but [...]
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, references, mockups, or screenshots here.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: List specific tasks or outcomes that define when this request is complete.
+      placeholder: |
+        - [ ] A new endpoint `/v1/...` is added
+        - [ ] Docs updated
+        - [ ] Tests written and passing
