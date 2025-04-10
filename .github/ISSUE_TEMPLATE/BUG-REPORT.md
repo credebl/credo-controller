@@ -56,4 +56,3 @@ _Where did the issue occur?_
 ## 🧾 Relevant Logs, Screenshots, or Stack Traces
 
 _Paste any error messages or screenshots that can help diagnose the issue._
-
