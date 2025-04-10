@@ -2,6 +2,7 @@
 
 - [ ] I have searched [existing issues](../issues) and [pull requests](../pulls) to avoid duplicates.
 - [ ] I have read the [contributing guidelines](../blob/main/CONTRIBUTING.md) (if applicable).
+- [ ] I'm willing to create a PR for this feature. (if applicable).
 
 ---
 
