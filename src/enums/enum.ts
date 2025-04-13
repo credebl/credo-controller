@@ -85,9 +85,6 @@ export enum RevocationListType {
   Bitstring = 'BitstringStatusList',
 }
 
-export enum CredentialStatusListType {
-  CredentialStatusList2017 = 'CredentialStatusList2017',
-}
 export enum SignatureType {
   Ed25519Signature2018 = 'Ed25519Signature2018',
 }

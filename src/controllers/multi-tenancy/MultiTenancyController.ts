@@ -1,7 +1,13 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { bslcCredentialPayload, BslCredential, RecipientKeyOption, SchemaMetadata } from '../types'
+import type {
+  BSLCredentialPayload,
+  BSLCSignedCredentialPayload,
+  CredentialMetadata,
+  RecipientKeyOption,
+  SchemaMetadata,
+} from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -47,19 +53,17 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
   ClaimFormat,
+  utils,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
-import * as crypto from 'crypto'
 import * as fs from 'fs'
-import { v4 as uuidv4 } from 'uuid'
 
-import { customDeflate, customInflate } from '../../../src/utils/helpers'
+import { ApiService } from '../../../src/services/apiService'
 import { initialBitsEncoded } from '../../constants'
 import {
   CredentialContext,
   CredentialEnum,
-  CredentialStatusListType,
   CredentialType,
   DidMethod,
   EndorserMode,
@@ -80,6 +84,7 @@ import {
   PaymentRequiredError,
   UnprocessableEntityError,
 } from '../../errors'
+import { customDeflate, customInflate } from '../../utils/helpers'
 import {
   SchemaId,
   CredentialDefinitionId,
@@ -110,10 +115,12 @@ import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example,
 @injectable()
 export class MultiTenancyController extends Controller {
   private readonly agent: Agent<RestMultiTenantAgentModules>
+  private apiService: ApiService
 
-  public constructor(agent: Agent<RestMultiTenantAgentModules>) {
+  public constructor(agent: Agent<RestMultiTenantAgentModules>, apiService: ApiService) {
     super()
     this.agent = agent
+    this.apiService = apiService
   }
 
   //create wallet
@@ -1294,46 +1301,46 @@ export class MultiTenancyController extends Controller {
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions, @Path('tenantId') tenantId: string) {
     let offer
     try {
-      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus;
+      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
 
       if (credentialStatus && Object.keys(credentialStatus).length > 0) {
         if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
-          throw new BadRequestError('Missing or invalid credentialStatus in the request.');
+          throw new BadRequestError('Missing or invalid credentialStatus in the request.')
         }
 
-        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string;
+        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string
 
         if (Array.isArray(credentialStatus)) {
           if (credentialStatus.length === 0) {
-        throw new BadRequestError('Missing or invalid credentialStatus in the request.');
+            throw new BadRequestError('Missing or invalid credentialStatus in the request.')
           }
-          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0]);
+          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0])
         } else {
-          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
-        id: string;
-        type: string;
-        statusPurpose: string;
-        statusListIndex: string;
-        statusListCredential: string;
-          });
+          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
+            id: string
+            type: string
+            statusPurpose: string
+            statusListIndex: string
+            statusListCredential: string
+          })
         }
         if (!id) {
-          throw new BadRequestError('Invalid or missing "id" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "id" in credentialStatus')
         }
         if (!type || type !== 'BitstringStatusListEntry') {
-          throw new BadRequestError('Invalid or missing "type" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "type" in credentialStatus')
         }
 
         if (!statusPurpose) {
-          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus')
         }
 
-        if (!statusListIndex || isNaN(Number(statusListIndex))) {
-          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus');
+        if (typeof statusListIndex === 'number' && !Number.isNaN(statusListIndex)) {
+          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus')
         }
 
         if (!statusListCredential || typeof statusListCredential !== 'string') {
-          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus')
         }
       }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1358,46 +1365,46 @@ export class MultiTenancyController extends Controller {
 
     try {
       let invitationDid: string | undefined
-      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus;
+      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
 
       if (credentialStatus && Object.keys(credentialStatus).length > 0) {
         if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
-          throw new BadRequestError('Missing or invalid credentialStatus in the request.');
+          throw new BadRequestError('Missing or invalid credentialStatus in the request.')
         }
 
-        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string;
+        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string
 
         if (Array.isArray(credentialStatus)) {
           if (credentialStatus.length === 0) {
-        throw new BadRequestError('Missing or invalid credentialStatus in the request.');
+            throw new BadRequestError('Missing or invalid credentialStatus in the request.')
           }
-          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0]);
+          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0])
         } else {
-          ({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
-        id: string;
-        type: string;
-        statusPurpose: string;
-        statusListIndex: string;
-        statusListCredential: string;
-          });
+          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
+            id: string
+            type: string
+            statusPurpose: string
+            statusListIndex: string
+            statusListCredential: string
+          })
         }
         if (!id) {
-          throw new BadRequestError('Invalid or missing "id" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "id" in credentialStatus')
         }
         if (!type || type !== 'BitstringStatusListEntry') {
-          throw new BadRequestError('Invalid or missing "type" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "type" in credentialStatus')
         }
 
         if (!statusPurpose) {
-          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus')
         }
 
-        if (!statusListIndex || isNaN(Number(statusListIndex))) {
-          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus');
+        if (typeof statusListIndex === 'number' && !Number.isNaN(statusListIndex)) {
+          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus')
         }
 
         if (!statusListCredential || typeof statusListCredential !== 'string') {
-          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus');
+          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus')
         }
       }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -2024,13 +2031,13 @@ export class MultiTenancyController extends Controller {
   ) {
     try {
       const { issuerDID, statusPurpose, verificationMethod } = request
-      const bslcId = uuidv4()
-      const credentialpayload: bslcCredentialPayload = {
+      const bslcId = utils.uuid()
+      const credentialpayload: BSLCredentialPayload = {
         '@context': [`${CredentialContext.V1}`, `${CredentialContext.V2}`],
         id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${bslcId}`,
         type: [`${CredentialType.VerifiableCredential}`, `${CredentialType.BitstringStatusListCredential}`],
         issuer: {
-          id: issuerDID as string,
+          id: issuerDID,
         },
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
@@ -2039,9 +2046,10 @@ export class MultiTenancyController extends Controller {
           statusPurpose: statusPurpose,
           encodedList: initialBitsEncoded,
         },
+        // TODO: Remove after testing
         credentialStatus: {
           id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${bslcId}`,
-          type: CredentialStatusListType.CredentialStatusList2017,
+          type: RevocationListType.Bitstring,
         },
       }
 
@@ -2074,22 +2082,12 @@ export class MultiTenancyController extends Controller {
         throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables')
       }
       const url = `${serverUrl}${process.env.BSLC_ROUTE}`
-      const bslcPayload: BslCredential = {
+      const bslcPayload: BSLCSignedCredentialPayload = {
         id: bslcId,
         bslcObject: signedCredential,
       }
       try {
-        const response = await axios.post(url, bslcPayload, {
-          headers: {
-            Accept: '*/*',
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (response.status !== 200) {
-          throw new Error('Failed to upload the signed BitstringStatusListCredential')
-        }
+        await this.apiService.postRequest(url, bslcPayload, token)
       } catch (error) {
         throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)
       }
@@ -2100,112 +2098,22 @@ export class MultiTenancyController extends Controller {
   }
 
   /**
-   * Get empty index for BSLC
-   *
-   * @param tenantId ID of the tenant
-   * @param bslcUrl URL of the BSLC
-   * @param bslcId ID of the BSLC
-   *
-   */
-  @Security('apiKey')
-  @Get('/get-empty-bslc-index/:tenantId/:bslcUrl/:bslcId')
-  public async getEmptyIndexForBSLC(
-    @Path('tenantId') tenantId: string,
-    @Path('bslcUrl') bslcUrl: string,
-    @Path('bslcId') bslcId: string
-  ) {
-    try {
-      if (!bslcUrl) {
-        throw new BadRequestError('Bslc URL is required')
-      }
-
-      const response = await axios.get(bslcUrl)
-      if (response.status !== 200) {
-        throw new Error('Failed to fetch the BitstringStatusListCredential')
-      }
-
-      const credential = response.data
-      const encodedList = credential?.credentialSubject?.claims.encodedList
-      if (!encodedList) {
-        throw new Error('Encoded list not found in the credential')
-      }
-
-      const bitstring = await customInflate(encodedList)
-
-      // Fetch used indexes from the BSLC server
-      const bslcCredentialServerUrl = `${process.env.BSLC_SERVER_URL}${process.env.BSLC_CREDENTIAL_INDEXES_ROUTE}/${bslcId}`
-      if (
-        !process.env.BSLC_SERVER_URL ||
-        !process.env.BSLC_CREDENTIAL_INDEXES_ROUTE ||
-        !process.env.BSLC_SERVER_TOKEN
-      ) {
-        throw new Error(
-          'One or more required environment variables are not defined: BSLC_SERVER_URL, BSLC_CREDENTIAL_INDEXES_ROUTE, BSLC_SERVER_TOKEN'
-        )
-      }
-      const token = process.env.BSLC_SERVER_TOKEN
-      let fetchedIndexes: number[]
-
-      try {
-        const response = await axios.get(bslcCredentialServerUrl, {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.status !== 200) {
-          throw new Error(`Failed to fetch data from API. Status code: ${response.status}`)
-        }
-        if (!response || typeof response !== 'object') {
-          throw new Error('Invalid response data from API')
-        }
-        fetchedIndexes = response.data.data
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new InternalServerError(`Error calling the credential index API in bslc server: ${error.message}`)
-        } else {
-          throw new InternalServerError('Error calling the credential index API in bslc server: Unknown error')
-        }
-      }
-
-      // Find unused indexes
-      const usedIndexes = new Set(fetchedIndexes)
-      const unusedIndexes = []
-      for (let i = 0; i < bitstring.length; i++) {
-        if (bitstring[i] === '0' && !usedIndexes.has(i)) {
-          unusedIndexes.push(i)
-        }
-      }
-
-      if (unusedIndexes.length === 0) {
-        throw new Error('No unused index found in the BitstringStatusList')
-      }
-
-      const randomIndex = unusedIndexes[crypto.getRandomValues(new Uint32Array(1))[0] % unusedIndexes.length]
-      return {
-        index: randomIndex,
-      }
-    } catch (error) {
-      throw ErrorHandlingService.handle(error)
-    }
-  }
-  /**
-   * Revoke a W3C credential by revocationId
+   * Change a W3C credential by revocationId
    *
    * @param tenantId Id of the tenant
    * @param request Revocation request details
    */
   @Security('apiKey')
-  @Post('/revoke-w3c/:tenantId')
+  @Post('/change-status/:tenantId')
   public async revokeW3CCredential(
     @Path('tenantId') tenantId: string,
-    @Body() request: { revocationId: string; credentialId: string }
+    @Body() request: { revocationId: string; BSLCredentialId: string }
   ) {
     try {
       let credentialDetailsObject
-      const { revocationId, credentialId } = request
+      const { revocationId, BSLCredentialId } = request
 
-      if (!revocationId || !credentialId) {
+      if (!revocationId || !BSLCredentialId) {
         throw new BadRequestError('revocationId and revocationType are required')
       }
 
@@ -2220,19 +2128,16 @@ export class MultiTenancyController extends Controller {
       }
 
       // Fetch the credential details from the server
-      const credentialMetadataURL = `${serverUrl}/credentials/${credentialId}`
+      const credentialMetadataURL = `${serverUrl}/credentials/${BSLCredentialId}`
       try {
-        const response = await axios.get(credentialMetadataURL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (response.status !== 200) {
+        const response = (await this.apiService.getRequest(credentialMetadataURL, token)) as {
+          data: { data: object }
+        }
+        if (!response || typeof response.data.data !== 'object') {
           throw new Error('Failed to fetch the credential details')
         }
-        credentialDetailsObject = response.data.data
-        if (credentialDetailsObject.revocationStatus == W3CRevocationStatus.Revoked) {
+        credentialDetailsObject = response.data.data as CredentialMetadata
+        if (credentialDetailsObject.statusPurpose === W3CRevocationStatus.Revoked.toString()) {
           throw new Error('The credential is already revoked')
         }
         if (!credentialDetailsObject) {
@@ -2250,11 +2155,10 @@ export class MultiTenancyController extends Controller {
         if (!bslcUrl) {
           throw new Error('bslcUrl not found in credential details')
         }
-        const response = await axios.get(bslcUrl)
-        if (response.status !== 200) {
-          throw new Error('Failed to fetch the BitstringStatusListCredential')
+        const response = await this.apiService.getRequest(bslcUrl, token)
+        if (!response || !response.data) {
+          throw new Error('Invalid response data while fetching the BSLC credential')
         }
-
         bslcCredential = response.data
       } catch (error) {
         throw new InternalServerError(`Error fetching the BSLC credential: ${error}`)
@@ -2267,9 +2171,9 @@ export class MultiTenancyController extends Controller {
         throw new InternalServerError('Invalid BSLC credential fetched from the server')
       }
       const encodedList = bslcCredential.credentialSubject.claims.encodedList
-      const bitstring =await customInflate(encodedList)
+      const bitstring = customInflate(encodedList)
       // Update the bitstring based on the revocationId
-      const revocationIndex = parseInt(credentialDetailsObject.index, 10)
+      const revocationIndex = parseInt(credentialDetailsObject.index.toString(), 10)
       if (isNaN(revocationIndex) || revocationIndex < 0 || revocationIndex >= bitstring.length) {
         throw new BadRequestError('Invalid revocationId')
       }
@@ -2279,9 +2183,7 @@ export class MultiTenancyController extends Controller {
       }
 
       const updatedBitstring = bitstring.substring(0, revocationIndex) + '1' + bitstring.substring(revocationIndex + 1)
-      // TODO: add compression method here
-      // Re-encode the updated bitstring
-      const updatedEncodedList = await customDeflate(updatedBitstring)
+      const updatedEncodedList = customDeflate(updatedBitstring)
 
       // Update the credential payload
       bslcCredential.credentialSubject.claims.encodedList = updatedEncodedList
@@ -2303,39 +2205,21 @@ export class MultiTenancyController extends Controller {
       const bslcUrl = `${serverUrl}${process.env.BSLC_ROUTE}`
       // Upload the updated credential back to the server
       try {
-        const response = await axios.put(bslcUrl, signedCredential, {
-          headers: {
-            Accept: '*/*',
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        })
+        const response = await this.apiService.putRequest(bslcUrl, signedCredential, token)
 
-        if (response.status !== 200) {
+        if (!response.data) {
           throw new Error('Failed to upload the updated BSLC credential')
         }
       } catch (error) {
         throw new InternalServerError(`Error uploading the updated BSLC credential: ${error}`)
       }
 
-      // return signedCredential;
       // Update the credential status in the BSLC server
       const updateStatusUrl = `${serverUrl}/credentials/status/${revocationId}`
       let statusUpdateResponse
       try {
-        statusUpdateResponse = await axios.patch(
-          updateStatusUrl,
-          { isValid: false },
-          {
-            headers: {
-              Accept: '*/*',
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        )
-
-        if (statusUpdateResponse.status !== 200) {
+        statusUpdateResponse = await this.apiService.patchRequest(updateStatusUrl, { isValid: false }, token)
+        if (!statusUpdateResponse.data) {
           throw new Error('Failed to update the credential status in the BSLC server')
         }
       } catch (error) {

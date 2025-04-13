@@ -1,7 +1,7 @@
 import { JsonTransformer } from '@credo-ts/core'
 import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder'
 
-import { BadRequestError, InternalServerError } from '../../src/errors/errors'
+import { BadRequestError, InternalServerError } from '../errors/errors'
 
 export function objectToJson<T>(result: T) {
   const serialized = JsonTransformer.serialize(result)
@@ -18,7 +18,7 @@ export function customInflate(encodedList: string): string {
     const compressedData = Buffer.from(encodedList, 'base64url')
     const decompressedData = new Uint8Array(compressedData)
     return Array.from(decompressedData)
-      .map((byte) => byte.toString(2).padStart(8, '0'))
+      .map((byte) => byte.toString(2))
       .join('')
   } catch (error) {
     if (error instanceof Error) {

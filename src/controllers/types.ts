@@ -390,7 +390,7 @@ export interface SchemaMetadata {
  */
 export type ThreadId = string
 
-export interface bslcCredentialPayload {
+export interface BSLCredentialPayload {
   '@context': string[]
   id: string
   type: string[]
@@ -410,7 +410,7 @@ export interface bslcCredentialPayload {
   }
 }
 
-export interface signedBslCredential {
+export interface SignedBslCredential {
   context: string[]
   id: string
   type: string[]
@@ -439,7 +439,26 @@ export interface signedBslCredential {
   }
 }
 
-export interface BslCredential {
+export interface BSLCSignedCredentialPayload {
   id: string
   bslcObject: W3cJsonLdVerifiableCredential
+}
+export enum Status {
+  REVOCATION = 'REVOCATION',
+  SUSPENSION = 'SUSPENSION',
+  REFRESH = 'REFRESH',
+  MESSAGE = 'MESSAGE',
+}
+export interface CredentialMetadata {
+  id: string
+  revocationId: string
+  credentialId: string
+  bslcId: string
+  bslcUrl: string
+  index: number
+  issuerId: string
+  statusPurpose: Status
+  isValid: boolean
+  createdAt: Date
+  updatedAt: Date
 }
