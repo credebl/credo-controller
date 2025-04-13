@@ -50,3 +50,40 @@ export function customDeflate(data: string): string {
     }
   }
 }
+
+export function validateCredentialStatus(credentialStatus: any) {
+  let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string
+
+  if (Array.isArray(credentialStatus)) {
+    if (credentialStatus.length === 0) {
+      throw new BadRequestError('Missing or invalid credentialStatus in the request.')
+    }
+    ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0])
+  } else {
+    ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
+      id: string
+      type: string
+      statusPurpose: string
+      statusListIndex: string
+      statusListCredential: string
+    })
+  }
+  if (!id) {
+    throw new BadRequestError('Invalid or missing "id" in credentialStatus')
+  }
+  if (!type || type !== 'BitstringStatusListEntry') {
+    throw new BadRequestError('Invalid or missing "type" in credentialStatus')
+  }
+
+  if (!statusPurpose) {
+    throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus')
+  }
+
+  if (typeof statusListIndex === 'number' && !Number.isNaN(statusListIndex)) {
+    throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus')
+  }
+
+  if (!statusListCredential || typeof statusListCredential !== 'string') {
+    throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus')
+  }
+}

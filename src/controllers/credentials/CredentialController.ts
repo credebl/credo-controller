@@ -18,6 +18,7 @@ import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError } from '../../errors'
+import { validateCredentialStatus } from '../../utils/helpers'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
@@ -174,41 +175,7 @@ export class CredentialController extends Controller {
         if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
           throw new BadRequestError('Missing or invalid credentialStatus in the request.')
         }
-
-        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string
-
-        if (Array.isArray(credentialStatus)) {
-          if (credentialStatus.length === 0) {
-            throw new BadRequestError('Missing or invalid credentialStatus in the request.')
-          }
-          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0])
-        } else {
-          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
-            id: string
-            type: string
-            statusPurpose: string
-            statusListIndex: string
-            statusListCredential: string
-          })
-        }
-        if (!id) {
-          throw new BadRequestError('Invalid or missing "id" in credentialStatus')
-        }
-        if (!type || type !== 'BitstringStatusListEntry') {
-          throw new BadRequestError('Invalid or missing "type" in credentialStatus')
-        }
-
-        if (!statusPurpose) {
-          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus')
-        }
-
-        if (typeof statusListIndex === 'number' && !Number.isNaN(statusListIndex)) {
-          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus')
-        }
-
-        if (!statusListCredential || typeof statusListCredential !== 'string') {
-          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus')
-        }
+        validateCredentialStatus(credentialStatus)
       }
       const offer = await this.agent.credentials.offerCredential(createOfferOptions)
       return offer
@@ -226,41 +193,7 @@ export class CredentialController extends Controller {
         if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
           throw new BadRequestError('Missing or invalid credentialStatus in the request.')
         }
-
-        let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string
-
-        if (Array.isArray(credentialStatus)) {
-          if (credentialStatus.length === 0) {
-            throw new BadRequestError('Missing or invalid credentialStatus in the request.')
-          }
-          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus[0])
-        } else {
-          ;({ id, type, statusPurpose, statusListIndex, statusListCredential } = credentialStatus as {
-            id: string
-            type: string
-            statusPurpose: string
-            statusListIndex: string
-            statusListCredential: string
-          })
-        }
-        if (!id) {
-          throw new BadRequestError('Invalid or missing "id" in credentialStatus')
-        }
-        if (!type || type !== 'BitstringStatusListEntry') {
-          throw new BadRequestError('Invalid or missing "type" in credentialStatus')
-        }
-
-        if (!statusPurpose) {
-          throw new BadRequestError('Invalid or missing "statusPurpose" in credentialStatus')
-        }
-
-        if (typeof statusListIndex === 'number' && !Number.isNaN(statusListIndex)) {
-          throw new BadRequestError('Invalid or missing "statusListIndex" in credentialStatus')
-        }
-
-        if (!statusListCredential || typeof statusListCredential !== 'string') {
-          throw new BadRequestError('Invalid or missing "statusListCredential" in credentialStatus')
-        }
+        validateCredentialStatus(credentialStatus)
       }
       let invitationDid: string | undefined
       let routing: Routing
