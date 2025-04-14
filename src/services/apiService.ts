@@ -1,6 +1,8 @@
 import type { RestAgentModules } from '../cliAgent'
-import type { Agent } from '@credo-ts/core'
 
+import { Agent } from '@credo-ts/core'
+import { injectable } from 'tsyringe'
+@injectable()
 export class ApiService {
   private fetch: typeof globalThis.fetch
 
@@ -43,12 +45,14 @@ export class ApiService {
         method: 'GET',
         headers,
       })
-
+      console.log('response::::::::::::::::::', response)
       if (!response.ok) {
         throw new Error(`Failed to make GET request. Status code: ${response.status}`)
       }
 
-      return response.json()
+      const data = await response.json()
+      console.log('data::::::::::::::::::', data)
+      return data
     } catch (error) {
       throw new Error(`Error making GET request: ${error}`)
     }

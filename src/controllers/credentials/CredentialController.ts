@@ -172,9 +172,6 @@ export class CredentialController extends Controller {
       const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
 
       if (credentialStatus && Object.keys(credentialStatus).length > 0) {
-        if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
-          throw new BadRequestError('Missing or invalid credentialStatus in the request.')
-        }
         validateCredentialStatus(credentialStatus)
       }
       const offer = await this.agent.credentials.offerCredential(createOfferOptions)
@@ -190,9 +187,6 @@ export class CredentialController extends Controller {
       const credentialStatus = outOfBandOption?.credentialFormats?.jsonld?.credential.credentialStatus
 
       if (credentialStatus && Object.keys(credentialStatus).length > 0) {
-        if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
-          throw new BadRequestError('Missing or invalid credentialStatus in the request.')
-        }
         validateCredentialStatus(credentialStatus)
       }
       let invitationDid: string | undefined

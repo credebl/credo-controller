@@ -59,7 +59,6 @@ import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answ
 import axios from 'axios'
 import * as fs from 'fs'
 
-import { ApiService } from '../../../src/services/apiService'
 import { initialBitsEncoded } from '../../constants'
 import {
   CredentialContext,
@@ -84,6 +83,7 @@ import {
   PaymentRequiredError,
   UnprocessableEntityError,
 } from '../../errors'
+import { ApiService } from '../../services/apiService'
 import { customDeflate, customInflate, validateCredentialStatus } from '../../utils/helpers'
 import {
   SchemaId,
@@ -115,7 +115,7 @@ import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example,
 @injectable()
 export class MultiTenancyController extends Controller {
   private readonly agent: Agent<RestMultiTenantAgentModules>
-  private apiService: ApiService
+  private readonly apiService: ApiService
 
   public constructor(agent: Agent<RestMultiTenantAgentModules>, apiService: ApiService) {
     super()
@@ -1304,9 +1304,6 @@ export class MultiTenancyController extends Controller {
       const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
 
       if (credentialStatus && Object.keys(credentialStatus).length > 0) {
-        if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
-          throw new BadRequestError('Missing or invalid credentialStatus in the request.')
-        }
         validateCredentialStatus(credentialStatus)
       }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1332,11 +1329,7 @@ export class MultiTenancyController extends Controller {
     try {
       let invitationDid: string | undefined
       const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
-
       if (credentialStatus && Object.keys(credentialStatus).length > 0) {
-        if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
-          throw new BadRequestError('Missing or invalid credentialStatus in the request.')
-        }
         validateCredentialStatus(credentialStatus)
       }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1959,10 +1952,13 @@ export class MultiTenancyController extends Controller {
   @Post('/create-bslc/:tenantId')
   public async createBitstringStatusListCredential(
     @Path('tenantId') tenantId: string,
-    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethod: string }
+    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethodId: string }
   ) {
     try {
-      const { issuerDID, statusPurpose, verificationMethod } = request
+      const { issuerDID, statusPurpose, verificationMethodId } = request
+      if (!['revocation', 'suspension'].includes(statusPurpose)) {
+        throw new BadRequestError('Invalid statusPurpose. Allowed values are "revocation" and "suspension".')
+      }
       const bslcId = utils.uuid()
       const credentialpayload: BSLCredentialPayload = {
         '@context': [`${CredentialContext.V1}`, `${CredentialContext.V2}`],
@@ -1993,7 +1989,7 @@ export class MultiTenancyController extends Controller {
             credential: credentialpayload,
             format: ClaimFormat.LdpVc,
             proofType: SignatureType.Ed25519Signature2018,
-            verificationMethod,
+            verificationMethod: verificationMethodId,
           })
         } catch (signingError) {
           throw new InternalServerError(`Failed to sign the BitstringStatusListCredential: ${signingError}`)

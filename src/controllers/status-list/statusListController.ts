@@ -4,8 +4,8 @@ import type { W3cJsonLdVerifiableCredential } from '@credo-ts/core'
 
 import { Agent, ClaimFormat, utils } from '@credo-ts/core'
 import * as crypto from 'crypto'
+import { injectable } from 'tsyringe'
 
-import { ApiService } from '../../../src/services/apiService'
 import { initialBitsEncoded } from '../../constants'
 import {
   CredentialContext,
@@ -16,14 +16,16 @@ import {
 } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors/errors'
+import { ApiService } from '../../services/apiService'
 import { customDeflate, customInflate } from '../../utils/helpers'
 
 import { Controller, Get, Path, Security, Tags, Example, Response, Route, Post, Body } from 'tsoa'
+@injectable()
 @Tags('Status List')
 @Route('/status-list')
 export class StatusListController extends Controller {
-  private agent: Agent<RestAgentModules>
-  private apiService: ApiService
+  private readonly agent: Agent<RestAgentModules>
+  private readonly apiService: ApiService
 
   public constructor(agent: Agent<RestAgentModules>, apiService: ApiService) {
     super()
@@ -40,10 +42,11 @@ export class StatusListController extends Controller {
   @Security('apiKey')
   @Post('/create-bslc')
   public async createBitstringStatusListCredential(
-    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethod: string }
+    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethodId: string }
   ) {
     try {
-      const { issuerDID, statusPurpose, verificationMethod } = request
+      const { issuerDID, statusPurpose, verificationMethodId } = request
+
       const bslcId = utils.uuid()
       const credentialpayload: BSLCredentialPayload = {
         '@context': [`${CredentialContext.V1}`, `${CredentialContext.V2}`],
@@ -72,7 +75,7 @@ export class StatusListController extends Controller {
           credential: credentialpayload,
           format: ClaimFormat.LdpVc,
           proofType: SignatureType.Ed25519Signature2018,
-          verificationMethod,
+          verificationMethod: verificationMethodId,
         })
 
         if ('proof' in signedResult) {
@@ -136,11 +139,10 @@ export class StatusListController extends Controller {
       }
 
       const response = await this.apiService.getRequest(bslcUrl)
-      if (!response || !response.data) {
-        throw new Error('Failed to fetch the BitstringStatusListCredential')
+      if (!response) {
+        throw new Error('Failed to fetch the Bitstring Status List Credential')
       }
-      const credential = response.data
-      const encodedList = credential?.credentialSubject?.claims.encodedList
+      const encodedList = response?.credentialSubject?.claims.encodedList
       if (!encodedList) {
         throw new Error('Encoded list not found in the credential')
       }
@@ -159,16 +161,13 @@ export class StatusListController extends Controller {
         )
       }
       const token = process.env.BSLC_SERVER_TOKEN
-      let fetchedIndexes: number[]
+      let fetchedIndexes: number[] = []
 
       try {
-        const response = (await this.apiService.getRequest(bslcCredentialServerUrl, token)) as {
-          data: { data: number }
+        const response = await this.apiService.getRequest(bslcCredentialServerUrl, token)
+        if (response.data) {
+          fetchedIndexes = response.data
         }
-        if (!response || !response.data || !Array.isArray(response.data.data)) {
-          throw new Error('Invalid response data from API')
-        }
-        fetchedIndexes = response.data.data
       } catch (error) {
         if (error instanceof Error) {
           throw new InternalServerError(`Error calling the credential index API in bslc server: ${error.message}`)

@@ -52,6 +52,10 @@ export function customDeflate(data: string): string {
 }
 
 export function validateCredentialStatus(credentialStatus: any) {
+  if (typeof credentialStatus !== 'object' && !Array.isArray(credentialStatus)) {
+    throw new BadRequestError('Missing or invalid credentialStatus in the request.')
+  }
+
   let id: string, type: string, statusPurpose: string, statusListIndex: string, statusListCredential: string
 
   if (Array.isArray(credentialStatus)) {
