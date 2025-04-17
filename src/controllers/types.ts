@@ -439,7 +439,7 @@ export interface SignedBslCredential {
   }
 }
 
-export interface BSLCSignedCredentialPayload {
+export interface BSLCSignedPayload {
   id: string
   bslcObject: W3cJsonLdVerifiableCredential
 }

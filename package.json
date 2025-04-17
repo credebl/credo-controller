@@ -108,5 +108,8 @@
   },
   "engines": {
     "node": "18.19.0"
+  },
+  "resolutions": {
+    "@credo-ts/core": "file:./credo-ts-core-0.5.15.tgz"
   }
 }

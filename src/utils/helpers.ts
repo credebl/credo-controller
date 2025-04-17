@@ -18,7 +18,7 @@ export function customInflate(encodedList: string): string {
     const compressedData = Buffer.from(encodedList, 'base64url')
     const decompressedData = new Uint8Array(compressedData)
     return Array.from(decompressedData)
-      .map((byte) => byte.toString(2))
+      .map((byte) => byte.toString(2).padStart(8, '0')) //TODO: Remove pad after testing
       .join('')
   } catch (error) {
     if (error instanceof Error) {

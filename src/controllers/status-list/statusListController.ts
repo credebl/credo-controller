@@ -1,5 +1,5 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { BSLCredentialPayload, BSLCSignedCredentialPayload, CredentialMetadata } from '../types'
+import type { BSLCredentialPayload, BSLCSignedPayload, CredentialMetadata } from '../types'
 import type { W3cJsonLdVerifiableCredential } from '@credo-ts/core'
 
 import { Agent, ClaimFormat, utils } from '@credo-ts/core'
@@ -47,24 +47,24 @@ export class StatusListController extends Controller {
     try {
       const { issuerDID, statusPurpose, verificationMethodId } = request
 
-      const bslcId = utils.uuid()
+      const BSLCId = utils.uuid()
       const credentialpayload: BSLCredentialPayload = {
         '@context': [`${CredentialContext.V1}`, `${CredentialContext.V2}`],
-        id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${bslcId}`,
+        id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${BSLCId}`,
         type: [`${CredentialType.VerifiableCredential}`, `${CredentialType.BitstringStatusListCredential}`],
         issuer: {
           id: issuerDID,
         },
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
-          id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${bslcId}`,
+          id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${BSLCId}`,
           type: `${RevocationListType.Bitstring}`,
           statusPurpose: statusPurpose,
           encodedList: initialBitsEncoded,
         },
         //TODO: remove after testing
         credentialStatus: {
-          id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${bslcId}`,
+          id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${BSLCId}`,
           type: RevocationListType.Bitstring,
         },
       }
@@ -101,8 +101,8 @@ export class StatusListController extends Controller {
         throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables')
       }
       const url = `${serverUrl}${process.env.BSLC_ROUTE}`
-      const bslcPayload: BSLCSignedCredentialPayload = {
-        id: bslcId,
+      const bslcPayload: BSLCSignedPayload = {
+        id: BSLCId,
         bslcObject: signedCredential,
       }
       try {
@@ -110,7 +110,7 @@ export class StatusListController extends Controller {
       } catch (error) {
         throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)
       }
-      return { signedCredential, bslcId }
+      return { signedCredential, BSLCId }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -205,8 +205,8 @@ export class StatusListController extends Controller {
    * @param request Revocation request details
    */
   @Security('apiKey')
-  @Post('/change-status/:tenantId')
-  public async revokeW3CCredential(@Body() request: { revocationId: string; credentialId: string }) {
+  @Post('/change-status')
+  public async changeStatus(@Body() request: { revocationId: string; credentialId: string }) {
     try {
       let credentialDetailsObject: CredentialMetadata
       const { revocationId, credentialId } = request

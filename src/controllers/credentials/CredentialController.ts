@@ -17,7 +17,6 @@ import {
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
-import { BadRequestError } from '../../errors'
 import { validateCredentialStatus } from '../../utils/helpers'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'

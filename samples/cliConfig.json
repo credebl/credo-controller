@@ -1,6 +1,6 @@
 {
   "label": "AFJ Rest Agent 1",
-  "walletId": "sample",
+  "walletId": "sample-issuer-verifier",
   "walletKey": "sample",
   "walletType": "postgres",
   "walletUrl": "localhost:5432",
@@ -26,7 +26,7 @@
   "endpoint": ["http://localhost:4002"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "always",
-  "autoAcceptProofs": "contentApproved",
+  "autoAcceptProofs": "always",
   "logLevel": 2,
   "inboundTransport": [
     {

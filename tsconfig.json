@@ -12,6 +12,7 @@
     "lib": ["ES2021.Promise"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
     "types": ["jest", "node"]
   },
   "exclude": ["node_modules", "build"]
