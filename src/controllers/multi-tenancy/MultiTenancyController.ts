@@ -2009,12 +2009,15 @@ export class MultiTenancyController extends Controller {
       if (!token) {
         throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables')
       }
+      
       const url = `${serverUrl}${process.env.BSLC_ROUTE}`
       const bslcPayload: BSLCSignedPayload = {
         id: BSLCId,
         bslcObject: signedCredential,
       }
       try {
+        console.log("url::::::::", url)
+        console.log("bslcPayload:::::::", bslcPayload) // debug
         await this.apiService.postRequest(url, bslcPayload, token)
       } catch (error) {
         throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)
