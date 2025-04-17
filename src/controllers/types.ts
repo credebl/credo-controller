@@ -25,6 +25,7 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
+  W3cJsonLdVerifiableCredential,
 } from '@credo-ts/core'
 import type { DIDDocument } from 'did-resolver'
 
@@ -388,3 +389,76 @@ export interface SchemaMetadata {
  * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
  */
 export type ThreadId = string
+
+export interface BSLCredentialPayload {
+  '@context': string[]
+  id: string
+  type: string[]
+  issuer: {
+    id: string
+  }
+  issuanceDate: string
+  credentialSubject: {
+    id: string
+    type: string
+    statusPurpose: string
+    encodedList: string
+  }
+  credentialStatus: {
+    id: string
+    type: string
+  }
+}
+
+export interface SignedBslCredential {
+  context: string[]
+  id: string
+  type: string[]
+  issuer: {
+    id: string
+  }
+  issuanceDate: string
+  credentialSubject: {
+    id: string
+    claims: {
+      type: string
+      statusPurpose: string
+      encodedList: string
+    }
+  }
+  credentialStatus: {
+    id: string
+    type: string
+  }
+  proof: {
+    verificationMethod: string
+    type: string
+    created: string
+    proofPurpose: string
+    jws: string
+  }
+}
+
+export interface BSLCSignedPayload {
+  id: string
+  bslcObject: W3cJsonLdVerifiableCredential
+}
+export enum Status {
+  REVOCATION = 'REVOCATION',
+  SUSPENSION = 'SUSPENSION',
+  REFRESH = 'REFRESH',
+  MESSAGE = 'MESSAGE',
+}
+export interface CredentialMetadata {
+  id: string
+  revocationId: string
+  credentialId: string
+  bslcId: string
+  bslcUrl: string
+  index: number
+  issuerId: string
+  statusPurpose: Status
+  isValid: boolean
+  createdAt: Date
+  updatedAt: Date
+}

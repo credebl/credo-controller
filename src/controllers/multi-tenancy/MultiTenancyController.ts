@@ -1,7 +1,13 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption, SchemaMetadata } from '../types'
+import type {
+  BSLCredentialPayload,
+  BSLCSignedPayload,
+  CredentialMetadata,
+  RecipientKeyOption,
+  SchemaMetadata,
+} from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -15,6 +21,7 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
+  W3cJsonLdVerifiableCredential,
 } from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
@@ -45,19 +52,27 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
+  ClaimFormat,
+  utils,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
 
+import { initialBitsEncoded } from '../../constants'
 import {
+  CredentialContext,
   CredentialEnum,
+  CredentialType,
   DidMethod,
   EndorserMode,
   Network,
   NetworkTypes,
+  RevocationListType,
   Role,
   SchemaError,
+  SignatureType,
+  W3CRevocationStatus,
 } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
@@ -68,6 +83,8 @@ import {
   PaymentRequiredError,
   UnprocessableEntityError,
 } from '../../errors'
+import { ApiService } from '../../services/apiService'
+import { customDeflate, customInflate, validateCredentialStatus } from '../../utils/helpers'
 import {
   SchemaId,
   CredentialDefinitionId,
@@ -98,10 +115,12 @@ import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example,
 @injectable()
 export class MultiTenancyController extends Controller {
   private readonly agent: Agent<RestMultiTenantAgentModules>
+  private readonly apiService: ApiService
 
-  public constructor(agent: Agent<RestMultiTenantAgentModules>) {
+  public constructor(agent: Agent<RestMultiTenantAgentModules>, apiService: ApiService) {
     super()
     this.agent = agent
+    this.apiService = apiService
   }
 
   //create wallet
@@ -1282,6 +1301,11 @@ export class MultiTenancyController extends Controller {
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions, @Path('tenantId') tenantId: string) {
     let offer
     try {
+      // const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
+
+      // if (credentialStatus && Object.keys(credentialStatus).length > 0) {
+      //   validateCredentialStatus(credentialStatus)
+      // }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         offer = await tenantAgent.credentials.offerCredential({
           connectionId: createOfferOptions.connectionId,
@@ -1304,6 +1328,10 @@ export class MultiTenancyController extends Controller {
 
     try {
       let invitationDid: string | undefined
+      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
+      if (credentialStatus && Object.keys(credentialStatus).length > 0) {
+        validateCredentialStatus(credentialStatus)
+      }
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const linkSecretIds = await tenantAgent.modules.anoncreds.getLinkSecretIds()
         if (linkSecretIds.length === 0) {
@@ -1909,6 +1937,242 @@ export class MultiTenancyController extends Controller {
         basicMessageRecord = await tenantAgent.basicMessages.sendMessage(connectionId, request.content)
       })
       return basicMessageRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Create bitstring status list credential
+   *
+   * @param tenantId Id of the tenant
+   * @param request BSLC required details
+   */
+  @Security('apiKey')
+  @Post('/create-bslc/:tenantId')
+  public async createBitstringStatusListCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethodId: string }
+  ) {
+    try {
+      const { issuerDID, statusPurpose, verificationMethodId } = request
+      if (!['revocation', 'suspension'].includes(statusPurpose)) {
+        throw new BadRequestError('Invalid statusPurpose. Allowed values are "revocation" and "suspension".')
+      }
+      const BSLCId = utils.uuid()
+      const credentialpayload: BSLCredentialPayload = {
+        '@context': [`${CredentialContext.V1}`, `${CredentialContext.V2}`],
+        id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${BSLCId}`,
+        type: [`${CredentialType.VerifiableCredential}`, `${CredentialType.BitstringStatusListCredential}`],
+        issuer: {
+          id: issuerDID,
+        },
+        issuanceDate: new Date().toISOString(),
+        credentialSubject: {
+          id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${BSLCId}`,
+          type: `${RevocationListType.Bitstring}`,
+          statusPurpose: statusPurpose,
+          encodedList: initialBitsEncoded,
+        },
+        // TODO: Remove after testing
+        credentialStatus: {
+          id: `${process.env.BSLC_SERVER_URL}${process.env.BSLC_ROUTE}/${BSLCId}`,
+          type: RevocationListType.Bitstring,
+        },
+      }
+
+      let signedCredential: W3cJsonLdVerifiableCredential | undefined
+
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        try {
+          signedCredential = await tenantAgent.w3cCredentials.signCredential<ClaimFormat.LdpVc>({
+            credential: credentialpayload,
+            format: ClaimFormat.LdpVc,
+            proofType: SignatureType.Ed25519Signature2018,
+            verificationMethod: verificationMethodId,
+          })
+        } catch (signingError) {
+          throw new InternalServerError(`Failed to sign the BitstringStatusListCredential: ${signingError}`)
+        }
+      })
+
+      if (!signedCredential) {
+        throw new InternalServerError('Signed credential is undefined')
+      }
+      // Step 3: Upload the signed payload to the server
+      const serverUrl = process.env.BSLC_SERVER_URL
+      if (!serverUrl) {
+        throw new Error('BSLC_SERVER_URL is not defined in the environment variables')
+      }
+
+      const token = process.env.BSLC_SERVER_TOKEN
+      if (!token) {
+        throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables')
+      }
+      
+      const url = `${serverUrl}${process.env.BSLC_ROUTE}`
+      const bslcPayload: BSLCSignedPayload = {
+        id: BSLCId,
+        bslcObject: signedCredential,
+      }
+      try {
+        console.log("url::::::::", url)
+        console.log("bslcPayload:::::::", bslcPayload) // debug
+        await this.apiService.postRequest(url, bslcPayload, token)
+      } catch (error) {
+        throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)
+      }
+      return { signedCredential, BSLCId }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Change a W3C credential by revocationId
+   *
+   * @param tenantId Id of the tenant
+   * @param request Revocation request details
+   */
+  @Security('apiKey')
+  @Post('/change-status/:tenantId')
+  public async changeBslCredentialStatus(
+    @Path('tenantId') tenantId: string,
+    @Body() request: { revocationId: string; BSLCredentialId: string }
+  ) {
+    try {
+      let credentialDetailsObject
+      const { revocationId, BSLCredentialId } = request
+
+      if (!revocationId || !BSLCredentialId) {
+        throw new BadRequestError('revocationId and revocationType are required')
+      }
+
+      const serverUrl = process.env.BSLC_SERVER_URL
+      if (!serverUrl) {
+        throw new Error('BSLC_SERVER_URL is not defined in the environment variables')
+      }
+
+      const token = process.env.BSLC_SERVER_TOKEN
+      if (!token) {
+        throw new Error('BSLC_SERVER_TOKEN is not defined in the environment variables')
+      }
+
+      // Fetch the credential details from the server
+      const credentialMetadataURL = `${serverUrl}/credentials/${BSLCredentialId}`
+      try {
+        const response = (await this.apiService.getRequest(credentialMetadataURL, token))
+        if (!response || typeof response.data !== 'object') {
+          throw new Error('Failed to fetch the credential details')
+        }
+        credentialDetailsObject = response.data as CredentialMetadata
+        if (credentialDetailsObject.isValid !== true) {
+          throw new Error('The credential is already revoked')
+        }
+        if (!credentialDetailsObject) {
+          throw new Error('Credential details not found')
+        }
+      } catch (error) {
+        throw new InternalServerError(`Error fetching the BSLC credential: ${error}`)
+      }
+
+      // Fetch the existing BSLC credential from the server
+      let bslcCredential
+      try {
+        const { bslcUrl } = credentialDetailsObject
+
+        if (!bslcUrl) {
+          throw new Error('bslcUrl not found in credential details')
+        }
+        bslcCredential = await this.apiService.getRequest(bslcUrl, token)
+        if (!bslcCredential) {
+          throw new Error('Invalid response data while fetching the BSLC credential')
+        }
+      } catch (error) {
+        throw new InternalServerError(`Error fetching the BSLC credential: ${error}`)
+      }
+      if (
+        !bslcCredential ||
+        !bslcCredential.credentialSubject ||
+        !bslcCredential.credentialSubject.claims.encodedList
+      ) {
+        throw new InternalServerError('Invalid BSLC credential fetched from the server')
+      }
+      const encodedList = bslcCredential.credentialSubject.claims.encodedList
+      const bitstring = customInflate(encodedList)
+
+      
+      // Update the bitstring based on the revocationId
+      const revocationIndex = parseInt(credentialDetailsObject.index.toString(), 10)
+      if (isNaN(revocationIndex) || revocationIndex < 0 || revocationIndex >= bitstring.length) {
+        throw new BadRequestError('Invalid revocationId')
+      }
+
+      if (bitstring[revocationIndex] === '1') {
+        throw new BadRequestError('The credential is already revoked')
+      }
+
+      const updatedBitstring = bitstring.substring(0, revocationIndex) + '1' + bitstring.substring(revocationIndex + 1)
+      const updatedEncodedList = customDeflate(updatedBitstring)
+      // Update the credential payload
+      bslcCredential.credentialSubject.claims.encodedList = updatedEncodedList
+
+      let signedCredential
+      const transformedCredential = {
+        '@context': bslcCredential.context, // Rename "context" to "@context"
+        id: bslcCredential.id,
+        type: bslcCredential.type,
+        issuer: bslcCredential.issuer,
+        issuanceDate: bslcCredential.issuanceDate,
+        credentialStatus: bslcCredential.credentialStatus,
+        credentialSubject: {
+          id: bslcCredential.credentialSubject.id,
+          ...bslcCredential.credentialSubject.claims // Flatten the "claims" into credentialSubject
+        }
+      };
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        try {
+          signedCredential = await tenantAgent.w3cCredentials.signCredential<ClaimFormat.LdpVc>({
+            credential: transformedCredential,
+            format: ClaimFormat.LdpVc,
+            proofType: SignatureType.Ed25519Signature2018,
+            verificationMethod: bslcCredential.proof.verificationMethod,
+          })
+        } catch (signingError) {
+          throw new InternalServerError(`Failed to sign the updated BSLC credential: ${signingError}`)
+        }
+      })
+      if (!signedCredential) {
+        throw new InternalServerError('Signed credential is undefined')
+      }
+      const bslcUrl = `${serverUrl}${process.env.BSLC_ROUTE}`
+      // Upload the updated credential back to the server
+      try {
+        const updateSignCredential = {
+          id: transformedCredential.credentialStatus.id.split('/').pop(),
+          bslcObject: signedCredential,
+        }
+        const response = await this.apiService.putRequest(bslcUrl, updateSignCredential, token)
+
+        if (!response.data) {
+          throw new Error('Failed to upload the updated BSLC credential')
+        }
+      } catch (error) {
+        throw new InternalServerError(`Error uploading the updated BSLC credential: ${error}`)
+      }
+
+      // Update the credential status in the BSLC server
+      const updateStatusUrl = `${serverUrl}/credentials/status/${revocationId}`
+      let statusUpdateResponse
+      try {
+        statusUpdateResponse = await this.apiService.patchRequest(updateStatusUrl, { isValid: false }, token)
+        if (!statusUpdateResponse.data) {
+          throw new Error('Failed to update the credential status in the BSLC server')
+        }
+      } catch (error) {
+        throw new InternalServerError(`Error updating the credential status in the BSLC server: ${error}`)
+      }
+      return statusUpdateResponse
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
