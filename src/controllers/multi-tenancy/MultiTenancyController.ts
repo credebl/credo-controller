@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
 import type { RecipientKeyOption, SchemaMetadata } from '../types'
@@ -49,7 +50,15 @@ import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answ
 import axios from 'axios'
 import * as fs from 'fs'
 
-import { CredentialEnum, DidMethod, EndorserMode, Network, NetworkTypes, Role, SchemaError } from '../../enums/enum'
+import {
+  CredentialEnum,
+  DidMethod,
+  EndorserMode,
+  Network,
+  NetworkTypes,
+  Role,
+  SchemaError,
+} from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import {
