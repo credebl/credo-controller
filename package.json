@@ -54,7 +54,7 @@
     "@tsoa/runtime": "^6.0.0",
     "@types/node-fetch": "^2.6.4",
     "@types/ref-struct-di": "^1.1.9",
-    "@types/uuid": "^8.3.3",
+    "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.4",
     "axios": "^1.4.0",
     "body-parser": "^1.20.0",
@@ -72,9 +72,7 @@
     "tslog": "^3.3.3",
     "tsoa": "^6.0.1",
     "tsyringe": "^4.8.0",
-    "uuidv4": "^6.2.13",
-    "yargs": "^17.3.1",
-    "zlib": "^1.0.5"
+    "yargs": "^17.3.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",
