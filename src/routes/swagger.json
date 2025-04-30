@@ -941,7 +941,6 @@
 					}
 				},
 				"required": [
-					"keyType",
 					"method"
 				],
 				"type": "object",
@@ -1379,7 +1378,8 @@
 					},
 					"credentialSubject": {
 						"$ref": "#/components/schemas/SingleOrArray_JsonObject_"
-					}
+					},
+					"prettyVc": {}
 				},
 				"required": [
 					"@context",
@@ -2585,6 +2585,56 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.proposal_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.offer_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.request_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.credential_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"GetCredentialFormatDataReturn__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array_": {
+				"properties": {
+					"credential": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.credential_"
+					},
+					"request": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.request_"
+					},
+					"offerAttributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"offer": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.offer_"
+					},
+					"proposal": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.proposal_"
+					},
+					"proposalAttributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"description": "Get format data return value. Each key holds a mapping of credential format key to format data."
+			},
 			"BasicMessageRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
@@ -2624,7 +2674,7 @@
 	},
 	"info": {
 		"title": "credo-controller",
-		"version": "0.9.4",
+		"version": "2.0.0",
 		"description": "Rest endpoint wrapper for using your agent over HTTP",
 		"license": {
 			"name": "Apache-2.0"
@@ -2890,26 +2940,11 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"recipientKey": {
-											"anyOf": [
-												{
-													"properties": {
-														"recipientKey": {}
-													},
-													"type": "object"
-												},
-												{
-													"properties": {
-														"recipientKey": {
-															"type": "string"
-														}
-													},
-													"required": [
-														"recipientKey"
-													],
-													"type": "object"
-												}
-											]
+										"proofRecordThId": {
+											"type": "string"
+										},
+										"invitationDid": {
+											"type": "string"
 										},
 										"outOfBandRecord": {
 											"$ref": "#/components/schemas/Record_string.unknown_"
@@ -2922,7 +2957,8 @@
 										}
 									},
 									"required": [
-										"recipientKey",
+										"proofRecordThId",
+										"invitationDid",
 										"outOfBandRecord",
 										"invitation",
 										"invitationUrl"
@@ -4860,7 +4896,7 @@
 				}
 			}
 		},
-		"/multi-tenancy/polygon-wc3/schema/{tenantId}": {
+		"/multi-tenancy/polygon-w3c/schema/{tenantId}": {
 			"post": {
 				"operationId": "CreatePolygonW3CSchema",
 				"responses": {
@@ -4923,7 +4959,7 @@
 				}
 			}
 		},
-		"/multi-tenancy/polygon-wc3/schema/{did}/{schemaId}/{tenantId}": {
+		"/multi-tenancy/polygon-w3c/schema/{did}/{schemaId}/{tenantId}": {
 			"get": {
 				"operationId": "GetPolygonW3CSchemaById",
 				"responses": {
@@ -5387,6 +5423,47 @@
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/CredentialState"
+						}
+					}
+				]
+			}
+		},
+		"/multi-tenancy/credentials/form-data/{tenantId}/{credentialRecordId}": {
+			"get": {
+				"operationId": "CredentialFormData",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "credentialRecordId",
+						"required": true,
+						"schema": {
+							"type": "string"
 						}
 					}
 				]
@@ -7261,26 +7338,14 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"recipientKey": {
-											"anyOf": [
-												{
-													"properties": {
-														"recipientKey": {}
-													},
-													"type": "object"
-												},
-												{
-													"properties": {
-														"recipientKey": {
-															"type": "string"
-														}
-													},
-													"required": [
-														"recipientKey"
-													],
-													"type": "object"
-												}
-											]
+										"invitationDid": {
+											"type": "string"
+										},
+										"credentialRequestThId": {
+											"type": "string"
+										},
+										"outOfBandRecordId": {
+											"type": "string"
 										},
 										"outOfBandRecord": {
 											"$ref": "#/components/schemas/Record_string.unknown_"
@@ -7293,7 +7358,9 @@
 										}
 									},
 									"required": [
-										"recipientKey",
+										"invitationDid",
+										"credentialRequestThId",
+										"outOfBandRecordId",
 										"outOfBandRecord",
 										"invitation",
 										"invitationUrl"
@@ -7506,6 +7573,42 @@
 						}
 					}
 				}
+			}
+		},
+		"/credentials/{credentialRecordId}/form-data": {
+			"get": {
+				"operationId": "CredentialFormData",
+				"responses": {
+					"200": {
+						"description": "credentialRecord",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/GetCredentialFormatDataReturn__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array_"
+								}
+							}
+						}
+					}
+				},
+				"description": "Return credentialRecord",
+				"tags": [
+					"Credentials"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "credentialRecordId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/connections": {
