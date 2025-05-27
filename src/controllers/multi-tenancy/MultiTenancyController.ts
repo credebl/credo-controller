@@ -73,6 +73,7 @@ import {
   SchemaError,
   SignatureType,
   W3CRevocationStatus,
+  W3CRevocationStatusLowerCase,
 } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
@@ -1952,12 +1953,13 @@ export class MultiTenancyController extends Controller {
   @Post('/create-bslc/:tenantId')
   public async createBitstringStatusListCredential(
     @Path('tenantId') tenantId: string,
-    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethodId: string }
+    @Body() request: { issuerDID: string; statusPurpose: W3CRevocationStatusLowerCase; verificationMethodId: string }
   ) {
     try {
       const { issuerDID, statusPurpose, verificationMethodId } = request
-      if (!['revocation', 'suspension'].includes(statusPurpose)) {
-        throw new BadRequestError('Invalid statusPurpose. Allowed values are "revocation" and "suspension".')
+      const allowedStatusPurposes = Object.values(RevocationListType) as string[];
+      if (!allowedStatusPurposes.includes(statusPurpose)) {
+        throw new BadRequestError(`Invalid statusPurpose. Allowed values are ${Object.values(RevocationListType).join(', ')}.`)
       }
       const BSLCId = utils.uuid()
       const credentialpayload: BSLCredentialPayload = {
