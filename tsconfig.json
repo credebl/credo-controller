@@ -1,19 +1,13 @@
 {
-  "extends": "./tsconfig.build.json",
-  "ts-node": {
-    "require": ["tsconfig-paths/register"],
-    "files": true
-  },
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "credo-controller/*": ["*/src"]
-    },
-    "lib": ["ES2021.Promise"],
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "types": ["jest", "node"],
-    "skipLibCheck": true,
-  },
-  "exclude": ["node_modules", "build"]
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "outDir": "./build",
+    "strict": true,
+    "declaration": true,
+    "sourceMap": true,
+    "skipLibCheck": true
+  }
 }

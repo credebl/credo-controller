@@ -299,6 +299,11 @@ const models: TsoaRoute.Models = {
         "enums": ["https://didcomm.org/didexchange/1.1","https://didcomm.org/connections/1.0"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SingleOrArray_string-or-Record_string.unknown__": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"union","subSchemas":[{"dataType":"string"},{"ref":"Record_string.unknown_"}]},{"dataType":"array","array":{"dataType":"union","subSchemas":[{"dataType":"string"},{"ref":"Record_string.unknown_"}]}}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "OutOfBandDidCommService": {
         "dataType": "refObject",
         "properties": {
@@ -655,6 +660,8 @@ const models: TsoaRoute.Models = {
         "properties": {
             "autoAcceptCredential": {"ref":"AutoAcceptCredential"},
             "comment": {"dataType":"string"},
+            "goalCode": {"dataType":"string"},
+            "goal": {"dataType":"string"},
             "credentialRecordId": {"dataType":"string","required":true},
             "credentialFormats": {"ref":"CredentialFormatPayload_CredentialFormatsFromProtocols_CredentialProtocol-Array_.acceptOffer_"},
         },
@@ -953,6 +960,7 @@ const models: TsoaRoute.Models = {
             "error": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["invalidDid"]},{"dataType":"enum","enums":["notFound"]},{"dataType":"enum","enums":["representationNotSupported"]},{"dataType":"enum","enums":["unsupportedDidMethod"]},{"dataType":"string"}]},
             "message": {"dataType":"string"},
             "servedFromCache": {"dataType":"boolean"},
+            "servedFromDidRecord": {"dataType":"boolean"},
         },
         "additionalProperties": false,
     },

@@ -17,7 +17,6 @@ export const startServer = async (agent: Agent, config: ServerConfig) => {
   // to also host the websocket server
   if (!config.socketServer) {
     server.on('upgrade', (request, socket, head) => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       socketServer.handleUpgrade(request, socket as Socket, head, () => {})
     })
   }

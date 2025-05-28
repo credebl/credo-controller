@@ -35,7 +35,7 @@
     "prepublishOnly": "yarn run build",
     "test": "jest",
     "postinstall": "patch-package",
-    "lint": "eslint --ignore-path .gitignore .",
+    "lint": "eslint",
     "validate": "yarn lint && yarn check-types && yarn check-format"
   },
   "dependencies": {
@@ -71,6 +71,7 @@
     "tslog": "^4.9.3",
     "tsoa": "^6.0.1",
     "tsyringe": "^4.8.0",
+    "ws": "^8.18.2",
     "yargs": "^17.7.2"
   },
   "devDependencies": {

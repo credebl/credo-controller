@@ -12,8 +12,9 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "types": ["jest"],
-    "outDir": "./build"
+    "outDir": "./build",
+    "types": ["node"],
+    "lib": ["ES2021.Promise"]
   },
   "include": ["src/**/*", "src/routes"],
   "exclude": [

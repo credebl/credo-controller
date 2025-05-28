@@ -7,4 +7,3 @@ export const iocContainer: IocContainer = {
     return container.resolve<T>(controller)
   },
 }
-

@@ -24,7 +24,7 @@ export class SecurityMiddleware {
 
       // Check if authentication should be skipped for this route or controller
       const skipAuthentication = pathsToSkipAuthentication.some(
-        ({ path, method }) => routePath.includes(path) && requestMethod === method
+        ({ path, method }) => routePath.includes(path) && requestMethod === method,
       )
 
       if (skipAuthentication) {

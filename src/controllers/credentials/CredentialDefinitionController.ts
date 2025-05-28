@@ -3,6 +3,7 @@ import type { SchemaId } from '../examples'
 
 import { getUnqualifiedCredentialDefinitionId, parseIndyCredentialDefinitionId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode } from '../../enums/enum'
@@ -10,8 +11,6 @@ import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
-
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Response } from 'tsoa'
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
@@ -34,12 +33,11 @@ export class CredentialDefinitionController extends Controller {
   @Example(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
   public async getCredentialDefinitionById(
-    @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId
+    @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
   ) {
     try {
-      const credentialDefinitionResult = await this.agent.modules.anoncreds.getCredentialDefinition(
-        credentialDefinitionId
-      )
+      const credentialDefinitionResult =
+        await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
 
       if (credentialDefinitionResult.resolutionMetadata?.error === 'notFound') {
         throw new NotFoundError(credentialDefinitionResult.resolutionMetadata.message)
@@ -78,7 +76,7 @@ export class CredentialDefinitionController extends Controller {
       tag: string
       endorse?: boolean
       endorserDid?: string
-    }
+    },
   ) {
     try {
       const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
@@ -107,9 +105,8 @@ export class CredentialDefinitionController extends Controller {
         credentialDefinitionPayload.options.endorserDid = endorserDid ? endorserDid : ''
       }
 
-      const registerCredentialDefinitionResult = await this.agent.modules.anoncreds.registerCredentialDefinition(
-        credentialDefinitionPayload
-      )
+      const registerCredentialDefinitionResult =
+        await this.agent.modules.anoncreds.registerCredentialDefinition(credentialDefinitionPayload)
 
       if (registerCredentialDefinitionResult.credentialDefinitionState.state === CredentialEnum.Failed) {
         throw new InternalServerError('Falied to register credef on ledger')
@@ -128,12 +125,12 @@ export class CredentialDefinitionController extends Controller {
       // TODO: Return uniform response for both Internally and Externally endorsed Schemas
       if (!endorse) {
         const indyCredDefId = parseIndyCredentialDefinitionId(
-          registerCredentialDefinitionResult.credentialDefinitionState.credentialDefinitionId as string
+          registerCredentialDefinitionResult.credentialDefinitionState.credentialDefinitionId as string,
         )
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
           indyCredDefId.namespaceIdentifier,
           indyCredDefId.schemaSeqNo,
-          indyCredDefId.tag
+          indyCredDefId.tag,
         )
         registerCredentialDefinitionResult.credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
         return registerCredentialDefinitionResult.credentialDefinitionState
