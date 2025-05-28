@@ -8,15 +8,15 @@ on:
 
 concurrency:
   # Cancel previous runs that are not completed yet
-  group: afj-controller-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
+  group: credo-controller-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
   validate:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     name: Validate
     steps:
-      - name: Checkout afj-controller
+      - name: Checkout credo-controller
         uses: actions/checkout@v4
 
       - name: Setup node v20
