@@ -2,9 +2,9 @@ name: Continuous Integration
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   # Cancel previous runs that are not completed yet
@@ -19,10 +19,11 @@ jobs:
       - name: Checkout afj-controller
         uses: actions/checkout@v4
 
-      - name: Setup NodeJS
-        uses: actions/setup-node@v3
+      - name: Setup node v20
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.19.0
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org/'
           cache: 'yarn'
 
       - name: Install dependencies
