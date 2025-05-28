@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import type { ServerConfig } from './utils/ServerConfig'
-import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
+import type { Response as ExResponse, Request as ExRequest, NextFunction, ErrorRequestHandler } from 'express'
 
 import { Agent } from '@credo-ts/core'
 import bodyParser from 'body-parser'
@@ -9,7 +9,7 @@ import dotenv from 'dotenv'
 import express from 'express'
 import { rateLimit } from 'express-rate-limit'
 import * as fs from 'fs'
-import { serve, generateHTML } from 'swagger-ui-express'
+import { generateHTML, serve } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 
 import { setDynamicApiKey } from './authentication'
@@ -53,10 +53,13 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   setDynamicApiKey(apiKey ? apiKey : '')
 
   app.use(bodyParser.json({ limit: '50mb' }))
-  app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
-    return res.send(generateHTML(await import('./routes/swagger.json')))
+  app.use('/docs', serve, (_req: ExRequest, res: ExResponse, next: NextFunction) => {
+    import('./routes/swagger.json')
+      .then((swaggerJson) => {
+        res.send(generateHTML(swaggerJson))
+      })
+      .catch(next)
   })
-
   const windowMs = Number(process.env.windowMs)
   const maxRateLimit = Number(process.env.maxRateLimit)
   const limiter = rateLimit({
@@ -80,7 +83,12 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   app.use(securityMiddleware.use)
   RegisterRoutes(app)
 
-  app.use(function errorHandler(err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void {
+  app.use(((
+    err: unknown,
+    req: ExRequest,
+    res: ExResponse,
+    next: NextFunction
+  ): ExResponse | void => {
     if (err instanceof ValidateError) {
       agent.config.logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
       return res.status(422).json({
@@ -100,7 +108,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
       })
     }
     next()
-  })
+  }) as ErrorRequestHandler)
 
   return app
 }

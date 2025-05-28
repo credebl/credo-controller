@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
     "types": ["jest"],
     "outDir": "./build"
   },
