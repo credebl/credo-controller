@@ -635,6 +635,33 @@
 				],
 				"type": "string"
 			},
+			"SingleOrArray_string-or-Record_string.unknown__": {
+				"anyOf": [
+					{
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						]
+					},
+					{
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								}
+							]
+						},
+						"type": "array"
+					}
+				]
+			},
 			"OutOfBandDidCommService": {
 				"properties": {
 					"id": {
@@ -1542,6 +1569,14 @@
 					"comment": {
 						"type": "string"
 					},
+					"goalCode": {
+						"type": "string",
+						"description": "Will be ignored for v1 protocol as it is not supported"
+					},
+					"goal": {
+						"type": "string",
+						"description": "Will be ignored for v1 protocol as it is not supported"
+					},
 					"credentialRecordId": {
 						"type": "string"
 					},
@@ -1766,7 +1801,12 @@
 						"type": "string"
 					},
 					"servedFromCache": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "Whether the did document was served from the cache"
+					},
+					"servedFromDidRecord": {
+						"type": "boolean",
+						"description": "Whether the did document was served from a local did record"
 					}
 				},
 				"type": "object",

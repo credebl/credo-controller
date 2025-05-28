@@ -6,15 +6,15 @@
     "sourceMap": true,
     "strict": true,
     "noEmitOnError": true,
-    "lib": ["ES2021"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "types": ["jest"],
-    "outDir": "./build"
+    "outDir": "./build",
+    "types": ["node"],
+    "lib": ["ES2021.Promise"]
   },
   "include": ["src/**/*", "src/routes"],
   "exclude": [

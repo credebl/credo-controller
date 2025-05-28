@@ -18,14 +18,13 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
 } from '@credo-ts/core'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { NotFoundError } from '../../errors'
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
 import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
-
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 
 @Tags('Out Of Band')
 @Security('apiKey')
@@ -94,7 +93,7 @@ export class OutOfBandController extends Controller {
   })
   @Post('/create-invitation')
   public async createInvitation(
-    @Body() config: CreateInvitationOptions & RecipientKeyOption // props removed because of issues with serialization
+    @Body() config: CreateInvitationOptions & RecipientKeyOption, // props removed because of issues with serialization
   ) {
     try {
       let invitationDid: string | undefined
@@ -117,7 +116,7 @@ export class OutOfBandController extends Controller {
             numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
           },
         })
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
         invitationDid = did.didState.did
       }
 
@@ -151,7 +150,7 @@ export class OutOfBandController extends Controller {
   })
   @Post('/create-legacy-invitation')
   public async createLegacyInvitation(
-    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption
+    @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> & RecipientKeyOption,
   ) {
     try {
       let routing: Routing
@@ -205,7 +204,7 @@ export class OutOfBandController extends Controller {
       recordId: string
       message: AgentMessageType
       domain: string
-    }
+    },
   ) {
     try {
       const agentMessage = JsonTransformer.fromJSON(config.message, AgentMessage)
@@ -290,12 +289,12 @@ export class OutOfBandController extends Controller {
   @Post('/:outOfBandId/accept-invitation')
   public async acceptInvitation(
     @Path('outOfBandId') outOfBandId: RecordId,
-    @Body() acceptInvitationConfig: AcceptInvitationConfig
+    @Body() acceptInvitationConfig: AcceptInvitationConfig,
   ) {
     try {
       const { outOfBandRecord, connectionRecord } = await this.agent.oob.acceptInvitation(
         outOfBandId,
-        acceptInvitationConfig
+        acceptInvitationConfig,
       )
 
       return {

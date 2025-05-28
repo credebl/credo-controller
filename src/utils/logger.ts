@@ -23,12 +23,13 @@ export class TsLogger extends BaseLogger {
     [LogLevel.error]: 5,
     [LogLevel.fatal]: 6,
   } as const
-// TODO: Add support for LogLevel.off.
+  // TODO: Add support for LogLevel.off.
   public constructor(logLevel: LogLevel, name?: string) {
     super(logLevel)
 
     this.logger = new Logger({
-      minLevel: this.logLevel === LogLevel.off ? 6 : this.tsLogLevelMap[this.logLevel as Exclude<LogLevel, LogLevel.off>],
+      minLevel:
+        this.logLevel === LogLevel.off ? 6 : this.tsLogLevelMap[this.logLevel as Exclude<LogLevel, LogLevel.off>],
       attachedTransports: [
         (logObject: ILogObj) => {
           logToTransport(logObject)

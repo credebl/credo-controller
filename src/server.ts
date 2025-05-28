@@ -10,6 +10,7 @@ import express from 'express'
 import { rateLimit } from 'express-rate-limit'
 import * as fs from 'fs'
 import { generateHTML, serve } from 'swagger-ui-express'
+import { ValidateError } from 'tsoa'
 import { container } from 'tsyringe'
 
 import { setDynamicApiKey } from './authentication'
@@ -22,8 +23,6 @@ import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { reuseConnectionEvents } from './events/ReuseConnectionEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
-
-import { ValidateError } from 'tsoa'
 
 dotenv.config()
 
@@ -47,7 +46,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
     bodyParser.urlencoded({
       extended: true,
       limit: '50mb',
-    })
+    }),
   )
 
   setDynamicApiKey(apiKey ? apiKey : '')
@@ -83,12 +82,7 @@ export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: s
   app.use(securityMiddleware.use)
   RegisterRoutes(app)
 
-  app.use(((
-    err: unknown,
-    req: ExRequest,
-    res: ExResponse,
-    next: NextFunction
-  ): ExResponse | void => {
+  app.use(((err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void => {
     if (err instanceof ValidateError) {
       agent.config.logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
       return res.status(422).json({
