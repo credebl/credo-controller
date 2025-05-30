@@ -635,33 +635,6 @@
 				],
 				"type": "string"
 			},
-			"SingleOrArray_string-or-Record_string.unknown__": {
-				"anyOf": [
-					{
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"$ref": "#/components/schemas/Record_string.unknown_"
-							}
-						]
-					},
-					{
-						"items": {
-							"anyOf": [
-								{
-									"type": "string"
-								},
-								{
-									"$ref": "#/components/schemas/Record_string.unknown_"
-								}
-							]
-						},
-						"type": "array"
-					}
-				]
-			},
 			"OutOfBandDidCommService": {
 				"properties": {
 					"id": {
@@ -1363,98 +1336,6 @@
 					}
 				]
 			},
-			"W3cCredentialStatus": {
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"type": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"id",
-					"type"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"BitStringStatusListStatusMessage": {
-				"properties": {
-					"status": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status"
-				],
-				"type": "object",
-				"additionalProperties": {}
-			},
-			"BitStringStatusListEntry": {
-				"description": "Status list Entry, used to check status of a credential being issued or verified during presentaton.",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"type": {
-						"type": "string"
-					},
-					"statusPurpose": {
-						"type": "string"
-					},
-					"statusListIndex": {
-						"type": "string"
-					},
-					"statusListCredential": {
-						"type": "string"
-					},
-					"statusSize": {
-						"type": "string"
-					},
-					"statusMessage": {
-						"items": {
-							"$ref": "#/components/schemas/BitStringStatusListStatusMessage"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"id",
-					"type",
-					"statusPurpose",
-					"statusListIndex",
-					"statusListCredential"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CredentialStatusBasedOnType": {
-				"anyOf": [
-					{
-						"$ref": "#/components/schemas/W3cCredentialStatus"
-					},
-					{
-						"$ref": "#/components/schemas/BitStringStatusListEntry"
-					}
-				]
-			},
-			"SingleOrArray_CredentialStatusBasedOnType_": {
-				"anyOf": [
-					{
-						"$ref": "#/components/schemas/CredentialStatusBasedOnType"
-					},
-					{
-						"items": {
-							"$ref": "#/components/schemas/CredentialStatusBasedOnType"
-						},
-						"type": "array"
-					}
-				]
-			},
 			"JsonCredential": {
 				"properties": {
 					"@context": {
@@ -1498,9 +1379,7 @@
 					"credentialSubject": {
 						"$ref": "#/components/schemas/SingleOrArray_JsonObject_"
 					},
-					"credentialStatus": {
-						"$ref": "#/components/schemas/SingleOrArray_CredentialStatusBasedOnType_"
-					}
+					"prettyVc": {}
 				},
 				"required": [
 					"@context",
@@ -1662,14 +1541,6 @@
 					},
 					"comment": {
 						"type": "string"
-					},
-					"goalCode": {
-						"type": "string",
-						"description": "Will be ignored for v1 protocol as it is not supported"
-					},
-					"goal": {
-						"type": "string",
-						"description": "Will be ignored for v1 protocol as it is not supported"
 					},
 					"credentialRecordId": {
 						"type": "string"
@@ -1933,6 +1804,22 @@
 					}
 				]
 			},
+			"W3cCredentialStatus": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"type"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"W3cJsonLdVerifiableCredential": {
 				"properties": {
 					"context": {
@@ -1996,6 +1883,13 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"W3CRevocationStatus": {
+				"enum": [
+					"REVOCATION",
+					"SUSPENSION"
+				],
+				"type": "string"
 			},
 			"DidRegistrationSecretOptions": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
@@ -2138,12 +2032,7 @@
 						"type": "string"
 					},
 					"servedFromCache": {
-						"type": "boolean",
-						"description": "Whether the did document was served from the cache"
-					},
-					"servedFromDidRecord": {
-						"type": "boolean",
-						"description": "Whether the did document was served from a local did record"
+						"type": "boolean"
 					}
 				},
 				"type": "object",
@@ -6819,7 +6708,7 @@
 										"type": "string"
 									},
 									"statusPurpose": {
-										"type": "string"
+										"$ref": "#/components/schemas/W3CRevocationStatus"
 									},
 									"issuerDID": {
 										"type": "string"
@@ -8987,9 +8876,6 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/BadRequestError"
-								},
-								"examples": {
-									"Example 1": {}
 								}
 							}
 						}
@@ -9000,9 +8886,6 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/InternalServerError"
-								},
-								"examples": {
-									"Example 1": {}
 								}
 							}
 						}

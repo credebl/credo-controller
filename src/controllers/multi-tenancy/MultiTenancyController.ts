@@ -1,5 +1,7 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
+import type {
+  W3CRevocationStatus} from '../../enums/enum';
 import type { Version } from '../examples'
 import type {
   BSLCredentialPayload,
@@ -72,8 +74,6 @@ import {
   Role,
   SchemaError,
   SignatureType,
-  W3CRevocationStatus,
-  W3CRevocationStatusLowerCase,
 } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
@@ -1953,7 +1953,7 @@ export class MultiTenancyController extends Controller {
   @Post('/create-bslc/:tenantId')
   public async createBitstringStatusListCredential(
     @Path('tenantId') tenantId: string,
-    @Body() request: { issuerDID: string; statusPurpose: W3CRevocationStatusLowerCase; verificationMethodId: string }
+    @Body() request: { issuerDID: string; statusPurpose: W3CRevocationStatus; verificationMethodId: string }
   ) {
     try {
       const { issuerDID, statusPurpose, verificationMethodId } = request
@@ -2018,8 +2018,6 @@ export class MultiTenancyController extends Controller {
         bslcObject: signedCredential,
       }
       try {
-        console.log("url::::::::", url)
-        console.log("bslcPayload:::::::", bslcPayload) // debug
         await this.apiService.postRequest(url, bslcPayload, token)
       } catch (error) {
         throw new InternalServerError(`Error uploading the BitstringStatusListCredential: ${error}`)

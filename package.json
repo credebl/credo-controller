@@ -110,6 +110,6 @@
     "node": "18.19.0"
   },
   "resolutions": {
-    "@credo-ts/core": "file:./credo-ts-core-0.5.14.tgz"
+    "@credo-ts/core": "0.5.3"
   }
 }
