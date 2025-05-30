@@ -28,7 +28,7 @@ export const credentialEvents = async (agent: Agent<RestMultiTenantAgentModules>
           }
           const data = await tenantAgent.credentials.getFormatData(record.id)
           body.credentialData = data
-        }
+        },
       )
     }
 

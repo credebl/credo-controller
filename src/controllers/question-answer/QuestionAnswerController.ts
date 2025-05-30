@@ -3,13 +3,12 @@ import type { ValidResponse } from '@credo-ts/question-answer'
 
 import { Agent } from '@credo-ts/core'
 import { QuestionAnswerRecord, QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
+import { Body, Controller, Get, Path, Post, Route, Tags, Query, Security, Example } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { NotFoundError } from '../../errors'
 import { RecordId } from '../examples'
-
-import { Body, Controller, Get, Path, Post, Route, Tags, Query, Security, Example } from 'tsoa'
 
 @Tags('Question Answer')
 @Route('/question-answer')
@@ -37,7 +36,7 @@ export class QuestionAnswerController extends Controller {
     @Query('connectionId') connectionId?: string,
     @Query('role') role?: QuestionAnswerRole,
     @Query('state') state?: QuestionAnswerState,
-    @Query('threadId') threadId?: string
+    @Query('threadId') threadId?: string,
   ) {
     try {
       const questionAnswerRecords = await this.agent.modules.questionAnswer.findAllByQuery({
@@ -67,7 +66,7 @@ export class QuestionAnswerController extends Controller {
       question: string
       validResponses: ValidResponse[]
       detail?: string
-    }
+    },
   ) {
     try {
       const { question, validResponses, detail } = config

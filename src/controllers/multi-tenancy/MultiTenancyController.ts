@@ -60,6 +60,7 @@ import {
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
+import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
 
 import { initialBitsEncoded } from '../../constants'
 import {
@@ -108,8 +109,6 @@ import {
   CreateOfferOobOptions,
   CreateSchemaInput,
 } from '../types'
-
-import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
@@ -224,7 +223,7 @@ export class MultiTenancyController extends Controller {
   private async handleBcovrin(
     createDidOptions: DidCreate,
     tenantAgent: TenantAgent<RestAgentModules>,
-    didMethod: string
+    didMethod: string,
   ) {
     const { seed, did, network, method, role, endorserDid } = createDidOptions
     let didDocument
@@ -296,7 +295,7 @@ export class MultiTenancyController extends Controller {
   private async handleIndicio(
     createDidOptions: DidCreate,
     tenantAgent: TenantAgent<RestAgentModules>,
-    didMethod: string
+    didMethod: string,
   ) {
     const { seed, did, method, network, role } = createDidOptions
     let didDocument
@@ -330,7 +329,7 @@ export class MultiTenancyController extends Controller {
   private async handleEndorserCreation(
     createDidOptions: DidCreate,
     tenantAgent: TenantAgent<RestAgentModules>,
-    didMethod: string
+    didMethod: string,
   ) {
     const { seed, network } = createDidOptions
     let didDocument
@@ -631,14 +630,14 @@ export class MultiTenancyController extends Controller {
   @Post('/transactions/endorse/:tenantId')
   public async endorserTransaction(
     @Path('tenantId') tenantId: string,
-    @Body() endorserTransaction: EndorserTransaction
+    @Body() endorserTransaction: EndorserTransaction,
   ) {
     let signedTransaction
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         signedTransaction = await tenantAgent.modules.indyVdr.endorseTransaction(
           endorserTransaction.transaction,
-          endorserTransaction.endorserDid
+          endorserTransaction.endorserDid,
         )
       })
 
@@ -671,7 +670,7 @@ export class MultiTenancyController extends Controller {
   @Post('/create-invitation/:tenantId')
   public async createInvitation(
     @Path('tenantId') tenantId: string,
-    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption // Remove routing property from type
+    @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing'> & RecipientKeyOption, // Remove routing property from type
   ) {
     let outOfBandRecord: OutOfBandRecord | undefined
     let invitationDid: string | undefined
@@ -726,7 +725,7 @@ export class MultiTenancyController extends Controller {
   public async createLegacyInvitation(
     @Path('tenantId') tenantId: string,
     @Body()
-    config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> & RecipientKeyOption // props removed because of issues with serialization
+    config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> & RecipientKeyOption, // props removed because of issues with serialization
   ) {
     let getInvitation
     try {
@@ -766,7 +765,7 @@ export class MultiTenancyController extends Controller {
   @Post('/receive-invitation/:tenantId')
   public async receiveInvitation(
     @Body() invitationRequest: ReceiveInvitationProps,
-    @Path('tenantId') tenantId: string
+    @Path('tenantId') tenantId: string,
   ) {
     let receiveInvitationRes
     try {
@@ -790,7 +789,7 @@ export class MultiTenancyController extends Controller {
   @Post('/receive-invitation-url/:tenantId')
   public async receiveInvitationFromUrl(
     @Body() invitationRequest: ReceiveInvitationByUrlProps,
-    @Path('tenantId') tenantId: string
+    @Path('tenantId') tenantId: string,
   ) {
     let receiveInvitationUrl
     try {
@@ -798,7 +797,7 @@ export class MultiTenancyController extends Controller {
         const { invitationUrl, ...config } = invitationRequest
         const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(
           invitationUrl,
-          config
+          config,
         )
         receiveInvitationUrl = {
           outOfBandRecord: outOfBandRecord.toJSON(),
@@ -840,7 +839,7 @@ export class MultiTenancyController extends Controller {
     @Query('state') state?: DidExchangeState,
     @Query('myDid') myDid?: string,
     @Query('theirDid') theirDid?: string,
-    @Query('theirLabel') theirLabel?: string
+    @Query('theirLabel') theirLabel?: string,
   ) {
     let connectionRecord
     try {
@@ -888,7 +887,7 @@ export class MultiTenancyController extends Controller {
   public async createSchema(
     @Body()
     schema: CreateSchemaInput,
-    @Path('tenantId') tenantId: string
+    @Path('tenantId') tenantId: string,
   ) {
     try {
       let createSchemaTxResult: any
@@ -943,7 +942,7 @@ export class MultiTenancyController extends Controller {
           const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
             indySchemaId.namespaceIdentifier,
             indySchemaId.schemaName,
-            indySchemaId.schemaVersion
+            indySchemaId.schemaVersion,
           )
           createSchemaTxResult.schemaState.schemaId = getSchemaUnqualifiedId
           return createSchemaTxResult.schemaState
@@ -964,7 +963,7 @@ export class MultiTenancyController extends Controller {
       schemaName: string
       schema: { [key: string]: any }
     },
-    @Path('tenantId') tenantId: string
+    @Path('tenantId') tenantId: string,
   ): Promise<SchemaMetadata> {
     try {
       const { did, schemaName, schema } = createSchemaRequest
@@ -983,7 +982,7 @@ export class MultiTenancyController extends Controller {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
           throw new PaymentRequiredError(
-            'Insufficient funds to the address, Please add funds to perform this operation'
+            'Insufficient funds to the address, Please add funds to perform this operation',
           )
         } else {
           throw new InternalServerError(schemaResponse.schemaState?.reason)
@@ -1016,7 +1015,7 @@ export class MultiTenancyController extends Controller {
   public async getPolygonW3CSchemaById(
     @Path('tenantId') tenantId: string,
     @Path('did') did: string,
-    @Path('schemaId') schemaId: string
+    @Path('schemaId') schemaId: string,
   ) {
     try {
       let schemaDetails
@@ -1038,21 +1037,21 @@ export class MultiTenancyController extends Controller {
   public async writeSchemaAndCredDefOnLedger(
     @Path('tenantId') tenantId: string,
     @Body()
-    writeTransaction: WriteTransaction
+    writeTransaction: WriteTransaction,
   ) {
     try {
       if (writeTransaction.schema) {
         const writeSchema = await this.submitSchemaOnLedger(
           writeTransaction.schema,
           writeTransaction.endorsedTransaction,
-          tenantId
+          tenantId,
         )
         return writeSchema
       } else if (writeTransaction.credentialDefinition) {
         const writeCredDef = await this.submitCredDefOnLedger(
           writeTransaction.credentialDefinition,
           writeTransaction.endorsedTransaction,
-          tenantId
+          tenantId,
         )
         return writeCredDef
       } else {
@@ -1071,7 +1070,7 @@ export class MultiTenancyController extends Controller {
       attributes: string[]
     },
     endorsedTransaction: string,
-    tenantId: string
+    tenantId: string,
   ) {
     let schemaRecord
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1097,7 +1096,7 @@ export class MultiTenancyController extends Controller {
       const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
         indySchemaId.namespaceIdentifier,
         indySchemaId.schemaName,
-        indySchemaId.schemaVersion
+        indySchemaId.schemaVersion,
       )
       if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
         schemaState.schemaId = getSchemaUnqualifiedId
@@ -1116,7 +1115,7 @@ export class MultiTenancyController extends Controller {
       type: string
     },
     endorsedTransaction: string,
-    tenantId: string
+    tenantId: string,
   ) {
     let credentialDefinitionRecord
     await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1138,7 +1137,7 @@ export class MultiTenancyController extends Controller {
       const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
         indyCredDefId.namespaceIdentifier,
         indyCredDefId.schemaSeqNo,
-        indyCredDefId.tag
+        indyCredDefId.tag,
       )
       if (
         credentialDefinitionState.state === CredentialEnum.Finished ||
@@ -1165,7 +1164,7 @@ export class MultiTenancyController extends Controller {
           schemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
         ) {
           throw new NotFoundError(
-            schemBySchemaId?.resolutionMetadata?.message || `schema details with schema id "${schemaId}" not found.`
+            schemBySchemaId?.resolutionMetadata?.message || `schema details with schema id "${schemaId}" not found.`,
           )
         }
       })
@@ -1189,7 +1188,7 @@ export class MultiTenancyController extends Controller {
       endorse?: boolean
       endorserDid?: string
     },
-    @Path('tenantId') tenantId: string
+    @Path('tenantId') tenantId: string,
   ) {
     try {
       let registerCredentialDefinitionResult: any
@@ -1227,9 +1226,8 @@ export class MultiTenancyController extends Controller {
           credentialDefinitionPayload.options.endorserDid = endorserDid
         }
 
-        registerCredentialDefinitionResult = await tenantAgent.modules.anoncreds.registerCredentialDefinition(
-          credentialDefinitionPayload
-        )
+        registerCredentialDefinitionResult =
+          await tenantAgent.modules.anoncreds.registerCredentialDefinition(credentialDefinitionPayload)
       })
 
       if (registerCredentialDefinitionResult?.credentialDefinitionState.state === CredentialEnum.Failed) {
@@ -1248,13 +1246,13 @@ export class MultiTenancyController extends Controller {
       // TODO: Return uniform response for both Internally and Externally endorsed Schemas
       if (!endorse) {
         const indyCredDefId = parseIndyCredentialDefinitionId(
-          registerCredentialDefinitionResult?.credentialDefinitionState.credentialDefinitionId as string
+          registerCredentialDefinitionResult?.credentialDefinitionState.credentialDefinitionId as string,
         )
 
         const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
           indyCredDefId.namespaceIdentifier,
           indyCredDefId.schemaSeqNo,
-          indyCredDefId.tag
+          indyCredDefId.tag,
         )
 
         registerCredentialDefinitionResult.credentialDefinitionState.credentialDefinitionId = getCredentialDefinitionId
@@ -1270,7 +1268,7 @@ export class MultiTenancyController extends Controller {
   @Get('/credential-definition/:credentialDefinitionId/:tenantId')
   public async getCredentialDefinitionById(
     @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
-    @Path('tenantId') tenantId: string
+    @Path('tenantId') tenantId: string,
   ) {
     let credentialDefinitionResult: any
     try {
@@ -1401,7 +1399,7 @@ export class MultiTenancyController extends Controller {
   @Post('/credentials/accept-offer/:tenantId')
   public async acceptOffer(
     @Path('tenantId') tenantId: string,
-    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions
+    @Body() acceptCredentialOfferOptions: AcceptCredentialOfferOptions,
   ) {
     let acceptOffer
     try {
@@ -1428,7 +1426,7 @@ export class MultiTenancyController extends Controller {
   @Get('/credentials/:credentialRecordId/:tenantId')
   public async getCredentialById(
     @Path('credentialRecordId') credentialRecordId: RecordId,
-    @Path('tenantId') tenantId: string
+    @Path('tenantId') tenantId: string,
   ) {
     let credentialRecord
     try {
@@ -1449,7 +1447,7 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Query('threadId') threadId?: string,
     @Query('connectionId') connectionId?: string,
-    @Query('state') state?: CredentialState
+    @Query('state') state?: CredentialState,
   ) {
     let credentialRecord
     try {
@@ -1471,7 +1469,7 @@ export class MultiTenancyController extends Controller {
   @Get('/credentials/form-data/:tenantId/:credentialRecordId')
   public async credentialFormData(
     @Path('tenantId') tenantId: string,
-    @Path('credentialRecordId') credentialRecordId: string
+    @Path('credentialRecordId') credentialRecordId: string,
   ) {
     let credentialDetails
     try {
@@ -1545,7 +1543,7 @@ export class MultiTenancyController extends Controller {
   @Post('/proofs/create-request-oob/:tenantId')
   public async createRequest(
     @Path('tenantId') tenantId: string,
-    @Body() createRequestOptions: CreateProofRequestOobOptions
+    @Body() createRequestOptions: CreateProofRequestOobOptions,
   ) {
     let oobProofRecord
     try {
@@ -1604,8 +1602,8 @@ export class MultiTenancyController extends Controller {
           proofMessageId: proof.message.thread?.threadId
             ? proof.message.thread?.threadId
             : proof.message.threadId
-            ? proof.message.thread
-            : proof.message.id,
+              ? proof.message.thread
+              : proof.message.id,
           invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
         }
       })
@@ -1628,7 +1626,7 @@ export class MultiTenancyController extends Controller {
       filterByPresentationPreview?: boolean
       filterByNonRevocationRequirements?: boolean
       comment?: string
-    }
+    },
   ) {
     let proofRecord
     try {
@@ -1787,7 +1785,7 @@ export class MultiTenancyController extends Controller {
     @Query('connectionId') connectionId?: string,
     @Query('role') role?: QuestionAnswerRole,
     @Query('state') state?: QuestionAnswerState,
-    @Query('threadId') threadId?: string
+    @Query('threadId') threadId?: string,
   ) {
     try {
       let questionAnswerRecords: QuestionAnswerRecord[] = []
@@ -1823,7 +1821,7 @@ export class MultiTenancyController extends Controller {
       question: string
       validResponses: ValidResponse[]
       detail?: string
-    }
+    },
   ) {
     try {
       const { question, validResponses, detail } = config
@@ -1854,7 +1852,7 @@ export class MultiTenancyController extends Controller {
   public async sendAnswer(
     @Path('id') id: RecordId,
     @Path('tenantId') tenantId: string,
-    @Body() request: Record<'response', string>
+    @Body() request: Record<'response', string>,
   ) {
     try {
       let questionAnswerRecord
@@ -1930,7 +1928,7 @@ export class MultiTenancyController extends Controller {
   public async sendMessage(
     @Path('connectionId') connectionId: RecordId,
     @Path('tenantId') tenantId: string,
-    @Body() request: Record<'content', string>
+    @Body() request: Record<'content', string>,
   ) {
     try {
       let basicMessageRecord

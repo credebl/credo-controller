@@ -14,6 +14,7 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
 } from '@credo-ts/core'
+import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -30,8 +31,6 @@ import {
   CreateOfferOobOptions,
   ThreadId,
 } from '../types'
-
-import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security } from 'tsoa'
 
 @Tags('Credentials')
 @Security('apiKey')
@@ -59,7 +58,7 @@ export class CredentialController extends Controller {
     @Query('parentThreadId') parentThreadId?: ThreadId,
     @Query('connectionId') connectionId?: RecordId,
     @Query('state') state?: CredentialState,
-    @Query('role') role?: CredentialRole
+    @Query('role') role?: CredentialRole,
   ) {
     try {
       const credentials = await this.agent.credentials.findAllByQuery({

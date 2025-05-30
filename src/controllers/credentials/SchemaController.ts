@@ -2,6 +2,7 @@ import type { RestAgentModules } from '../../cliAgent'
 
 import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
+import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
@@ -11,7 +12,6 @@ import { BadRequestError, InternalServerError, NotFoundError } from '../../error
 import { CreateSchemaSuccessful, SchemaExample } from '../examples'
 import { CreateSchemaInput } from '../types'
 
-import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller } from 'tsoa'
 @Tags('Schemas')
 @Route('/schemas')
 @Security('apiKey')
@@ -117,7 +117,7 @@ export class SchemaController extends Controller {
           const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
             indySchemaId.namespaceIdentifier,
             indySchemaId.schemaName,
-            indySchemaId.schemaVersion
+            indySchemaId.schemaVersion,
           )
 
           createSchemaTxResult.schemaState.schemaId = getSchemaUnqualifiedId

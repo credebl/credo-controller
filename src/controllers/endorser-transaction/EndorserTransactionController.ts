@@ -8,14 +8,13 @@ import {
   parseIndySchemaId,
 } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
+import { Body, Controller, Post, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError } from '../../errors'
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
-
-import { Body, Controller, Post, Route, Tags, Security } from 'tsoa'
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
@@ -40,7 +39,7 @@ export class EndorserTransactionController extends Controller {
       }
       const signedTransaction = await this.agent.modules.indyVdr.endorseTransaction(
         endorserTransaction.transaction,
-        endorserTransaction.endorserDid
+        endorserTransaction.endorserDid,
       )
 
       return { signedTransaction }
@@ -71,19 +70,19 @@ export class EndorserTransactionController extends Controller {
   @Post('/write')
   public async writeSchemaAndCredDefOnLedger(
     @Body()
-    writeTransaction: WriteTransaction
+    writeTransaction: WriteTransaction,
   ) {
     try {
       if (writeTransaction.schema) {
         const writeSchema = await this.submitSchemaOnLedger(
           writeTransaction.schema,
-          writeTransaction.endorsedTransaction
+          writeTransaction.endorsedTransaction,
         )
         return writeSchema
       } else if (writeTransaction.credentialDefinition) {
         const writeCredDef = await this.submitCredDefOnLedger(
           writeTransaction.credentialDefinition,
-          writeTransaction.endorsedTransaction
+          writeTransaction.endorsedTransaction,
         )
         return writeCredDef
       } else {
@@ -101,7 +100,7 @@ export class EndorserTransactionController extends Controller {
       version: Version
       attributes: string[]
     },
-    endorsedTransaction?: string
+    endorsedTransaction?: string,
   ) {
     if (!schema.issuerId) {
       throw new BadRequestError('IssuerId is required')
@@ -133,7 +132,7 @@ export class EndorserTransactionController extends Controller {
     const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
       indySchemaId.namespaceIdentifier,
       indySchemaId.schemaName,
-      indySchemaId.schemaVersion
+      indySchemaId.schemaVersion,
     )
     if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
       schemaState.schemaId = getSchemaUnqualifiedId
@@ -149,7 +148,7 @@ export class EndorserTransactionController extends Controller {
       value: unknown
       type: string
     },
-    endorsedTransaction?: string
+    endorsedTransaction?: string,
   ) {
     if (!credentialDefinition.schemaId) {
       throw new BadRequestError('SchemaId is required')
@@ -178,7 +177,7 @@ export class EndorserTransactionController extends Controller {
     const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
       indyCredDefId.namespaceIdentifier,
       indyCredDefId.schemaSeqNo,
-      indyCredDefId.tag
+      indyCredDefId.tag,
     )
     if (
       credentialDefinitionState.state === CredentialEnum.Finished ||

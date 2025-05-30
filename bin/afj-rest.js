@@ -1,6 +1,9 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-var-requires, no-undef */
-
-const { runCliServer } = require('../build/cli')
-
-runCliServer()
+import('../build/cli.js')
+  .then((module) => {
+    module.runCliServer()
+  })
+  .catch((err) => {
+    console.error('Error starting CLI server:', err)
+    process.exit(1)
+  })
