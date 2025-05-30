@@ -124,7 +124,7 @@ const getModules = (
   autoAcceptConnections: boolean,
   autoAcceptCredentials: AutoAcceptCredential,
   autoAcceptProofs: AutoAcceptProof,
-  walletScheme: AskarMultiWalletDatabaseScheme
+  walletScheme: AskarMultiWalletDatabaseScheme,
 ) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
@@ -212,7 +212,7 @@ const getWithTenantModules = (
   autoAcceptConnections: boolean,
   autoAcceptCredentials: AutoAcceptCredential,
   autoAcceptProofs: AutoAcceptProof,
-  walletScheme: AskarMultiWalletDatabaseScheme
+  walletScheme: AskarMultiWalletDatabaseScheme,
 ) => {
   const modules = getModules(
     networkConfig,
@@ -224,7 +224,7 @@ const getWithTenantModules = (
     autoAcceptConnections,
     autoAcceptCredentials,
     autoAcceptProofs,
-    walletScheme
+    walletScheme,
   )
   return {
     tenants: new TenantsModule<typeof modules>({
@@ -355,7 +355,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptConnections || true,
     autoAcceptCredentials || AutoAcceptCredential.Always,
     autoAcceptProofs || AutoAcceptProof.ContentApproved,
-    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
   )
   const modules = getModules(
     networkConfig,
@@ -367,7 +367,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptConnections || true,
     autoAcceptCredentials || AutoAcceptCredential.Always,
     autoAcceptProofs || AutoAcceptProof.ContentApproved,
-    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
   )
   const agent = new Agent({
     config: agentConfig,
@@ -435,7 +435,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       port: adminPort,
       schemaFileServerURL,
     },
-    token
+    token,
   )
 
   logger.info(`*** API Token: ${token}`)

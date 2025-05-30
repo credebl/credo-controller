@@ -11,6 +11,7 @@ import {
   getBls12381G2Key2020,
 } from '@credo-ts/core'
 import axios from 'axios'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { DidMethod, Network, Role } from '../../enums/enum'
@@ -18,8 +19,6 @@ import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors'
 import { CreateDidResponse, Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
-
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security } from 'tsoa'
 
 @Tags('Dids')
 @Route('/dids')
@@ -126,7 +125,7 @@ export class DidController extends Controller {
       case Network.Bcovrin_Testnet:
         result = await this.handleBcovrin(
           createDidOptions,
-          `did:${createDidOptions.method}:${createDidOptions.network}`
+          `did:${createDidOptions.method}:${createDidOptions.network}`,
         )
         break
 
@@ -134,7 +133,7 @@ export class DidController extends Controller {
       case Network.Indicio_Testnet:
         result = await this.handleIndicio(
           createDidOptions,
-          `did:${createDidOptions.method}:${createDidOptions.network}`
+          `did:${createDidOptions.method}:${createDidOptions.network}`,
         )
         break
 

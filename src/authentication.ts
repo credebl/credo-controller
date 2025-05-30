@@ -10,7 +10,7 @@ export async function expressAuthentication(
   request: express.Request,
   securityName: string,
   secMethod?: { [key: string]: any },
-  scopes?: string
+  scopes?: string,
 ) {
   const logger = new TsLogger(LogLevel.info)
 

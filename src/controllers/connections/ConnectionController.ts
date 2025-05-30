@@ -2,13 +2,12 @@ import type { RestAgentModules } from '../../cliAgent'
 import type { ConnectionRecordProps } from '@credo-ts/core'
 
 import { DidExchangeState, Agent } from '@credo-ts/core'
+import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { NotFoundError } from '../../errors'
 import { ConnectionRecordExample, RecordId } from '../examples'
-
-import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
 
 @Tags('Connections')
 @Route()
@@ -39,7 +38,7 @@ export class ConnectionController extends Controller {
     @Query('state') state?: DidExchangeState,
     @Query('myDid') myDid?: string,
     @Query('theirDid') theirDid?: string,
-    @Query('theirLabel') theirLabel?: string
+    @Query('theirLabel') theirLabel?: string,
   ) {
     try {
       const connections = await this.agent.connections.findAllByQuery({

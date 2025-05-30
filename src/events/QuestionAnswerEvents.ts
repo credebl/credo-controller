@@ -29,6 +29,6 @@ export const questionAnswerEvents = async (agent: Agent, config: ServerConfig) =
           },
         })
       }
-    }
+    },
   )
 }

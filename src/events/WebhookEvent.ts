@@ -1,9 +1,8 @@
 import type { Logger } from '@credo-ts/core'
 
-import fetch from 'node-fetch'
-
 export const sendWebhookEvent = async (webhookUrl: string, body: Record<string, unknown>, logger: Logger) => {
   try {
+    const fetch = (await import('node-fetch')).default
     await fetch(webhookUrl, {
       method: 'POST',
       body: JSON.stringify(body),

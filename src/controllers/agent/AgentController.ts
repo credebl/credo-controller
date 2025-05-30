@@ -2,11 +2,10 @@ import type { RestAgentModules } from '../../cliAgent'
 import type { AgentInfo } from '../types'
 
 import { Agent } from '@credo-ts/core'
+import { Controller, Delete, Get, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
-
-import { Controller, Delete, Get, Route, Tags, Security } from 'tsoa'
 
 @Tags('Agent')
 @Route('/agent')

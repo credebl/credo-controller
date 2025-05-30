@@ -5,12 +5,11 @@ import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
 import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
 import { Agent } from '@credo-ts/core'
 import * as fs from 'fs'
+import { Route, Tags, Security, Controller, Post, Body, Get, Path } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, UnprocessableEntityError } from '../../errors'
-
-import { Route, Tags, Security, Controller, Post, Body, Get, Path } from 'tsoa'
 
 @Tags('Polygon')
 @Security('apiKey')
@@ -55,7 +54,7 @@ export class Polygon extends Controller {
       did: string
       schemaName: string
       schema: { [key: string]: any }
-    }
+    },
   ): Promise<unknown> {
     try {
       const { did, schemaName, schema } = createSchemaRequest
@@ -72,7 +71,7 @@ export class Polygon extends Controller {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
           throw new UnprocessableEntityError(
-            'Insufficient funds to the address, Please add funds to perform this operation'
+            'Insufficient funds to the address, Please add funds to perform this operation',
           )
         } else {
           throw new Error(schemaResponse.schemaState?.reason)
@@ -110,7 +109,7 @@ export class Polygon extends Controller {
     estimateTransactionRequest: {
       operation: any
       transaction: any
-    }
+    },
   ): Promise<unknown> {
     try {
       const { operation } = estimateTransactionRequest

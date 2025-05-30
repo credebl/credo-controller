@@ -2,12 +2,11 @@ import type { RestAgentModules } from '../../cliAgent'
 import type { BasicMessageRecord, BasicMessageStorageProps } from '@credo-ts/core'
 
 import { Agent } from '@credo-ts/core'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { BasicMessageRecordExample, RecordId } from '../examples'
-
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security } from 'tsoa'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
