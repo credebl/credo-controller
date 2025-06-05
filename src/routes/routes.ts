@@ -593,7 +593,6 @@ const models: TsoaRoute.Models = {
             "issuanceDate": {"dataType":"string","required":true},
             "expirationDate": {"dataType":"string"},
             "credentialSubject": {"ref":"SingleOrArray_JsonObject_","required":true},
-            "prettyVc": {"dataType":"any"},
         },
         "additionalProperties": {"dataType":"any"},
     },
@@ -5162,6 +5161,42 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'changeStatus',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatusListController_createEncodedList: Record<string, TsoaRoute.ParameterSchema> = {
+                length: {"in":"path","name":"length","required":true,"dataType":"double"},
+        };
+        app.post('/status-list/create-encoded-list/:length',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(StatusListController)),
+            ...(fetchMiddlewares<RequestHandler>(StatusListController.prototype.createEncodedList)),
+
+            async function StatusListController_createEncodedList(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatusListController_createEncodedList, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatusListController>(StatusListController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createEncodedList',
                 controller,
                 response,
                 next,

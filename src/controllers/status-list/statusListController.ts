@@ -4,6 +4,7 @@ import type { W3cJsonLdVerifiableCredential } from '@credo-ts/core'
 
 import { Agent, ClaimFormat, utils } from '@credo-ts/core'
 import * as crypto from 'crypto'
+import { Controller, Get, Path, Security, Tags, Example, Response, Route, Post, Body } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { initialBitsEncoded } from '../../constants'
@@ -19,7 +20,6 @@ import { BadRequestError, InternalServerError } from '../../errors/errors'
 import { ApiService } from '../../services/apiService'
 import { customDeflate, customInflate } from '../../utils/helpers'
 
-import { Controller, Get, Path, Security, Tags, Example, Response, Route, Post, Body } from 'tsoa'
 @injectable()
 @Tags('Status List')
 @Route('/status-list')
@@ -42,7 +42,7 @@ export class StatusListController extends Controller {
   @Security('apiKey')
   @Post('/create-bslc')
   public async createBitstringStatusListCredential(
-    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethodId: string }
+    @Body() request: { issuerDID: string; statusPurpose: string; verificationMethodId: string },
   ) {
     try {
       const { issuerDID, statusPurpose, verificationMethodId } = request
@@ -131,7 +131,7 @@ export class StatusListController extends Controller {
   @Response<InternalServerError>(500, 'Internal server error')
   public async getEmptyIndexForBSLC(
     @Path('bslcUrl') bslcUrl: string,
-    @Path('bslcId') bslcId: string
+    @Path('bslcId') bslcId: string,
   ): Promise<{ index: number }> {
     try {
       if (!bslcUrl) {
@@ -157,7 +157,7 @@ export class StatusListController extends Controller {
         !process.env.BSLC_SERVER_TOKEN
       ) {
         throw new Error(
-          'One or more required environment variables are not defined: BSLC_SERVER_URL, BSLC_CREDENTIAL_INDEXES_ROUTE, BSLC_SERVER_TOKEN'
+          'One or more required environment variables are not defined: BSLC_SERVER_URL, BSLC_CREDENTIAL_INDEXES_ROUTE, BSLC_SERVER_TOKEN',
         )
       }
       const token = process.env.BSLC_SERVER_TOKEN

@@ -1405,8 +1405,7 @@
 					},
 					"credentialSubject": {
 						"$ref": "#/components/schemas/SingleOrArray_JsonObject_"
-					},
-					"prettyVc": {}
+					}
 				},
 				"required": [
 					"@context",
@@ -9009,6 +9008,44 @@
 						}
 					}
 				}
+			}
+		},
+		"/status-list/create-encoded-list/{length}": {
+			"post": {
+				"operationId": "CreateEncodedList",
+				"responses": {
+					"200": {
+						"description": "Encoded list as a base64url string.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				},
+				"description": "Generate an encoded list for Bitstring Status List Credential with all bits set to 0.",
+				"tags": [
+					"Status List"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "The length of the bitstring (number of status entries).",
+						"in": "path",
+						"name": "length",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
 			}
 		}
 	},
