@@ -14,9 +14,11 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
 } from '@credo-ts/core'
+import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
+import { validateCredentialStatus } from '../../utils/helpers'
 import { CredentialExchangeRecordExample, RecordId } from '../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
@@ -29,8 +31,6 @@ import {
   CreateOfferOobOptions,
   ThreadId,
 } from '../types'
-
-import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security } from 'tsoa'
 
 @Tags('Credentials')
 @Security('apiKey')
@@ -58,7 +58,7 @@ export class CredentialController extends Controller {
     @Query('parentThreadId') parentThreadId?: ThreadId,
     @Query('connectionId') connectionId?: RecordId,
     @Query('state') state?: CredentialState,
-    @Query('role') role?: CredentialRole
+    @Query('role') role?: CredentialRole,
   ) {
     try {
       const credentials = await this.agent.credentials.findAllByQuery({
@@ -167,6 +167,11 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
     try {
+      const credentialStatus = createOfferOptions?.credentialFormats?.jsonld?.credential.credentialStatus
+
+      if (credentialStatus && Object.keys(credentialStatus).length > 0) {
+        validateCredentialStatus(credentialStatus)
+      }
       const offer = await this.agent.credentials.offerCredential(createOfferOptions)
       return offer
     } catch (error) {
@@ -177,6 +182,11 @@ export class CredentialController extends Controller {
   @Post('/create-offer-oob')
   public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
     try {
+      const credentialStatus = outOfBandOption?.credentialFormats?.jsonld?.credential.credentialStatus
+
+      if (credentialStatus && Object.keys(credentialStatus).length > 0) {
+        validateCredentialStatus(credentialStatus)
+      }
       let invitationDid: string | undefined
       let routing: Routing
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()

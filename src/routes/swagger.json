@@ -635,6 +635,33 @@
 				],
 				"type": "string"
 			},
+			"SingleOrArray_string-or-Record_string.unknown__": {
+				"anyOf": [
+					{
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						]
+					},
+					{
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"$ref": "#/components/schemas/Record_string.unknown_"
+								}
+							]
+						},
+						"type": "array"
+					}
+				]
+			},
 			"OutOfBandDidCommService": {
 				"properties": {
 					"id": {
@@ -1378,8 +1405,7 @@
 					},
 					"credentialSubject": {
 						"$ref": "#/components/schemas/SingleOrArray_JsonObject_"
-					},
-					"prettyVc": {}
+					}
 				},
 				"required": [
 					"@context",
@@ -1542,6 +1568,14 @@
 					"comment": {
 						"type": "string"
 					},
+					"goalCode": {
+						"type": "string",
+						"description": "Will be ignored for v1 protocol as it is not supported"
+					},
+					"goal": {
+						"type": "string",
+						"description": "Will be ignored for v1 protocol as it is not supported"
+					},
 					"credentialRecordId": {
 						"type": "string"
 					},
@@ -1624,6 +1658,272 @@
 				],
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
+			},
+			"LinkedDataProof": {
+				"description": "Linked Data Proof",
+				"properties": {
+					"type": {
+						"type": "string"
+					},
+					"proofPurpose": {
+						"type": "string"
+					},
+					"verificationMethod": {
+						"type": "string"
+					},
+					"created": {
+						"type": "string"
+					},
+					"domain": {
+						"type": "string"
+					},
+					"challenge": {
+						"type": "string"
+					},
+					"jws": {
+						"type": "string"
+					},
+					"proofValue": {
+						"type": "string"
+					},
+					"nonce": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"type",
+					"proofPurpose",
+					"verificationMethod",
+					"created"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DataIntegrityProof": {
+				"description": "Linked Data Proof",
+				"properties": {
+					"type": {
+						"type": "string"
+					},
+					"cryptosuite": {
+						"type": "string"
+					},
+					"proofPurpose": {
+						"type": "string"
+					},
+					"verificationMethod": {
+						"type": "string"
+					},
+					"domain": {
+						"type": "string"
+					},
+					"challenge": {
+						"type": "string"
+					},
+					"nonce": {
+						"type": "string"
+					},
+					"created": {
+						"type": "string"
+					},
+					"expires": {
+						"type": "string"
+					},
+					"proofValue": {
+						"type": "string"
+					},
+					"previousProof": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"type",
+					"cryptosuite",
+					"proofPurpose",
+					"verificationMethod"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SingleOrArray_LinkedDataProof-or-DataIntegrityProof_": {
+				"anyOf": [
+					{
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/LinkedDataProof"
+							},
+							{
+								"$ref": "#/components/schemas/DataIntegrityProof"
+							}
+						]
+					},
+					{
+						"items": {
+							"anyOf": [
+								{
+									"$ref": "#/components/schemas/LinkedDataProof"
+								},
+								{
+									"$ref": "#/components/schemas/DataIntegrityProof"
+								}
+							]
+						},
+						"type": "array"
+					}
+				]
+			},
+			"W3cIssuer": {
+				"properties": {
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"W3cCredentialSubject": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"claims": {
+						"$ref": "#/components/schemas/Record_string.unknown_"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SingleOrArray_W3cCredentialSubject_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/W3cCredentialSubject"
+					},
+					{
+						"items": {
+							"$ref": "#/components/schemas/W3cCredentialSubject"
+						},
+						"type": "array"
+					}
+				]
+			},
+			"W3cCredentialSchema": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"type"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SingleOrArray_W3cCredentialSchema_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/W3cCredentialSchema"
+					},
+					{
+						"items": {
+							"$ref": "#/components/schemas/W3cCredentialSchema"
+						},
+						"type": "array"
+					}
+				]
+			},
+			"W3cCredentialStatus": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"type"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"W3cJsonLdVerifiableCredential": {
+				"properties": {
+					"context": {
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"$ref": "#/components/schemas/JsonObject"
+								}
+							]
+						},
+						"type": "array"
+					},
+					"id": {
+						"type": "string"
+					},
+					"type": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"issuer": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"$ref": "#/components/schemas/W3cIssuer"
+							}
+						]
+					},
+					"issuanceDate": {
+						"type": "string"
+					},
+					"expirationDate": {
+						"type": "string"
+					},
+					"credentialSubject": {
+						"$ref": "#/components/schemas/SingleOrArray_W3cCredentialSubject_"
+					},
+					"credentialSchema": {
+						"$ref": "#/components/schemas/SingleOrArray_W3cCredentialSchema_"
+					},
+					"credentialStatus": {
+						"$ref": "#/components/schemas/W3cCredentialStatus"
+					},
+					"proof": {
+						"$ref": "#/components/schemas/SingleOrArray_LinkedDataProof-or-DataIntegrityProof_"
+					}
+				},
+				"required": [
+					"context",
+					"type",
+					"issuer",
+					"issuanceDate",
+					"credentialSubject",
+					"proof"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"W3CRevocationStatus": {
+				"enum": [
+					"REVOCATION",
+					"SUSPENSION"
+				],
+				"type": "string"
 			},
 			"DidRegistrationSecretOptions": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
@@ -1766,7 +2066,12 @@
 						"type": "string"
 					},
 					"servedFromCache": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "Whether the did document was served from the cache"
+					},
+					"servedFromDidRecord": {
+						"type": "boolean",
+						"description": "Whether the did document was served from a local did record"
 					}
 				},
 				"type": "object",
@@ -2659,6 +2964,54 @@
 					"endpoints",
 					"isInitialized",
 					"publicDid"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"BadRequestError": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"stack": {
+						"type": "string"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"name",
+					"message",
+					"statusCode"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"InternalServerError": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"stack": {
+						"type": "string"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"name",
+					"message",
+					"statusCode"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -6336,6 +6689,142 @@
 				}
 			}
 		},
+		"/multi-tenancy/create-bslc/{tenantId}": {
+			"post": {
+				"operationId": "CreateBitstringStatusListCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"BSLCId": {
+											"type": "string"
+										},
+										"signedCredential": {
+											"$ref": "#/components/schemas/W3cJsonLdVerifiableCredential"
+										}
+									},
+									"required": [
+										"BSLCId",
+										"signedCredential"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create bitstring status list credential",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Id of the tenant",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "BSLC required details",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"verificationMethodId": {
+										"type": "string"
+									},
+									"statusPurpose": {
+										"$ref": "#/components/schemas/W3CRevocationStatus"
+									},
+									"issuerDID": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"verificationMethodId",
+									"statusPurpose",
+									"issuerDID"
+								],
+								"type": "object",
+								"description": "BSLC required details"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/change-status/{tenantId}": {
+			"post": {
+				"operationId": "ChangeBslCredentialStatus",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Change a W3C credential by revocationId",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Id of the tenant",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Revocation request details",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"BSLCredentialId": {
+										"type": "string"
+									},
+									"revocationId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"BSLCredentialId",
+									"revocationId"
+								],
+								"type": "object",
+								"description": "Revocation request details"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/transactions/endorse": {
 			"post": {
 				"operationId": "EndorserTransaction",
@@ -8318,6 +8807,242 @@
 						"required": true,
 						"schema": {
 							"$ref": "#/components/schemas/RecordId"
+						}
+					}
+				]
+			}
+		},
+		"/status-list/create-bslc": {
+			"post": {
+				"operationId": "CreateBitstringStatusListCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"BSLCId": {
+											"type": "string"
+										},
+										"signedCredential": {
+											"$ref": "#/components/schemas/W3cJsonLdVerifiableCredential"
+										}
+									},
+									"required": [
+										"BSLCId",
+										"signedCredential"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create bitstring status list credential",
+				"tags": [
+					"Status List"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"description": "BSLC required details",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"verificationMethodId": {
+										"type": "string"
+									},
+									"statusPurpose": {
+										"type": "string"
+									},
+									"issuerDID": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"verificationMethodId",
+									"statusPurpose",
+									"issuerDID"
+								],
+								"type": "object",
+								"description": "BSLC required details"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/status-list/get-empty-bslc-index/{bslcUrl}/{bslcId}": {
+			"get": {
+				"operationId": "GetEmptyIndexForBSLC",
+				"responses": {
+					"200": {
+						"description": "An unused index from the Bitstring Status List",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"index": {
+											"type": "number",
+											"format": "double"
+										}
+									},
+									"required": [
+										"index"
+									],
+									"type": "object"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"index": 132
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/BadRequestError"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerError"
+								}
+							}
+						}
+					}
+				},
+				"description": "\nThis endpoint retrieves an unused index from the Bitstring Status List Credential.",
+				"tags": [
+					"Status List"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "URL of the BSLC",
+						"in": "path",
+						"name": "bslcUrl",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "ID of the BSLC",
+						"in": "path",
+						"name": "bslcId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/status-list/change-status": {
+			"post": {
+				"operationId": "ChangeStatus",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Revoke a W3C credential by revocationId",
+				"tags": [
+					"Status List"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"description": "Revocation request details",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"credentialId": {
+										"type": "string"
+									},
+									"revocationId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"credentialId",
+									"revocationId"
+								],
+								"type": "object",
+								"description": "Revocation request details"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/status-list/create-encoded-list/{length}": {
+			"post": {
+				"operationId": "CreateEncodedList",
+				"responses": {
+					"200": {
+						"description": "Encoded list as a base64url string.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				},
+				"description": "Generate an encoded list for Bitstring Status List Credential with all bits set to 0.",
+				"tags": [
+					"Status List"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "The length of the bitstring (number of status entries).",
+						"in": "path",
+						"name": "length",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
 						}
 					}
 				]
