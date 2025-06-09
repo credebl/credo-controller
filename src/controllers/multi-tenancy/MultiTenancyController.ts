@@ -15,6 +15,8 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
+  W3cJsonLdSignCredentialOptions,
+  W3cJwtSignCredentialOptions
 } from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
@@ -46,7 +48,10 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
-} from '@credo-ts/core'
+  W3cJsonLdVerifiableCredential,
+  W3cCredential,
+
+  W3cVerifyCredentialOptions} from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
@@ -1931,6 +1936,9 @@ export class MultiTenancyController extends Controller {
     try {
       const signature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         assertAskarWallet(tenantAgent.context.wallet)
+
+        tenantAgent.w3cCredentials
+
         const signature = await tenantAgent.context.wallet.sign({
           data: TypedArrayEncoder.fromBase64(request.data),
           key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
@@ -1967,6 +1975,55 @@ export class MultiTenancyController extends Controller {
         return isValidSignature
       })
       return isValidSignature
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/credential/sign/:tenantId')
+  public async signCredential(
+    @Path('tenantId') tenantId: string,
+    @Query('storeCredential') storeCredential: boolean,
+    @Body() credentialToSign: W3cJsonLdSignCredentialOptions | W3cJwtSignCredentialOptions
+  ) {
+    let storedCredential
+    let formattedCredential
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if(credentialToSign.credential instanceof W3cCredential) {
+          const signedCred = await tenantAgent.w3cCredentials.signCredential(credentialToSign)
+          formattedCredential = JsonTransformer.fromJSON(signedCred, W3cJsonLdVerifiableCredential) //TODO: add support for JWT format as well
+          if(storeCredential) {
+            storedCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: formattedCredential })
+          }
+        } else {
+          throw new Error('Credential Type not supported')
+        }
+      })
+      return storedCredential ?? formattedCredential
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/credential/verify/:tenantId')
+  public async verifyCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() credentialToVerify: W3cVerifyCredentialOptions
+  ) {
+    let formattedCredential
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        if(credentialToVerify.credential instanceof W3cCredential) {
+          const signedCred = await tenantAgent.w3cCredentials.verifyCredential(credentialToVerify)
+          formattedCredential = JsonTransformer.fromJSON(signedCred, W3cJsonLdVerifiableCredential) //TODO: add support for other credential format as well
+        } else {
+          throw new Error('Credential Type not supported')
+        }
+      })
+      return formattedCredential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

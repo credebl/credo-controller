@@ -25,7 +25,9 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
+  JsonObject,
 } from '@credo-ts/core'
+import type { SingleOrArray } from '@credo-ts/core/build/utils'
 import type { DIDDocument } from 'did-resolver'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
@@ -37,10 +39,6 @@ export interface AgentInfo {
   endpoints: string[]
   isInitialized: boolean
   publicDid: void
-  // publicDid?: {
-  //   did: string
-  //   verkey: string
-  // }
 }
 
 export interface AgentMessageType {
@@ -400,4 +398,17 @@ export type VerifyDataOptions = {
   keyType: KeyType
   publicKeyBase58: string
   signature: string
+}
+
+export interface jsonLdCredentialOptions {
+  '@context': Array<string | JsonObject>
+  type: Array<string>
+  credentialSubject: SingleOrArray<JsonObject>
+  proofType: string
+}
+
+export interface credentialPayloadToSign {
+  issuerDID: string
+  method: string
+  credential: jsonLdCredentialOptions // TODO: add support for other credential format
 }
