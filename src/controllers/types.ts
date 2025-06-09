@@ -388,3 +388,16 @@ export interface SchemaMetadata {
  * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
  */
 export type ThreadId = string
+
+export type SignDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+}
+
+export type VerifyDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+  signature: string
+}
