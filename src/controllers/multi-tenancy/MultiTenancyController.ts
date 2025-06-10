@@ -1935,9 +1935,9 @@ export class MultiTenancyController extends Controller {
   public async sign(@Path('tenantId') tenantId: string, @Body() request: SignDataOptions) {
     try {
       const signature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        assertAskarWallet(tenantAgent.context.wallet)
+        // assertAskarWallet(tenantAgent.context.wallet)
 
-        tenantAgent.w3cCredentials
+        // tenantAgent.w3cCredentials
 
         const signature = await tenantAgent.context.wallet.sign({
           data: TypedArrayEncoder.fromBase64(request.data),
@@ -1985,21 +1985,27 @@ export class MultiTenancyController extends Controller {
   public async signCredential(
     @Path('tenantId') tenantId: string,
     @Query('storeCredential') storeCredential: boolean,
-    @Body() credentialToSign: W3cJsonLdSignCredentialOptions | W3cJwtSignCredentialOptions
+    @Body() credentialToSign: any
   ) {
     let storedCredential
     let formattedCredential
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        if(credentialToSign.credential instanceof W3cCredential) {
-          const signedCred = await tenantAgent.w3cCredentials.signCredential(credentialToSign)
-          formattedCredential = JsonTransformer.fromJSON(signedCred, W3cJsonLdVerifiableCredential) //TODO: add support for JWT format as well
-          if(storeCredential) {
-            storedCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: formattedCredential })
-          }
-        } else {
-          throw new Error('Credential Type not supported')
-        }
+        // if(credentialToSign.credential instanceof W3cCredential) {
+          const {credential, ...credentialObject} = credentialToSign
+          console.log("THis is credential", JSON.stringify(credential, null, 2))
+          const transformedCredential = JsonTransformer.fromJSON(credentialToSign.credential, W3cCredential)
+          console.log("THis is transformedCredential", JSON.stringify(transformedCredential, null, 2))
+          const signedCred = await tenantAgent.w3cCredentials.signCredential({credential: transformedCredential, ...credentialObject}) as W3cJsonLdVerifiableCredential
+          formattedCredential = signedCred.toJson()
+          // const signedJson = JsonTransformer.toJSON(signedCred, W3cJsonLdVerifiableCredential)
+          // formattedCredential = JsonTransformer.fromJSON(signedCred, W3cJsonLdVerifiableCredential) //TODO: add support for JWT format as well
+          // if(storeCredential) {
+          //   storedCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: formattedCredential })
+          // }
+        // } else {
+        //   throw new Error('Credential Type not supported')
+        // }
       })
       return storedCredential ?? formattedCredential
     } catch (error) {
