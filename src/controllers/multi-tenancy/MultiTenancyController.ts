@@ -1980,7 +1980,7 @@ export class MultiTenancyController extends Controller {
   public async signCredential(
     @Path('tenantId') tenantId: string,
     @Query('storeCredential') storeCredential: boolean,
-    @Body() credentialToSign: any
+    @Body() credentialToSign: W3cJsonLdVerifiableCredential | any
   ) {
     let storedCredential
     let formattedCredential
@@ -1990,6 +1990,9 @@ export class MultiTenancyController extends Controller {
           const transformedCredential = JsonTransformer.fromJSON(credentialToSign.credential, W3cCredential)
           const signedCred = await tenantAgent.w3cCredentials.signCredential({credential: transformedCredential, ...credentialObject}) as W3cJsonLdVerifiableCredential
           formattedCredential = signedCred.toJson()
+          if (storeCredential) {
+            storedCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: signedCred })
+          }
       })
       return storedCredential ?? formattedCredential
     } catch (error) {
