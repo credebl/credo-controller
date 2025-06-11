@@ -1625,6 +1625,48 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
+			"SignDataOptions": {
+				"properties": {
+					"publicKeyBase58": {
+						"type": "string"
+					},
+					"keyType": {
+						"$ref": "#/components/schemas/KeyType"
+					},
+					"data": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"publicKeyBase58",
+					"keyType",
+					"data"
+				],
+				"type": "object"
+			},
+			"VerifyDataOptions": {
+				"properties": {
+					"signature": {
+						"type": "string"
+					},
+					"publicKeyBase58": {
+						"type": "string"
+					},
+					"keyType": {
+						"$ref": "#/components/schemas/KeyType"
+					},
+					"data": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"signature",
+					"publicKeyBase58",
+					"keyType",
+					"data"
+				],
+				"type": "object"
+			},
 			"DidRegistrationSecretOptions": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
@@ -6331,6 +6373,194 @@
 							"schema": {
 								"$ref": "#/components/schemas/Record_content.string_"
 							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/sign/{tenantId}": {
+			"post": {
+				"operationId": "Sign",
+				"responses": {
+					"200": {
+						"description": "Signature in base64 format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				},
+				"description": "Sign data using a key",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Tenant identifier",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Sign options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignDataOptions",
+								"description": "Sign options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/verify/{tenantId}": {
+			"post": {
+				"operationId": "Verify",
+				"responses": {
+					"200": {
+						"description": "isValidSignature - true if signature is valid, false otherwise",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "boolean"
+								}
+							}
+						}
+					}
+				},
+				"description": "Verify data using a key",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Tenant identifier",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Verify options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format\nsignature - Signature in base64 format",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/VerifyDataOptions",
+								"description": "Verify options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format\nsignature - Signature in base64 format"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/credential/sign/{tenantId}": {
+			"post": {
+				"operationId": "SignCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storeCredential",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/credential/verify/{tenantId}": {
+			"post": {
+				"operationId": "VerifyCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {}
 						}
 					}
 				}
