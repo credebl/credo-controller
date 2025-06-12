@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption, SchemaMetadata } from '../types'
+import type { RecipientKeyOption, SafeW3cJsonLdVerifyCredentialOptions, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -2004,13 +2004,14 @@ export class MultiTenancyController extends Controller {
   @Post('/credential/verify/:tenantId')
   public async verifyCredential(
     @Path('tenantId') tenantId: string,
-    @Body() credentialToVerify: any
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any
   ) {
     let formattedCredential
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const {credential,  ...credentialOptions}= credentialToVerify
         const transformedCredential = JsonTransformer.fromJSON(credentialToVerify?.credential, W3cJsonLdVerifiableCredential)
-        const signedCred = await tenantAgent.w3cCredentials.verifyCredential({credential: transformedCredential})
+        const signedCred = await tenantAgent.w3cCredentials.verifyCredential({credential: transformedCredential, ...credentialOptions})
         formattedCredential = signedCred
       })
       return formattedCredential
