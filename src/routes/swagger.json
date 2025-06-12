@@ -1667,118 +1667,28 @@
 				],
 				"type": "object"
 			},
-			"LinkedDataProof": {
-				"description": "Linked Data Proof",
-				"properties": {
-					"type": {
-						"type": "string"
-					},
-					"proofPurpose": {
-						"type": "string"
-					},
-					"verificationMethod": {
-						"type": "string"
-					},
-					"created": {
-						"type": "string"
-					},
-					"domain": {
-						"type": "string"
-					},
-					"challenge": {
-						"type": "string"
-					},
-					"jws": {
-						"type": "string"
-					},
-					"proofValue": {
-						"type": "string"
-					},
-					"nonce": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"type",
-					"proofPurpose",
-					"verificationMethod",
-					"created"
+			"ClaimFormat.LdpVc": {
+				"enum": [
+					"ldp_vc"
 				],
-				"type": "object",
-				"additionalProperties": false
+				"type": "string"
 			},
-			"DataIntegrityProof": {
-				"description": "Linked Data Proof",
-				"properties": {
-					"type": {
-						"type": "string"
-					},
-					"cryptosuite": {
-						"type": "string"
-					},
-					"proofPurpose": {
-						"type": "string"
-					},
-					"verificationMethod": {
-						"type": "string"
-					},
-					"domain": {
-						"type": "string"
-					},
-					"challenge": {
-						"type": "string"
-					},
-					"nonce": {
-						"type": "string"
-					},
-					"created": {
-						"type": "string"
-					},
-					"expires": {
-						"type": "string"
-					},
-					"proofValue": {
-						"type": "string"
-					},
-					"previousProof": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"type",
-					"cryptosuite",
-					"proofPurpose",
-					"verificationMethod"
+			"ProofPurpose": {},
+			"ClaimFormat": {
+				"description": "Defines the claim format based on the formats registered in\n[DIF Claim Format Registry](https://identity.foundation/claim-format-registry/).",
+				"enum": [
+					"jwt",
+					"jwt_vc",
+					"jwt_vp",
+					"ldp",
+					"ldp_vc",
+					"ldp_vp",
+					"di",
+					"di_vc",
+					"di_vp",
+					"vc+sd-jwt"
 				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"SingleOrArray_LinkedDataProof-or-DataIntegrityProof_": {
-				"anyOf": [
-					{
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/LinkedDataProof"
-							},
-							{
-								"$ref": "#/components/schemas/DataIntegrityProof"
-							}
-						]
-					},
-					{
-						"items": {
-							"anyOf": [
-								{
-									"$ref": "#/components/schemas/LinkedDataProof"
-								},
-								{
-									"$ref": "#/components/schemas/DataIntegrityProof"
-								}
-							]
-						},
-						"type": "array"
-					}
-				]
+				"type": "string"
 			},
 			"W3cIssuer": {
 				"properties": {
@@ -1862,7 +1772,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"W3cJsonLdVerifiableCredential": {
+			"W3cCredential": {
 				"properties": {
 					"context": {
 						"items": {
@@ -1910,9 +1820,6 @@
 					},
 					"credentialStatus": {
 						"$ref": "#/components/schemas/W3cCredentialStatus"
-					},
-					"proof": {
-						"$ref": "#/components/schemas/SingleOrArray_LinkedDataProof-or-DataIntegrityProof_"
 					}
 				},
 				"required": [
@@ -1920,8 +1827,41 @@
 					"type",
 					"issuer",
 					"issuanceDate",
-					"credentialSubject",
-					"proof"
+					"credentialSubject"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"W3cJsonLdSignCredentialOptions": {
+				"properties": {
+					"format": {
+						"$ref": "#/components/schemas/ClaimFormat.LdpVc",
+						"description": "The format of the credential to be signed. Must be either `jwt_vc` or `ldp_vc`."
+					},
+					"credential": {
+						"$ref": "#/components/schemas/W3cCredential",
+						"description": "The credential to be signed."
+					},
+					"verificationMethod": {
+						"type": "string",
+						"description": "URI of the verificationMethod to be used for signing the credential.\n\nMust be a valid did url pointing to a key."
+					},
+					"proofType": {
+						"type": "string",
+						"description": "The proofType to be used for signing the credential.\n\nMust be a valid Linked Data Signature suite."
+					},
+					"proofPurpose": {
+						"$ref": "#/components/schemas/ProofPurpose"
+					},
+					"created": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"format",
+					"credential",
+					"verificationMethod",
+					"proofType"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -2041,8 +1981,184 @@
 					}
 				]
 			},
-			"ProofPurpose": {},
-			"safeW3cJsonLdVerifyCredentialOptions": {
+			"LinkedDataProof": {
+				"description": "Linked Data Proof",
+				"properties": {
+					"type": {
+						"type": "string"
+					},
+					"proofPurpose": {
+						"type": "string"
+					},
+					"verificationMethod": {
+						"type": "string"
+					},
+					"created": {
+						"type": "string"
+					},
+					"domain": {
+						"type": "string"
+					},
+					"challenge": {
+						"type": "string"
+					},
+					"jws": {
+						"type": "string"
+					},
+					"proofValue": {
+						"type": "string"
+					},
+					"nonce": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"type",
+					"proofPurpose",
+					"verificationMethod",
+					"created"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DataIntegrityProof": {
+				"description": "Linked Data Proof",
+				"properties": {
+					"type": {
+						"type": "string"
+					},
+					"cryptosuite": {
+						"type": "string"
+					},
+					"proofPurpose": {
+						"type": "string"
+					},
+					"verificationMethod": {
+						"type": "string"
+					},
+					"domain": {
+						"type": "string"
+					},
+					"challenge": {
+						"type": "string"
+					},
+					"nonce": {
+						"type": "string"
+					},
+					"created": {
+						"type": "string"
+					},
+					"expires": {
+						"type": "string"
+					},
+					"proofValue": {
+						"type": "string"
+					},
+					"previousProof": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"type",
+					"cryptosuite",
+					"proofPurpose",
+					"verificationMethod"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SingleOrArray_LinkedDataProof-or-DataIntegrityProof_": {
+				"anyOf": [
+					{
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/LinkedDataProof"
+							},
+							{
+								"$ref": "#/components/schemas/DataIntegrityProof"
+							}
+						]
+					},
+					{
+						"items": {
+							"anyOf": [
+								{
+									"$ref": "#/components/schemas/LinkedDataProof"
+								},
+								{
+									"$ref": "#/components/schemas/DataIntegrityProof"
+								}
+							]
+						},
+						"type": "array"
+					}
+				]
+			},
+			"W3cJsonLdVerifiableCredential": {
+				"properties": {
+					"context": {
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"$ref": "#/components/schemas/JsonObject"
+								}
+							]
+						},
+						"type": "array"
+					},
+					"id": {
+						"type": "string"
+					},
+					"type": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"issuer": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"$ref": "#/components/schemas/W3cIssuer"
+							}
+						]
+					},
+					"issuanceDate": {
+						"type": "string"
+					},
+					"expirationDate": {
+						"type": "string"
+					},
+					"credentialSubject": {
+						"$ref": "#/components/schemas/SingleOrArray_W3cCredentialSubject_"
+					},
+					"credentialSchema": {
+						"$ref": "#/components/schemas/SingleOrArray_W3cCredentialSchema_"
+					},
+					"credentialStatus": {
+						"$ref": "#/components/schemas/W3cCredentialStatus"
+					},
+					"proof": {
+						"$ref": "#/components/schemas/SingleOrArray_LinkedDataProof-or-DataIntegrityProof_"
+					}
+				},
+				"required": [
+					"context",
+					"type",
+					"issuer",
+					"issuanceDate",
+					"credentialSubject",
+					"proof"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SafeW3cJsonLdVerifyCredentialOptions": {
 				"properties": {
 					"credential": {
 						"$ref": "#/components/schemas/W3cJsonLdVerifiableCredential"
@@ -6920,7 +7036,7 @@
 							"schema": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/W3cJsonLdVerifiableCredential"
+										"$ref": "#/components/schemas/W3cJsonLdSignCredentialOptions"
 									},
 									{}
 								]
@@ -6968,7 +7084,7 @@
 							"schema": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/safeW3cJsonLdVerifyCredentialOptions"
+										"$ref": "#/components/schemas/SafeW3cJsonLdVerifyCredentialOptions"
 									},
 									{}
 								]

@@ -14,7 +14,9 @@ import type {
   PeerDidNumAlgo2CreateOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
-  Routing} from '@credo-ts/core'
+  Routing,
+  W3cJsonLdSignCredentialOptions,
+  W3cVerifiableCredential} from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
 import type { TenantRecord } from '@credo-ts/tenants'
@@ -46,7 +48,8 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
   W3cJsonLdVerifiableCredential,
-  W3cCredential} from '@credo-ts/core'
+  W3cCredential,
+  ClaimFormat} from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
@@ -1980,15 +1983,15 @@ export class MultiTenancyController extends Controller {
   public async signCredential(
     @Path('tenantId') tenantId: string,
     @Query('storeCredential') storeCredential: boolean,
-    @Body() credentialToSign: W3cJsonLdVerifiableCredential | any
+    @Body() credentialToSign: W3cJsonLdSignCredentialOptions | any
   ) {
     let storedCredential
     let formattedCredential
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-          const {credential, ...credentialObject} = credentialToSign
-          const transformedCredential = JsonTransformer.fromJSON(credentialToSign.credential, W3cCredential)
-          const signedCred = await tenantAgent.w3cCredentials.signCredential({credential: transformedCredential, ...credentialObject}) as W3cJsonLdVerifiableCredential
+          credentialToSign.format = ClaimFormat.LdpVc
+
+          const signedCred = await tenantAgent.w3cCredentials.signCredential(credentialToSign) as W3cJsonLdVerifiableCredential
           formattedCredential = signedCred.toJson()
           if (storeCredential) {
             storedCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: signedCred })
