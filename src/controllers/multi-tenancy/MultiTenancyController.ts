@@ -1918,37 +1918,6 @@ export class MultiTenancyController extends Controller {
     }
   }
 
-
-    /**
-   * Sign data using a key
-   *
-   * @param tenantId Tenant identifier
-   * @param request Sign options
-   *  data - Data has to be in base64 format
-   *  publicKeyBase58 - Public key in base58 format
-   * @returns Signature in base64 format
-   */
-  @Security('apiKey')
-  @Post('/sign/:tenantId')
-  public async sign(@Path('tenantId') tenantId: string, @Body() request: SignDataOptions) {
-    try {
-      const signature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        // assertAskarWallet(tenantAgent.context.wallet)
-
-        // tenantAgent.w3cCredentials
-
-        const signature = await tenantAgent.context.wallet.sign({
-          data: TypedArrayEncoder.fromBase64(request.data),
-          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
-        })
-        return TypedArrayEncoder.toBase64(signature)
-      })
-      return signature
-    } catch (error) {
-      throw ErrorHandlingService.handle(error)
-    }
-  }
-
   /**
    * Verify data using a key
    *
@@ -1983,21 +1952,66 @@ export class MultiTenancyController extends Controller {
   public async signCredential(
     @Path('tenantId') tenantId: string,
     @Query('storeCredential') storeCredential: boolean,
-    @Body() credentialToSign: W3cJsonLdSignCredentialOptions | any
+    @Query('dataTypeToSign') dataTypeToSign: 'rawData' | 'jsonLd',
+    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any
   ) {
-    let storedCredential
-    let formattedCredential
     try {
-      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-          credentialToSign.format = ClaimFormat.LdpVc
+      return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        // JSON-LD VC Signing
+        if (dataTypeToSign === 'jsonLd') {
+          const credentialData = data as unknown as W3cJsonLdSignCredentialOptions
+          credentialData.format = ClaimFormat.LdpVc
 
-          const signedCred = await tenantAgent.w3cCredentials.signCredential(credentialToSign) as W3cJsonLdVerifiableCredential
-          formattedCredential = signedCred.toJson()
+          const signedCredential = await tenantAgent.w3cCredentials.signCredential(credentialData) as W3cJsonLdVerifiableCredential
+
           if (storeCredential) {
-            storedCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: signedCred })
+            return await tenantAgent.w3cCredentials.storeCredential({ credential: signedCredential })
           }
+
+          return signedCredential.toJson()
+        }
+
+        // Raw Data Signing
+        const rawData = data as SignDataOptions
+
+        if (!rawData.data) throw new BadRequestError('Missing "data" for raw data signing.')
+
+        const hasDidOrMethod = rawData.did || rawData.method
+        const hasPublicKey = rawData.publicKeyBase58 && rawData.keyType
+
+        if (!hasDidOrMethod && !hasPublicKey) {
+          throw new BadRequestError('Either (did or method) OR (publicKeyBase58 and keyType) must be provided.')
+        }
+
+        let keyToUse: Key
+
+        if (hasDidOrMethod) {
+          const dids = await tenantAgent.dids.getCreatedDids({
+            method: rawData.method || undefined,
+            did: rawData.did || undefined,
+          })
+
+          const verificationMethod = dids[0]?.didDocument?.verificationMethod?.[0]?.publicKeyBase58
+          if (!verificationMethod) {
+            throw new BadRequestError('No publicKeyBase58 found for the given DID or method.')
+          }
+
+          keyToUse = Key.fromPublicKeyBase58(verificationMethod, rawData.keyType)
+        } else {
+          keyToUse = Key.fromPublicKeyBase58(rawData.publicKeyBase58, rawData.keyType)
+        }
+
+        if (!keyToUse) {
+          throw new Error('Unable to construct signing key.')
+        }
+
+        const signature = await tenantAgent.context.wallet.sign({
+          data: TypedArrayEncoder.fromBase64(rawData.data),
+          key: keyToUse,
+        })
+
+        return TypedArrayEncoder.toBase64(signature)
       })
-      return storedCredential ?? formattedCredential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

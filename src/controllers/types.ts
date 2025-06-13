@@ -28,6 +28,9 @@ import type {
   JsonObject,
   W3cJsonLdVerifyCredentialOptions,
   DataIntegrityProofOptions,
+  W3cJsonLdSignCredentialOptions,
+  W3cCredential,
+  W3cCredentialSubject,
 } from '@credo-ts/core'
 import type { SingleOrArray } from '@credo-ts/core/build/utils'
 import type { DIDDocument } from 'did-resolver'
@@ -394,6 +397,8 @@ export type SignDataOptions = {
   data: string
   keyType: KeyType
   publicKeyBase58: string
+  did?: string
+  method?: string
 }
 
 export type VerifyDataOptions = {
@@ -418,4 +423,17 @@ export interface credentialPayloadToSign {
 export interface SafeW3cJsonLdVerifyCredentialOptions extends W3cJsonLdVerifyCredentialOptions {
   // Ommited due to issues with TSOA
   proof: SingleOrArray<Omit<LinkedDataProofOptions, "cryptosuite"> | DataIntegrityProofOptions>
+}
+
+export type ExtensibleW3cCredentialSubject = W3cCredentialSubject & {
+  [key: string]: unknown
+}
+
+export type ExtensibleW3cCredential = W3cCredential & {
+  [key: string]: unknown
+  credentialSubject: SingleOrArray<ExtensibleW3cCredentialSubject>
+}
+
+export type CustomW3cJsonLdSignCredentialOptions = Omit<W3cJsonLdSignCredentialOptions, 'format'> & {
+  [key: string]: unknown
 }
