@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption, SchemaMetadata } from '../types'
+import type { RecipientKeyOption, SafeW3cJsonLdVerifyCredentialOptions, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -15,7 +15,8 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
-} from '@credo-ts/core'
+  W3cJsonLdSignCredentialOptions,
+  W3cVerifiableCredential} from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
 import type { TenantRecord } from '@credo-ts/tenants'
@@ -27,6 +28,7 @@ import {
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
 } from '@credo-ts/anoncreds'
+import { assertAskarWallet } from '@credo-ts/askar/build/utils/assertAskarWallet'
 import {
   AcceptCredentialOfferOptions,
   Agent,
@@ -45,7 +47,9 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
-} from '@credo-ts/core'
+  W3cJsonLdVerifiableCredential,
+  W3cCredential,
+  ClaimFormat} from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
@@ -89,7 +93,7 @@ import {
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
   CreateSchemaInput,
-} from '../types'
+ VerifyDataOptions , SignDataOptions } from '../types'
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
 
@@ -1913,4 +1917,110 @@ export class MultiTenancyController extends Controller {
       throw ErrorHandlingService.handle(error)
     }
   }
+
+
+    /**
+   * Sign data using a key
+   *
+   * @param tenantId Tenant identifier
+   * @param request Sign options
+   *  data - Data has to be in base64 format
+   *  publicKeyBase58 - Public key in base58 format
+   * @returns Signature in base64 format
+   */
+  @Security('apiKey')
+  @Post('/sign/:tenantId')
+  public async sign(@Path('tenantId') tenantId: string, @Body() request: SignDataOptions) {
+    try {
+      const signature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        // assertAskarWallet(tenantAgent.context.wallet)
+
+        // tenantAgent.w3cCredentials
+
+        const signature = await tenantAgent.context.wallet.sign({
+          data: TypedArrayEncoder.fromBase64(request.data),
+          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+        })
+        return TypedArrayEncoder.toBase64(signature)
+      })
+      return signature
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Verify data using a key
+   *
+   * @param tenantId Tenant identifier
+   * @param request Verify options
+   *  data - Data has to be in base64 format
+   *  publicKeyBase58 - Public key in base58 format
+   *  signature - Signature in base64 format
+   * @returns isValidSignature - true if signature is valid, false otherwise
+   */
+  @Security('apiKey')
+  @Post('/verify/:tenantId')
+  public async verify(@Path('tenantId') tenantId: string, @Body() request: VerifyDataOptions) {
+    try {
+      const isValidSignature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        assertAskarWallet(tenantAgent.context.wallet)
+        const isValidSignature = await tenantAgent.context.wallet.verify({
+          data: TypedArrayEncoder.fromBase64(request.data),
+          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+          signature: TypedArrayEncoder.fromBase64(request.signature),
+        })
+        return isValidSignature
+      })
+      return isValidSignature
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/credential/sign/:tenantId')
+  public async signCredential(
+    @Path('tenantId') tenantId: string,
+    @Query('storeCredential') storeCredential: boolean,
+    @Body() credentialToSign: W3cJsonLdSignCredentialOptions | any
+  ) {
+    let storedCredential
+    let formattedCredential
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+          credentialToSign.format = ClaimFormat.LdpVc
+
+          const signedCred = await tenantAgent.w3cCredentials.signCredential(credentialToSign) as W3cJsonLdVerifiableCredential
+          formattedCredential = signedCred.toJson()
+          if (storeCredential) {
+            storedCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: signedCred })
+          }
+      })
+      return storedCredential ?? formattedCredential
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/credential/verify/:tenantId')
+  public async verifyCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any
+  ) {
+    let formattedCredential
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const {credential,  ...credentialOptions}= credentialToVerify
+        const transformedCredential = JsonTransformer.fromJSON(credentialToVerify?.credential, W3cJsonLdVerifiableCredential)
+        const signedCred = await tenantAgent.w3cCredentials.verifyCredential({credential: transformedCredential, ...credentialOptions})
+        formattedCredential = signedCred
+      })
+      return formattedCredential
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
 }
+
