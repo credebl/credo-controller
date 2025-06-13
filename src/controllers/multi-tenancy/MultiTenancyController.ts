@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption, SafeW3cJsonLdVerifyCredentialOptions, SchemaMetadata } from '../types'
+import type { CustomW3cJsonLdSignCredentialOptions, RecipientKeyOption, SafeW3cJsonLdVerifyCredentialOptions, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
