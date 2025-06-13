@@ -1625,25 +1625,6 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
-			"SignDataOptions": {
-				"properties": {
-					"publicKeyBase58": {
-						"type": "string"
-					},
-					"keyType": {
-						"$ref": "#/components/schemas/KeyType"
-					},
-					"data": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"publicKeyBase58",
-					"keyType",
-					"data"
-				],
-				"type": "object"
-			},
 			"VerifyDataOptions": {
 				"properties": {
 					"signature": {
@@ -1667,28 +1648,8 @@
 				],
 				"type": "object"
 			},
-			"ClaimFormat.LdpVc": {
-				"enum": [
-					"ldp_vc"
-				],
-				"type": "string"
-			},
-			"ProofPurpose": {},
-			"ClaimFormat": {
-				"description": "Defines the claim format based on the formats registered in\n[DIF Claim Format Registry](https://identity.foundation/claim-format-registry/).",
-				"enum": [
-					"jwt",
-					"jwt_vc",
-					"jwt_vp",
-					"ldp",
-					"ldp_vc",
-					"ldp_vp",
-					"di",
-					"di_vc",
-					"di_vp",
-					"vc+sd-jwt"
-				],
-				"type": "string"
+			"W3cCredentialRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"W3cIssuer": {
 				"properties": {
@@ -1832,52 +1793,86 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"W3cJsonLdSignCredentialOptions": {
+			"Pick_W3cJsonLdSignCredentialOptions.Exclude_keyofW3cJsonLdSignCredentialOptions.format__": {
 				"properties": {
-					"format": {
-						"$ref": "#/components/schemas/ClaimFormat.LdpVc",
-						"description": "The format of the credential to be signed. Must be either `jwt_vc` or `ldp_vc`."
-					},
 					"credential": {
 						"$ref": "#/components/schemas/W3cCredential",
 						"description": "The credential to be signed."
-					},
-					"verificationMethod": {
-						"type": "string",
-						"description": "URI of the verificationMethod to be used for signing the credential.\n\nMust be a valid did url pointing to a key."
 					},
 					"proofType": {
 						"type": "string",
 						"description": "The proofType to be used for signing the credential.\n\nMust be a valid Linked Data Signature suite."
 					},
-					"proofPurpose": {
-						"$ref": "#/components/schemas/ProofPurpose"
-					},
+					"proofPurpose": {},
 					"created": {
+						"type": "string"
+					},
+					"verificationMethod": {
+						"type": "string",
+						"description": "URI of the verificationMethod to be used for signing the credential.\n\nMust be a valid did url pointing to a key."
+					}
+				},
+				"required": [
+					"credential",
+					"proofType",
+					"verificationMethod"
+				],
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_W3cJsonLdSignCredentialOptions.format_": {
+				"$ref": "#/components/schemas/Pick_W3cJsonLdSignCredentialOptions.Exclude_keyofW3cJsonLdSignCredentialOptions.format__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"CustomW3cJsonLdSignCredentialOptions": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Omit_W3cJsonLdSignCredentialOptions.format_"
+					},
+					{
+						"properties": {},
+						"additionalProperties": {},
+						"type": "object"
+					}
+				]
+			},
+			"SignDataOptions": {
+				"properties": {
+					"method": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"publicKeyBase58": {
+						"type": "string"
+					},
+					"keyType": {
+						"$ref": "#/components/schemas/KeyType"
+					},
+					"data": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"format",
-					"credential",
-					"verificationMethod",
-					"proofType"
+					"publicKeyBase58",
+					"keyType",
+					"data"
 				],
-				"type": "object",
-				"additionalProperties": false
+				"type": "object"
 			},
 			"Pick_LinkedDataProofOptions.Exclude_keyofLinkedDataProofOptions.cryptosuite__": {
 				"properties": {
-					"type": {
+					"proofPurpose": {
 						"type": "string"
 					},
-					"proofPurpose": {
+					"created": {
 						"type": "string"
 					},
 					"verificationMethod": {
 						"type": "string"
 					},
-					"created": {
+					"type": {
 						"type": "string"
 					},
 					"domain": {
@@ -1897,10 +1892,10 @@
 					}
 				},
 				"required": [
-					"type",
 					"proofPurpose",
+					"created",
 					"verificationMethod",
-					"created"
+					"type"
 				],
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
@@ -2158,6 +2153,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ProofPurpose": {},
 			"SafeW3cJsonLdVerifyCredentialOptions": {
 				"properties": {
 					"credential": {
@@ -2825,9 +2821,6 @@
 					"holder"
 				],
 				"type": "string"
-			},
-			"W3cCredentialRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"CredentialExchangeRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
@@ -6892,55 +6885,6 @@
 				}
 			}
 		},
-		"/multi-tenancy/sign/{tenantId}": {
-			"post": {
-				"operationId": "Sign",
-				"responses": {
-					"200": {
-						"description": "Signature in base64 format",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						}
-					}
-				},
-				"description": "Sign data using a key",
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Tenant identifier",
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"description": "Sign options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format",
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/SignDataOptions",
-								"description": "Sign options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format"
-							}
-						}
-					}
-				}
-			}
-		},
 		"/multi-tenancy/verify/{tenantId}": {
 			"post": {
 				"operationId": "Verify",
@@ -6998,7 +6942,19 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
+								"schema": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"$ref": "#/components/schemas/Record_string.any_"
+										},
+										{
+											"$ref": "#/components/schemas/W3cCredentialRecord"
+										}
+									]
+								}
 							}
 						}
 					}
@@ -7027,6 +6983,18 @@
 						"schema": {
 							"type": "boolean"
 						}
+					},
+					{
+						"in": "query",
+						"name": "dataTypeToSign",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"rawData",
+								"jsonLd"
+							]
+						}
 					}
 				],
 				"requestBody": {
@@ -7036,7 +7004,10 @@
 							"schema": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/W3cJsonLdSignCredentialOptions"
+										"$ref": "#/components/schemas/CustomW3cJsonLdSignCredentialOptions"
+									},
+									{
+										"$ref": "#/components/schemas/SignDataOptions"
 									},
 									{}
 								]
