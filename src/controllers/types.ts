@@ -25,8 +25,16 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
+  JsonObject,
+  W3cJsonLdVerifyCredentialOptions,
+  DataIntegrityProofOptions,
+  W3cJsonLdSignCredentialOptions,
+  W3cCredential,
+  W3cCredentialSubject,
 } from '@credo-ts/core'
+import type { SingleOrArray } from '@credo-ts/core/build/utils'
 import type { DIDDocument } from 'did-resolver'
+import { LinkedDataProofOptions } from '@credo-ts/core/build/modules/vc/data-integrity/models/LinkedDataProof'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>
@@ -37,10 +45,6 @@ export interface AgentInfo {
   endpoints: string[]
   isInitialized: boolean
   publicDid: void
-  // publicDid?: {
-  //   did: string
-  //   verkey: string
-  // }
 }
 
 export interface AgentMessageType {
@@ -388,3 +392,48 @@ export interface SchemaMetadata {
  * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
  */
 export type ThreadId = string
+
+export type SignDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+  did?: string
+  method?: string
+}
+
+export type VerifyDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+  signature: string
+}
+
+export interface jsonLdCredentialOptions {
+  '@context': Array<string | JsonObject>
+  type: Array<string>
+  credentialSubject: SingleOrArray<JsonObject>
+  proofType: string
+}
+
+export interface credentialPayloadToSign {
+  issuerDID: string
+  method: string
+  credential: jsonLdCredentialOptions // TODO: add support for other credential format
+}
+export interface SafeW3cJsonLdVerifyCredentialOptions extends W3cJsonLdVerifyCredentialOptions {
+  // Ommited due to issues with TSOA
+  proof: SingleOrArray<Omit<LinkedDataProofOptions, "cryptosuite"> | DataIntegrityProofOptions>
+}
+
+export type ExtensibleW3cCredentialSubject = W3cCredentialSubject & {
+  [key: string]: unknown
+}
+
+export type ExtensibleW3cCredential = W3cCredential & {
+  [key: string]: unknown
+  credentialSubject: SingleOrArray<ExtensibleW3cCredentialSubject>
+}
+
+export type CustomW3cJsonLdSignCredentialOptions = Omit<W3cJsonLdSignCredentialOptions, 'format'> & {
+  [key: string]: unknown
+}

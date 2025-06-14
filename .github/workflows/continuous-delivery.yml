@@ -42,3 +42,5 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.SERVICE }}:${{ env.TAG }}
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.SERVICE }}:latest
+          
+
