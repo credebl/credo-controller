@@ -16,7 +16,8 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 
 import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs'
 import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api'
-
+import dotenv from 'dotenv'
+dotenv.config()
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO)
 
 const resource = new resourceFromAttributes({
