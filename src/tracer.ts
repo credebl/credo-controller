@@ -1,7 +1,6 @@
 /* eslint-disable import/order */
 /* eslint-disable no-console */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+// @ts-nocheck //TODO: Remove this when the code is stable and types are fixed
 import { NodeSDK } from '@opentelemetry/sdk-node'
 import * as process from 'process'
 
