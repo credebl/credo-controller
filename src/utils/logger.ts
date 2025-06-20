@@ -60,32 +60,39 @@ export class TsLogger extends BaseLogger {
     } else {
       this.logger[tsLogLevel](message)
     }
+    let logMessage = ''
+    if (typeof message === 'string') {
+      logMessage = message
+    } else if (typeof message === 'object' && 'message' in message) {
+      logMessage = message.message
+    }
+
+    let errorDetails
+    if (data?.error) {
+      const error = data.error
+      if (typeof error === 'string') {
+        errorDetails = error
+      } else if (error instanceof Error) {
+        errorDetails = {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        }
+      } else {
+        try {
+          errorDetails = JSON.parse(JSON.stringify(error))
+        } catch {
+          errorDetails = String(error)
+        }
+      }
+    }
     otelLogger.emit({
-      body: `${
-        typeof message === 'string'
-          ? message
-          : typeof message === 'object' && 'message' in message
-          ? message.message
-          : ''
-      }`,
+      body: logMessage,
       severityText: LogLevel[level].toUpperCase(),
       attributes: {
         source: this.serviceName,
         ...(data || {}),
-        ...(data?.error
-          ? {
-              error:
-                typeof data.error === 'string'
-                  ? data.error
-                  : data.error instanceof Error
-                  ? {
-                      name: data.error.name,
-                      message: data.error.message,
-                      stack: data.error.stack,
-                    }
-                  : JSON.parse(JSON.stringify(data.error)),
-            }
-          : {}),
+        ...(errorDetails ? { error: errorDetails } : {}),
       },
     })
   }
