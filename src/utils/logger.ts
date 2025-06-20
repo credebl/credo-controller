@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { ILogObject } from 'tslog'
 
 import { LogLevel, BaseLogger } from '@credo-ts/core'
 import { appendFileSync } from 'fs'
 import { Logger } from 'tslog'
+
+import { otelLogger } from '../tracer'
 
 function logToTransport(logObject: ILogObject) {
   appendFileSync('logs.txt', JSON.stringify(logObject) + '\n')
@@ -13,7 +14,6 @@ function logToTransport(logObject: ILogObject) {
 export class TsLogger extends BaseLogger {
   private logger: Logger
 
-  // Map our log levels to tslog levels
   private tsLogLevelMap = {
     [LogLevel.test]: 'silly',
     [LogLevel.trace]: 'trace',
@@ -24,12 +24,12 @@ export class TsLogger extends BaseLogger {
     [LogLevel.fatal]: 'fatal',
   } as const
 
-  public constructor(logLevel: LogLevel, name?: string) {
+  public constructor(logLevel: LogLevel, private readonly serviceName = 'credo-controller-service' as string) {
     super(logLevel)
 
     this.logger = new Logger({
-      name,
-      minLevel: this.logLevel == LogLevel.off ? undefined : this.tsLogLevelMap[this.logLevel],
+      name: serviceName,
+      minLevel: logLevel === LogLevel.off ? undefined : this.tsLogLevelMap[logLevel],
       ignoreStackLevels: 5,
       attachedTransports: [
         {
@@ -42,14 +42,17 @@ export class TsLogger extends BaseLogger {
             error: logToTransport,
             fatal: logToTransport,
           },
-          // always log to file
           minLevel: 'silly',
         },
       ],
     })
   }
 
-  private log(level: Exclude<LogLevel, LogLevel.off>, message: string, data?: Record<string, any>): void {
+  private log(
+    level: Exclude<LogLevel, LogLevel.off>,
+    message: string | { message: string },
+    data?: Record<string, any>
+  ): void {
     const tsLogLevel = this.tsLogLevelMap[level]
 
     if (data) {
@@ -57,6 +60,34 @@ export class TsLogger extends BaseLogger {
     } else {
       this.logger[tsLogLevel](message)
     }
+    otelLogger.emit({
+      body: `${
+        typeof message === 'string'
+          ? message
+          : typeof message === 'object' && 'message' in message
+          ? message.message
+          : ''
+      }`,
+      severityText: LogLevel[level].toUpperCase(),
+      attributes: {
+        source: this.serviceName,
+        ...(data || {}),
+        ...(data?.error
+          ? {
+              error:
+                typeof data.error === 'string'
+                  ? data.error
+                  : data.error instanceof Error
+                  ? {
+                      name: data.error.name,
+                      message: data.error.message,
+                      stack: data.error.stack,
+                    }
+                  : JSON.parse(JSON.stringify(data.error)),
+            }
+          : {}),
+      },
+    })
   }
 
   public test(message: string, data?: Record<string, any>): void {

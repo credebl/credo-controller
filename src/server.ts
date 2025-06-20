@@ -1,4 +1,5 @@
-import 'reflect-metadata'
+// eslint-disable-next-line import/order
+import { otelSDK } from './tracer'
 import type { ServerConfig } from './utils/ServerConfig'
 import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 
@@ -28,6 +29,7 @@ import { ValidateError } from 'tsoa'
 dotenv.config()
 
 export const setupServer = async (agent: Agent, config: ServerConfig, apiKey?: string) => {
+  await otelSDK.start()
   container.registerInstance(Agent, agent)
   fs.writeFileSync('config.json', JSON.stringify(config, null, 2))
   const app = config.app ?? express()
