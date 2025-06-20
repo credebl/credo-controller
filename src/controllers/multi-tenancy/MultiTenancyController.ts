@@ -651,6 +651,22 @@ export class MultiTenancyController extends Controller {
     }
   }
 
+  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Security('apiKey')
+  @Delete('/connections/:connectionId/:tenantId')
+  public async deleteConnectionById(@Path('tenantId') tenantId: string, @Path('connectionId') connectionId: RecordId) {
+    try {
+      const connectionRecord = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const connection = await tenantAgent.connections.deleteById(connectionId)
+        return JsonTransformer.toJSON(connection)
+      })
+
+      return connectionRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
   @Security('apiKey')
   @Post('/create-invitation/:tenantId')
   public async createInvitation(
