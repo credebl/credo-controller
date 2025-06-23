@@ -27,14 +27,14 @@ const resource = new resourceFromAttributes({
 })
 
 const traceExporter = new OTLPTraceExporter({
-  url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+  url: process.env.OTEL_TRACES_OTLP_ENDPOINT,
   headers: {
     Authorization: `Api-Key ${process.env.OTEL_HEADERS_KEY}`,
   },
 })
 
 const logExporter = new OTLPLogExporter({
-  url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+  url: process.env.OTEL_LOGS_OTLP_ENDPOINT,
   headers: {
     Authorization: `Api-Key ${process.env.OTEL_HEADERS_KEY}`,
   },
