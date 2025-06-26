@@ -6,6 +6,8 @@ import { LogLevel, BaseLogger } from '@credo-ts/core'
 import { appendFileSync } from 'fs'
 import { Logger } from 'tslog'
 
+import { otelLogger } from '../tracer'
+
 function logToTransport(logObject: ILogObject) {
   appendFileSync('logs.txt', JSON.stringify(logObject) + '\n')
 }
@@ -49,7 +51,11 @@ export class TsLogger extends BaseLogger {
     })
   }
 
-  private log(level: Exclude<LogLevel, LogLevel.off>, message: string, data?: Record<string, any>): void {
+  private log(
+    level: Exclude<LogLevel, LogLevel.off>,
+    message: string | { message: string },
+    data?: Record<string, any>,
+  ): void {
     const tsLogLevel = this.tsLogLevelMap[level]
 
     if (data) {
@@ -87,7 +93,6 @@ export class TsLogger extends BaseLogger {
       body: logMessage,
       severityText: LogLevel[level].toUpperCase(),
       attributes: {
-        source: this.serviceName,
         ...(data || {}),
         ...(errorDetails ? { error: errorDetails } : {}),
       },
