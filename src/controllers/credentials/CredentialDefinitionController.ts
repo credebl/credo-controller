@@ -3,7 +3,8 @@ import type { SchemaId } from '../examples'
 
 import { getUnqualifiedCredentialDefinitionId, parseIndyCredentialDefinitionId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Response } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Response, Request } from 'tsoa'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode } from '../../enums/enum'
@@ -14,15 +15,9 @@ import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
-@Security('apiKey')
+@Security('jwt')
 @injectable()
 export class CredentialDefinitionController extends Controller {
-  // TODO: Currently this only works if Extensible from credo-ts is renamed to something else, since there are two references to Extensible
-  private agent: Agent<RestAgentModules>
-  public constructor(agent: Agent<RestAgentModules>) {
-    super()
-    this.agent = agent
-  }
 
   /**
    * Retrieve credential definition by credential definition id
@@ -33,11 +28,12 @@ export class CredentialDefinitionController extends Controller {
   @Example(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
   public async getCredentialDefinitionById(
+    @Request() request: Req,
     @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
   ) {
     try {
       const credentialDefinitionResult =
-        await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
+        await request.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
 
       if (credentialDefinitionResult.resolutionMetadata?.error === 'notFound') {
         throw new NotFoundError(credentialDefinitionResult.resolutionMetadata.message)
@@ -69,6 +65,7 @@ export class CredentialDefinitionController extends Controller {
   @Response(202, 'Wait for action to complete')
   @Post('/')
   public async createCredentialDefinition(
+    @Request() request: Req,
     @Body()
     credentialDefinitionRequest: {
       issuerId: string
@@ -106,7 +103,7 @@ export class CredentialDefinitionController extends Controller {
       }
 
       const registerCredentialDefinitionResult =
-        await this.agent.modules.anoncreds.registerCredentialDefinition(credentialDefinitionPayload)
+        await request.agent.modules.anoncreds.registerCredentialDefinition(credentialDefinitionPayload)
 
       if (registerCredentialDefinitionResult.credentialDefinitionState.state === CredentialEnum.Failed) {
         throw new InternalServerError('Falied to register credef on ledger')

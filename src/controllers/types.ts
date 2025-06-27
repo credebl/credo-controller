@@ -47,6 +47,10 @@ export interface AgentInfo {
   publicDid: void
 }
 
+export interface AgentToken {
+  token: string
+}
+
 export interface AgentMessageType {
   '@id': string
   '@type': string
@@ -98,6 +102,8 @@ export interface CreateOfferOptions {
   credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
+  goalCode?: string
+  goal?: string
 }
 
 type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
@@ -251,10 +257,7 @@ export interface RequestProofOptions {
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
   connectionId: string
-  proofFormats: {
-    formats: ProofFormat[]
-    action: 'createProposal'
-  }
+  proofFormats: any
   goalCode?: string
   parentThreadId?: string
   autoAcceptProof?: AutoAcceptProof
@@ -263,10 +266,7 @@ export interface RequestProofProposalOptions {
 
 export interface AcceptProofProposal {
   proofRecordId: string
-  proofFormats: {
-    formats: ProofFormat[]
-    action: 'acceptProposal'
-  }
+  proofFormats: any
   comment?: string
   autoAcceptProof?: AutoAcceptProof
   goalCode?: string

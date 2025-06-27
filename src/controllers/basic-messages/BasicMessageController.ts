@@ -2,7 +2,8 @@ import type { RestAgentModules } from '../../cliAgent'
 import type { BasicMessageRecord, BasicMessageStorageProps } from '@credo-ts/core'
 
 import { Agent } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Request } from 'tsoa'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -10,15 +11,9 @@ import { BasicMessageRecordExample, RecordId } from '../examples'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
-@Security('apiKey')
+@Security('jwt')
 @injectable()
 export class BasicMessageController extends Controller {
-  private agent: Agent<RestAgentModules>
-
-  public constructor(agent: Agent<RestAgentModules>) {
-    super()
-    this.agent = agent
-  }
 
   /**
    * Retrieve basic messages by connection id
@@ -28,9 +23,9 @@ export class BasicMessageController extends Controller {
    */
   @Example<BasicMessageStorageProps[]>([BasicMessageRecordExample])
   @Get('/:connectionId')
-  public async getBasicMessages(@Path('connectionId') connectionId: RecordId): Promise<BasicMessageRecord[]> {
+  public async getBasicMessages(@Request() request: Req, @Path('connectionId') connectionId: RecordId): Promise<BasicMessageRecord[]> {
     try {
-      const basicMessageRecords = await this.agent.basicMessages.findAllByQuery({ connectionId })
+      const basicMessageRecords = await request.agent.basicMessages.findAllByQuery({ connectionId })
       this.setStatus(200)
       return basicMessageRecords
     } catch (error) {
@@ -46,9 +41,9 @@ export class BasicMessageController extends Controller {
    */
   @Example<BasicMessageStorageProps>(BasicMessageRecordExample)
   @Post('/:connectionId')
-  public async sendMessage(@Path('connectionId') connectionId: RecordId, @Body() request: Record<'content', string>) {
+  public async sendMessage(@Request() request: Req, @Path('connectionId') connectionId: RecordId, @Body() body: Record<'content', string>) {
     try {
-      const basicMessageRecord = await this.agent.basicMessages.sendMessage(connectionId, request.content)
+      const basicMessageRecord = await request.agent.basicMessages.sendMessage(connectionId, body.content)
       this.setStatus(204)
       return basicMessageRecord
     } catch (error) {

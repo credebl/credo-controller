@@ -14,7 +14,8 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
 } from '@credo-ts/core'
-import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security } from 'tsoa'
+import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security, Request } from 'tsoa'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -32,16 +33,14 @@ import {
 } from '../types'
 
 @Tags('Credentials')
-@Security('apiKey')
+@Security('jwt')
 @Route('/credentials')
 @injectable()
 export class CredentialController extends Controller {
-  private agent: Agent<RestAgentModules>
   private outOfBandController: OutOfBandController
 
-  public constructor(agent: Agent<RestAgentModules>, outOfBandController: OutOfBandController) {
+  public constructor(outOfBandController: OutOfBandController) {
     super()
-    this.agent = agent
     this.outOfBandController = outOfBandController
   }
 
@@ -53,6 +52,7 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps[]>([CredentialExchangeRecordExample])
   @Get('/')
   public async getAllCredentials(
+    @Request() request: Req,
     @Query('threadId') threadId?: ThreadId,
     @Query('parentThreadId') parentThreadId?: ThreadId,
     @Query('connectionId') connectionId?: RecordId,
@@ -60,7 +60,7 @@ export class CredentialController extends Controller {
     @Query('role') role?: CredentialRole,
   ) {
     try {
-      const credentials = await this.agent.credentials.findAllByQuery({
+      const credentials = await request.agent.credentials.findAllByQuery({
         connectionId,
         threadId,
         state,
@@ -77,10 +77,10 @@ export class CredentialController extends Controller {
   // TODO: Fix W3cCredentialRecordExample from example
   // @Example<W3cCredentialRecordOptions[]>([W3cCredentialRecordExample])
   @Get('/w3c')
-  public async getAllW3c() {
+  public async getAllW3c(@Request() request: Req) {
     try {
-      const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-      const w3cCredentialRecords = await w3cCredentialService.getAllCredentialRecords(this.agent.context)
+      const w3cCredentialService = await request.agent.dependencyManager.resolve(W3cCredentialService)
+      const w3cCredentialRecords = await w3cCredentialService.getAllCredentialRecords(request.agent.context)
       return w3cCredentialRecords
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -90,10 +90,10 @@ export class CredentialController extends Controller {
   // TODO: Fix W3cCredentialRecordExample from example
   // @Example<W3cCredentialRecordOptions[]>([W3cCredentialRecordExample])
   @Get('/w3c/:id')
-  public async getW3cById(@Path('id') id: string) {
+  public async getW3cById(@Request() request: Req, @Path('id') id: string) {
     try {
-      const w3cCredentialService = await this.agent.dependencyManager.resolve(W3cCredentialService)
-      const w3cRecord = await w3cCredentialService.getCredentialRecordById(this.agent.context, id)
+      const w3cCredentialService = await request.agent.dependencyManager.resolve(W3cCredentialService)
+      const w3cRecord = await w3cCredentialService.getCredentialRecordById(request.agent.context, id)
       return w3cRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -108,9 +108,9 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Get('/:credentialRecordId')
-  public async getCredentialById(@Path('credentialRecordId') credentialRecordId: RecordId) {
+  public async getCredentialById(@Request() request: Req, @Path('credentialRecordId') credentialRecordId: RecordId) {
     try {
-      const credential = await this.agent.credentials.getById(credentialRecordId)
+      const credential = await request.agent.credentials.getById(credentialRecordId)
       return credential.toJSON()
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -126,9 +126,9 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/propose-credential')
-  public async proposeCredential(@Body() proposeCredentialOptions: ProposeCredentialOptions) {
+  public async proposeCredential(@Request() request: Req, @Body() proposeCredentialOptions: ProposeCredentialOptions) {
     try {
-      const credential = await this.agent.credentials.proposeCredential(proposeCredentialOptions)
+      const credential = await request.agent.credentials.proposeCredential(proposeCredentialOptions)
       return credential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -145,9 +145,9 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-proposal')
-  public async acceptProposal(@Body() acceptCredentialProposal: AcceptCredentialProposalOptions) {
+  public async acceptProposal(@Request() request: Req, @Body() acceptCredentialProposal: AcceptCredentialProposalOptions) {
     try {
-      const credential = await this.agent.credentials.acceptProposal(acceptCredentialProposal)
+      const credential = await request.agent.credentials.acceptProposal(acceptCredentialProposal)
 
       return credential
     } catch (error) {
@@ -164,9 +164,9 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
-  public async createOffer(@Body() createOfferOptions: CreateOfferOptions) {
+  public async createOffer(@Request() request: Req, @Body() createOfferOptions: CreateOfferOptions) {
     try {
-      const offer = await this.agent.credentials.offerCredential(createOfferOptions)
+      const offer = await request.agent.credentials.offerCredential(createOfferOptions)
       return offer
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -174,19 +174,19 @@ export class CredentialController extends Controller {
   }
 
   @Post('/create-offer-oob')
-  public async createOfferOob(@Body() outOfBandOption: CreateOfferOobOptions) {
+  public async createOfferOob(@Request() request: Req, @Body() outOfBandOption: CreateOfferOobOptions) {
     try {
       let invitationDid: string | undefined
       let routing: Routing
-      const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
+      const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
-        await this.agent.modules.anoncreds.createLinkSecret()
+        await request.agent.modules.anoncreds.createLinkSecret()
       }
 
       if (outOfBandOption?.invitationDid) {
         invitationDid = outOfBandOption?.invitationDid
       } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+        routing = await request.agent.mediationRecipient.getRouting({})
         const didDocument = createPeerDidDocumentFromServices([
           {
             id: 'didcomm',
@@ -195,7 +195,7 @@ export class CredentialController extends Controller {
             serviceEndpoint: routing.endpoints[0],
           },
         ])
-        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+        const did = await request.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
           didDocument,
           method: 'peer',
           options: {
@@ -205,7 +205,7 @@ export class CredentialController extends Controller {
         invitationDid = did.didState.did
       }
 
-      const offerOob = await this.agent.credentials.createOffer({
+      const offerOob = await request.agent.credentials.createOffer({
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: outOfBandOption.credentialFormats,
         autoAcceptCredential: outOfBandOption.autoAcceptCredential,
@@ -213,7 +213,7 @@ export class CredentialController extends Controller {
       })
 
       const credentialMessage = offerOob.message
-      const outOfBandRecord = await this.agent.oob.createInvitation({
+      const outOfBandRecord = await request.agent.oob.createInvitation({
         label: outOfBandOption.label,
         messages: [credentialMessage],
         autoAcceptConnection: true,
@@ -223,10 +223,10 @@ export class CredentialController extends Controller {
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: this.agent.config.endpoints[0],
+          domain: request.agent.config.endpoints[0],
         }),
         invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+          useDidSovPrefixWhereAllowed: request.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
         outOfBandRecordId: outOfBandRecord.id,
@@ -248,13 +248,13 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-offer')
-  public async acceptOffer(@Body() acceptCredentialOfferOptions: CredentialOfferOptions) {
+  public async acceptOffer(@Request() request: Req, @Body() acceptCredentialOfferOptions: CredentialOfferOptions) {
     try {
-      const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
+      const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
-        await this.agent.modules.anoncreds.createLinkSecret()
+        await request.agent.modules.anoncreds.createLinkSecret()
       }
-      const acceptOffer = await this.agent.credentials.acceptOffer(acceptCredentialOfferOptions)
+      const acceptOffer = await request.agent.credentials.acceptOffer(acceptCredentialOfferOptions)
       return acceptOffer
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -271,9 +271,9 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-request')
-  public async acceptRequest(@Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions) {
+  public async acceptRequest(@Request() request: Req, @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions) {
     try {
-      const credential = await this.agent.credentials.acceptRequest(acceptCredentialRequestOptions)
+      const credential = await request.agent.credentials.acceptRequest(acceptCredentialRequestOptions)
       return credential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -289,9 +289,9 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-credential')
-  public async acceptCredential(@Body() acceptCredential: AcceptCredential) {
+  public async acceptCredential(@Request() request: Req, @Body() acceptCredential: AcceptCredential) {
     try {
-      const credential = await this.agent.credentials.acceptCredential(acceptCredential)
+      const credential = await request.agent.credentials.acceptCredential(acceptCredential)
       return credential
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -305,9 +305,9 @@ export class CredentialController extends Controller {
    * @returns credentialRecord
    */
   @Get('/:credentialRecordId/form-data')
-  public async credentialFormData(@Path('credentialRecordId') credentialRecordId: string) {
+  public async credentialFormData(@Request() request: Req, @Path('credentialRecordId') credentialRecordId: string) {
     try {
-      const credentialDetails = await this.agent.credentials.getFormatData(credentialRecordId)
+      const credentialDetails = await request.agent.credentials.getFormatData(credentialRecordId)
       return credentialDetails
     } catch (error) {
       throw ErrorHandlingService.handle(error)

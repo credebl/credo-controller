@@ -48,12 +48,11 @@ import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
-import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
-import jwt from 'jsonwebtoken'
 
 import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums/enum'
 import { setupServer } from './server'
+import { generateSecretKey } from './utils/helpers'
 import { TsLogger } from './utils/logger'
 
 export type Transports = 'ws' | 'http'
@@ -100,6 +99,7 @@ export interface AriesRestConfig {
   fileServerToken?: string
   walletScheme?: AskarMultiWalletDatabaseScheme
   schemaFileServerURL?: string
+  apiKey: string
 }
 
 export async function readRestConfig(path: string) {
@@ -235,23 +235,23 @@ const getWithTenantModules = (
   }
 }
 
-async function generateSecretKey(length: number = 32): Promise<string> {
-  // Asynchronously generate a buffer containing random values
-  const buffer: Buffer = await new Promise((resolve, reject) => {
-    randomBytes(length, (error, buf) => {
-      if (error) {
-        reject(error)
-      } else {
-        resolve(buf)
-      }
-    })
-  })
+// async function generateSecretKey(length: number = 32): Promise<string> {
+//   // Asynchronously generate a buffer containing random values
+//   const buffer: Buffer = await new Promise((resolve, reject) => {
+//     randomBytes(length, (error, buf) => {
+//       if (error) {
+//         reject(error)
+//       } else {
+//         resolve(buf)
+//       }
+//     })
+//   })
 
-  // Convert the buffer to a hexadecimal string
-  const secretKey: string = buffer.toString('hex')
+//   // Convert the buffer to a hexadecimal string
+//   const secretKey: string = buffer.toString('hex')
 
-  return secretKey
-}
+//   return secretKey
+// }
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
@@ -271,6 +271,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptProofs,
     walletScheme,
+    apiKey,
     ...afjConfig
   } = restConfig
 
@@ -396,37 +397,19 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  let token: string = ''
   const genericRecord = await agent.genericRecords.getAll()
+  const recordsWithSecretKey = genericRecord.some((record) => record?.content?.secretKey)
 
-  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
-  if (!genericRecord.length || !recordsWithToken) {
-    // Call the async function
-    const secretKeyInfo: string = await generateSecretKey()
-    // Check if the secretKey already exist in the genericRecords
+  if (!genericRecord.length || !recordsWithSecretKey) {
+    // If secretKey doesn't exist in genericRecord: i.e. Agent initialized for the first time or secretKey not found
+    // Generate and store secret key for agent while initialization
+    const secretKeyInfo = await generateSecretKey()
 
-    // if already exist - then don't generate the secret key again
-    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
-    // instead use the existin JWT token
-    // if JWT token is not found, create/generate a new token and save in genericRecords
-    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-
-    // if already exist - then don't generate the secret key again
-    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
-    // instead use the existin JWT token
-    // if JWT token is not found, create/generate a new token and save in genericRecords
-    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
-        token,
       },
     })
-  } else {
-    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
-
-    token = recordWithToken?.content.token as string
   }
   const app = await setupServer(
     agent,
@@ -435,10 +418,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       port: adminPort,
       schemaFileServerURL,
     },
-    token,
+    apiKey,
   )
 
-  logger.info(`*** API Token: ${token}`)
+  logger.info(`*** API Key: ${apiKey}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)

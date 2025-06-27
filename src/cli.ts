@@ -43,6 +43,7 @@ interface Parsed {
   rpcUrl?: string
   fileServerUrl?: string
   fileServerToken?: string
+  apiKey?: string
 }
 
 interface InboundTransport {
@@ -147,6 +148,9 @@ async function parseArguments(): Promise<Parsed> {
     .option('wallet-connect-timeout', { number: true })
     .option('wallet-max-connections', { number: true })
     .option('wallet-idle-timeout', { number: true })
+    .option('apiKey', {
+      string: true,
+    })
     .config()
     .env('AFJ_REST')
     .parseAsync() as Promise<Parsed>
@@ -193,5 +197,6 @@ export async function runCliServer() {
     rpcUrl: parsed.rpcUrl,
     fileServerUrl: parsed.fileServerUrl,
     fileServerToken: parsed.fileServerToken,
+    apiKey: parsed['apiKey'],
   } as AriesRestConfig)
 }

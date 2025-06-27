@@ -2,7 +2,8 @@ import type { RestAgentModules } from '../../cliAgent'
 import type { ConnectionRecordProps } from '@credo-ts/core'
 
 import { DidExchangeState, Agent } from '@credo-ts/core'
-import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security } from 'tsoa'
+import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -13,12 +14,6 @@ import { ConnectionRecordExample, RecordId } from '../examples'
 @Route()
 @injectable()
 export class ConnectionController extends Controller {
-  private agent: Agent<RestAgentModules>
-
-  public constructor(agent: Agent<RestAgentModules>) {
-    super()
-    this.agent = agent
-  }
 
   /**
    * Retrieve all connections records
@@ -30,9 +25,10 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord[]
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
-  @Security('apiKey')
+  @Security('jwt')
   @Get('/connections')
   public async getAllConnections(
+    @Request() request: Req,
     @Query('outOfBandId') outOfBandId?: string,
     @Query('alias') alias?: string,
     @Query('state') state?: DidExchangeState,
@@ -41,7 +37,7 @@ export class ConnectionController extends Controller {
     @Query('theirLabel') theirLabel?: string,
   ) {
     try {
-      const connections = await this.agent.connections.findAllByQuery({
+      const connections = await request.agent.connections.findAllByQuery({
         outOfBandId,
         alias,
         myDid,
@@ -62,11 +58,11 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('apiKey')
+  @Security('jwt')
   @Get('/connections/:connectionId')
-  public async getConnectionById(@Path('connectionId') connectionId: RecordId) {
+  public async getConnectionById(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
-      const connection = await this.agent.connections.findById(connectionId)
+      const connection = await request.agent.connections.findById(connectionId)
 
       if (!connection) throw new NotFoundError(`Connection with connection id "${connectionId}" not found.`)
 
@@ -82,11 +78,11 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/connections/:connectionId')
-  @Security('apiKey')
-  public async deleteConnection(@Path('connectionId') connectionId: RecordId) {
+  @Security('jwt')
+  public async deleteConnection(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
       this.setStatus(204)
-      await this.agent.connections.deleteById(connectionId)
+      await request.agent.connections.deleteById(connectionId)
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -102,11 +98,11 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('apiKey')
+  @Security('jwt')
   @Post('/connections/:connectionId/accept-request')
-  public async acceptRequest(@Path('connectionId') connectionId: RecordId) {
+  public async acceptRequest(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
-      const connection = await this.agent.connections.acceptRequest(connectionId)
+      const connection = await request.agent.connections.acceptRequest(connectionId)
       return connection.toJSON()
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -123,11 +119,11 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('apiKey')
+  @Security('jwt')
   @Post('/connections/:connectionId/accept-response')
-  public async acceptResponse(@Path('connectionId') connectionId: RecordId) {
+  public async acceptResponse(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
-      const connection = await this.agent.connections.acceptResponse(connectionId)
+      const connection = await request.agent.connections.acceptResponse(connectionId)
       return connection.toJSON()
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -135,9 +131,9 @@ export class ConnectionController extends Controller {
   }
 
   @Get('/url/:invitationId')
-  public async getInvitation(@Path('invitationId') invitationId: string) {
+  public async getInvitation(@Request() request: Req, @Path('invitationId') invitationId: string) {
     try {
-      const outOfBandRecord = await this.agent.oob.findByCreatedInvitationId(invitationId)
+      const outOfBandRecord = await request.agent.oob.findByCreatedInvitationId(invitationId)
 
       if (!outOfBandRecord || outOfBandRecord.state !== 'await-response')
         throw new NotFoundError(`connection with invitationId "${invitationId}" not found.`)

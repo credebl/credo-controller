@@ -5,23 +5,18 @@ import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
 import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
 import { Agent } from '@credo-ts/core'
 import * as fs from 'fs'
-import { Route, Tags, Security, Controller, Post, Body, Get, Path } from 'tsoa'
+import { Route, Tags, Security, Controller, Post, Body, Get, Path, Request } from 'tsoa'
+import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, UnprocessableEntityError } from '../../errors'
 
 @Tags('Polygon')
-@Security('apiKey')
+@Security('jwt')
 @Route('/polygon')
 @injectable()
 export class Polygon extends Controller {
-  private agent: Agent<RestAgentModules>
-
-  public constructor(agent: Agent<RestAgentModules>) {
-    super()
-    this.agent = agent
-  }
 
   /**
    * Create Secp256k1 key pair for polygon DID
@@ -49,6 +44,7 @@ export class Polygon extends Controller {
    */
   @Post('create-schema')
   public async createSchema(
+    @Request() request: Req,
     @Body()
     createSchemaRequest: {
       did: string
@@ -62,7 +58,7 @@ export class Polygon extends Controller {
         throw new BadRequestError('One or more parameters are empty or undefined.')
       }
 
-      const schemaResponse = await this.agent.modules.polygon.createSchema({
+      const schemaResponse = await request.agent.modules.polygon.createSchema({
         did,
         schemaName,
         schema,
@@ -105,6 +101,7 @@ export class Polygon extends Controller {
    */
   @Post('estimate-transaction')
   public async estimateTransaction(
+    @Request() request: Req,
     @Body()
     estimateTransactionRequest: {
       operation: any
@@ -118,9 +115,9 @@ export class Polygon extends Controller {
         throw new BadRequestError('Invalid method parameter!')
       }
       if (operation === DidOperation.Create) {
-        return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
+        return request.agent.modules.polygon.estimateFeeForDidOperation({ operation })
       } else if (operation === DidOperation.Update) {
-        return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
+        return request.agent.modules.polygon.estimateFeeForDidOperation({ operation })
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -133,9 +130,9 @@ export class Polygon extends Controller {
    * @returns Schema Object
    */
   @Get(':did/:schemaId')
-  public async getSchemaById(@Path('did') did: string, @Path('schemaId') schemaId: string): Promise<unknown> {
+  public async getSchemaById(@Request() request: Req, @Path('did') did: string, @Path('schemaId') schemaId: string): Promise<unknown> {
     try {
-      return this.agent.modules.polygon.getSchemaById(did, schemaId)
+      return request.agent.modules.polygon.getSchemaById(did, schemaId)
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
