@@ -29,7 +29,7 @@
     "dev": "tsoa spec-and-routes && tsnd --respawn samples/sampleWithApp.ts",
     "build": "yarn run clean && yarn run compile",
     "prestart:dev": "yarn run clean && yarn run compile",
-    "start:dev": "./bin/afj-rest.js --config ./samples/cliConfig.json",
+    "start:dev": "yarn build && ./bin/afj-rest.js --config ./samples/cliConfig.json",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
