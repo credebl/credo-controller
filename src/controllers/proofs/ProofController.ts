@@ -19,10 +19,11 @@ import {
   RequestProofOptions,
   RequestProofProposalOptions,
 } from '../types'
+import { SCOPES } from '../../enums'
 
 @Tags('Proofs')
 @Route('/proofs')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class ProofController extends Controller {
 

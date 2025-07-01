@@ -6,7 +6,7 @@ import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller, Requ
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum, EndorserMode, SchemaError } from '../../enums/enum'
+import { CredentialEnum, EndorserMode, SchemaError, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
@@ -15,7 +15,7 @@ import { CreateSchemaInput } from '../types'
 
 @Tags('Schemas')
 @Route('/schemas')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class SchemaController extends Controller {
 

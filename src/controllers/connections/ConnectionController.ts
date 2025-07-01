@@ -9,6 +9,7 @@ import { injectable } from 'tsyringe'
 import ErrorHandlingService from '../../errorHandlingService'
 import { NotFoundError } from '../../errors'
 import { ConnectionRecordExample, RecordId } from '../examples'
+import { SCOPES } from '../../enums'
 
 @Tags('Connections')
 @Route()
@@ -25,7 +26,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord[]
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Get('/connections')
   public async getAllConnections(
     @Request() request: Req,
@@ -58,7 +59,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Get('/connections/:connectionId')
   public async getConnectionById(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
@@ -78,7 +79,7 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/connections/:connectionId')
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   public async deleteConnection(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
       this.setStatus(204)
@@ -98,7 +99,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('/connections/:connectionId/accept-request')
   public async acceptRequest(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
@@ -119,7 +120,7 @@ export class ConnectionController extends Controller {
    * @returns ConnectionRecord
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('/connections/:connectionId/accept-response')
   public async acceptResponse(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {

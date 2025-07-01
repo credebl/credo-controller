@@ -1,13 +1,13 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
-import type { TenantAgent } from '@aries-framework/tenants/build/TenantAgent'
+import type { TenantAgent } from '@credo-ts/tenants/build/TenantAgent'
 import type { Request } from 'express'
 
-import { Agent, LogLevel } from '@aries-framework/core'
+import { Agent, LogLevel } from '@credo-ts/core'
 import jwt, { decode } from 'jsonwebtoken'
 import { container } from 'tsyringe'
 
-import { AgentRole, ErrorMessages } from './enums/enum'
-import { StatusException } from './error'
+import { AgentRole, ErrorMessages, SCOPES } from './enums'
+import { StatusException } from './errors'
 import { TsLogger } from './utils/logger'
 
 // export type AgentType = Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>
@@ -21,9 +21,9 @@ export async function expressAuthentication(request: Request, securityName: stri
   logger.info(`securityName::: ${securityName}`)
   logger.info(`scopes::: ${scopes}`)
 
-  if (scopes && scopes?.includes('skip')) {
+  if (scopes && scopes?.includes(SCOPES.UNPROTECTED)) {
     // Skip authentication for this route or controller
-    request['agent'] = agent
+    request.agent = agent
     return true
   }
 
@@ -39,7 +39,7 @@ export async function expressAuthentication(request: Request, securityName: stri
     if (apiKeyHeader) {
       const providedApiKey = apiKeyHeader as string
       if (providedApiKey === dynamicApiKey) {
-        request['agent'] = agent
+        request.agent = agent
         return true
       }
     }
@@ -50,7 +50,18 @@ export async function expressAuthentication(request: Request, securityName: stri
     const tokenWithHeader = apiKeyHeader
     const token = tokenWithHeader!.replace('Bearer ', '')
     const reqPath = request.path
-    const decodedToken: jwt.JwtPayload = decode(token) as jwt.JwtPayload
+    let decodedToken: jwt.JwtPayload;
+    try {
+      decodedToken = decode(token) as jwt.JwtPayload
+      if (!decodedToken || !decodedToken.role) {
+        throw new Error('Token not decoded')
+      }
+    } catch (err) {
+      console.error("Error decoding token", err)
+      return Promise.reject(new StatusException(`${ErrorMessages.Unauthorized}: Invalid token`, 401))
+    }
+    
+    // Before getting ahead, we can ideally, verify the token, since, in the current approach we have stored the jwt secret in BW
     const role: AgentRole = decodedToken.role
 
     if (tenancy) {
@@ -62,9 +73,9 @@ export async function expressAuthentication(request: Request, securityName: stri
       }
       if (role === AgentRole.RestTenantAgent) {
         // Logic if the token is of tenant agent
-        if (reqPath.includes('/multi-tenancy/')) {
+        // if (reqPath.includes('/multi-tenancy/')) {
           // Note: Include the below logic for path detection instead of url
-          // if (scopes && scopes?.includes('multi-tenant')) {
+          if (scopes && scopes?.includes(SCOPES.MULTITENANT_BASE_AGENT)) {
           logger.debug('Tenants cannot manage tenants')
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         } else {
@@ -80,9 +91,10 @@ export async function expressAuthentication(request: Request, securityName: stri
             return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
           }
 
-          const verified = await verifyToken(tenantAgent, token)
-          // Note: logic to store generate token for tenant using BW's secertKey
-          // const verified = await verifyToken(agent, token)
+          // Option1: logic to use tenant's secret key to generate token for tenant
+          // const verified = await verifyToken(tenantAgent, token)
+          // Option2: logic to store generate token for tenant using BW's secertKey
+          const verified = await verifyToken(agent, token)
 
           // Failed to verify token
           if (!verified) {
@@ -92,12 +104,12 @@ export async function expressAuthentication(request: Request, securityName: stri
 
           // Only need to registerInstance for TenantAgent.
           // return tenantAgent
-          request['agent'] = tenantAgent
+          request.agent = tenantAgent
           return true
         }
       } else if (role === AgentRole.RestRootAgentWithTenants) {
         // Auth: base wallet
-        const verified = await verifyToken(agent!, token)
+        const verified = await verifyToken(agent, token)
 
         // Base wallet cant access any endpoints apart from multi-tenant endpoint
         // if (!reqPath.includes('/multi-tenancy/')) {
@@ -106,14 +118,14 @@ export async function expressAuthentication(request: Request, securityName: stri
         // }
 
         // Note: Implement the authorization part using scopes(below), instead of url(above)
-        // if (!scopes?.includes('multi-tenant')) {
-        //   logger.error('Basewallet can only manage tenants')
-        //   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
-        // }
+        if (!scopes?.includes(SCOPES.MULTITENANT_BASE_AGENT)) {
+          logger.error('Basewallet can only manage tenants')
+          return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
+        }
 
         if (!verified) return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 
-        request['agent'] = agent
+        request.agent = agent
         return true
       } else {
         // return false //'Invalid Token'
@@ -128,14 +140,15 @@ export async function expressAuthentication(request: Request, securityName: stri
       } else {
         // Auth: dedicated agent
 
+        // TODO: replace with scopes, instead of routes
         if (reqPath.includes('/multi-tenancy/'))
-          return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
+          return Promise.reject(new StatusException(`${ErrorMessages.Unauthorized}: Multitenant routes are diabled for dedicated agent`, 401))
 
-        const verified = await verifyToken(agent!, token)
+        const verified = await verifyToken(agent, token)
         if (!verified) return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         //return false
 
-        request['agent'] = agent
+        request.agent = agent
         return true
       }
     }
@@ -156,7 +169,7 @@ async function getSecretKey(
   agent: Agent<RestMultiTenantAgentModules | RestAgentModules> | TenantAgent<RestAgentModules>
 ): Promise<string> {
   const genericRecord = await agent.genericRecords.getAll()
-  const recordWithToken = genericRecord.find((record: { content: { secretKey: undefined } }) => record?.content?.secretKey !== undefined)
+  const recordWithToken = genericRecord.find((record) => record?.content?.secretKey !== undefined)
   const secretKey = recordWithToken?.content.secretKey as string
 
   return secretKey

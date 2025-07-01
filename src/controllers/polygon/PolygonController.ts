@@ -11,9 +11,10 @@ import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, UnprocessableEntityError } from '../../errors'
+import { CredentialEnum, SCOPES } from '../../enums'
 
 @Tags('Polygon')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @Route('/polygon')
 @injectable()
 export class Polygon extends Controller {

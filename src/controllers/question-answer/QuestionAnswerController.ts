@@ -10,10 +10,11 @@ import { injectable } from 'tsyringe'
 import ErrorHandlingService from '../../errorHandlingService'
 import { NotFoundError } from '../../errors'
 import { RecordId } from '../examples'
+import { SCOPES } from '../../enums'
 
 @Tags('Question Answer')
 @Route('/question-answer')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class QuestionAnswerController extends Controller {
 

@@ -7,7 +7,7 @@ import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Resp
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum, EndorserMode } from '../../enums/enum'
+import { CredentialEnum, EndorserMode, SchemaError, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
@@ -15,7 +15,7 @@ import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class CredentialDefinitionController extends Controller {
 

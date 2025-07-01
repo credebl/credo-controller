@@ -16,7 +16,7 @@ import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Requ
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import { DidMethod, Network, Role } from '../../enums/enum'
+import { DidMethod, Network, Role, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors'
 import { CreateDidResponse, Did, DidRecordExample } from '../examples'
@@ -25,7 +25,7 @@ import { AgentType } from 'src/types/request'
 
 @Tags('Dids')
 @Route('/dids')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class DidController extends Controller {
 

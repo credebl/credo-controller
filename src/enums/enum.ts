@@ -86,3 +86,10 @@ export enum RESULT {
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
 }
+
+export enum SCOPES {
+  UNPROTECTED = 'skip',
+  MULTITENANT_BASE_AGENT = 'Basewallet',
+  TENANT_AGENT = 'tenant',
+  DEDICATED_AGENT = 'dedicated'
+}

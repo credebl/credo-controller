@@ -11,7 +11,7 @@ import { Body, Controller, Post, Route, Tags, Security, Request } from 'tsoa'
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum, EndorserMode } from '../../enums/enum'
+import { CredentialEnum, EndorserMode, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError } from '../../errors'
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
@@ -19,7 +19,7 @@ import { AgentType } from 'src/types/request'
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class EndorserTransactionController extends Controller {
 

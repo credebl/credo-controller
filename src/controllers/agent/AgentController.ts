@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
-import { AgentRole } from 'src/enums/enum'
+import { AgentRole, SCOPES } from '../../enums'
 import { assertAskarWallet } from '@credo-ts/askar/build/utils/assertAskarWallet'
 import { BadRequestError } from 'src/errors'
 
@@ -20,6 +20,7 @@ export class AgentController extends Controller {
   /**
    * Retrieve basic agent information
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Get('/')
   public async getAgentInfo(@Request() request: Req): Promise<AgentInfo> {
     try {
@@ -60,7 +61,7 @@ export class AgentController extends Controller {
   /**
    * Delete wallet
    */
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Delete('/wallet')
   public async deleteWallet(@Request() request: Req) {
     try {
@@ -81,7 +82,7 @@ export class AgentController extends Controller {
    *  signature - Signature in base64 format
    * @returns isValidSignature - true if signature is valid, false otherwise
    */
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('/verify/:tenantId')
   public async verify(@Request() request: Req, @Body() body: VerifyDataOptions) {
     try {
@@ -97,7 +98,7 @@ export class AgentController extends Controller {
     }
   }
 
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('/credential/sign')
   public async signCredential(
     @Request() request: Req,
@@ -157,7 +158,7 @@ export class AgentController extends Controller {
     }
   }
 
-  @Security('jwt')
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('/credential/verify')
   public async verifyCredential(
     @Request() request: Req,

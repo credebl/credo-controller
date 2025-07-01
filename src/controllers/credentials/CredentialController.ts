@@ -31,9 +31,10 @@ import {
   CreateOfferOobOptions,
   ThreadId,
 } from '../types'
+import { SCOPES } from '../../enums'
 
 @Tags('Credentials')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @Route('/credentials')
 @injectable()
 export class CredentialController extends Controller {

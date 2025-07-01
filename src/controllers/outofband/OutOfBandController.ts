@@ -26,9 +26,10 @@ import ErrorHandlingService from '../../errorHandlingService'
 import { NotFoundError } from '../../errors'
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
 import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
+import { SCOPES } from '../../enums'
 
 @Tags('Out Of Band')
-@Security('apiKey')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @Route('/oob')
 @injectable()
 export class OutOfBandController extends Controller {

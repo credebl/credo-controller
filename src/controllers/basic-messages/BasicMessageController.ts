@@ -8,10 +8,11 @@ import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
 import { BasicMessageRecordExample, RecordId } from '../examples'
+import { SCOPES } from '../../enums'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
-@Security('jwt')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class BasicMessageController extends Controller {
 
