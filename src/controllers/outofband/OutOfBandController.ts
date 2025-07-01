@@ -23,7 +23,7 @@ import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
-import { NotFoundError } from '../../errors'
+import { InternalServerError, NotFoundError } from '../../errors'
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
 import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
 import { SCOPES } from '../../enums'
@@ -43,9 +43,10 @@ export class OutOfBandController extends Controller {
   @Get()
   public async getAllOutOfBandRecords(@Request() request: Req, @Query('invitationId') invitationId?: RecordId) {
     try {
-      let outOfBandRecords = await request.agent.oob.getAll()
-
-      if (invitationId) outOfBandRecords = outOfBandRecords.filter((o) => o.outOfBandInvitation.id === invitationId)
+      const query = invitationId ? {
+        invitationId: invitationId
+      } : {}
+      let outOfBandRecords = await request.agent.oob.findAllByQuery(query)
 
       return outOfBandRecords.map((c) => c.toJSON())
     } catch (error) {
@@ -115,6 +116,10 @@ export class OutOfBandController extends Controller {
         })
 
         invitationDid = did.didState.did
+
+        if (!invitationDid) {
+          throw new InternalServerError('Error in creating invitationDid')
+        }
       }
 
       const outOfBandRecord = await request.agent.oob.createInvitation({ ...config, invitationDid })

@@ -21,7 +21,7 @@ import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors'
 import { CreateDidResponse, Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
-import { AgentType } from 'src/types/request'
+import { AgentType } from '../../types'
 
 @Tags('Dids')
 @Route('/dids')
@@ -387,7 +387,7 @@ export class DidController extends Controller {
   public async handleWeb(agent: AgentType, didOptions: DidCreate) {
     let didDocument: any
     if (!didOptions.domain) {
-      throw new BadRequestError('domain is required')
+      throw new BadRequestError('For create did:web, domain is required')
     }
 
     if (!didOptions.seed) {
@@ -407,8 +407,10 @@ export class DidController extends Controller {
     const keyId = `${did}#key-1`
 
     const key = await agent.wallet.createKey({
-      keyType: KeyType.Ed25519,
-      privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+      keyType: didOptions.keyType,
+      // Commenting for now, as per the multi-tenant endpoint
+      // privateKey: TypedArrayEncoder.fromString(didOptions.seed),
+      seed: TypedArrayEncoder.fromString(didOptions.seed),
     })
 
     if (didOptions.keyType === KeyType.Ed25519) {
@@ -450,7 +452,7 @@ export class DidController extends Controller {
       throw new BadRequestError('Invalid network type')
     }
     if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
-      throw new BadRequestError('Invalid private key or not supported')
+      throw new BadRequestError('Invalid private key or key not supported')
     }
 
     const createDidResponse = await agent.dids.create<PolygonDidCreateOptions>({

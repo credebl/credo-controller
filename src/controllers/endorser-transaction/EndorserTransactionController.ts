@@ -1,4 +1,3 @@
-import type { Version } from '../examples'
 import type { IndyVdrDidCreateOptions } from '@credo-ts/indy-vdr'
 
 import {
@@ -15,7 +14,7 @@ import { CredentialEnum, EndorserMode, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError } from '../../errors'
 import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
-import { AgentType } from 'src/types/request'
+import { AgentType } from '../../types'
 
 @Tags('EndorserTransaction')
 @Route('/transactions')
@@ -54,6 +53,12 @@ export class EndorserTransactionController extends Controller {
             nymRequest: didNymTransaction.nymRequest,
           },
         },
+      })
+
+      // Importing did in accordance to the multi-tenant flow
+      await request.agent.dids.import({
+        did: didNymTransaction.did,
+        overwrite: true,
       })
 
       return didCreateSubmitResult
@@ -96,7 +101,7 @@ export class EndorserTransactionController extends Controller {
     schema: {
       issuerId: string
       name: string
-      version: Version
+      version: string
       attributes: string[]
     },
     endorsedTransaction?: string,

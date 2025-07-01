@@ -10,7 +10,7 @@ import { injectable } from 'tsyringe'
 import ErrorHandlingService from '../../errorHandlingService'
 import { AgentRole, SCOPES } from '../../enums'
 import { assertAskarWallet } from '@credo-ts/askar/build/utils/assertAskarWallet'
-import { BadRequestError } from 'src/errors'
+import { BadRequestError } from '../../errors'
 
 @Tags('Agent')
 @Route('/agent')

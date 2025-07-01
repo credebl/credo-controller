@@ -50,7 +50,7 @@ import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
 import { readFile } from 'fs/promises'
 
-import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums/enum'
+import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums'
 import { setupServer } from './server'
 import { generateSecretKey } from './utils/helpers'
 import { TsLogger } from './utils/logger'

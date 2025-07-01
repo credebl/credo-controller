@@ -35,12 +35,12 @@ export class CredentialDefinitionController extends Controller {
       const credentialDefinitionResult =
         await request.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
 
-      if (credentialDefinitionResult.resolutionMetadata?.error === 'notFound') {
+      if (credentialDefinitionResult.resolutionMetadata?.error === SchemaError.NotFound) {
         throw new NotFoundError(credentialDefinitionResult.resolutionMetadata.message)
       }
       const error = credentialDefinitionResult.resolutionMetadata?.error
 
-      if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
+      if (error === 'invalid' || error === SchemaError.UnSupportedAnonCredsMethod) {
         throw new BadRequestError(credentialDefinitionResult.resolutionMetadata.message)
       }
 
@@ -77,6 +77,9 @@ export class CredentialDefinitionController extends Controller {
   ) {
     try {
       const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
+      credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse
+          ? credentialDefinitionRequest.endorse
+          : false
       const credDef = {
         issuerId,
         schemaId,

@@ -10,7 +10,7 @@ import { CredentialEnum, EndorserMode, SchemaError, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
 import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
-import { CreateSchemaSuccessful, SchemaExample } from '../examples'
+import { CreateSchemaSuccessful, SchemaExample, SchemaId } from '../examples'
 import { CreateSchemaInput } from '../types'
 
 @Tags('Schemas')
@@ -30,7 +30,7 @@ export class SchemaController extends Controller {
    */
   @Example(SchemaExample)
   @Get('/:schemaId')
-  public async getSchemaById(@Request() request: Req, @Path('schemaId') schemaId: string) {
+  public async getSchemaById(@Request() request: Req, @Path('schemaId') schemaId: SchemaId) {
     try {
       const schemBySchemaId = await request.agent.modules.anoncreds.getSchema(schemaId)
 
@@ -40,7 +40,7 @@ export class SchemaController extends Controller {
           schemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound) ||
         schemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
       ) {
-        throw new NotFoundError(schemBySchemaId?.resolutionMetadata?.message)
+        throw new NotFoundError(schemBySchemaId?.resolutionMetadata?.message || `schema details with schema id "${schemaId}" not found.`)
       }
 
       return schemBySchemaId

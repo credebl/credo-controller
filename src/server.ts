@@ -2,7 +2,7 @@
 import { otelSDK } from './tracer'
 import 'reflect-metadata'
 import type { RestAgentModules, RestMultiTenantAgentModules } from './cliAgent'
-import type { ApiError } from './error'
+import type { ApiError } from './errors'
 import type { ServerConfig } from './utils/ServerConfig'
 import type { Response as ExResponse, Request as ExRequest, NextFunction, ErrorRequestHandler } from 'express'
 
@@ -20,7 +20,7 @@ import { container } from 'tsyringe'
 
 import { setDynamicApiKey } from './authentication'
 import { BaseError } from './errors/errors'
-import { ErrorMessages } from './enums/enum'
+import { ErrorMessages } from './enums'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
@@ -95,15 +95,16 @@ export const setupServer = async (
   app.use(securityMiddleware.use)
   RegisterRoutes(app)
 
-  app.use(async (req, _, next) => {
-    // End tenant session if active
-    await endTenantSessionIfActive(req)
+  app.use((req: ExRequest, res: ExResponse, next: NextFunction) => {
+    res.on('finish', async () => {
+      console.log("Clean-up tenant sessions")
+      await endTenantSessionIfActive(req)
+    })
     next()
   })
 
   app.use((async (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): Promise<ExResponse | void> => {
     // End tenant session if active
-    await endTenantSessionIfActive(req)
     if (err instanceof ValidateError) {
       agent.config.logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
       return res.status(422).json({
@@ -138,7 +139,7 @@ async function endTenantSessionIfActive(request: ExRequest) {
   if ('agent' in request) {
     const agent = request?.agent
     if (agent instanceof TenantAgent) {
-      agent.config.logger.debug('Ending tenant session')
+      agent.config.logger.debug(`Ending tenant session for tenant:: ${agent.context.contextCorrelationId}`)
       await agent.endSession()
     }
   }

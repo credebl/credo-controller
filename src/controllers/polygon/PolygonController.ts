@@ -64,7 +64,7 @@ export class Polygon extends Controller {
         schemaName,
         schema,
       })
-      if (schemaResponse.schemaState?.state === 'failed') {
+      if (schemaResponse.schemaState?.state === CredentialEnum.Failed) {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
           throw new UnprocessableEntityError(
@@ -81,7 +81,7 @@ export class Polygon extends Controller {
       }
 
       if (!schemaResponse?.schemaId) {
-        throw new BadRequestError('Invalid schema response')
+        throw new BadRequestError('Error in getting schema response or Invalid schema response')
       }
       const schemaPayload: SchemaMetadata = {
         schemaUrl: configJson.schemaFileServerURL + schemaResponse?.schemaId,
@@ -133,7 +133,11 @@ export class Polygon extends Controller {
   @Get(':did/:schemaId')
   public async getSchemaById(@Request() request: Req, @Path('did') did: string, @Path('schemaId') schemaId: string): Promise<unknown> {
     try {
-      return request.agent.modules.polygon.getSchemaById(did, schemaId)
+      if (!did || !schemaId) {
+        throw new BadRequestError('Missing or invalid parameters.')
+      }
+      const schemaDetails = request.agent.modules.polygon.getSchemaById(did, schemaId)
+      return schemaDetails
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
