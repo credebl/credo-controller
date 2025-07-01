@@ -19,72 +19,6 @@
 			"ProofExchangeRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
-			"ProofFormat": {
-				"properties": {
-					"formatKey": {
-						"type": "string"
-					},
-					"proofFormats": {
-						"properties": {
-							"selectCredentialsForRequest": {
-								"properties": {
-									"output": {},
-									"input": {}
-								},
-								"required": [
-									"output",
-									"input"
-								],
-								"type": "object"
-							},
-							"getCredentialsForRequest": {
-								"properties": {
-									"output": {},
-									"input": {}
-								},
-								"required": [
-									"output",
-									"input"
-								],
-								"type": "object"
-							},
-							"acceptRequest": {},
-							"createRequest": {},
-							"acceptProposal": {},
-							"createProposal": {}
-						},
-						"required": [
-							"selectCredentialsForRequest",
-							"getCredentialsForRequest",
-							"acceptRequest",
-							"createRequest",
-							"acceptProposal",
-							"createProposal"
-						],
-						"type": "object"
-					},
-					"formatData": {
-						"properties": {
-							"presentation": {},
-							"request": {},
-							"proposal": {}
-						},
-						"required": [
-							"presentation",
-							"request",
-							"proposal"
-						],
-						"type": "object"
-					}
-				},
-				"required": [
-					"formatKey",
-					"proofFormats",
-					"formatData"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"AutoAcceptProof": {
 				"description": "Typing of the state for auto acceptance",
 				"enum": [
@@ -99,28 +33,7 @@
 					"connectionId": {
 						"type": "string"
 					},
-					"proofFormats": {
-						"properties": {
-							"action": {
-								"type": "string",
-								"enum": [
-									"createProposal"
-								],
-								"nullable": false
-							},
-							"formats": {
-								"items": {
-									"$ref": "#/components/schemas/ProofFormat"
-								},
-								"type": "array"
-							}
-						},
-						"required": [
-							"action",
-							"formats"
-						],
-						"type": "object"
-					},
+					"proofFormats": {},
 					"goalCode": {
 						"type": "string"
 					},
@@ -146,28 +59,7 @@
 					"proofRecordId": {
 						"type": "string"
 					},
-					"proofFormats": {
-						"properties": {
-							"action": {
-								"type": "string",
-								"enum": [
-									"acceptProposal"
-								],
-								"nullable": false
-							},
-							"formats": {
-								"items": {
-									"$ref": "#/components/schemas/ProofFormat"
-								},
-								"type": "array"
-							}
-						},
-						"required": [
-							"action",
-							"formats"
-						],
-						"type": "object"
-					},
+					"proofFormats": {},
 					"comment": {
 						"type": "string"
 					},
@@ -253,6 +145,35 @@
 				],
 				"type": "object",
 				"additionalProperties": {}
+			},
+			"ThreadDecorator": {
+				"description": "Represents `~thread` decorator",
+				"properties": {
+					"threadId": {
+						"type": "string",
+						"description": "The ID of the message that serves as the thread start."
+					},
+					"parentThreadId": {
+						"type": "string",
+						"description": "An optional parent `thid`. Used when branching or nesting a new interaction off of an existing one."
+					},
+					"senderOrder": {
+						"type": "number",
+						"format": "double",
+						"description": "A number that tells where this message fits in the sequence of all messages that the current sender has contributed to this thread."
+					},
+					"receivedOrders": {
+						"properties": {},
+						"additionalProperties": {
+							"type": "number",
+							"format": "double"
+						},
+						"type": "object",
+						"description": "Reports the highest `sender_order` value that the sender has seen from other sender(s) on the thread.\nThis value is often missing if it is the first message in an interaction, but should be used otherwise, as it provides an implicit ACK."
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"CreateProofRequestOobOptions": {
 				"properties": {
@@ -888,10 +809,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"TenantRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__": {
+			"Pick_InitConfig.label-or-connectionImageUrl_": {
 				"properties": {
 					"label": {
 						"type": "string"
@@ -906,21 +824,50 @@
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
-			"Omit_TenantConfig.walletConfig_": {
-				"$ref": "#/components/schemas/Pick_TenantConfig.Exclude_keyofTenantConfig.walletConfig__",
-				"description": "Construct a type with the properties of T except for those in type K."
+			"KeyDerivationMethod": {
+				"enum": [
+					"ARGON2I_MOD",
+					"ARGON2I_INT",
+					"RAW"
+				],
+				"type": "string"
 			},
-			"CreateTenantOptions": {
+			"Pick_WalletConfig.id-or-key-or-keyDerivationMethod_": {
 				"properties": {
-					"config": {
-						"$ref": "#/components/schemas/Omit_TenantConfig.walletConfig_"
+					"key": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					},
+					"keyDerivationMethod": {
+						"$ref": "#/components/schemas/KeyDerivationMethod"
 					}
 				},
 				"required": [
-					"config"
+					"key",
+					"id"
 				],
 				"type": "object",
-				"additionalProperties": false
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"TenantConfig": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Pick_InitConfig.label-or-connectionImageUrl_"
+					},
+					{
+						"properties": {
+							"walletConfig": {
+								"$ref": "#/components/schemas/Pick_WalletConfig.id-or-key-or-keyDerivationMethod_"
+							}
+						},
+						"required": [
+							"walletConfig"
+						],
+						"type": "object"
+					}
+				]
 			},
 			"Record_string.any_": {
 				"properties": {},
@@ -928,63 +875,56 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
-			"DidDocument": {
+			"MetadataValue": {
 				"$ref": "#/components/schemas/Record_string.any_"
 			},
-			"DidCreate": {
+			"MetadataBase": {
+				"properties": {},
+				"additionalProperties": {
+					"$ref": "#/components/schemas/MetadataValue"
+				},
+				"type": "object"
+			},
+			"Metadata____": {
+				"description": "Metadata access class to get, set (create and update), add (append to a record) and delete metadata on any record.\n\nset will override the previous value if it already exists\n\nnote: To add persistence to these records, you have to update the record in the correct repository",
 				"properties": {
-					"keyType": {
-						"$ref": "#/components/schemas/KeyType"
-					},
-					"seed": {
-						"type": "string"
-					},
-					"domain": {
-						"type": "string"
-					},
-					"method": {
-						"type": "string"
-					},
-					"network": {
-						"type": "string"
-					},
-					"did": {
-						"type": "string"
-					},
-					"role": {
-						"type": "string"
-					},
-					"endorserDid": {
-						"type": "string"
-					},
-					"didDocument": {
-						"$ref": "#/components/schemas/DidDocument"
-					},
-					"privatekey": {
-						"type": "string"
-					},
-					"endpoint": {
-						"type": "string"
+					"data": {
+						"$ref": "#/components/schemas/MetadataBase"
 					}
 				},
 				"required": [
-					"method"
+					"data"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"DidNymTransaction": {
+			"Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__": {
 				"properties": {
-					"did": {
+					"label": {
 						"type": "string"
 					},
-					"nymRequest": {
+					"connectionImageUrl": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"did",
-					"nymRequest"
+					"label"
+				],
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_CustomTenantConfig.walletConfig_": {
+				"$ref": "#/components/schemas/Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"CreateTenantOptions": {
+				"properties": {
+					"config": {
+						"$ref": "#/components/schemas/Omit_CustomTenantConfig.walletConfig_"
+					}
+				},
+				"required": [
+					"config"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -1012,126 +952,214 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing__": {
+			"DidRegistrationSecretOptions": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidDocument": {
+				"$ref": "#/components/schemas/Record_string.any_"
+			},
+			"DidOperationStateWait": {
 				"properties": {
-					"alias": {
-						"type": "string"
-					},
-					"label": {
-						"type": "string"
-					},
-					"imageUrl": {
-						"type": "string"
-					},
-					"multiUseInvitation": {
-						"type": "boolean"
-					},
-					"autoAcceptConnection": {
-						"type": "boolean"
-					},
-					"goalCode": {
-						"type": "string"
-					},
-					"goal": {
-						"type": "string"
-					},
-					"handshake": {
-						"type": "boolean"
-					},
-					"handshakeProtocols": {
-						"items": {
-							"$ref": "#/components/schemas/HandshakeProtocol"
-						},
-						"type": "array"
-					},
-					"messages": {
-						"items": {
-							"$ref": "#/components/schemas/AgentMessage"
-						},
-						"type": "array"
-					},
-					"appendedAttachments": {
-						"items": {
-							"$ref": "#/components/schemas/Attachment"
-						},
-						"type": "array"
-					},
-					"invitationDid": {
+					"state": {
 						"type": "string",
-						"description": "Did to use in the invitation. Cannot be used in combination with `routing`."
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
 					}
 				},
-				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
-			},
-			"Omit_CreateOutOfBandInvitationConfig.routing_": {
-				"$ref": "#/components/schemas/Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing__",
-				"description": "Construct a type with the properties of T except for those in type K."
-			},
-			"Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages__": {
-				"properties": {
-					"alias": {
-						"type": "string"
-					},
-					"label": {
-						"type": "string"
-					},
-					"imageUrl": {
-						"type": "string"
-					},
-					"multiUseInvitation": {
-						"type": "boolean"
-					},
-					"autoAcceptConnection": {
-						"type": "boolean"
-					},
-					"goalCode": {
-						"type": "string"
-					},
-					"goal": {
-						"type": "string"
-					},
-					"handshake": {
-						"type": "boolean"
-					},
-					"handshakeProtocols": {
-						"items": {
-							"$ref": "#/components/schemas/HandshakeProtocol"
-						},
-						"type": "array"
-					},
-					"invitationDid": {
-						"type": "string",
-						"description": "Did to use in the invitation. Cannot be used in combination with `routing`."
-					}
-				},
-				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
-			},
-			"Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_": {
-				"$ref": "#/components/schemas/Pick_CreateOutOfBandInvitationConfig.Exclude_keyofCreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages__",
-				"description": "Construct a type with the properties of T except for those in type K."
-			},
-			"DidExchangeState": {
-				"description": "Connection states as defined in RFC 0023.",
-				"enum": [
-					"start",
-					"invitation-sent",
-					"invitation-received",
-					"request-sent",
-					"request-received",
-					"response-sent",
-					"response-received",
-					"abandoned",
-					"completed"
+				"required": [
+					"state"
 				],
-				"type": "string"
+				"type": "object",
+				"additionalProperties": false
 			},
-			"Version": {
-				"type": "string",
-				"example": "1.0.0"
+			"DidOperationStateActionBase": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state",
+					"action"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
-			"CreateSchemaInput": {
+			"DidOperationStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
+				"required": [
+					"state",
+					"did",
+					"didDocument"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidOperationStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"did": {
+						"type": "string"
+					},
+					"secret": {
+						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidRegistrationMetadata": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"DidResolutionMetadata": {
+				"properties": {
+					"contentType": {
+						"type": "string"
+					},
+					"error": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"enum": [
+									"invalidDid",
+									"notFound",
+									"representationNotSupported",
+									"unsupportedDidMethod"
+								]
+							}
+						]
+					},
+					"message": {
+						"type": "string"
+					},
+					"servedFromCache": {
+						"type": "boolean",
+						"description": "Whether the did document was served from the cache"
+					},
+					"servedFromDidRecord": {
+						"type": "boolean",
+						"description": "Whether the did document was served from a local did record"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidCreateResult_DidOperationStateActionBase_": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"didState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/DidOperationStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateActionBase"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/DidOperationStateFailed"
+							}
+						]
+					},
+					"didRegistrationMetadata": {
+						"$ref": "#/components/schemas/DidRegistrationMetadata"
+					},
+					"didDocumentMetadata": {
+						"$ref": "#/components/schemas/DidResolutionMetadata"
+					}
+				},
+				"required": [
+					"didState",
+					"didRegistrationMetadata",
+					"didDocumentMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidNymTransaction": {
+				"properties": {
+					"did": {
+						"type": "string"
+					},
+					"nymRequest": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"did",
+					"nymRequest"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsSchema": {
 				"properties": {
 					"issuerId": {
 						"type": "string"
@@ -1140,48 +1168,261 @@
 						"type": "string"
 					},
 					"version": {
-						"$ref": "#/components/schemas/Version"
+						"type": "string"
 					},
-					"attributes": {
+					"attrNames": {
 						"items": {
 							"type": "string"
 						},
 						"type": "array"
-					},
-					"endorse": {
-						"type": "boolean"
-					},
-					"endorserDid": {
-						"type": "string"
 					}
 				},
 				"required": [
 					"issuerId",
 					"name",
 					"version",
-					"attributes"
+					"attrNames"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"SchemaMetadata": {
+			"RegisterSchemaReturnStateWait": {
 				"properties": {
-					"did": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateAction": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"action",
+					"schema",
+					"schemaId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"schema",
+					"schemaId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterSchemaReturnStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"reason": {
+						"type": "string"
+					},
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsCredentialDefinition": {
+				"properties": {
+					"issuerId": {
 						"type": "string"
 					},
 					"schemaId": {
 						"type": "string"
 					},
-					"schemaTxnHash": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"CL"
+						],
+						"nullable": false
+					},
+					"tag": {
 						"type": "string"
 					},
-					"schemaUrl": {
+					"value": {
+						"properties": {
+							"revocation": {},
+							"primary": {
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						},
+						"required": [
+							"primary"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"issuerId",
+					"schemaId",
+					"type",
+					"tag",
+					"value"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateWait": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"wait"
+						],
+						"nullable": false
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"did",
-					"schemaId"
+					"state"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateAction": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"action"
+						],
+						"nullable": false
+					},
+					"action": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					}
+				},
+				"required": [
+					"state",
+					"action",
+					"credentialDefinitionId",
+					"credentialDefinition"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateFinished": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"finished"
+						],
+						"nullable": false
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"credentialDefinition",
+					"credentialDefinitionId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterCredentialDefinitionReturnStateFailed": {
+				"properties": {
+					"state": {
+						"type": "string",
+						"enum": [
+							"failed"
+						],
+						"nullable": false
+					},
+					"reason": {
+						"type": "string"
+					},
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"state",
+					"reason"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -1203,7 +1444,7 @@
 								"type": "array"
 							},
 							"version": {
-								"$ref": "#/components/schemas/Version"
+								"type": "string"
 							},
 							"name": {
 								"type": "string"
@@ -1252,13 +1493,305 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"DIDDocumentMetadata": {
+				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
+				"properties": {
+					"created": {
+						"type": "string"
+					},
+					"updated": {
+						"type": "string"
+					},
+					"deactivated": {
+						"type": "boolean"
+					},
+					"versionId": {
+						"type": "string"
+					},
+					"nextUpdate": {
+						"type": "string"
+					},
+					"nextVersionId": {
+						"type": "string"
+					},
+					"equivalentId": {
+						"type": "string"
+					},
+					"canonicalId": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Did": {
+				"type": "string",
+				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+			},
+			"DidCreate": {
+				"properties": {
+					"keyType": {
+						"$ref": "#/components/schemas/KeyType"
+					},
+					"seed": {
+						"type": "string"
+					},
+					"domain": {
+						"type": "string"
+					},
+					"method": {
+						"type": "string"
+					},
+					"network": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"role": {
+						"type": "string"
+					},
+					"endorserDid": {
+						"type": "string"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					},
+					"privatekey": {
+						"type": "string"
+					},
+					"endpoint": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"method"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"AnonCredsResolutionMetadata": {
+				"properties": {
+					"error": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"enum": [
+									"invalid",
+									"notFound",
+									"unsupportedAnonCredsMethod"
+								]
+							}
+						]
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredoExtensible": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"GetSchemaReturn": {
+				"properties": {
+					"schema": {
+						"$ref": "#/components/schemas/AnonCredsSchema"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"resolutionMetadata": {
+						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
+					},
+					"schemaMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"schemaId",
+					"resolutionMetadata",
+					"schemaMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"SchemaId": {
 				"type": "string",
 				"example": "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0"
 			},
+			"RegisterSchemaReturn": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"schemaState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateAction"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterSchemaReturnStateFailed"
+							}
+						]
+					},
+					"schemaMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					},
+					"registrationMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"schemaState",
+					"schemaMetadata",
+					"registrationMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateSchemaInput": {
+				"properties": {
+					"issuerId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"version": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"endorse": {
+						"type": "boolean"
+					},
+					"endorserDid": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"issuerId",
+					"name",
+					"version",
+					"attributes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"GetCredentialDefinitionReturn": {
+				"properties": {
+					"credentialDefinition": {
+						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"resolutionMetadata": {
+						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
+					},
+					"credentialDefinitionMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"credentialDefinitionId",
+					"resolutionMetadata",
+					"credentialDefinitionMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialDefinitionId": {
 				"type": "string",
 				"example": "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
+			},
+			"RegisterCredentialDefinitionReturn": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"credentialDefinitionState": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateWait"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateAction"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
+							},
+							{
+								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFailed"
+							}
+						]
+					},
+					"credentialDefinitionMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					},
+					"registrationMetadata": {
+						"$ref": "#/components/schemas/CredoExtensible"
+					}
+				},
+				"required": [
+					"credentialDefinitionState",
+					"credentialDefinitionMetadata",
+					"registrationMetadata"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ThreadId": {
+				"type": "string",
+				"example": "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
+			},
+			"CredentialState": {
+				"description": "Issue Credential states as defined in RFC 0036 and RFC 0453",
+				"enum": [
+					"proposal-sent",
+					"proposal-received",
+					"offer-sent",
+					"offer-received",
+					"declined",
+					"request-sent",
+					"request-received",
+					"credential-issued",
+					"credential-received",
+					"done",
+					"abandoned"
+				],
+				"type": "string"
+			},
+			"CredentialRole": {
+				"enum": [
+					"issuer",
+					"holder"
+				],
+				"type": "string"
+			},
+			"W3cCredentialRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"CredentialExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"ProtocolVersion": {
 				"enum": [
@@ -1304,18 +1837,19 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"AnonCredsOfferCredentialFormat": {
-				"description": "This defines the module payload for calling CredentialsApi.offerCredential\nor CredentialsApi.negotiateProposal",
+			"Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__": {
 				"properties": {
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
 					"credentialDefinitionId": {
 						"type": "string"
-					},
-					"revocationRegistryDefinitionId": {
-						"type": "string"
-					},
-					"revocationRegistryIndex": {
-						"type": "number",
-						"format": "double"
 					},
 					"attributes": {
 						"items": {
@@ -1328,14 +1862,24 @@
 							"$ref": "#/components/schemas/LinkedAttachment"
 						},
 						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
 					}
 				},
-				"required": [
-					"credentialDefinitionId",
-					"attributes"
-				],
 				"type": "object",
-				"additionalProperties": false
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_": {
+				"$ref": "#/components/schemas/Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"LegacyIndyProposeCredentialFormat": {
+				"$ref": "#/components/schemas/Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_",
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer\n\nNOTE: This doesn't include the `issuerId` and `schemaIssuerId` properties that are present in the newer format."
 			},
 			"W3cIssuerOptions": {
 				"description": "TODO: check how to support arbitrary data in class",
@@ -1447,6 +1991,205 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"AnonCredsProposeCredentialFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer",
+				"properties": {
+					"schemaIssuerId": {
+						"type": "string"
+					},
+					"schemaId": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"schemaVersion": {
+						"type": "string"
+					},
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"issuerId": {
+						"type": "string"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					},
+					"schemaIssuerDid": {
+						"type": "string"
+					},
+					"issuerDid": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_CredentialFormatType-Array.createProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/LegacyIndyProposeCredentialFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsProposeCredentialFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"AutoAcceptCredential": {
+				"description": "Typing of the state for auto acceptance",
+				"enum": [
+					"always",
+					"contentApproved",
+					"never"
+				],
+				"type": "string"
+			},
+			"ProposeCredentialOptions": {
+				"properties": {
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProtocolVersion"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormatType-Array.createProposal_"
+					},
+					"autoAcceptCredential": {
+						"$ref": "#/components/schemas/AutoAcceptCredential"
+					},
+					"comment": {
+						"type": "string"
+					},
+					"connectionId": {
+						"$ref": "#/components/schemas/RecordId"
+					}
+				},
+				"required": [
+					"protocolVersion",
+					"credentialFormats",
+					"connectionId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsAcceptProposalFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptProposal",
+				"properties": {
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryIndex": {
+						"type": "number",
+						"format": "double"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Record_string.never_": {
+				"properties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"EmptyObject": {
+				"$ref": "#/components/schemas/Record_string.never_"
+			},
+			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"AcceptCredentialProposalOptions": {
+				"properties": {
+					"credentialRecordId": {
+						"type": "string"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptProposal_"
+					},
+					"autoAcceptCredential": {
+						"$ref": "#/components/schemas/AutoAcceptCredential"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"credentialRecordId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsOfferCredentialFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.offerCredential\nor CredentialsApi.negotiateProposal",
+				"properties": {
+					"credentialDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryDefinitionId": {
+						"type": "string"
+					},
+					"revocationRegistryIndex": {
+						"type": "number",
+						"format": "double"
+					},
+					"attributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"linkedAttachments": {
+						"items": {
+							"$ref": "#/components/schemas/LinkedAttachment"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"credentialDefinitionId",
+					"attributes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CredentialFormatPayload_CredentialFormats.createOffer_": {
 				"properties": {
 					"indy": {
@@ -1461,15 +2204,6 @@
 				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
-			},
-			"AutoAcceptCredential": {
-				"description": "Typing of the state for auto acceptance",
-				"enum": [
-					"always",
-					"contentApproved",
-					"never"
-				],
-				"type": "string"
 			},
 			"CreateOfferOptions": {
 				"properties": {
@@ -1486,6 +2220,12 @@
 						"$ref": "#/components/schemas/AutoAcceptCredential"
 					},
 					"comment": {
+						"type": "string"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"goal": {
 						"type": "string"
 					}
 				},
@@ -1555,33 +2295,44 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_CredentialFormatsFromProtocols_CredentialProtocol-Array_.acceptOffer_": {
-				"properties": {},
+			"AnonCredsAcceptOfferFormat": {
+				"description": "This defines the module payload for calling CredentialsApi.acceptOffer. No options are available for this\nmethod, so it's an empty object",
+				"properties": {
+					"linkSecretId": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_CredentialFormats.acceptOffer_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/EmptyObject"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
+					}
+				},
 				"type": "object",
 				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
 			},
-			"AcceptCredentialOfferOptions": {
-				"description": "Interface for CredentialsApi.acceptOffer. Will send a request\n\ncredentialFormats is optional because this is an accept method",
+			"CredentialOfferOptions": {
 				"properties": {
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
+					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
 					},
 					"comment": {
 						"type": "string"
-					},
-					"goalCode": {
-						"type": "string",
-						"description": "Will be ignored for v1 protocol as it is not supported"
-					},
-					"goal": {
-						"type": "string",
-						"description": "Will be ignored for v1 protocol as it is not supported"
-					},
-					"credentialRecordId": {
-						"type": "string"
-					},
-					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormatsFromProtocols_CredentialProtocol-Array_.acceptOffer_"
 					}
 				},
 				"required": [
@@ -1590,63 +2341,135 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialState": {
-				"description": "Issue Credential states as defined in RFC 0036 and RFC 0453",
-				"enum": [
-					"proposal-sent",
-					"proposal-received",
-					"offer-sent",
-					"offer-received",
-					"declined",
-					"request-sent",
-					"request-received",
-					"credential-issued",
-					"credential-received",
-					"done",
-					"abandoned"
-				],
-				"type": "string"
+			"AnonCredsAcceptRequestFormat": {
+				"$ref": "#/components/schemas/Record_string.never_",
+				"description": "This defines the module payload for calling CredentialsApi.acceptRequest. No options are available for this\nmethod, so it's an empty object"
 			},
-			"QuestionAnswerRole": {
-				"enum": [
-					"questioner",
-					"responder"
-				],
-				"type": "string"
-			},
-			"QuestionAnswerState": {
-				"description": "QuestionAnswer states inferred from RFC 0113.",
-				"enum": [
-					"question-sent",
-					"question-received",
-					"answer-received",
-					"answer-sent"
-				],
-				"type": "string"
-			},
-			"ValidResponse": {
+			"JsonLdAcceptRequestFormat": {
+				"description": "Format for accepting a jsonld credential request. Optionally allows the verification\nmethod to use to sign the credential.",
 				"properties": {
-					"text": {
+					"verificationMethod": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
+				"properties": {
+					"indy": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					},
+					"jsonld": {
+						"$ref": "#/components/schemas/JsonLdAcceptRequestFormat"
+					},
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
+			},
+			"AcceptCredentialRequestOptions": {
+				"properties": {
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
+					},
+					"credentialFormats": {
+						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptRequest_"
+					},
+					"autoAcceptCredential": {
+						"$ref": "#/components/schemas/AutoAcceptCredential"
+					},
+					"comment": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"text"
+					"credentialRecordId"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Record_response.string_": {
+			"AcceptCredential": {
 				"properties": {
-					"response": {
-						"type": "string"
+					"credentialRecordId": {
+						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"response"
+					"credentialRecordId"
 				],
 				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
+				"additionalProperties": false
+			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.proposal_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.offer_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.request_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.credential_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
+			},
+			"GetCredentialFormatDataReturn__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array_": {
+				"properties": {
+					"credential": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.credential_"
+					},
+					"request": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.request_"
+					},
+					"offerAttributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					},
+					"offer": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.offer_"
+					},
+					"proposal": {
+						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.proposal_"
+					},
+					"proposalAttributes": {
+						"items": {
+							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"description": "Get format data return value. Each key holds a mapping of credential format key to format data."
+			},
+			"DidExchangeState": {
+				"description": "Connection states as defined in RFC 0023.",
+				"enum": [
+					"start",
+					"invitation-sent",
+					"invitation-received",
+					"request-sent",
+					"request-received",
+					"response-sent",
+					"response-received",
+					"abandoned",
+					"completed"
+				],
+				"type": "string"
+			},
+			"BasicMessageRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"Record_content.string_": {
 				"properties": {
@@ -1659,6 +2482,43 @@
 				],
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
+			},
+			"AgentInfo": {
+				"properties": {
+					"label": {
+						"type": "string"
+					},
+					"endpoints": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"isInitialized": {
+						"type": "boolean"
+					},
+					"publicDid": {}
+				},
+				"required": [
+					"label",
+					"endpoints",
+					"isInitialized",
+					"publicDid"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AgentToken": {
+				"properties": {
+					"token": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"token"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"VerifyDataOptions": {
 				"properties": {
@@ -1682,9 +2542,6 @@
 					"data"
 				],
 				"type": "object"
-			},
-			"W3cCredentialRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"W3cIssuer": {
 				"properties": {
@@ -1895,6 +2752,55 @@
 					"data"
 				],
 				"type": "object"
+			},
+			"Partial_W3cCredentialValidations_": {
+				"properties": {},
+				"type": "object",
+				"description": "Make all properties in T optional"
+			},
+			"Error": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"stack": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"W3cVerifyResult_W3cCredentialValidations_": {
+				"properties": {
+					"isValid": {
+						"type": "boolean",
+						"description": "Whether the verification as a whole is valid. This means that\nall validations inside the validations object should have passed."
+					},
+					"validations": {
+						"$ref": "#/components/schemas/Partial_W3cCredentialValidations_",
+						"description": "Validations that have been performed"
+					},
+					"error": {
+						"$ref": "#/components/schemas/Error",
+						"description": "Error that was caught during verification not related to\nany of the specific validations that are performed"
+					}
+				},
+				"required": [
+					"isValid",
+					"validations"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"W3cVerifyCredentialResult": {
+				"$ref": "#/components/schemas/W3cVerifyResult_W3cCredentialValidations_"
 			},
 			"Pick_LinkedDataProofOptions.Exclude_keyofLinkedDataProofOptions.cryptosuite__": {
 				"properties": {
@@ -2212,1045 +3118,46 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"DidRegistrationSecretOptions": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"DidOperationStateWait": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"wait"
-						],
-						"nullable": false
-					},
-					"did": {
-						"type": "string"
-					},
-					"secret": {
-						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
-					},
-					"didDocument": {
-						"$ref": "#/components/schemas/DidDocument"
-					}
-				},
-				"required": [
-					"state"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"DidOperationStateActionBase": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"action"
-						],
-						"nullable": false
-					},
-					"action": {
-						"type": "string"
-					},
-					"did": {
-						"type": "string"
-					},
-					"secret": {
-						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
-					},
-					"didDocument": {
-						"$ref": "#/components/schemas/DidDocument"
-					}
-				},
-				"required": [
-					"state",
-					"action"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"DidOperationStateFinished": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"finished"
-						],
-						"nullable": false
-					},
-					"did": {
-						"type": "string"
-					},
-					"secret": {
-						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
-					},
-					"didDocument": {
-						"$ref": "#/components/schemas/DidDocument"
-					}
-				},
-				"required": [
-					"state",
-					"did",
-					"didDocument"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"DidOperationStateFailed": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"failed"
-						],
-						"nullable": false
-					},
-					"did": {
-						"type": "string"
-					},
-					"secret": {
-						"$ref": "#/components/schemas/DidRegistrationSecretOptions"
-					},
-					"didDocument": {
-						"$ref": "#/components/schemas/DidDocument"
-					},
-					"reason": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state",
-					"reason"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"DidRegistrationMetadata": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"DidResolutionMetadata": {
-				"properties": {
-					"contentType": {
-						"type": "string"
-					},
-					"error": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"enum": [
-									"invalidDid",
-									"notFound",
-									"representationNotSupported",
-									"unsupportedDidMethod"
-								]
-							}
-						]
-					},
-					"message": {
-						"type": "string"
-					},
-					"servedFromCache": {
-						"type": "boolean",
-						"description": "Whether the did document was served from the cache"
-					},
-					"servedFromDidRecord": {
-						"type": "boolean",
-						"description": "Whether the did document was served from a local did record"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"DidCreateResult_DidOperationStateActionBase_": {
-				"properties": {
-					"jobId": {
-						"type": "string"
-					},
-					"didState": {
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/DidOperationStateWait"
-							},
-							{
-								"$ref": "#/components/schemas/DidOperationStateActionBase"
-							},
-							{
-								"$ref": "#/components/schemas/DidOperationStateFinished"
-							},
-							{
-								"$ref": "#/components/schemas/DidOperationStateFailed"
-							}
-						]
-					},
-					"didRegistrationMetadata": {
-						"$ref": "#/components/schemas/DidRegistrationMetadata"
-					},
-					"didDocumentMetadata": {
-						"$ref": "#/components/schemas/DidResolutionMetadata"
-					}
-				},
-				"required": [
-					"didState",
-					"didRegistrationMetadata",
-					"didDocumentMetadata"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"DIDDocumentMetadata": {
-				"description": "Represents metadata about the DID document resulting from a {@link Resolvable.resolve} operation.",
-				"properties": {
-					"created": {
-						"type": "string"
-					},
-					"updated": {
-						"type": "string"
-					},
-					"deactivated": {
-						"type": "boolean"
-					},
-					"versionId": {
-						"type": "string"
-					},
-					"nextUpdate": {
-						"type": "string"
-					},
-					"nextVersionId": {
-						"type": "string"
-					},
-					"equivalentId": {
-						"type": "string"
-					},
-					"canonicalId": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"Did": {
-				"type": "string",
-				"example": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
-			},
-			"DidRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"AnonCredsSchema": {
-				"properties": {
-					"issuerId": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"version": {
-						"type": "string"
-					},
-					"attrNames": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"issuerId",
-					"name",
-					"version",
-					"attrNames"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"AnonCredsResolutionMetadata": {
-				"properties": {
-					"error": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"enum": [
-									"invalid",
-									"notFound",
-									"unsupportedAnonCredsMethod"
-								]
-							}
-						]
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CredoExtensible": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"GetSchemaReturn": {
-				"properties": {
-					"schema": {
-						"$ref": "#/components/schemas/AnonCredsSchema"
-					},
-					"schemaId": {
-						"type": "string"
-					},
-					"resolutionMetadata": {
-						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
-					},
-					"schemaMetadata": {
-						"$ref": "#/components/schemas/CredoExtensible"
-					}
-				},
-				"required": [
-					"schemaId",
-					"resolutionMetadata",
-					"schemaMetadata"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterSchemaReturnStateWait": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"wait"
-						],
-						"nullable": false
-					},
-					"schema": {
-						"$ref": "#/components/schemas/AnonCredsSchema"
-					},
-					"schemaId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterSchemaReturnStateAction": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"action"
-						],
-						"nullable": false
-					},
-					"action": {
-						"type": "string"
-					},
-					"schema": {
-						"$ref": "#/components/schemas/AnonCredsSchema"
-					},
-					"schemaId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state",
-					"action",
-					"schema",
-					"schemaId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterSchemaReturnStateFinished": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"finished"
-						],
-						"nullable": false
-					},
-					"schema": {
-						"$ref": "#/components/schemas/AnonCredsSchema"
-					},
-					"schemaId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state",
-					"schema",
-					"schemaId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterSchemaReturnStateFailed": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"failed"
-						],
-						"nullable": false
-					},
-					"reason": {
-						"type": "string"
-					},
-					"schema": {
-						"$ref": "#/components/schemas/AnonCredsSchema"
-					},
-					"schemaId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state",
-					"reason"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterSchemaReturn": {
-				"properties": {
-					"jobId": {
-						"type": "string"
-					},
-					"schemaState": {
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/RegisterSchemaReturnStateWait"
-							},
-							{
-								"$ref": "#/components/schemas/RegisterSchemaReturnStateAction"
-							},
-							{
-								"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
-							},
-							{
-								"$ref": "#/components/schemas/RegisterSchemaReturnStateFailed"
-							}
-						]
-					},
-					"schemaMetadata": {
-						"$ref": "#/components/schemas/CredoExtensible"
-					},
-					"registrationMetadata": {
-						"$ref": "#/components/schemas/CredoExtensible"
-					}
-				},
-				"required": [
-					"schemaState",
-					"schemaMetadata",
-					"registrationMetadata"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"AnonCredsCredentialDefinition": {
-				"properties": {
-					"issuerId": {
-						"type": "string"
-					},
-					"schemaId": {
-						"type": "string"
-					},
-					"type": {
-						"type": "string",
-						"enum": [
-							"CL"
-						],
-						"nullable": false
-					},
-					"tag": {
-						"type": "string"
-					},
-					"value": {
-						"properties": {
-							"revocation": {},
-							"primary": {
-								"$ref": "#/components/schemas/Record_string.unknown_"
-							}
-						},
-						"required": [
-							"primary"
-						],
-						"type": "object"
-					}
-				},
-				"required": [
-					"issuerId",
-					"schemaId",
-					"type",
-					"tag",
-					"value"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"GetCredentialDefinitionReturn": {
-				"properties": {
-					"credentialDefinition": {
-						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					},
-					"resolutionMetadata": {
-						"$ref": "#/components/schemas/AnonCredsResolutionMetadata"
-					},
-					"credentialDefinitionMetadata": {
-						"$ref": "#/components/schemas/CredoExtensible"
-					}
-				},
-				"required": [
-					"credentialDefinitionId",
-					"resolutionMetadata",
-					"credentialDefinitionMetadata"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterCredentialDefinitionReturnStateWait": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"wait"
-						],
-						"nullable": false
-					},
-					"credentialDefinition": {
-						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterCredentialDefinitionReturnStateAction": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"action"
-						],
-						"nullable": false
-					},
-					"action": {
-						"type": "string"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					},
-					"credentialDefinition": {
-						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
-					}
-				},
-				"required": [
-					"state",
-					"action",
-					"credentialDefinitionId",
-					"credentialDefinition"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterCredentialDefinitionReturnStateFinished": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"finished"
-						],
-						"nullable": false
-					},
-					"credentialDefinition": {
-						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state",
-					"credentialDefinition",
-					"credentialDefinitionId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterCredentialDefinitionReturnStateFailed": {
-				"properties": {
-					"state": {
-						"type": "string",
-						"enum": [
-							"failed"
-						],
-						"nullable": false
-					},
-					"reason": {
-						"type": "string"
-					},
-					"credentialDefinition": {
-						"$ref": "#/components/schemas/AnonCredsCredentialDefinition"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"state",
-					"reason"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RegisterCredentialDefinitionReturn": {
-				"properties": {
-					"jobId": {
-						"type": "string"
-					},
-					"credentialDefinitionState": {
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateWait"
-							},
-							{
-								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateAction"
-							},
-							{
-								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
-							},
-							{
-								"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFailed"
-							}
-						]
-					},
-					"credentialDefinitionMetadata": {
-						"$ref": "#/components/schemas/CredoExtensible"
-					},
-					"registrationMetadata": {
-						"$ref": "#/components/schemas/CredoExtensible"
-					}
-				},
-				"required": [
-					"credentialDefinitionState",
-					"credentialDefinitionMetadata",
-					"registrationMetadata"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ThreadId": {
-				"type": "string",
-				"example": "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
-			},
-			"CredentialRole": {
+			"QuestionAnswerRole": {
 				"enum": [
-					"issuer",
-					"holder"
+					"questioner",
+					"responder"
 				],
 				"type": "string"
 			},
-			"CredentialExchangeRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
+			"QuestionAnswerState": {
+				"description": "QuestionAnswer states inferred from RFC 0113.",
+				"enum": [
+					"question-sent",
+					"question-received",
+					"answer-received",
+					"answer-sent"
+				],
+				"type": "string"
 			},
-			"Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__": {
+			"ValidResponse": {
 				"properties": {
-					"schemaId": {
+					"text": {
 						"type": "string"
-					},
-					"schemaName": {
-						"type": "string"
-					},
-					"schemaVersion": {
-						"type": "string"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					},
-					"attributes": {
-						"items": {
-							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
-						},
-						"type": "array"
-					},
-					"linkedAttachments": {
-						"items": {
-							"$ref": "#/components/schemas/LinkedAttachment"
-						},
-						"type": "array"
-					},
-					"schemaIssuerDid": {
-						"type": "string"
-					},
-					"issuerDid": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
-			},
-			"Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_": {
-				"$ref": "#/components/schemas/Pick_AnonCredsProposeCredentialFormat.Exclude_keyofAnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId__",
-				"description": "Construct a type with the properties of T except for those in type K."
-			},
-			"LegacyIndyProposeCredentialFormat": {
-				"$ref": "#/components/schemas/Omit_AnonCredsProposeCredentialFormat.schemaIssuerId-or-issuerId_",
-				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer\n\nNOTE: This doesn't include the `issuerId` and `schemaIssuerId` properties that are present in the newer format."
-			},
-			"AnonCredsProposeCredentialFormat": {
-				"description": "This defines the module payload for calling CredentialsApi.createProposal\nor CredentialsApi.negotiateOffer",
-				"properties": {
-					"schemaIssuerId": {
-						"type": "string"
-					},
-					"schemaId": {
-						"type": "string"
-					},
-					"schemaName": {
-						"type": "string"
-					},
-					"schemaVersion": {
-						"type": "string"
-					},
-					"credentialDefinitionId": {
-						"type": "string"
-					},
-					"issuerId": {
-						"type": "string"
-					},
-					"attributes": {
-						"items": {
-							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
-						},
-						"type": "array"
-					},
-					"linkedAttachments": {
-						"items": {
-							"$ref": "#/components/schemas/LinkedAttachment"
-						},
-						"type": "array"
-					},
-					"schemaIssuerDid": {
-						"type": "string"
-					},
-					"issuerDid": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CredentialFormatPayload_CredentialFormatType-Array.createProposal_": {
-				"properties": {
-					"indy": {
-						"$ref": "#/components/schemas/LegacyIndyProposeCredentialFormat"
-					},
-					"jsonld": {
-						"$ref": "#/components/schemas/JsonLdCredentialDetailFormat"
-					},
-					"anoncreds": {
-						"$ref": "#/components/schemas/AnonCredsProposeCredentialFormat"
-					}
-				},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
-			},
-			"ProposeCredentialOptions": {
-				"properties": {
-					"protocolVersion": {
-						"$ref": "#/components/schemas/ProtocolVersion"
-					},
-					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormatType-Array.createProposal_"
-					},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					},
-					"connectionId": {
-						"$ref": "#/components/schemas/RecordId"
 					}
 				},
 				"required": [
-					"protocolVersion",
-					"credentialFormats",
-					"connectionId"
+					"text"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"AnonCredsAcceptProposalFormat": {
-				"description": "This defines the module payload for calling CredentialsApi.acceptProposal",
+			"Record_response.string_": {
 				"properties": {
-					"credentialDefinitionId": {
+					"response": {
 						"type": "string"
-					},
-					"revocationRegistryDefinitionId": {
-						"type": "string"
-					},
-					"revocationRegistryIndex": {
-						"type": "number",
-						"format": "double"
-					},
-					"attributes": {
-						"items": {
-							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
-						},
-						"type": "array"
-					},
-					"linkedAttachments": {
-						"items": {
-							"$ref": "#/components/schemas/LinkedAttachment"
-						},
-						"type": "array"
 					}
 				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"Record_string.never_": {
-				"properties": {},
+				"required": [
+					"response"
+				],
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
-			},
-			"EmptyObject": {
-				"$ref": "#/components/schemas/Record_string.never_"
-			},
-			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
-				"properties": {
-					"indy": {
-						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
-					},
-					"jsonld": {
-						"$ref": "#/components/schemas/EmptyObject"
-					},
-					"anoncreds": {
-						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
-					}
-				},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
-			},
-			"AcceptCredentialProposalOptions": {
-				"properties": {
-					"credentialRecordId": {
-						"type": "string"
-					},
-					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptProposal_"
-					},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"credentialRecordId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"AnonCredsAcceptOfferFormat": {
-				"description": "This defines the module payload for calling CredentialsApi.acceptOffer. No options are available for this\nmethod, so it's an empty object",
-				"properties": {
-					"linkSecretId": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CredentialFormatPayload_CredentialFormats.acceptOffer_": {
-				"properties": {
-					"indy": {
-						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
-					},
-					"jsonld": {
-						"$ref": "#/components/schemas/EmptyObject"
-					},
-					"anoncreds": {
-						"$ref": "#/components/schemas/AnonCredsAcceptOfferFormat"
-					}
-				},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
-			},
-			"CredentialOfferOptions": {
-				"properties": {
-					"credentialRecordId": {
-						"$ref": "#/components/schemas/RecordId"
-					},
-					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptOffer_"
-					},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"credentialRecordId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"AnonCredsAcceptRequestFormat": {
-				"$ref": "#/components/schemas/Record_string.never_",
-				"description": "This defines the module payload for calling CredentialsApi.acceptRequest. No options are available for this\nmethod, so it's an empty object"
-			},
-			"JsonLdAcceptRequestFormat": {
-				"description": "Format for accepting a jsonld credential request. Optionally allows the verification\nmethod to use to sign the credential.",
-				"properties": {
-					"verificationMethod": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CredentialFormatPayload_CredentialFormats.acceptRequest_": {
-				"properties": {
-					"indy": {
-						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
-					},
-					"jsonld": {
-						"$ref": "#/components/schemas/JsonLdAcceptRequestFormat"
-					},
-					"anoncreds": {
-						"$ref": "#/components/schemas/AnonCredsAcceptRequestFormat"
-					}
-				},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
-			},
-			"AcceptCredentialRequestOptions": {
-				"properties": {
-					"credentialRecordId": {
-						"$ref": "#/components/schemas/RecordId"
-					},
-					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptRequest_"
-					},
-					"autoAcceptCredential": {
-						"$ref": "#/components/schemas/AutoAcceptCredential"
-					},
-					"comment": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"credentialRecordId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"AcceptCredential": {
-				"properties": {
-					"credentialRecordId": {
-						"$ref": "#/components/schemas/RecordId"
-					}
-				},
-				"required": [
-					"credentialRecordId"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.proposal_": {
-				"properties": {},
-				"type": "object",
-				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
-			},
-			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.offer_": {
-				"properties": {},
-				"type": "object",
-				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
-			},
-			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.request_": {
-				"properties": {},
-				"type": "object",
-				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
-			},
-			"CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.credential_": {
-				"properties": {},
-				"type": "object",
-				"description": "Get the format data payload for a specific message from a list of CredentialFormat interfaces and a message\n\nFor an indy offer, this resolves to the cred abstract format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#cred-abstract-format"
-			},
-			"GetCredentialFormatDataReturn__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array_": {
-				"properties": {
-					"credential": {
-						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.credential_"
-					},
-					"request": {
-						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.request_"
-					},
-					"offerAttributes": {
-						"items": {
-							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
-						},
-						"type": "array"
-					},
-					"offer": {
-						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.offer_"
-					},
-					"proposal": {
-						"$ref": "#/components/schemas/CredentialFormatDataMessagePayload__40_LegacyIndyCredentialFormat-or-JsonLdCredentialFormat-or-AnonCredsCredentialFormat_41_-Array.proposal_"
-					},
-					"proposalAttributes": {
-						"items": {
-							"$ref": "#/components/schemas/CredentialPreviewAttributeOptions"
-						},
-						"type": "array"
-					}
-				},
-				"type": "object",
-				"description": "Get format data return value. Each key holds a mapping of credential format key to format data."
-			},
-			"BasicMessageRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"AgentInfo": {
-				"properties": {
-					"label": {
-						"type": "string"
-					},
-					"endpoints": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"isInitialized": {
-						"type": "boolean"
-					},
-					"publicDid": {}
-				},
-				"required": [
-					"label",
-					"endpoints",
-					"isInitialized",
-					"publicDid"
-				],
-				"type": "object",
-				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {
@@ -3258,6 +3165,11 @@
 				"type": "apiKey",
 				"name": "Authorization",
 				"in": "header"
+			},
+			"jwt": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT"
 			}
 		}
 	},
@@ -3309,7 +3221,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -3357,7 +3272,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -3405,7 +3323,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -3454,7 +3375,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -3503,7 +3427,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -3529,6 +3456,16 @@
 							"application/json": {
 								"schema": {
 									"properties": {
+										"proofMessageId": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"$ref": "#/components/schemas/ThreadDecorator"
+												}
+											]
+										},
 										"proofRecordThId": {
 											"type": "string"
 										},
@@ -3546,6 +3483,7 @@
 										}
 									},
 									"required": [
+										"proofMessageId",
 										"proofRecordThId",
 										"invitationDid",
 										"outOfBandRecord",
@@ -3576,7 +3514,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -3625,7 +3566,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -3694,7 +3638,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -3740,7 +3687,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -3792,7 +3742,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": []
@@ -3817,7 +3770,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -3870,7 +3826,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -3913,7 +3872,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -4004,7 +3966,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -4083,7 +4048,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -4110,7 +4078,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -4236,7 +4207,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -4369,7 +4343,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -4442,7 +4419,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -4568,7 +4548,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -4676,7 +4659,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -4784,7 +4770,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -4818,7 +4807,46 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/TenantRecord"
+									"properties": {
+										"token": {},
+										"metadata": {
+											"$ref": "#/components/schemas/Metadata____"
+										},
+										"updatedAt": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"createdAt": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"id": {
+											"type": "string"
+										},
+										"storageVersion": {
+											"type": "string"
+										},
+										"config": {
+											"$ref": "#/components/schemas/TenantConfig"
+										},
+										"type": {
+											"type": "string",
+											"enum": [
+												"TenantRecord"
+											],
+											"nullable": false
+										}
+									},
+									"required": [
+										"token",
+										"metadata",
+										"createdAt",
+										"id",
+										"storageVersion",
+										"config",
+										"type"
+									],
+									"type": "object"
 								}
 							}
 						}
@@ -4829,7 +4857,9 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"Basewallet"
+						]
 					}
 				],
 				"parameters": [],
@@ -4845,9 +4875,9 @@
 				}
 			}
 		},
-		"/multi-tenancy/create-did/{tenantId}": {
+		"/multi-tenancy/get-token/{tenantId}": {
 			"post": {
-				"operationId": "CreateDid",
+				"operationId": "GetTenantToken",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -4856,128 +4886,37 @@
 								"schema": {}
 							}
 						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/DidCreate"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/dids/{tenantId}": {
-			"get": {
-				"operationId": "GetDids",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/transactions/set-endorser-role/{tenantId}": {
-			"post": {
-				"operationId": "DidNymTransaction",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/DidNymTransaction"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/transactions/endorse/{tenantId}": {
-			"post": {
-				"operationId": "EndorserTransaction",
-				"responses": {
-					"200": {
-						"description": "Ok",
+					},
+					"404": {
+						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
 									"properties": {
-										"signedTransaction": {}
+										"reason": {
+											"type": "string"
+										}
 									},
 									"required": [
-										"signedTransaction"
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
 									],
 									"type": "object"
 								}
@@ -4990,7 +4929,9 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"Basewallet"
+						]
 					}
 				],
 				"parameters": [
@@ -5000,1853 +4941,71 @@
 						"required": true,
 						"schema": {
 							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/EndorserTransaction"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/connections/{connectionId}/{tenantId}": {
-			"get": {
-				"operationId": "GetConnectionById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"_tags": {
-												"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-												"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-												"invitationKey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz",
-												"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d",
-												"verkey": "9HG4rJFpLiWf56MWxHj9rgdpErFzim2zEpHuxy1dw7oz"
-											},
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"did": "did:peer:1zQmfQh1T3rSqarP2FZ37uKjdQHPKFdVyo2mGiAPHZ8Ep7hv",
-											"invitationDid": "did:peer:2.SeyJzIjoiaHR0cHM6Ly9kYTIzLTg5LTIwLTE2Mi0xNDYubmdyb2suaW8iLCJ0IjoiZGlkLWNvbW11bmljYXRpb24iLCJwcmlvcml0eSI6MCwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtualg3U1lXRmdHMThCYkNEZHJnemhuQnA0UlhyOGVITHZxQ3FvRXllckxiTiN6Nk1rbmpYN1NZV0ZnRzE4QmJDRGRyZ3pobkJwNFJYcjhlSEx2cUNxb0V5ZXJMYk4iXSwiciI6W119",
-											"outOfBandId": "edbc89fe-785f-4774-a288-46012486881d"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/create-invitation/{tenantId}": {
-			"post": {
-				"operationId": "CreateInvitation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"invitationDid": {
-											"type": "string"
-										},
-										"outOfBandRecord": {
-											"$ref": "#/components/schemas/Record_string.unknown_"
-										},
-										"invitation": {
-											"$ref": "#/components/schemas/PlaintextMessage"
-										},
-										"invitationUrl": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"invitationDid",
-										"outOfBandRecord",
-										"invitation",
-										"invitationUrl"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": false,
-					"content": {
-						"application/json": {
-							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/Omit_CreateOutOfBandInvitationConfig.routing_"
-									},
-									{
-										"$ref": "#/components/schemas/RecipientKeyOption"
-									}
-								]
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/create-legacy-invitation/{tenantId}": {
-			"post": {
-				"operationId": "CreateLegacyInvitation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": false,
-					"content": {
-						"application/json": {
-							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/Omit_CreateOutOfBandInvitationConfig.routing-or-appendedAttachments-or-messages_"
-									},
-									{
-										"$ref": "#/components/schemas/RecipientKeyOption"
-									}
-								]
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/receive-invitation/{tenantId}": {
-			"post": {
-				"operationId": "ReceiveInvitation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ReceiveInvitationProps"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/receive-invitation-url/{tenantId}": {
-			"post": {
-				"operationId": "ReceiveInvitationFromUrl",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ReceiveInvitationByUrlProps"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/oob/{invitationId}/{tenantId}": {
-			"get": {
-				"operationId": "GetAllOutOfBandRecords",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "invitationId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/connections/{tenantId}": {
-			"get": {
-				"operationId": "GetAllConnections",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "outOfBandId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "alias",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "state",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/DidExchangeState"
-						}
-					},
-					{
-						"in": "query",
-						"name": "myDid",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "theirDid",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "theirLabel",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/url/{tenantId}/{invitationId}": {
-			"get": {
-				"operationId": "GetInvitation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "invitationId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/schema/{tenantId}": {
-			"post": {
-				"operationId": "CreateSchema",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateSchemaInput"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/polygon-w3c/schema/{tenantId}": {
-			"post": {
-				"operationId": "CreatePolygonW3CSchema",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/SchemaMetadata"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"schema": {
-										"properties": {},
-										"additionalProperties": {},
-										"type": "object"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"did": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"schema",
-									"schemaName",
-									"did"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/polygon-w3c/schema/{did}/{schemaId}/{tenantId}": {
-			"get": {
-				"operationId": "GetPolygonW3CSchemaById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "did",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "schemaId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/transactions/write/{tenantId}": {
-			"post": {
-				"operationId": "WriteSchemaAndCredDefOnLedger",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/WriteTransaction"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/schema/{schemaId}/{tenantId}": {
-			"get": {
-				"operationId": "GetSchemaById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "schemaId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/SchemaId"
-						}
-					},
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/credential-definition/{tenantId}": {
-			"post": {
-				"operationId": "CreateCredentialDefinition",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"202": {
-						"description": "Wait for action to complete"
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"endorserDid": {
-										"type": "string"
-									},
-									"endorse": {
-										"type": "boolean"
-									},
-									"tag": {
-										"type": "string"
-									},
-									"schemaId": {
-										"type": "string"
-									},
-									"issuerId": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"tag",
-									"schemaId",
-									"issuerId"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/credential-definition/{credentialDefinitionId}/{tenantId}": {
-			"get": {
-				"operationId": "GetCredentialDefinitionById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "credentialDefinitionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/CredentialDefinitionId"
-						}
-					},
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/credentials/create-offer/{tenantId}": {
-			"post": {
-				"operationId": "CreateOffer",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateOfferOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/credentials/create-offer-oob/{tenantId}": {
-			"post": {
-				"operationId": "CreateOfferOob",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateOfferOobOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/credentials/accept-offer/{tenantId}": {
-			"post": {
-				"operationId": "AcceptOffer",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/AcceptCredentialOfferOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/credentials/{credentialRecordId}/{tenantId}": {
-			"get": {
-				"operationId": "GetCredentialById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "credentialRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					},
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/credentials/{tenantId}": {
-			"get": {
-				"operationId": "GetAllCredentials",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "threadId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "connectionId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "state",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/CredentialState"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/credentials/form-data/{tenantId}/{credentialRecordId}": {
-			"get": {
-				"operationId": "CredentialFormData",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "credentialRecordId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/proofs/{tenantId}": {
-			"get": {
-				"operationId": "GetAllProofs",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "threadId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/form-data/{tenantId}/{proofRecordId}": {
-			"get": {
-				"operationId": "ProofFormData",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "proofRecordId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/proofs/request-proof/{tenantId}": {
-			"post": {
-				"operationId": "RequestProof",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RequestProofOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/proofs/create-request-oob/{tenantId}": {
-			"post": {
-				"operationId": "CreateRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateProofRequestOobOptions"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/proofs/{proofRecordId}/accept-request/{tenantId}": {
-			"post": {
-				"operationId": "AcceptRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "proofRecordId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"comment": {
-										"type": "string"
-									},
-									"filterByNonRevocationRequirements": {
-										"type": "boolean"
-									},
-									"filterByPresentationPreview": {
-										"type": "boolean"
-									}
-								},
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/proofs/{proofRecordId}/accept-presentation/{tenantId}": {
-			"post": {
-				"operationId": "AcceptPresentation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "proofRecordId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/proofs/{proofRecordId}/{tenantId}": {
-			"get": {
-				"operationId": "GetProofById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"metadata": {},
-											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
-											"createdAt": "2022-01-01T00:00:00.000Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
-											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
-											"protocolVersion": "v1"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "proofRecordId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
 						}
 					}
 				]
 			}
 		},
 		"/multi-tenancy/{tenantId}": {
-			"delete": {
-				"operationId": "DeleteTenantById",
+			"get": {
+				"operationId": "GetTenantById",
 				"responses": {
 					"200": {
 						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/Record_string.any_"
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
 								}
 							}
 						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/did/web/{tenantId}": {
-			"post": {
-				"operationId": "CreateDidWeb",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/DidCreate"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/did/key{tenantId}": {
-			"post": {
-				"operationId": "CreateDidKey",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/DidCreate"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/question-answer/{tenantId}": {
-			"get": {
-				"operationId": "GetQuestionAnswerRecords",
-				"responses": {
-					"200": {
-						"description": "QuestionAnswerRecord[]",
+					},
+					"500": {
+						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/Record_string.unknown_"
+									"properties": {
+										"message": {
+											"type": "string"
+										}
 									},
-									"type": "array"
+									"required": [
+										"message"
+									],
+									"type": "object"
 								}
 							}
 						}
 					}
 				},
-				"description": "Retrieve question and answer records by query",
 				"tags": [
 					"MultiTenancy"
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"Basewallet"
+						]
 					}
 				],
 				"parameters": [
-					{
-						"description": "Tenant identifier",
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Connection identifier",
-						"in": "query",
-						"name": "connectionId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Role of the question",
-						"in": "query",
-						"name": "role",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/QuestionAnswerRole"
-						}
-					},
-					{
-						"description": "State of the question",
-						"in": "query",
-						"name": "state",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/QuestionAnswerState"
-						}
-					},
-					{
-						"description": "Thread identifier",
-						"in": "query",
-						"name": "threadId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/question-answer/question/{connectionId}/{tenantId}": {
-			"post": {
-				"operationId": "SendQuestion",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"description": "Send a question to a connection",
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					},
-					{
-						"description": "Tenant identifier",
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"detail": {
-										"type": "string"
-									},
-									"validResponses": {
-										"items": {
-											"$ref": "#/components/schemas/ValidResponse"
-										},
-										"type": "array"
-									},
-									"question": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"validResponses",
-									"question"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/question-answer/answer/{id}/{tenantId}": {
-			"post": {
-				"operationId": "SendAnswer",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"description": "Send a answer to question",
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Question Answer Record identifier",
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					},
-					{
-						"description": "Tenant identifier",
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/Record_response.string_"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/question-answer/{id}/{tenantId}": {
-			"get": {
-				"operationId": "GetQuestionAnswerRecordById",
-				"responses": {
-					"200": {
-						"description": "ConnectionRecord",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"description": "Retrieve question answer record by id",
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Question Answer Record identifier",
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					},
-					{
-						"description": "Tenant identifier",
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/multi-tenancy/basic-messages/{connectionId}/{tenantId}": {
-			"get": {
-				"operationId": "GetBasicMessages",
-				"responses": {
-					"200": {
-						"description": "BasicMessageRecord[]",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": [
-											{
-												"_tags": {
-													"role": "sender",
-													"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
-												},
-												"metadata": {},
-												"id": "74bcf865-1fdc-45b4-b517-9def02dfd25f",
-												"createdAt": "2022-08-18T08:38:40.216Z",
-												"content": "string",
-												"sentTime": "2022-08-18T08:38:40.216Z",
-												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
-											}
-										]
-									}
-								}
-							}
-						}
-					}
-				},
-				"description": "Retrieve basic messages by connection id",
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					},
 					{
 						"in": "path",
 						"name": "tenantId",
@@ -6857,209 +5016,8 @@
 					}
 				]
 			},
-			"post": {
-				"operationId": "SendMessage",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {},
-								"examples": {
-									"Example 1": {
-										"value": {
-											"_tags": {
-												"role": "sender",
-												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
-											},
-											"metadata": {},
-											"id": "74bcf865-1fdc-45b4-b517-9def02dfd25f",
-											"createdAt": "2022-08-18T08:38:40.216Z",
-											"content": "string",
-											"sentTime": "2022-08-18T08:38:40.216Z",
-											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"description": "Send a basic message to a connection",
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Connection identifier",
-						"in": "path",
-						"name": "connectionId",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/RecordId"
-						}
-					},
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/Record_content.string_"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/verify/{tenantId}": {
-			"post": {
-				"operationId": "Verify",
-				"responses": {
-					"200": {
-						"description": "isValidSignature - true if signature is valid, false otherwise",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "boolean"
-								}
-							}
-						}
-					}
-				},
-				"description": "Verify data using a key",
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"description": "Tenant identifier",
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"description": "Verify options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format\nsignature - Signature in base64 format",
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/VerifyDataOptions",
-								"description": "Verify options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format\nsignature - Signature in base64 format"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/credential/sign/{tenantId}": {
-			"post": {
-				"operationId": "SignCredential",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"anyOf": [
-										{
-											"type": "string"
-										},
-										{
-											"$ref": "#/components/schemas/Record_string.any_"
-										},
-										{
-											"$ref": "#/components/schemas/W3cCredentialRecord"
-										}
-									]
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "storeCredential",
-						"required": true,
-						"schema": {
-							"type": "boolean"
-						}
-					},
-					{
-						"in": "query",
-						"name": "dataTypeToSign",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"rawData",
-								"jsonLd"
-							]
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/CustomW3cJsonLdSignCredentialOptions"
-									},
-									{
-										"$ref": "#/components/schemas/SignDataOptions"
-									},
-									{}
-								]
-							}
-						}
-					}
-				}
-			}
-		},
-		"/multi-tenancy/credential/verify/{tenantId}": {
-			"post": {
-				"operationId": "VerifyCredential",
+			"delete": {
+				"operationId": "DeleteTenantById",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -7068,6 +5026,42 @@
 								"schema": {}
 							}
 						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -7075,7 +5069,9 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"Basewallet"
+						]
 					}
 				],
 				"parameters": [
@@ -7087,22 +5083,7 @@
 							"type": "string"
 						}
 					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/SafeW3cJsonLdVerifyCredentialOptions"
-									},
-									{}
-								]
-							}
-						}
-					}
-				}
+				]
 			}
 		},
 		"/transactions/endorse": {
@@ -7115,7 +5096,9 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"signedTransaction": {}
+										"signedTransaction": {
+											"type": "string"
+										}
 									},
 									"required": [
 										"signedTransaction"
@@ -7131,7 +5114,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -7167,7 +5153,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -7191,7 +5180,34 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturnStateWait"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturnStateAction"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturnStateFinished"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterSchemaReturnStateFailed"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateWait"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateAction"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFinished"
+										},
+										{
+											"$ref": "#/components/schemas/RegisterCredentialDefinitionReturnStateFailed"
+										}
+									]
+								}
 							}
 						}
 					}
@@ -7201,7 +5217,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -7300,7 +5319,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -7360,7 +5382,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -7399,7 +5424,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": []
@@ -7440,7 +5468,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -7449,7 +5480,7 @@
 						"name": "schemaId",
 						"required": true,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/SchemaId"
 						}
 					}
 				]
@@ -7500,7 +5531,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -7573,7 +5607,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -7655,7 +5692,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -7743,7 +5783,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -7813,7 +5856,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": []
@@ -7839,7 +5885,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -7899,7 +5948,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -7959,7 +6011,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -8020,7 +6075,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -8081,7 +6139,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -8145,7 +6206,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -8206,7 +6270,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -8267,7 +6334,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -8328,7 +6398,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [],
@@ -8365,7 +6438,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8425,7 +6501,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8525,7 +6604,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8553,7 +6635,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8609,7 +6694,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8665,7 +6753,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8754,7 +6845,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8805,7 +6899,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8850,7 +6947,41 @@
 				"tags": [
 					"Agent"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/agent/token": {
+			"post": {
+				"operationId": "GetAgentToken",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AgentToken"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieve agent token",
+				"tags": [
+					"Agent"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -8868,10 +6999,175 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": []
+			}
+		},
+		"/agent/verify/{tenantId}": {
+			"post": {
+				"operationId": "Verify",
+				"responses": {
+					"200": {
+						"description": "isValidSignature - true if signature is valid, false otherwise",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "boolean"
+								}
+							}
+						}
+					}
+				},
+				"description": "Verify data using a key",
+				"tags": [
+					"Agent"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/VerifyDataOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/agent/credential/sign": {
+			"post": {
+				"operationId": "SignCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"$ref": "#/components/schemas/Record_string.any_"
+										},
+										{
+											"$ref": "#/components/schemas/W3cCredentialRecord"
+										}
+									]
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Agent"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "storeCredential",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"in": "query",
+						"name": "dataTypeToSign",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"rawData",
+								"jsonLd"
+							]
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/CustomW3cJsonLdSignCredentialOptions"
+									},
+									{
+										"$ref": "#/components/schemas/SignDataOptions"
+									},
+									{}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		"/agent/credential/verify": {
+			"post": {
+				"operationId": "VerifyCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/W3cVerifyCredentialResult"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Agent"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/SafeW3cJsonLdVerifyCredentialOptions"
+									},
+									{}
+								]
+							}
+						}
+					}
+				}
 			}
 		},
 		"/question-answer": {
@@ -8898,7 +7194,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -8965,7 +7264,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -9030,7 +7332,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
@@ -9077,7 +7382,10 @@
 				],
 				"security": [
 					{
-						"apiKey": []
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
 					}
 				],
 				"parameters": [
