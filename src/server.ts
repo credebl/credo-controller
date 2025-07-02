@@ -91,17 +91,19 @@ export const setupServer = async (
     next()
   })
 
+
+
+  app.use((async (req: ExRequest, res: ExResponse, next: NextFunction) => {
+  res.on('finish', async () => {
+    console.log("Clean-up tenant sessions 2")
+    await endTenantSessionIfActive(req)
+  })
+    next()
+  }))
+
   const securityMiddleware = new SecurityMiddleware()
   app.use(securityMiddleware.use)
   RegisterRoutes(app)
-
-  app.use((req: ExRequest, res: ExResponse, next: NextFunction) => {
-    res.on('finish', async () => {
-      console.log("Clean-up tenant sessions")
-      await endTenantSessionIfActive(req)
-    })
-    next()
-  })
 
   app.use((async (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): Promise<ExResponse | void> => {
     // End tenant session if active
