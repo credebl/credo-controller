@@ -6951,7 +6951,8 @@
 					{
 						"jwt": [
 							"tenant",
-							"dedicated"
+							"dedicated",
+							"Basewallet"
 						]
 					}
 				],

@@ -3497,7 +3497,7 @@ export function RegisterRoutes(app: Router) {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
         };
         app.get('/agent',
-            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated","Basewallet"]}]),
             ...(fetchMiddlewares<RequestHandler>(AgentController)),
             ...(fetchMiddlewares<RequestHandler>(AgentController.prototype.getAgentInfo)),
 
