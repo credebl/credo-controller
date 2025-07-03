@@ -14,12 +14,6 @@ import { TsLogger } from './utils/logger'
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
-// TODO:
-/** 
- * 1. Cache secret. (Instead of fetching for each request)
- * 2. Verify token ASAP. (In first step instead of for each agent type separately, only then proceed with other tasks)
-*/
-
 export async function expressAuthentication(request: Request, securityName: string, scopes?: string[]) {
   const logger = new TsLogger(LogLevel.info)
   const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
