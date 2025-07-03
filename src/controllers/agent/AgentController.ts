@@ -20,7 +20,7 @@ export class AgentController extends Controller {
   /**
    * Retrieve basic agent information
    */
-  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT, SCOPES.MULTITENANT_BASE_AGENT])
   @Get('/')
   public async getAgentInfo(@Request() request: Req): Promise<AgentInfo> {
     try {
