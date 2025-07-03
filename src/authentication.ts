@@ -30,7 +30,6 @@ export async function expressAuthentication(request: Request, securityName: stri
   const apiKeyHeader = request.headers['authorization']
 
   if (!apiKeyHeader) {
-    // return false
     return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
   }
 
@@ -67,7 +66,6 @@ export async function expressAuthentication(request: Request, securityName: stri
     
     // Failed to verify token
     if (!verified) {
-      // return false
       return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
     }
 
@@ -87,14 +85,11 @@ export async function expressAuthentication(request: Request, securityName: stri
     if (tenancy) {
       // it should be a shared agent
       if (role !== AgentRole.RestRootAgentWithTenants && role !== AgentRole.RestTenantAgent) {
-        // return false //'The agent is a multi-tenant agent'
         logger.debug('Unknown role. The agent is a multi-tenant agent')
         return Promise.reject(new StatusException('Unknown role', 401))
       }
       if (role === AgentRole.RestTenantAgent) {
         // Logic if the token is of tenant agent
-        // if (reqPath.includes('/multi-tenancy/')) {
-          // Note: Include the below logic for path detection instead of url
           if (scopes && scopes?.includes(SCOPES.MULTITENANT_BASE_AGENT)) {
           logger.debug('Tenants cannot manage tenants')
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
@@ -102,17 +97,14 @@ export async function expressAuthentication(request: Request, securityName: stri
           // Auth: tenant agent
           const tenantId: string = decodedToken.tenantId
           if (!tenantId) {
-            // return false
             return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
           }
           const tenantAgent = await agent.modules.tenants.getTenantAgent({ tenantId })
           if (!tenantAgent) {
-            // return false
             return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
           }
 
           // Only need to registerInstance for TenantAgent.
-          // return tenantAgent
           request.agent = tenantAgent
           return true
         }
@@ -127,7 +119,6 @@ export async function expressAuthentication(request: Request, securityName: stri
         request.agent = agent
         return true
       } else {
-        // return false //'Invalid Token'
         logger.debug('Invalid Token')
         return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
       }
@@ -135,7 +126,6 @@ export async function expressAuthentication(request: Request, securityName: stri
       if (role !== AgentRole.RestRootAgent) {
         logger.debug('This is a dedicated agent')
         return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
-        // return false //'This is a dedicated agent'
       } else {
         // Auth: dedicated agent
 
@@ -148,7 +138,6 @@ export async function expressAuthentication(request: Request, securityName: stri
       }
     }
   }
-  // return false
   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 }
 
