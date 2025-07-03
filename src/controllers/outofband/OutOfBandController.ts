@@ -268,10 +268,10 @@ export class OutOfBandController extends Controller {
     const { invitationUrl, ...config } = invitationRequest
 
     try {
-      const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
-      if (linkSecretIds.length === 0) {
-        await request.agent.modules.anoncreds.createLinkSecret()
-      }
+      // const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
+      // if (linkSecretIds.length === 0) {
+      //   await request.agent.modules.anoncreds.createLinkSecret()
+      // }
       const { outOfBandRecord, connectionRecord } = await request.agent.oob.receiveInvitationFromUrl(invitationUrl, config)
       return {
         outOfBandRecord: outOfBandRecord.toJSON(),
