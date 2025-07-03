@@ -14,6 +14,12 @@ import { TsLogger } from './utils/logger'
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
+// TODO:
+/** 
+ * 1. Cache secret. (Instead of fetching for each request)
+ * 2. Verify token ASAP. (In first step instead of for each agent type separately, only then proceed with other tasks)
+*/
+
 export async function expressAuthentication(request: Request, securityName: string, scopes?: string[]) {
   const logger = new TsLogger(LogLevel.info)
   const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
@@ -51,6 +57,26 @@ export async function expressAuthentication(request: Request, securityName: stri
     const token = tokenWithHeader!.replace('Bearer ', '')
     const reqPath = request.path
     let decodedToken: jwt.JwtPayload;
+    if(!token) {
+      return Promise.reject(new StatusException(`${ErrorMessages.Unauthorized}: Invalid token`, 401))
+    }
+
+    let cachedKey = getFromCache("secret")
+    
+    if(!cachedKey || cachedKey == '') {
+      // Cache key from
+      cachedKey = await getSecretKey(agent as Agent)
+    }
+    
+    // Verify token
+    const verified = await verifyToken(token, cachedKey)
+    
+    // Failed to verify token
+    if (!verified) {
+      // return false
+      return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
+    }
+
     try {
       decodedToken = decode(token) as jwt.JwtPayload
       if (!decodedToken || !decodedToken.role) {
@@ -91,17 +117,6 @@ export async function expressAuthentication(request: Request, securityName: stri
             return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
           }
 
-          // Option1: logic to use tenant's secret key to generate token for tenant
-          // const verified = await verifyToken(tenantAgent, token)
-          // Option2: logic to store generate token for tenant using BW's secertKey
-          const verified = await verifyToken(agent, token)
-
-          // Failed to verify token
-          if (!verified) {
-            // return false
-            return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
-          }
-
           // Only need to registerInstance for TenantAgent.
           // return tenantAgent
           request.agent = tenantAgent
@@ -109,21 +124,11 @@ export async function expressAuthentication(request: Request, securityName: stri
         }
       } else if (role === AgentRole.RestRootAgentWithTenants) {
         // Auth: base wallet
-        const verified = await verifyToken(agent, token)
-
-        // Base wallet cant access any endpoints apart from multi-tenant endpoint
-        // if (!reqPath.includes('/multi-tenancy/')) {
-        //   logger.error('Basewallet can only manage tenants and can`t perform other operations')
-        //   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
-        // }
-
-        // Note: Implement the authorization part using scopes(below), instead of url(above)
         if (!scopes?.includes(SCOPES.MULTITENANT_BASE_AGENT)) {
           logger.error('Basewallet can only manage tenants')
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         }
 
-        if (!verified) return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 
         request.agent = agent
         return true
@@ -144,10 +149,6 @@ export async function expressAuthentication(request: Request, securityName: stri
         if (reqPath.includes('/multi-tenancy/'))
           return Promise.reject(new StatusException(`${ErrorMessages.Unauthorized}: Multitenant routes are diabled for dedicated agent`, 401))
 
-        const verified = await verifyToken(agent, token)
-        if (!verified) return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
-        //return false
-
         request.agent = agent
         return true
       }
@@ -157,8 +158,7 @@ export async function expressAuthentication(request: Request, securityName: stri
   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 }
 
-async function verifyToken(agent: Agent | TenantAgent<RestAgentModules>, token: string): Promise<boolean> {
-  const secretKey = await getSecretKey(agent)
+async function verifyToken(token: string, secretKey: string): Promise<boolean> {
   const verified = jwt.verify(token, secretKey)
 
   return verified ? true : false
@@ -168,11 +168,19 @@ async function verifyToken(agent: Agent | TenantAgent<RestAgentModules>, token: 
 async function getSecretKey(
   agent: Agent<RestMultiTenantAgentModules | RestAgentModules> | TenantAgent<RestAgentModules>
 ): Promise<string> {
-  const genericRecord = await agent.genericRecords.getAll()
-  const recordWithToken = genericRecord.find((record) => record?.content?.secretKey !== undefined)
-  const secretKey = recordWithToken?.content.secretKey as string
+  let cachedKey: string | undefined;
 
-  return secretKey
+  cachedKey = getFromCache("secret")
+
+  if (!cachedKey || cachedKey == '') {
+    const genericRecord = await agent.genericRecords.getAll()
+    const recordWithToken = genericRecord.find((record) => record?.content?.secretKey !== undefined)
+    cachedKey = recordWithToken?.content.secretKey as string
+
+    setInCache("secret", cachedKey)
+  }
+
+  return cachedKey
 }
 
 export function setDynamicApiKey(newApiKey: string) {
@@ -182,3 +190,9 @@ export function setDynamicApiKey(newApiKey: string) {
 export function getDynamicApiKey() {
   return dynamicApiKey
 }
+
+// Cache for jwt token key
+const cache = new Map<string, string>();
+
+export const getFromCache = (key: string) => cache.get(key);
+export const setInCache = (key: string, value: string) => cache.set(key, value);
