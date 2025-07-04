@@ -288,6 +288,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // As backup is only supported for sqlite storage
     // we need to manually take backup of the storage before updating the storage
     backupBeforeStorageUpdate: false,
+    processDidCommMessagesConcurrently: true,
   }
 
   async function fetchLedgerData(ledgerConfig: {
