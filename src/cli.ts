@@ -151,6 +151,7 @@ async function parseArguments(): Promise<Parsed> {
     .option('apiKey', {
       string: true,
     })
+    // TODO: add some variable like: 'rotateSecret' to trigger rotating the secret from the generic records
     .config()
     .env('AFJ_REST')
     .parseAsync() as Promise<Parsed>

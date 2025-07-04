@@ -289,6 +289,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // As backup is only supported for sqlite storage
     // we need to manually take backup of the storage before updating the storage
     backupBeforeStorageUpdate: false,
+    // Ideally for testing connection between tenant agent we need to set this to 'true'. Default is 'false'
+    // TODO: triage: not sure if we want it to be 'true', as it would mean parallel requests on BW
+    // Setting it for now
+    processDidCommMessagesConcurrently: true,
   }
 
   async function fetchLedgerData(ledgerConfig: {
@@ -397,6 +401,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
+  // TODO: add some variable like: 'rotateSecret' to trigger rotating the secret from the generic records
   const genericRecord = await agent.genericRecords.getAll()
   const recordsWithSecretKey = genericRecord.some((record) => record?.content?.secretKey)
 
