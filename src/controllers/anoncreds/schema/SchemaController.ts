@@ -1,20 +1,18 @@
-import type { RestAgentModules } from '../../cliAgent'
 
 import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
-import { Agent } from '@credo-ts/core'
 import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller, Request } from 'tsoa'
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum, EndorserMode, SchemaError, SCOPES } from '../../enums'
-import ErrorHandlingService from '../../errorHandlingService'
-import { ENDORSER_DID_NOT_PRESENT } from '../../errorMessages'
-import { BadRequestError, InternalServerError, NotFoundError } from '../../errors/errors'
-import { CreateSchemaSuccessful, SchemaExample, SchemaId } from '../examples'
-import { CreateSchemaInput } from '../types'
+import { CredentialEnum, EndorserMode, SchemaError, SCOPES } from '../../../enums'
+import ErrorHandlingService from '../../../errorHandlingService'
+import { ENDORSER_DID_NOT_PRESENT } from '../../../errorMessages'
+import { BadRequestError, InternalServerError, NotFoundError } from '../../../errors/errors'
+import { CreateSchemaSuccessful, SchemaExample, SchemaId } from '../../examples'
+import { CreateSchemaInput } from '../../types'
 
-@Tags('Schemas')
-@Route('/schemas')
+@Tags('Anoncreds - Schemas')
+@Route('/anoncreds/schemas')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class SchemaController extends Controller {

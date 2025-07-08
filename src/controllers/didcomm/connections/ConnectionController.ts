@@ -1,4 +1,4 @@
-import type { RestAgentModules } from '../../cliAgent'
+import type { RestAgentModules } from '../../../cliAgent'
 import type { ConnectionRecordProps } from '@credo-ts/core'
 
 import { DidExchangeState, Agent } from '@credo-ts/core'
@@ -6,12 +6,12 @@ import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Secur
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import ErrorHandlingService from '../../errorHandlingService'
-import { NotFoundError } from '../../errors'
-import { ConnectionRecordExample, RecordId } from '../examples'
-import { SCOPES } from '../../enums'
+import ErrorHandlingService from '../../../errorHandlingService'
+import { NotFoundError } from '../../../errors'
+import { ConnectionRecordExample, RecordId } from '../../examples'
+import { SCOPES } from '../../../enums'
 
-@Tags('Connections')
+@Tags('DIDComm - Connections')
 @Route()
 @injectable()
 export class ConnectionController extends Controller {
@@ -27,7 +27,7 @@ export class ConnectionController extends Controller {
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
   @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
-  @Get('/connections')
+  @Get('/didcomm/connections')
   public async getAllConnections(
     @Request() request: Req,
     @Query('outOfBandId') outOfBandId?: string,
@@ -60,7 +60,7 @@ export class ConnectionController extends Controller {
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
-  @Get('/connections/:connectionId')
+  @Get('/didcomm/connections/:connectionId')
   public async getConnectionById(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
       const connection = await request.agent.connections.findById(connectionId)
@@ -78,7 +78,7 @@ export class ConnectionController extends Controller {
    *
    * @param connectionId Connection identifier
    */
-  @Delete('/connections/:connectionId')
+  @Delete('/didcomm/connections/:connectionId')
   @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   public async deleteConnection(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
@@ -100,7 +100,7 @@ export class ConnectionController extends Controller {
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
-  @Post('/connections/:connectionId/accept-request')
+  @Post('/didcomm/connections/:connectionId/accept-request')
   public async acceptRequest(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
       const connection = await request.agent.connections.acceptRequest(connectionId)
@@ -121,7 +121,7 @@ export class ConnectionController extends Controller {
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
-  @Post('/connections/:connectionId/accept-response')
+  @Post('/didcomm/connections/:connectionId/accept-response')
   public async acceptResponse(@Request() request: Req, @Path('connectionId') connectionId: RecordId) {
     try {
       const connection = await request.agent.connections.acceptResponse(connectionId)
@@ -131,7 +131,7 @@ export class ConnectionController extends Controller {
     }
   }
 
-  @Get('/url/:invitationId')
+  @Get('/didcomm/url/:invitationId')
   public async getInvitation(@Request() request: Req, @Path('invitationId') invitationId: string) {
     try {
       const outOfBandRecord = await request.agent.oob.findByCreatedInvitationId(invitationId)

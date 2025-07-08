@@ -1,6 +1,6 @@
-import type { RestAgentModules } from '../../cliAgent'
-import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples'
-import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../types'
+import type { RestAgentModules } from '../../../cliAgent'
+import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../../examples'
+import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../../types'
 import type {
   ConnectionRecordProps,
   CreateLegacyInvitationConfig,
@@ -22,15 +22,15 @@ import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags,
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import ErrorHandlingService from '../../errorHandlingService'
-import { InternalServerError, NotFoundError } from '../../errors'
-import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples'
-import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types'
-import { SCOPES } from '../../enums'
+import ErrorHandlingService from '../../../errorHandlingService'
+import { InternalServerError, NotFoundError } from '../../../errors'
+import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../../examples'
+import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../../types'
+import { SCOPES } from '../../../enums'
 
-@Tags('Out Of Band')
+@Tags('DIDComm - Out Of Band')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
-@Route('/oob')
+@Route('/didcomm/oob')
 @injectable()
 export class OutOfBandController extends Controller {
 

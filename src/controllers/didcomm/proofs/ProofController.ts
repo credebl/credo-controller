@@ -11,18 +11,18 @@ import { Body, Controller, Example, Get, Path, Post, Query, Route, Tags, Securit
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import ErrorHandlingService from '../../errorHandlingService'
-import { ProofRecordExample, RecordId } from '../examples'
+import ErrorHandlingService from '../../../errorHandlingService'
+import { ProofRecordExample, RecordId } from '../../examples'
 import {
   AcceptProofProposal,
   CreateProofRequestOobOptions,
   RequestProofOptions,
   RequestProofProposalOptions,
-} from '../types'
-import { SCOPES } from '../../enums'
+} from '../../types'
+import { SCOPES } from '../../../enums'
 
-@Tags('Proofs')
-@Route('/proofs')
+@Tags('DIDComm - Proofs')
+@Route('/didcomm/proofs')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class ProofController extends Controller {

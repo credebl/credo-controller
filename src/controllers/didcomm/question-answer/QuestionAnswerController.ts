@@ -1,4 +1,4 @@
-import type { RestAgentModules } from '../../cliAgent'
+import type { RestAgentModules } from '../../../cliAgent'
 import type { ValidResponse } from '@credo-ts/question-answer'
 
 import { Agent } from '@credo-ts/core'
@@ -7,13 +7,13 @@ import { Body, Controller, Get, Path, Post, Route, Tags, Query, Security, Exampl
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import ErrorHandlingService from '../../errorHandlingService'
-import { NotFoundError } from '../../errors'
-import { RecordId } from '../examples'
-import { SCOPES } from '../../enums'
+import ErrorHandlingService from '../../../errorHandlingService'
+import { NotFoundError } from '../../../errors'
+import { RecordId } from '../../examples'
+import { SCOPES } from '../../../enums'
 
-@Tags('Question Answer')
-@Route('/question-answer')
+@Tags('DIDComm - Question Answer')
+@Route('/didcomm/question-answer')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class QuestionAnswerController extends Controller {

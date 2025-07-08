@@ -1,4 +1,4 @@
-import type { RestAgentModules } from '../../cliAgent'
+import type { RestAgentModules } from '../../../cliAgent'
 import type {
   CredentialExchangeRecordProps,
   CredentialProtocolVersionType,
@@ -18,8 +18,8 @@ import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Securit
 import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
-import ErrorHandlingService from '../../errorHandlingService'
-import { CredentialExchangeRecordExample, RecordId } from '../examples'
+import ErrorHandlingService from '../../../errorHandlingService'
+import { CredentialExchangeRecordExample, RecordId } from '../../examples'
 import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
   AcceptCredentialRequestOptions,
@@ -30,12 +30,12 @@ import {
   AcceptCredential,
   CreateOfferOobOptions,
   ThreadId,
-} from '../types'
-import { SCOPES } from '../../enums'
+} from '../../types'
+import { SCOPES } from '../../../enums'
 
-@Tags('Credentials')
+@Tags('DIDComm - Credentials')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
-@Route('/credentials')
+@Route('/didcomm/credentials')
 @injectable()
 export class CredentialController extends Controller {
   private outOfBandController: OutOfBandController
