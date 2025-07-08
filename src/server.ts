@@ -142,6 +142,8 @@ async function endTenantSessionIfActive(request: ExRequest) {
     const agent = request?.agent
     if (agent instanceof TenantAgent) {
       agent.config.logger.debug(`Ending tenant session for tenant:: ${agent.context.contextCorrelationId}`)
+      // TODO: we can also not wait for the ending of session
+      // This can further imporve the response time
       await agent.endSession()
     }
   }
