@@ -53,6 +53,13 @@ interface InboundTransport {
 
 type Transports = 'http' | 'ws'
 
+/**
+ * Parses command-line arguments and environment variables to produce a validated configuration for starting the Credo REST agent.
+ *
+ * Supports options for wallet credentials, ledger configuration, transport protocols, auto-accept policies, logging, tenancy, contract addresses, timeouts, and API key. Throws errors for invalid or missing required values.
+ *
+ * @returns The parsed and validated configuration object for the agent.
+ */
 async function parseArguments(): Promise<Parsed> {
   return yargs(hideBin(process.argv))
     .command('start', 'Start Credo Rest agent')
@@ -157,6 +164,11 @@ async function parseArguments(): Promise<Parsed> {
     .parseAsync() as Promise<Parsed>
 }
 
+/**
+ * Parses CLI arguments and environment variables, then starts the Credo REST agent with the specified configuration.
+ *
+ * This function gathers configuration options for wallet, ledger, transport, auto-accept policies, logging, tenancy, contract addresses, timeouts, and API keys, and launches the agent accordingly.
+ */
 export async function runCliServer() {
   const parsed = await parseArguments()
 

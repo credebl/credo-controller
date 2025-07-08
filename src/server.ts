@@ -137,6 +137,11 @@ export const setupServer = async (
   return app
 }
 
+/**
+ * Ends the tenant session associated with the request if an active tenant agent is present.
+ *
+ * If the request contains an `agent` property that is an instance of `TenantAgent`, this function calls `endSession` on the agent to terminate the tenant session.
+ */
 async function endTenantSessionIfActive(request: ExRequest) {
   if ('agent' in request) {
     const agent = request?.agent

@@ -102,6 +102,12 @@ export interface AriesRestConfig {
   apiKey: string
 }
 
+/**
+ * Reads and parses a JSON configuration file from the specified path.
+ *
+ * @param path - The file system path to the JSON configuration file
+ * @returns The parsed configuration object
+ */
 export async function readRestConfig(path: string) {
   const configString = await readFile(path, { encoding: 'utf-8' })
   const config = JSON.parse(configString)
@@ -251,7 +257,13 @@ const getWithTenantModules = (
 //   const secretKey: string = buffer.toString('hex')
 
 //   return secretKey
-// }
+/**
+ * Initializes and runs an Aries REST agent with the provided configuration.
+ *
+ * Sets up the agent with specified modules, transport protocols, ledger networks, and wallet configuration. Ensures a secret key is present in the agent's generic records, generating one if necessary. Starts an Express server with the agent and listens on the configured admin port, using the provided API key for authentication.
+ *
+ * @param restConfig - The configuration object for the Aries REST agent, including network, wallet, transport, and API key settings.
+ */
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
@@ -295,6 +307,13 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     processDidCommMessagesConcurrently: true,
   }
 
+  /**
+   * Fetches and constructs an IndyVdrPoolConfig for a given ledger by downloading its genesis transactions and applying Indicio-specific transaction author agreement settings if applicable.
+   *
+   * @param ledgerConfig - Contains the URL to the genesis transactions and the Indy namespace identifier.
+   * @returns The constructed IndyVdrPoolConfig object for the specified ledger.
+   * @throws Error if the provided genesisTransactions URL is invalid.
+   */
   async function fetchLedgerData(ledgerConfig: {
     genesisTransactions: string
     indyNamespace: string

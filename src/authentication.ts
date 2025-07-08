@@ -14,6 +14,16 @@ import { TsLogger } from './utils/logger'
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
+/**
+ * Authenticates an incoming Express request using either API key or JWT, supporting multi-tenant and dedicated agent scenarios.
+ *
+ * If the route is marked as unprotected, authentication is bypassed. For API key authentication, the provided key is compared to the current dynamic API key. For JWT authentication, the function verifies the token, decodes the agent role, and enforces role-based access control based on tenancy and scopes. On successful authentication, attaches the appropriate agent instance to the request.
+ *
+ * @param request - The incoming Express request to authenticate
+ * @param securityName - The security scheme to use ('apiKey' or 'jwt')
+ * @param scopes - Optional array of required scopes for the route
+ * @returns Resolves to `true` if authentication succeeds; otherwise, rejects with a 401 error
+ */
 export async function expressAuthentication(request: Request, securityName: string, scopes?: string[]) {
   const logger = new TsLogger(LogLevel.info)
   const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
@@ -141,13 +151,26 @@ export async function expressAuthentication(request: Request, securityName: stri
   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 }
 
+/**
+ * Verifies a JWT token using the provided secret key.
+ *
+ * @param token - The JWT token to verify
+ * @param secretKey - The secret key used for verification
+ * @returns `true` if the token is valid, otherwise `false`
+ */
 async function verifyToken(token: string, secretKey: string): Promise<boolean> {
   const verified = jwt.verify(token, secretKey)
 
   return verified ? true : false
 }
 
-// Common function to pass agent object and get secretKey
+/**
+ * Retrieves the JWT secret key associated with the provided agent, using a cache to optimize repeated lookups.
+ *
+ * If the secret key is not found in the cache, it is fetched from the agent's generic records and then cached for future use.
+ *
+ * @returns The secret key as a string.
+ */
 async function getSecretKey(
   agent: Agent<RestMultiTenantAgentModules | RestAgentModules> | TenantAgent<RestAgentModules>
 ): Promise<string> {
@@ -166,10 +189,20 @@ async function getSecretKey(
   return cachedKey
 }
 
+/**
+ * Updates the current API key used for API key authentication.
+ *
+ * @param newApiKey - The new API key string to set
+ */
 export function setDynamicApiKey(newApiKey: string) {
   dynamicApiKey = newApiKey
 }
 
+/**
+ * Returns the current API key used for API key authentication.
+ *
+ * @returns The current dynamic API key string
+ */
 export function getDynamicApiKey() {
   return dynamicApiKey
 }
