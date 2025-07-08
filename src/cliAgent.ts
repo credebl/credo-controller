@@ -100,6 +100,7 @@ export interface AriesRestConfig {
   walletScheme?: AskarMultiWalletDatabaseScheme
   schemaFileServerURL?: string
   apiKey: string
+  updateJwtSecret?: boolean
 }
 
 export async function readRestConfig(path: string) {
@@ -272,6 +273,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptProofs,
     walletScheme,
     apiKey,
+    updateJwtSecret,
     ...afjConfig
   } = restConfig
 
@@ -401,9 +403,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  // TODO: add some variable like: 'rotateSecret' to trigger rotating the secret from the generic records
   const genericRecord = await agent.genericRecords.getAll()
-  const recordsWithSecretKey = genericRecord.some((record) => record?.content?.secretKey)
+  const recordsWithSecretKey = genericRecord.find((record) => record?.content?.secretKey)
 
   if (!genericRecord.length || !recordsWithSecretKey) {
     // If secretKey doesn't exist in genericRecord: i.e. Agent initialized for the first time or secretKey not found
@@ -415,6 +416,12 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         secretKey: secretKeyInfo,
       },
     })
+  } else if(updateJwtSecret && recordsWithSecretKey) {
+    // If secretKey already exist in genericRecord: i.e. Agent is not initialized for the first time or secretKey already found
+    // And we are requested to store a new secret, with the flag: 'updateJwtSecret'
+    // Generate and store secret key for agent while initialization
+    recordsWithSecretKey.content.secretKey = await generateSecretKey()
+    await agent.genericRecords.update(recordsWithSecretKey)
   }
   const app = await setupServer(
     agent,

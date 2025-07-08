@@ -44,6 +44,7 @@ interface Parsed {
   fileServerUrl?: string
   fileServerToken?: string
   apiKey?: string
+  updateJwtSecret?: boolean
 }
 
 interface InboundTransport {
@@ -151,7 +152,10 @@ async function parseArguments(): Promise<Parsed> {
     .option('apiKey', {
       string: true,
     })
-    // TODO: add some variable like: 'rotateSecret' to trigger rotating the secret from the generic records
+    .option('updateJwtSecret', {
+      boolean: true,
+      default: false
+    })
     .config()
     .env('AFJ_REST')
     .parseAsync() as Promise<Parsed>
@@ -199,5 +203,6 @@ export async function runCliServer() {
     fileServerUrl: parsed.fileServerUrl,
     fileServerToken: parsed.fileServerToken,
     apiKey: parsed['apiKey'],
+    updateJwtSecret: parsed['updateJwtSecret'],
   } as AriesRestConfig)
 }
