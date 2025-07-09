@@ -2,11 +2,7 @@
 import type { RestMultiTenantAgentModules } from '../../cliAgent'
 import type { TenantRecord } from '@credo-ts/tenants'
 
-import {
-  Agent,
-  JsonTransformer,
-  injectable,
-  RecordNotFoundError} from '@credo-ts/core'
+import { Agent, JsonTransformer, injectable, RecordNotFoundError } from '@credo-ts/core'
 import { Request as Req } from 'express'
 import jwt from 'jsonwebtoken'
 import { Body, Controller, Delete, Post, Route, Tags, Path, Security, Request, Res, TsoaResponse, Get } from 'tsoa'
@@ -14,15 +10,13 @@ import { Body, Controller, Delete, Post, Route, Tags, Path, Security, Request, R
 import { AgentRole, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { generateSecretKey } from '../../utils'
-import {
-  CreateTenantOptions } from '../types'
+import { CreateTenantOptions } from '../types'
 
 @Tags('MultiTenancy')
 @Security('jwt', [SCOPES.MULTITENANT_BASE_AGENT])
 @Route('/multi-tenancy')
 @injectable()
 export class MultiTenancyController extends Controller {
-
   @Post('/create-tenant')
   public async createTenant(@Request() request: Req, @Body() createTenantOptions: CreateTenantOptions) {
     const agent = request.agent as Agent<RestMultiTenantAgentModules>
@@ -45,7 +39,7 @@ export class MultiTenancyController extends Controller {
     @Request() request: Req,
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const agent = request.agent as unknown as Agent<RestMultiTenantAgentModules>
@@ -80,13 +74,12 @@ export class MultiTenancyController extends Controller {
     }
   }
 
-
   @Get(':tenantId')
   public async getTenantById(
     @Request() request: Req,
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const agent = request.agent as Agent<RestMultiTenantAgentModules>
@@ -102,13 +95,12 @@ export class MultiTenancyController extends Controller {
     }
   }
 
-
   @Delete(':tenantId')
   public async deleteTenantById(
     @Request() request: Req,
     @Path('tenantId') tenantId: string,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Res() internalServerError: TsoaResponse<500, { message: string }>,
   ) {
     try {
       const agent = request.agent as Agent<RestMultiTenantAgentModules>
@@ -152,4 +144,3 @@ export class MultiTenancyController extends Controller {
     return token
   }
 }
-
