@@ -9,7 +9,6 @@ import { Body, Controller, Delete, Post, Route, Tags, Path, Security, Request, R
 
 import { AgentRole, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
-import { generateSecretKey } from '../../utils'
 import { CreateTenantOptions } from '../types'
 
 @Tags('MultiTenancy')
@@ -19,7 +18,6 @@ import { CreateTenantOptions } from '../types'
 export class MultiTenancyController extends Controller {
   @Post('/create-tenant')
   public async createTenant(@Request() request: Req, @Body() createTenantOptions: CreateTenantOptions) {
-    const agent = request.agent as Agent<RestMultiTenantAgentModules>
     const { config } = createTenantOptions
     try {
       const agent = request.agent as Agent<RestMultiTenantAgentModules>

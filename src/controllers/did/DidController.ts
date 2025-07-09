@@ -1,6 +1,6 @@
 import type { DidResolutionResultProps } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
-import type { KeyDidCreateOptions, PeerDidNumAlgo2CreateOptions } from '@credo-ts/core'
+import type { DidDocument, KeyDidCreateOptions, PeerDidNumAlgo2CreateOptions } from '@credo-ts/core'
 
 import {
   KeyType,
@@ -104,7 +104,7 @@ export class DidController extends Controller {
 
   private async handleDidPeer(agent: AgentType, createDidOptions: DidCreate) {
     let didResponse
-    let did: any
+    let did
 
     if (!createDidOptions.keyType) {
       throw Error('keyType is required')
@@ -384,7 +384,7 @@ export class DidController extends Controller {
   }
 
   public async handleWeb(agent: AgentType, didOptions: DidCreate) {
-    let didDocument: any
+    let didDocument: DidDocument;
     if (!didOptions.domain) {
       throw new BadRequestError('For create did:web, domain is required')
     }
@@ -419,14 +419,15 @@ export class DidController extends Controller {
         .addAuthentication(keyId)
         .addAssertionMethod(keyId)
         .build()
-    }
-    if (didOptions.keyType === KeyType.Bls12381g2) {
+    } else if (didOptions.keyType === KeyType.Bls12381g2) {
       didDocument = new DidDocumentBuilder(did)
         .addContext('https://w3id.org/security/bbs/v1')
         .addVerificationMethod(getBls12381G2Key2020({ key, id: keyId, controller: did }))
         .addAuthentication(keyId)
         .addAssertionMethod(keyId)
         .build()
+    } else {
+      throw new BadRequestError('Unsupported key type') // fallback, but this won't hit due to earlier check
     }
 
     await agent.dids.import({

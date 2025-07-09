@@ -1,7 +1,5 @@
-import type { RestAgentModules } from '../../../cliAgent'
 import type { ValidResponse } from '@credo-ts/question-answer'
 
-import { Agent } from '@credo-ts/core'
 import { QuestionAnswerRecord, QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import { Request as Req } from 'express'
 import { Body, Controller, Get, Path, Post, Route, Tags, Query, Security, Example, Request } from 'tsoa'

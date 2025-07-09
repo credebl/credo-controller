@@ -6,7 +6,7 @@ import type {
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, PeerDidNumAlgo, createPeerDidDocumentFromServices } from '@credo-ts/core'
+import { PeerDidNumAlgo, createPeerDidDocumentFromServices } from '@credo-ts/core'
 import { Request as Req } from 'express'
 import { Body, Controller, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
@@ -198,11 +198,7 @@ export class ProofController extends Controller {
         outOfBandRecord: outOfBandRecord.toJSON(),
         invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
         proofRecordThId: proof.proofRecord.threadId,
-        proofMessageId: proof.message.thread?.threadId
-          ? proof.message.thread?.threadId
-          : proof.message.threadId
-            ? proof.message.thread
-            : proof.message.id,
+        proofMessageId: proof.message.thread?.threadId || proof.message.threadId || proof.message.id
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -275,7 +271,7 @@ export class ProofController extends Controller {
   @Get('/:proofRecordId/form-data')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   // TODO: Add return type
-  public async proofFormData(@Request() request: Req, @Path('proofRecordId') proofRecordId: string): Promise<any> {
+  public async proofFormData(@Request() request: Req, @Path('proofRecordId') proofRecordId: string) {
     try {
       const proof = await request.agent.proofs.getFormatData(proofRecordId)
       return proof

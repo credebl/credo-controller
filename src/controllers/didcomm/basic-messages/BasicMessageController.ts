@@ -1,7 +1,5 @@
-import type { RestAgentModules } from '../../../cliAgent'
 import type { BasicMessageRecord, BasicMessageStorageProps } from '@credo-ts/core'
 
-import { Agent } from '@credo-ts/core'
 import { Request as Req } from 'express'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
@@ -51,7 +49,7 @@ export class BasicMessageController extends Controller {
   ) {
     try {
       const basicMessageRecord = await request.agent.basicMessages.sendMessage(connectionId, body.content)
-      this.setStatus(204)
+      this.setStatus(201)
       return basicMessageRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)

@@ -9,10 +9,11 @@ import { container } from 'tsyringe'
 import { AgentRole, ErrorMessages, SCOPES } from './enums'
 import { StatusException } from './errors'
 import { TsLogger } from './utils/logger'
+import { uuid } from '@credo-ts/core/build/utils/uuid'
 
 // export type AgentType = Agent<RestAgentModules> | Agent<RestMultiTenantAgentModules> | TenantAgent<RestAgentModules>
 
-let dynamicApiKey: string = 'api_key' // Initialize with a default value
+let dynamicApiKey: string = uuid() // Initialize with a default value
 
 // Cache for jwt token key
 const cache = new Map<string, string>()
@@ -152,9 +153,12 @@ export async function expressAuthentication(request: Request, securityName: stri
 }
 
 async function verifyToken(token: string, secretKey: string): Promise<boolean> {
-  const verified = jwt.verify(token, secretKey)
-
-  return verified ? true : false
+  try {
+    jwt.verify(token, secretKey)
+    return true
+  } catch (error) {
+    return false
+  }
 }
 
 // Common function to pass agent object and get secretKey

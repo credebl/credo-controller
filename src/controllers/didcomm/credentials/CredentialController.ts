@@ -1,4 +1,3 @@
-import type { RestAgentModules } from '../../../cliAgent'
 import type {
   CredentialExchangeRecordProps,
   CredentialProtocolVersionType,
@@ -8,7 +7,6 @@ import type {
 
 import {
   CredentialState,
-  Agent,
   W3cCredentialService,
   CredentialRole,
   createPeerDidDocumentFromServices,
@@ -32,6 +30,7 @@ import {
   ThreadId,
 } from '../../types'
 import { OutOfBandController } from '../outofband/OutOfBandController'
+import { AgentType } from '../../../types'
 
 @Tags('DIDComm - Credentials')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
@@ -182,10 +181,7 @@ export class CredentialController extends Controller {
     try {
       let invitationDid: string | undefined
       let routing: Routing
-      const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
-      if (linkSecretIds.length === 0) {
-        await request.agent.modules.anoncreds.createLinkSecret()
-      }
+      await this.ensureLinkSecretExists(request.agent)
 
       if (outOfBandOption?.invitationDid) {
         invitationDid = outOfBandOption?.invitationDid
@@ -254,10 +250,7 @@ export class CredentialController extends Controller {
   @Post('/accept-offer')
   public async acceptOffer(@Request() request: Req, @Body() acceptCredentialOfferOptions: CredentialOfferOptions) {
     try {
-      const linkSecretIds = await request.agent.modules.anoncreds.getLinkSecretIds()
-      if (linkSecretIds.length === 0) {
-        await request.agent.modules.anoncreds.createLinkSecret()
-      }
+      await this.ensureLinkSecretExists(request.agent)
       const acceptOffer = await request.agent.credentials.acceptOffer(acceptCredentialOfferOptions)
       return acceptOffer
     } catch (error) {
@@ -318,6 +311,13 @@ export class CredentialController extends Controller {
       return credentialDetails
     } catch (error) {
       throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  private async ensureLinkSecretExists(agent: AgentType): Promise<void> {
+    const linkSecretIds = await agent.modules.anoncreds.getLinkSecretIds()
+    if (linkSecretIds.length === 0) {
+      await agent.modules.anoncreds.createLinkSecret()
     }
   }
 }

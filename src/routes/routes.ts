@@ -4,7 +4,7 @@
 import type { TsoaRoute } from '@tsoa/runtime';
 import {  fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { MultiTenancyController } from './../controllers/multi-tenancy/MultiTenancyController';
+import { Polygon } from './../controllers/polygon/PolygonController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { EndorserTransactionController } from './../controllers/anoncreds/endorser-transaction/EndorserTransactionController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -28,7 +28,7 @@ import { ConnectionController } from './../controllers/didcomm/connections/Conne
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { BasicMessageController } from './../controllers/didcomm/basic-messages/BasicMessageController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { Polygon } from './../controllers/polygon/PolygonController';
+import { MultiTenancyController } from './../controllers/multi-tenancy/MultiTenancyController';
 import { expressAuthentication } from './../authentication';
 // @ts-ignore - no great way to install types from subpackage
 import { iocContainer } from './../utils/tsyringeTsoaIocContainer';
@@ -41,24 +41,24 @@ const expressAuthenticationRecasted = expressAuthentication as (req: ExRequest, 
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
 const models: TsoaRoute.Models = {
-    "Pick_InitConfig.label-or-connectionImageUrl_": {
+    "Record_string.unknown_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "KeyDerivationMethod": {
+    "DidOperation.Create": {
         "dataType": "refEnum",
-        "enums": ["ARGON2I_MOD","ARGON2I_INT","RAW"],
+        "enums": ["createDID"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Pick_WalletConfig.id-or-key-or-keyDerivationMethod_": {
+    "CreateDidOperationOptions": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"id":{"dataType":"string","required":true},"key":{"dataType":"string","required":true},"keyDerivationMethod":{"ref":"KeyDerivationMethod"}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"serviceEndpoint":{"dataType":"string"},"operation":{"ref":"DidOperation.Create","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "TenantConfig": {
-        "dataType": "refAlias",
-        "type": {"dataType":"intersection","subSchemas":[{"ref":"Pick_InitConfig.label-or-connectionImageUrl_"},{"dataType":"nestedObjectLiteral","nestedProperties":{"walletConfig":{"ref":"Pick_WalletConfig.id-or-key-or-keyDerivationMethod_","required":true}}}],"validators":{}},
+    "DidOperation.Update": {
+        "dataType": "refEnum",
+        "enums": ["updateDIDDoc"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Record_string.any_": {
@@ -66,45 +66,39 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "MetadataValue": {
+    "DidDocument": {
         "dataType": "refAlias",
         "type": {"ref":"Record_string.any_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "MetadataBase": {
+    "UpdateDidOperationOptions": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"ref":"MetadataValue"},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"did":{"dataType":"string","required":true},"didDocument":{"ref":"DidDocument","required":true},"operation":{"ref":"DidOperation.Update","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Metadata____": {
-        "dataType": "refObject",
-        "properties": {
-            "data": {"ref":"MetadataBase","required":true},
-        },
-        "additionalProperties": false,
+    "DidOperation.Deactivate": {
+        "dataType": "refEnum",
+        "enums": ["deactivate"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__": {
+    "DeactivateDidOperationOptions": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"did":{"dataType":"string","required":true},"operation":{"ref":"DidOperation.Deactivate","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Omit_CustomTenantConfig.walletConfig_": {
+    "DidOperation.AddResource": {
+        "dataType": "refEnum",
+        "enums": ["addResource"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AddResourceDidOperationOptions": {
         "dataType": "refAlias",
-        "type": {"ref":"Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__","validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"did":{"dataType":"string","required":true},"resource":{"dataType":"object","required":true},"resourceId":{"dataType":"string","required":true},"operation":{"ref":"DidOperation.AddResource","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateTenantOptions": {
-        "dataType": "refObject",
-        "properties": {
-            "config": {"ref":"Omit_CustomTenantConfig.walletConfig_","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Record_string.unknown_": {
+    "DidOperationOptions": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"validators":{}},
+        "type": {"dataType":"union","subSchemas":[{"ref":"CreateDidOperationOptions"},{"ref":"UpdateDidOperationOptions"},{"ref":"DeactivateDidOperationOptions"},{"ref":"AddResourceDidOperationOptions"}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "EndorserTransaction": {
@@ -119,11 +113,6 @@ const models: TsoaRoute.Models = {
     "DidRegistrationSecretOptions": {
         "dataType": "refAlias",
         "type": {"ref":"Record_string.unknown_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DidDocument": {
-        "dataType": "refAlias",
-        "type": {"ref":"Record_string.any_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidOperationStateWait": {
@@ -808,17 +797,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": {"dataType":"any"},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ThreadDecorator": {
-        "dataType": "refObject",
-        "properties": {
-            "threadId": {"dataType":"string"},
-            "parentThreadId": {"dataType":"string"},
-            "senderOrder": {"dataType":"double"},
-            "receivedOrders": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"double"}},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateProofRequestOobOptions": {
         "dataType": "refObject",
         "properties": {
@@ -835,6 +813,26 @@ const models: TsoaRoute.Models = {
             "invitationDid": {"dataType":"string"},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.proposal_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.request_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.presentation_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "GetProofFormatDataReturn__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"presentation":{"ref":"ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.presentation_"},"request":{"ref":"ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.request_"},"proposal":{"ref":"ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.proposal_"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "HandshakeProtocol": {
@@ -946,7 +944,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string"},"alias":{"dataType":"string"},"imageUrl":{"dataType":"string"},"multiUseInvitation":{"dataType":"boolean"},"autoAcceptConnection":{"dataType":"boolean"}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"alias":{"dataType":"string"},"label":{"dataType":"string"},"imageUrl":{"dataType":"string"},"multiUseInvitation":{"dataType":"boolean"},"autoAcceptConnection":{"dataType":"boolean"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Omit_CreateLegacyInvitationConfig.routing_": {
@@ -1009,7 +1007,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Pick_ReceiveOutOfBandInvitationConfig.Exclude_keyofReceiveOutOfBandInvitationConfig.routing__": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string"},"alias":{"dataType":"string"},"imageUrl":{"dataType":"string"},"autoAcceptConnection":{"dataType":"boolean"},"autoAcceptInvitation":{"dataType":"boolean"},"reuseConnection":{"dataType":"boolean"},"acceptInvitationTimeoutMs":{"dataType":"double"},"ourDid":{"dataType":"string"}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"alias":{"dataType":"string"},"label":{"dataType":"string"},"imageUrl":{"dataType":"string"},"autoAcceptConnection":{"dataType":"boolean"},"autoAcceptInvitation":{"dataType":"boolean"},"reuseConnection":{"dataType":"boolean"},"acceptInvitationTimeoutMs":{"dataType":"double"},"ourDid":{"dataType":"string"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Omit_ReceiveOutOfBandInvitationConfig.routing_": {
@@ -1020,8 +1018,8 @@ const models: TsoaRoute.Models = {
     "ReceiveInvitationProps": {
         "dataType": "refObject",
         "properties": {
-            "label": {"dataType":"string"},
             "alias": {"dataType":"string"},
+            "label": {"dataType":"string"},
             "imageUrl": {"dataType":"string"},
             "autoAcceptConnection": {"dataType":"boolean"},
             "autoAcceptInvitation": {"dataType":"boolean"},
@@ -1036,8 +1034,8 @@ const models: TsoaRoute.Models = {
     "ReceiveInvitationByUrlProps": {
         "dataType": "refObject",
         "properties": {
-            "label": {"dataType":"string"},
             "alias": {"dataType":"string"},
+            "label": {"dataType":"string"},
             "imageUrl": {"dataType":"string"},
             "autoAcceptConnection": {"dataType":"boolean"},
             "autoAcceptInvitation": {"dataType":"boolean"},
@@ -1390,6 +1388,62 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"content":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Pick_InitConfig.label-or-connectionImageUrl_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "KeyDerivationMethod": {
+        "dataType": "refEnum",
+        "enums": ["ARGON2I_MOD","ARGON2I_INT","RAW"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Pick_WalletConfig.id-or-key-or-keyDerivationMethod_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"key":{"dataType":"string","required":true},"id":{"dataType":"string","required":true},"keyDerivationMethod":{"ref":"KeyDerivationMethod"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "TenantConfig": {
+        "dataType": "refAlias",
+        "type": {"dataType":"intersection","subSchemas":[{"ref":"Pick_InitConfig.label-or-connectionImageUrl_"},{"dataType":"nestedObjectLiteral","nestedProperties":{"walletConfig":{"ref":"Pick_WalletConfig.id-or-key-or-keyDerivationMethod_","required":true}}}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "MetadataValue": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.any_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "MetadataBase": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"ref":"MetadataValue"},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Metadata____": {
+        "dataType": "refObject",
+        "properties": {
+            "data": {"ref":"MetadataBase","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"label":{"dataType":"string","required":true},"connectionImageUrl":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Omit_CustomTenantConfig.walletConfig_": {
+        "dataType": "refAlias",
+        "type": {"ref":"Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateTenantOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "config": {"ref":"Omit_CustomTenantConfig.walletConfig_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 };
 const templateService = new ExpressTemplateService(models, {"noImplicitAdditionalProperties":"throw-on-extras","bodyCoercion":true});
 
@@ -1407,32 +1461,30 @@ export function RegisterRoutes(app: Router) {
 
 
     
-        const argsMultiTenancyController_createTenant: Record<string, TsoaRoute.ParameterSchema> = {
-                request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                createTenantOptions: {"in":"body","name":"createTenantOptions","required":true,"ref":"CreateTenantOptions"},
+        const argsPolygon_createKeyPair: Record<string, TsoaRoute.ParameterSchema> = {
         };
-        app.post('/multi-tenancy/create-tenant',
-            authenticateMiddleware([{"jwt":["Basewallet"]}]),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.createTenant)),
+        app.post('/polygon/create-keys',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createKeyPair)),
 
-            async function MultiTenancyController_createTenant(request: ExRequest, response: ExResponse, next: any) {
+            async function Polygon_createKeyPair(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_createTenant, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_createKeyPair, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                const controller: any = await container.get<Polygon>(Polygon);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'createTenant',
+                methodName: 'createKeyPair',
                 controller,
                 response,
                 next,
@@ -1444,34 +1496,32 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsMultiTenancyController_getTenantToken: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsPolygon_createSchema: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
-                notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"ref":"Record_string.unknown_","required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
         };
-        app.post('/multi-tenancy/get-token/:tenantId',
-            authenticateMiddleware([{"jwt":["Basewallet"]}]),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getTenantToken)),
+        app.post('/polygon/create-schema',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createSchema)),
 
-            async function MultiTenancyController_getTenantToken(request: ExRequest, response: ExResponse, next: any) {
+            async function Polygon_createSchema(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_getTenantToken, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_createSchema, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                const controller: any = await container.get<Polygon>(Polygon);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'getTenantToken',
+                methodName: 'createSchema',
                 controller,
                 response,
                 next,
@@ -1483,34 +1533,32 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsMultiTenancyController_getTenantById: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsPolygon_estimateTransaction: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
-                notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                estimateTransactionRequest: {"in":"body","name":"estimateTransactionRequest","required":true,"ref":"DidOperationOptions"},
         };
-        app.get('/multi-tenancy/:tenantId',
-            authenticateMiddleware([{"jwt":["Basewallet"]}]),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getTenantById)),
+        app.post('/polygon/estimate-transaction',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.estimateTransaction)),
 
-            async function MultiTenancyController_getTenantById(request: ExRequest, response: ExResponse, next: any) {
+            async function Polygon_estimateTransaction(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_getTenantById, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_estimateTransaction, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                const controller: any = await container.get<Polygon>(Polygon);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'getTenantById',
+                methodName: 'estimateTransaction',
                 controller,
                 response,
                 next,
@@ -1522,34 +1570,33 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsMultiTenancyController_deleteTenantById: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsPolygon_getSchemaById: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
-                notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
-                internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
+                did: {"in":"path","name":"did","required":true,"dataType":"string"},
+                schemaId: {"in":"path","name":"schemaId","required":true,"dataType":"string"},
         };
-        app.delete('/multi-tenancy/:tenantId',
-            authenticateMiddleware([{"jwt":["Basewallet"]}]),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
-            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.deleteTenantById)),
+        app.get('/polygon/:did/:schemaId',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            ...(fetchMiddlewares<RequestHandler>(Polygon)),
+            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.getSchemaById)),
 
-            async function MultiTenancyController_deleteTenantById(request: ExRequest, response: ExResponse, next: any) {
+            async function Polygon_getSchemaById(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_deleteTenantById, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_getSchemaById, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                const controller: any = await container.get<Polygon>(Polygon);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'deleteTenantById',
+                methodName: 'getSchemaById',
                 controller,
                 response,
                 next,
@@ -2042,7 +2089,7 @@ export function RegisterRoutes(app: Router) {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 body: {"in":"body","name":"body","required":true,"ref":"VerifyDataOptions"},
         };
-        app.post('/agent/verify/:tenantId',
+        app.post('/agent/verify',
             authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(AgentController)),
             ...(fetchMiddlewares<RequestHandler>(AgentController.prototype.verify)),
@@ -2079,7 +2126,7 @@ export function RegisterRoutes(app: Router) {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 storeCredential: {"in":"query","name":"storeCredential","required":true,"dataType":"boolean"},
                 dataTypeToSign: {"in":"query","name":"dataTypeToSign","required":true,"dataType":"union","subSchemas":[{"dataType":"enum","enums":["rawData"]},{"dataType":"enum","enums":["jsonLd"]}]},
-                data: {"in":"body","name":"data","required":true,"dataType":"union","subSchemas":[{"ref":"CustomW3cJsonLdSignCredentialOptions"},{"ref":"SignDataOptions"},{"dataType":"any"}]},
+                data: {"in":"body","name":"data","required":true,"dataType":"union","subSchemas":[{"ref":"CustomW3cJsonLdSignCredentialOptions"},{"ref":"SignDataOptions"}]},
         };
         app.post('/agent/credential/sign',
             authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
@@ -2116,7 +2163,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsAgentController_verifyCredential: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                credentialToVerify: {"in":"body","name":"credentialToVerify","required":true,"dataType":"union","subSchemas":[{"ref":"SafeW3cJsonLdVerifyCredentialOptions"},{"dataType":"any"}]},
+                credentialToVerify: {"in":"body","name":"credentialToVerify","required":true,"ref":"SafeW3cJsonLdVerifyCredentialOptions"},
         };
         app.post('/agent/credential/verify',
             authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
@@ -3720,30 +3767,32 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsPolygon_createKeyPair: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsMultiTenancyController_createTenant: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                createTenantOptions: {"in":"body","name":"createTenantOptions","required":true,"ref":"CreateTenantOptions"},
         };
-        app.post('/polygon/create-keys',
-            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
-            ...(fetchMiddlewares<RequestHandler>(Polygon)),
-            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createKeyPair)),
+        app.post('/multi-tenancy/create-tenant',
+            authenticateMiddleware([{"jwt":["Basewallet"]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.createTenant)),
 
-            async function Polygon_createKeyPair(request: ExRequest, response: ExResponse, next: any) {
+            async function MultiTenancyController_createTenant(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_createKeyPair, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_createTenant, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'createKeyPair',
+                methodName: 'createTenant',
                 controller,
                 response,
                 next,
@@ -3755,32 +3804,34 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsPolygon_createSchema: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsMultiTenancyController_getTenantToken: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                createSchemaRequest: {"in":"body","name":"createSchemaRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"schema":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true},"schemaName":{"dataType":"string","required":true},"did":{"dataType":"string","required":true}}},
+                tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
         };
-        app.post('/polygon/create-schema',
-            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
-            ...(fetchMiddlewares<RequestHandler>(Polygon)),
-            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createSchema)),
+        app.post('/multi-tenancy/get-token/:tenantId',
+            authenticateMiddleware([{"jwt":["Basewallet"]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getTenantToken)),
 
-            async function Polygon_createSchema(request: ExRequest, response: ExResponse, next: any) {
+            async function MultiTenancyController_getTenantToken(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_createSchema, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_getTenantToken, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'createSchema',
+                methodName: 'getTenantToken',
                 controller,
                 response,
                 next,
@@ -3792,32 +3843,34 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsPolygon_estimateTransaction: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsMultiTenancyController_getTenantById: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                estimateTransactionRequest: {"in":"body","name":"estimateTransactionRequest","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"transaction":{"dataType":"any","required":true},"operation":{"dataType":"any","required":true}}},
+                tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
         };
-        app.post('/polygon/estimate-transaction',
-            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
-            ...(fetchMiddlewares<RequestHandler>(Polygon)),
-            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.estimateTransaction)),
+        app.get('/multi-tenancy/:tenantId',
+            authenticateMiddleware([{"jwt":["Basewallet"]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.getTenantById)),
 
-            async function Polygon_estimateTransaction(request: ExRequest, response: ExResponse, next: any) {
+            async function MultiTenancyController_getTenantById(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_estimateTransaction, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_getTenantById, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'estimateTransaction',
+                methodName: 'getTenantById',
                 controller,
                 response,
                 next,
@@ -3829,33 +3882,34 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsPolygon_getSchemaById: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsMultiTenancyController_deleteTenantById: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                did: {"in":"path","name":"did","required":true,"dataType":"string"},
-                schemaId: {"in":"path","name":"schemaId","required":true,"dataType":"string"},
+                tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                notFoundError: {"in":"res","name":"404","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                internalServerError: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true}}},
         };
-        app.get('/polygon/:did/:schemaId',
-            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
-            ...(fetchMiddlewares<RequestHandler>(Polygon)),
-            ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.getSchemaById)),
+        app.delete('/multi-tenancy/:tenantId',
+            authenticateMiddleware([{"jwt":["Basewallet"]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.deleteTenantById)),
 
-            async function Polygon_getSchemaById(request: ExRequest, response: ExResponse, next: any) {
+            async function MultiTenancyController_deleteTenantById(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsPolygon_getSchemaById, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsMultiTenancyController_deleteTenantById, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<Polygon>(Polygon);
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
 
               await templateService.apiHandler({
-                methodName: 'getSchemaById',
+                methodName: 'deleteTenantById',
                 controller,
                 response,
                 next,

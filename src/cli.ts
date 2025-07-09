@@ -151,6 +151,13 @@ async function parseArguments(): Promise<Parsed> {
     .option('wallet-idle-timeout', { number: true })
     .option('apiKey', {
       string: true,
+      coerce: (input: string) => {
+        input = input.trim()
+        if (input && input.length < 16) {
+          throw new Error('API key must be at least 16 characters long')
+        }
+        return input
+      },
     })
     .option('updateJwtSecret', {
       boolean: true,

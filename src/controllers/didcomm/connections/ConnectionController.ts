@@ -1,7 +1,6 @@
-import type { RestAgentModules } from '../../../cliAgent'
 import type { ConnectionRecordProps } from '@credo-ts/core'
 
-import { DidExchangeState, Agent } from '@credo-ts/core'
+import { DidExchangeState } from '@credo-ts/core'
 import { Request as Req } from 'express'
 import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'

@@ -1,4 +1,3 @@
-import type { RestAgentModules } from '../../../cliAgent'
 import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../../examples'
 import type { AgentMessageType, RecipientKeyOption, CreateInvitationOptions } from '../../types'
 import type {
@@ -12,7 +11,6 @@ import {
   AgentMessage,
   JsonTransformer,
   OutOfBandInvitation,
-  Agent,
   Key,
   KeyType,
   createPeerDidDocumentFromServices,

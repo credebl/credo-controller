@@ -7,65 +7,37 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"Pick_InitConfig.label-or-connectionImageUrl_": {
-				"properties": {
-					"label": {
-						"type": "string"
-					},
-					"connectionImageUrl": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"label"
-				],
+			"Record_string.unknown_": {
+				"properties": {},
+				"additionalProperties": {},
 				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
+				"description": "Construct a type with a set of properties K of type T"
 			},
-			"KeyDerivationMethod": {
+			"DidOperation.Create": {
 				"enum": [
-					"ARGON2I_MOD",
-					"ARGON2I_INT",
-					"RAW"
+					"createDID"
 				],
 				"type": "string"
 			},
-			"Pick_WalletConfig.id-or-key-or-keyDerivationMethod_": {
+			"CreateDidOperationOptions": {
 				"properties": {
-					"id": {
+					"serviceEndpoint": {
 						"type": "string"
 					},
-					"key": {
-						"type": "string"
-					},
-					"keyDerivationMethod": {
-						"$ref": "#/components/schemas/KeyDerivationMethod"
+					"operation": {
+						"$ref": "#/components/schemas/DidOperation.Create"
 					}
 				},
 				"required": [
-					"id",
-					"key"
+					"operation"
 				],
-				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
+				"type": "object"
 			},
-			"TenantConfig": {
-				"allOf": [
-					{
-						"$ref": "#/components/schemas/Pick_InitConfig.label-or-connectionImageUrl_"
-					},
-					{
-						"properties": {
-							"walletConfig": {
-								"$ref": "#/components/schemas/Pick_WalletConfig.id-or-key-or-keyDerivationMethod_"
-							}
-						},
-						"required": [
-							"walletConfig"
-						],
-						"type": "object"
-					}
-				]
+			"DidOperation.Update": {
+				"enum": [
+					"updateDIDDoc"
+				],
+				"type": "string"
 			},
 			"Record_string.any_": {
 				"properties": {},
@@ -73,65 +45,94 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
-			"MetadataValue": {
+			"DidDocument": {
 				"$ref": "#/components/schemas/Record_string.any_"
 			},
-			"MetadataBase": {
-				"properties": {},
-				"additionalProperties": {
-					"$ref": "#/components/schemas/MetadataValue"
-				},
-				"type": "object"
-			},
-			"Metadata____": {
-				"description": "Metadata access class to get, set (create and update), add (append to a record) and delete metadata on any record.\n\nset will override the previous value if it already exists\n\nnote: To add persistence to these records, you have to update the record in the correct repository",
+			"UpdateDidOperationOptions": {
 				"properties": {
-					"data": {
-						"$ref": "#/components/schemas/MetadataBase"
-					}
-				},
-				"required": [
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__": {
-				"properties": {
-					"label": {
+					"did": {
 						"type": "string"
 					},
-					"connectionImageUrl": {
-						"type": "string"
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					},
+					"operation": {
+						"$ref": "#/components/schemas/DidOperation.Update"
 					}
 				},
 				"required": [
-					"label"
+					"did",
+					"didDocument",
+					"operation"
 				],
-				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
+				"type": "object"
 			},
-			"Omit_CustomTenantConfig.walletConfig_": {
-				"$ref": "#/components/schemas/Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__",
-				"description": "Construct a type with the properties of T except for those in type K."
+			"DidOperation.Deactivate": {
+				"enum": [
+					"deactivate"
+				],
+				"type": "string"
 			},
-			"CreateTenantOptions": {
+			"DeactivateDidOperationOptions": {
 				"properties": {
-					"config": {
-						"$ref": "#/components/schemas/Omit_CustomTenantConfig.walletConfig_"
+					"did": {
+						"type": "string"
+					},
+					"operation": {
+						"$ref": "#/components/schemas/DidOperation.Deactivate"
 					}
 				},
 				"required": [
-					"config"
+					"did",
+					"operation"
 				],
-				"type": "object",
-				"additionalProperties": false
+				"type": "object"
 			},
-			"Record_string.unknown_": {
-				"properties": {},
-				"additionalProperties": {},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
+			"DidOperation.AddResource": {
+				"enum": [
+					"addResource"
+				],
+				"type": "string"
+			},
+			"AddResourceDidOperationOptions": {
+				"properties": {
+					"did": {
+						"type": "string"
+					},
+					"resource": {
+						"additionalProperties": false,
+						"type": "object"
+					},
+					"resourceId": {
+						"type": "string"
+					},
+					"operation": {
+						"$ref": "#/components/schemas/DidOperation.AddResource"
+					}
+				},
+				"required": [
+					"did",
+					"resource",
+					"resourceId",
+					"operation"
+				],
+				"type": "object"
+			},
+			"DidOperationOptions": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/CreateDidOperationOptions"
+					},
+					{
+						"$ref": "#/components/schemas/UpdateDidOperationOptions"
+					},
+					{
+						"$ref": "#/components/schemas/DeactivateDidOperationOptions"
+					},
+					{
+						"$ref": "#/components/schemas/AddResourceDidOperationOptions"
+					}
+				]
 			},
 			"EndorserTransaction": {
 				"properties": {
@@ -158,9 +159,6 @@
 			},
 			"DidRegistrationSecretOptions": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"DidDocument": {
-				"$ref": "#/components/schemas/Record_string.any_"
 			},
 			"DidOperationStateWait": {
 				"properties": {
@@ -1824,35 +1822,6 @@
 				"type": "object",
 				"additionalProperties": {}
 			},
-			"ThreadDecorator": {
-				"description": "Represents `~thread` decorator",
-				"properties": {
-					"threadId": {
-						"type": "string",
-						"description": "The ID of the message that serves as the thread start."
-					},
-					"parentThreadId": {
-						"type": "string",
-						"description": "An optional parent `thid`. Used when branching or nesting a new interaction off of an existing one."
-					},
-					"senderOrder": {
-						"type": "number",
-						"format": "double",
-						"description": "A number that tells where this message fits in the sequence of all messages that the current sender has contributed to this thread."
-					},
-					"receivedOrders": {
-						"properties": {},
-						"additionalProperties": {
-							"type": "number",
-							"format": "double"
-						},
-						"type": "object",
-						"description": "Reports the highest `sender_order` value that the sender has seen from other sender(s) on the thread.\nThis value is often missing if it is the first message in an interaction, but should be used otherwise, as it provides an implicit ACK."
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
 			"CreateProofRequestOobOptions": {
 				"properties": {
 					"protocolVersion": {
@@ -1893,6 +1862,35 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.proposal_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of ProofFormat interfaces and a message\n\nFor an indy offer, this resolves to the proof request format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#proof-request-format"
+			},
+			"ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.request_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of ProofFormat interfaces and a message\n\nFor an indy offer, this resolves to the proof request format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#proof-request-format"
+			},
+			"ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.presentation_": {
+				"properties": {},
+				"type": "object",
+				"description": "Get the format data payload for a specific message from a list of ProofFormat interfaces and a message\n\nFor an indy offer, this resolves to the proof request format as defined here:\nhttps://github.com/hyperledger/aries-rfcs/tree/b3a3942ef052039e73cd23d847f42947f8287da2/features/0592-indy-attachments#proof-request-format"
+			},
+			"GetProofFormatDataReturn__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array_": {
+				"properties": {
+					"presentation": {
+						"$ref": "#/components/schemas/ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.presentation_"
+					},
+					"request": {
+						"$ref": "#/components/schemas/ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.request_"
+					},
+					"proposal": {
+						"$ref": "#/components/schemas/ProofFormatDataMessagePayload__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array.proposal_"
+					}
+				},
+				"type": "object"
 			},
 			"HandshakeProtocol": {
 				"description": "Enum values should be sorted based on order of preference. Values will be\nincluded in this order when creating out of band invitations.",
@@ -2137,10 +2135,10 @@
 			},
 			"Pick_CreateLegacyInvitationConfig.Exclude_keyofCreateLegacyInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -2308,10 +2306,10 @@
 			},
 			"Pick_ReceiveOutOfBandInvitationConfig.Exclude_keyofReceiveOutOfBandInvitationConfig.routing__": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -2343,10 +2341,10 @@
 			},
 			"ReceiveInvitationProps": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -2380,10 +2378,10 @@
 			},
 			"ReceiveInvitationByUrlProps": {
 				"properties": {
-					"label": {
+					"alias": {
 						"type": "string"
 					},
-					"alias": {
+					"label": {
 						"type": "string"
 					},
 					"imageUrl": {
@@ -3159,6 +3157,120 @@
 				],
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
+			},
+			"Pick_InitConfig.label-or-connectionImageUrl_": {
+				"properties": {
+					"label": {
+						"type": "string"
+					},
+					"connectionImageUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"label"
+				],
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"KeyDerivationMethod": {
+				"enum": [
+					"ARGON2I_MOD",
+					"ARGON2I_INT",
+					"RAW"
+				],
+				"type": "string"
+			},
+			"Pick_WalletConfig.id-or-key-or-keyDerivationMethod_": {
+				"properties": {
+					"key": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					},
+					"keyDerivationMethod": {
+						"$ref": "#/components/schemas/KeyDerivationMethod"
+					}
+				},
+				"required": [
+					"key",
+					"id"
+				],
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"TenantConfig": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Pick_InitConfig.label-or-connectionImageUrl_"
+					},
+					{
+						"properties": {
+							"walletConfig": {
+								"$ref": "#/components/schemas/Pick_WalletConfig.id-or-key-or-keyDerivationMethod_"
+							}
+						},
+						"required": [
+							"walletConfig"
+						],
+						"type": "object"
+					}
+				]
+			},
+			"MetadataValue": {
+				"$ref": "#/components/schemas/Record_string.any_"
+			},
+			"MetadataBase": {
+				"properties": {},
+				"additionalProperties": {
+					"$ref": "#/components/schemas/MetadataValue"
+				},
+				"type": "object"
+			},
+			"Metadata____": {
+				"description": "Metadata access class to get, set (create and update), add (append to a record) and delete metadata on any record.\n\nset will override the previous value if it already exists\n\nnote: To add persistence to these records, you have to update the record in the correct repository",
+				"properties": {
+					"data": {
+						"$ref": "#/components/schemas/MetadataBase"
+					}
+				},
+				"required": [
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__": {
+				"properties": {
+					"label": {
+						"type": "string"
+					},
+					"connectionImageUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"label"
+				],
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_CustomTenantConfig.walletConfig_": {
+				"$ref": "#/components/schemas/Pick_CustomTenantConfig.Exclude_keyofCustomTenantConfig.walletConfig__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"CreateTenantOptions": {
+				"properties": {
+					"config": {
+						"$ref": "#/components/schemas/Omit_CustomTenantConfig.walletConfig_"
+					}
+				},
+				"required": [
+					"config"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {
@@ -3184,53 +3296,30 @@
 		"contact": {}
 	},
 	"paths": {
-		"/multi-tenancy/create-tenant": {
+		"/polygon/create-keys": {
 			"post": {
-				"operationId": "CreateTenant",
+				"operationId": "CreateKeyPair",
 				"responses": {
 					"200": {
-						"description": "Ok",
+						"description": "Secp256k1KeyPair",
 						"content": {
 							"application/json": {
 								"schema": {
 									"properties": {
-										"token": {},
-										"metadata": {
-											"$ref": "#/components/schemas/Metadata____"
-										},
-										"updatedAt": {
-											"type": "string",
-											"format": "date-time"
-										},
-										"createdAt": {
-											"type": "string",
-											"format": "date-time"
-										},
-										"id": {
+										"address": {
 											"type": "string"
 										},
-										"storageVersion": {
+										"publicKeyBase58": {
 											"type": "string"
 										},
-										"config": {
-											"$ref": "#/components/schemas/TenantConfig"
-										},
-										"type": {
-											"type": "string",
-											"enum": [
-												"TenantRecord"
-											],
-											"nullable": false
+										"privateKey": {
+											"type": "string"
 										}
 									},
 									"required": [
-										"token",
-										"metadata",
-										"createdAt",
-										"id",
-										"storageVersion",
-										"config",
-										"type"
+										"address",
+										"publicKeyBase58",
+										"privateKey"
 									],
 									"type": "object"
 								}
@@ -3238,13 +3327,43 @@
 						}
 					}
 				},
+				"description": "Create Secp256k1 key pair for polygon DID",
 				"tags": [
-					"MultiTenancy"
+					"Polygon"
 				],
 				"security": [
 					{
 						"jwt": [
-							"Basewallet"
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/polygon/create-schema": {
+			"post": {
+				"operationId": "CreateSchema",
+				"responses": {
+					"200": {
+						"description": "Schema JSON",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Create polygon based W3C schema",
+				"tags": [
+					"Polygon"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
 						]
 					}
 				],
@@ -3254,216 +3373,104 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/CreateTenantOptions"
+								"properties": {
+									"schema": {
+										"$ref": "#/components/schemas/Record_string.unknown_"
+									},
+									"schemaName": {
+										"type": "string"
+									},
+									"did": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"schema",
+									"schemaName",
+									"did"
+								],
+								"type": "object"
 							}
 						}
 					}
 				}
 			}
 		},
-		"/multi-tenancy/get-token/{tenantId}": {
+		"/polygon/estimate-transaction": {
 			"post": {
-				"operationId": "GetTenantToken",
+				"operationId": "EstimateTransaction",
 				"responses": {
 					"200": {
-						"description": "Ok",
+						"description": "Transaction Object",
 						"content": {
 							"application/json": {
 								"schema": {}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
+				"description": "Estimate transaction",
 				"tags": [
-					"MultiTenancy"
+					"Polygon"
 				],
 				"security": [
 					{
 						"jwt": [
-							"Basewallet"
+							"tenant",
+							"dedicated"
 						]
 					}
 				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "tenantId",
-						"required": true,
-						"schema": {
-							"type": "string"
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DidOperationOptions"
+							}
 						}
 					}
-				]
+				}
 			}
 		},
-		"/multi-tenancy/{tenantId}": {
+		"/polygon/{did}/{schemaId}": {
 			"get": {
-				"operationId": "GetTenantById",
+				"operationId": "GetSchemaById",
 				"responses": {
 					"200": {
-						"description": "Ok",
+						"description": "Schema Object",
 						"content": {
 							"application/json": {
 								"schema": {}
 							}
 						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
 					}
 				},
+				"description": "Fetch schema details",
 				"tags": [
-					"MultiTenancy"
+					"Polygon"
 				],
 				"security": [
 					{
 						"jwt": [
-							"Basewallet"
+							"tenant",
+							"dedicated"
 						]
 					}
 				],
 				"parameters": [
 					{
 						"in": "path",
-						"name": "tenantId",
+						"name": "did",
 						"required": true,
 						"schema": {
 							"type": "string"
 						}
-					}
-				]
-			},
-			"delete": {
-				"operationId": "DeleteTenantById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
 					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"jwt": [
-							"Basewallet"
-						]
-					}
-				],
-				"parameters": [
 					{
 						"in": "path",
-						"name": "tenantId",
+						"name": "schemaId",
 						"required": true,
 						"schema": {
 							"type": "string"
@@ -4200,7 +4207,7 @@
 				"parameters": []
 			}
 		},
-		"/agent/verify/{tenantId}": {
+		"/agent/verify": {
 			"post": {
 				"operationId": "Verify",
 				"responses": {
@@ -4309,8 +4316,7 @@
 									},
 									{
 										"$ref": "#/components/schemas/SignDataOptions"
-									},
-									{}
+									}
 								]
 							}
 						}
@@ -4350,12 +4356,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/SafeW3cJsonLdVerifyCredentialOptions"
-									},
-									{}
-								]
+								"$ref": "#/components/schemas/SafeW3cJsonLdVerifyCredentialOptions"
 							}
 						}
 					}
@@ -4866,14 +4867,7 @@
 								"schema": {
 									"properties": {
 										"proofMessageId": {
-											"anyOf": [
-												{
-													"type": "string"
-												},
-												{
-													"$ref": "#/components/schemas/ThreadDecorator"
-												}
-											]
+											"type": "string"
 										},
 										"proofRecordThId": {
 											"type": "string"
@@ -5073,7 +5067,9 @@
 						"description": "ProofRecord",
 						"content": {
 							"application/json": {
-								"schema": {},
+								"schema": {
+									"$ref": "#/components/schemas/GetProofFormatDataReturn__40_LegacyIndyProofFormat-or-AnonCredsProofFormat-or-DifPresentationExchangeProofFormat_41_-Array_"
+								},
 								"examples": {
 									"Example 1": {
 										"value": {
@@ -7209,30 +7205,53 @@
 				}
 			}
 		},
-		"/polygon/create-keys": {
+		"/multi-tenancy/create-tenant": {
 			"post": {
-				"operationId": "CreateKeyPair",
+				"operationId": "CreateTenant",
 				"responses": {
 					"200": {
-						"description": "Secp256k1KeyPair",
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
 									"properties": {
-										"address": {
+										"token": {},
+										"metadata": {
+											"$ref": "#/components/schemas/Metadata____"
+										},
+										"updatedAt": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"createdAt": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"id": {
 											"type": "string"
 										},
-										"publicKeyBase58": {
+										"storageVersion": {
 											"type": "string"
 										},
-										"privateKey": {
-											"type": "string"
+										"config": {
+											"$ref": "#/components/schemas/TenantConfig"
+										},
+										"type": {
+											"type": "string",
+											"enum": [
+												"TenantRecord"
+											],
+											"nullable": false
 										}
 									},
 									"required": [
-										"address",
-										"publicKeyBase58",
-										"privateKey"
+										"token",
+										"metadata",
+										"createdAt",
+										"id",
+										"storageVersion",
+										"config",
+										"type"
 									],
 									"type": "object"
 								}
@@ -7240,43 +7259,13 @@
 						}
 					}
 				},
-				"description": "Create Secp256k1 key pair for polygon DID",
 				"tags": [
-					"Polygon"
+					"MultiTenancy"
 				],
 				"security": [
 					{
 						"jwt": [
-							"tenant",
-							"dedicated"
-						]
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/polygon/create-schema": {
-			"post": {
-				"operationId": "CreateSchema",
-				"responses": {
-					"200": {
-						"description": "Schema JSON",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"description": "Create polygon based W3C schema",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"jwt": [
-							"tenant",
-							"dedicated"
+							"Basewallet"
 						]
 					}
 				],
@@ -7286,114 +7275,216 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"schema": {
-										"properties": {},
-										"additionalProperties": {},
-										"type": "object"
-									},
-									"schemaName": {
-										"type": "string"
-									},
-									"did": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"schema",
-									"schemaName",
-									"did"
-								],
-								"type": "object"
+								"$ref": "#/components/schemas/CreateTenantOptions"
 							}
 						}
 					}
 				}
 			}
 		},
-		"/polygon/estimate-transaction": {
+		"/multi-tenancy/get-token/{tenantId}": {
 			"post": {
-				"operationId": "EstimateTransaction",
+				"operationId": "GetTenantToken",
 				"responses": {
 					"200": {
-						"description": "Transaction Object",
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {}
 							}
 						}
-					}
-				},
-				"description": "Estimate transaction",
-				"tags": [
-					"Polygon"
-				],
-				"security": [
-					{
-						"jwt": [
-							"tenant",
-							"dedicated"
-						]
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"transaction": {},
-									"operation": {}
-								},
-								"required": [
-									"transaction",
-									"operation"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/polygon/{did}/{schemaId}": {
-			"get": {
-				"operationId": "GetSchemaById",
-				"responses": {
-					"200": {
-						"description": "Schema Object",
+					},
+					"404": {
+						"description": "",
 						"content": {
 							"application/json": {
-								"schema": {}
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
 							}
 						}
 					}
 				},
-				"description": "Fetch schema details",
 				"tags": [
-					"Polygon"
+					"MultiTenancy"
 				],
 				"security": [
 					{
 						"jwt": [
-							"tenant",
-							"dedicated"
+							"Basewallet"
 						]
 					}
 				],
 				"parameters": [
 					{
 						"in": "path",
-						"name": "did",
+						"name": "tenantId",
 						"required": true,
 						"schema": {
 							"type": "string"
 						}
+					}
+				]
+			}
+		},
+		"/multi-tenancy/{tenantId}": {
+			"get": {
+				"operationId": "GetTenantById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
 					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"jwt": [
+							"Basewallet"
+						]
+					}
+				],
+				"parameters": [
 					{
 						"in": "path",
-						"name": "schemaId",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "DeleteTenantById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"jwt": [
+							"Basewallet"
+						]
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
 						"required": true,
 						"schema": {
 							"type": "string"

@@ -24,7 +24,7 @@ export class TsLogger extends BaseLogger {
     [LogLevel.fatal]: 'fatal',
   } as const
 
-  public constructor(logLevel: LogLevel, name?: string) {
+  public constructor(logLevel: LogLevel, name: string = 'credo-controller-service' as string) {
     super(logLevel)
 
     this.logger = new Logger({

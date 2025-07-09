@@ -97,7 +97,7 @@ export class AgentController extends Controller {
    * @returns isValidSignature - true if signature is valid, false otherwise
    */
   @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
-  @Post('/verify/:tenantId')
+  @Post('/verify')
   public async verify(@Request() request: Req, @Body() body: VerifyDataOptions) {
     try {
       assertAskarWallet(request.agent.context.wallet)
@@ -112,13 +112,14 @@ export class AgentController extends Controller {
     }
   }
 
+  //Triage: Do we want the BW to be able to sign and verify as well?
   @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('/credential/sign')
   public async signCredential(
     @Request() request: Req,
     @Query('storeCredential') storeCredential: boolean,
     @Query('dataTypeToSign') dataTypeToSign: 'rawData' | 'jsonLd',
-    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any,
+    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions,
   ) {
     try {
       // JSON-LD VC Signing
@@ -178,7 +179,7 @@ export class AgentController extends Controller {
   @Post('/credential/verify')
   public async verifyCredential(
     @Request() request: Req,
-    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any,
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions,
   ) {
     try {
       const { credential, ...credentialOptions } = credentialToVerify

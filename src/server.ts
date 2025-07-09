@@ -93,7 +93,6 @@ export const setupServer = async (
 
   app.use(async (req: ExRequest, res: ExResponse, next: NextFunction) => {
     res.on('finish', async () => {
-      agent.config.logger.info('Clean-up tenant sessions 2')
       await endTenantSessionIfActive(req)
     })
     next()

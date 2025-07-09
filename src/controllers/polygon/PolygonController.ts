@@ -1,9 +1,7 @@
-import type { RestAgentModules } from '../../cliAgent'
 import type { SchemaMetadata } from '../types'
 
 import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
-import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
-import { Agent } from '@credo-ts/core'
+import { DidOperation, DidOperationOptions } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
 import { Request as Req } from 'express'
 import * as fs from 'fs'
 import { Route, Tags, Security, Controller, Post, Body, Get, Path, Request } from 'tsoa'
@@ -49,7 +47,7 @@ export class Polygon extends Controller {
     createSchemaRequest: {
       did: string
       schemaName: string
-      schema: { [key: string]: any }
+      schema: Record<string, unknown>
     },
   ): Promise<unknown> {
     try {
@@ -103,10 +101,7 @@ export class Polygon extends Controller {
   public async estimateTransaction(
     @Request() request: Req,
     @Body()
-    estimateTransactionRequest: {
-      operation: any
-      transaction: any
-    },
+    estimateTransactionRequest: DidOperationOptions,
   ): Promise<unknown> {
     try {
       const { operation } = estimateTransactionRequest
@@ -117,7 +112,7 @@ export class Polygon extends Controller {
       if (operation === DidOperation.Create) {
         return request.agent.modules.polygon.estimateFeeForDidOperation({ operation })
       } else if (operation === DidOperation.Update) {
-        return request.agent.modules.polygon.estimateFeeForDidOperation({ operation })
+        return request.agent.modules.polygon.estimateFeeForDidOperation({ ...estimateTransactionRequest })
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -139,7 +134,7 @@ export class Polygon extends Controller {
       if (!did || !schemaId) {
         throw new BadRequestError('Missing or invalid parameters.')
       }
-      const schemaDetails = request.agent.modules.polygon.getSchemaById(did, schemaId)
+      const schemaDetails = await request.agent.modules.polygon.getSchemaById(did, schemaId) 
       return schemaDetails
     } catch (error) {
       throw ErrorHandlingService.handle(error)
