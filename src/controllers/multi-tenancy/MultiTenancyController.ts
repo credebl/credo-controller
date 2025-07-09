@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import type { RestMultiTenantAgentModules } from '../../cliAgent'
 import type { TenantRecord } from '@credo-ts/tenants'
 

@@ -18,6 +18,7 @@ import { injectable } from 'tsyringe'
 
 import { SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
+import { AgentType } from '../../../types'
 import { CredentialExchangeRecordExample, RecordId } from '../../examples'
 import {
   AcceptCredentialRequestOptions,
@@ -30,7 +31,6 @@ import {
   ThreadId,
 } from '../../types'
 import { OutOfBandController } from '../outofband/OutOfBandController'
-import { AgentType } from '../../../types'
 
 @Tags('DIDComm - Credentials')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])

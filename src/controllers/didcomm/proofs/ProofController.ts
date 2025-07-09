@@ -198,7 +198,7 @@ export class ProofController extends Controller {
         outOfBandRecord: outOfBandRecord.toJSON(),
         invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
         proofRecordThId: proof.proofRecord.threadId,
-        proofMessageId: proof.message.thread?.threadId || proof.message.threadId || proof.message.id
+        proofMessageId: proof.message.thread?.threadId || proof.message.threadId || proof.message.id,
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)

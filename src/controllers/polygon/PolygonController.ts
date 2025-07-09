@@ -134,7 +134,7 @@ export class Polygon extends Controller {
       if (!did || !schemaId) {
         throw new BadRequestError('Missing or invalid parameters.')
       }
-      const schemaDetails = await request.agent.modules.polygon.getSchemaById(did, schemaId) 
+      const schemaDetails = await request.agent.modules.polygon.getSchemaById(did, schemaId)
       return schemaDetails
     } catch (error) {
       throw ErrorHandlingService.handle(error)

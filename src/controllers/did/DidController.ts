@@ -384,7 +384,7 @@ export class DidController extends Controller {
   }
 
   public async handleWeb(agent: AgentType, didOptions: DidCreate) {
-    let didDocument: DidDocument;
+    let didDocument: DidDocument
     if (!didOptions.domain) {
       throw new BadRequestError('For create did:web, domain is required')
     }
