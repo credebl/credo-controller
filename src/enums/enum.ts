@@ -91,5 +91,5 @@ export enum SCOPES {
   UNPROTECTED = 'skip',
   MULTITENANT_BASE_AGENT = 'Basewallet',
   TENANT_AGENT = 'tenant',
-  DEDICATED_AGENT = 'dedicated'
+  DEDICATED_AGENT = 'dedicated',
 }

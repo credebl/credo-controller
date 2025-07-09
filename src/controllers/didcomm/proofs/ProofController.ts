@@ -7,10 +7,11 @@ import type {
 } from '@credo-ts/core'
 
 import { Agent, PeerDidNumAlgo, createPeerDidDocumentFromServices } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Body, Controller, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
 import { ProofRecordExample, RecordId } from '../../examples'
 import {
@@ -19,14 +20,12 @@ import {
   RequestProofOptions,
   RequestProofProposalOptions,
 } from '../../types'
-import { SCOPES } from '../../../enums'
 
 @Tags('DIDComm - Proofs')
 @Route('/didcomm/proofs')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class ProofController extends Controller {
-
   /**
    * Retrieve all proof records
    *
@@ -37,7 +36,7 @@ export class ProofController extends Controller {
   @Get('/')
   public async getAllProofs(@Request() request: Req, @Query('threadId') threadId?: string) {
     try {
-      let query = threadId ? {threadId} : {}
+      let query = threadId ? { threadId } : {}
       let proofs = await request.agent.proofs.findAllByQuery(query)
 
       // if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
@@ -221,7 +220,7 @@ export class ProofController extends Controller {
   @Post('/:proofRecordId/accept-request')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptRequest(
-    @Request() request: Req, 
+    @Request() request: Req,
     @Path('proofRecordId') proofRecordId: string,
     @Body()
     body: {

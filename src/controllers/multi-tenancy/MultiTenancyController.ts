@@ -7,15 +7,15 @@ import {
   JsonTransformer,
   injectable,
   RecordNotFoundError} from '@credo-ts/core'
+import { Request as Req } from 'express'
 import jwt from 'jsonwebtoken'
 import { Body, Controller, Delete, Post, Route, Tags, Path, Security, Request, Res, TsoaResponse, Get } from 'tsoa'
-import { Request as Req } from 'express'
 
 import { AgentRole, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
+import { generateSecretKey } from '../../utils'
 import {
   CreateTenantOptions } from '../types'
-import { generateSecretKey } from '../../utils'
 
 @Tags('MultiTenancy')
 @Security('jwt', [SCOPES.MULTITENANT_BASE_AGENT])

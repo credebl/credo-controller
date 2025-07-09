@@ -3,21 +3,20 @@ import type { ValidResponse } from '@credo-ts/question-answer'
 
 import { Agent } from '@credo-ts/core'
 import { QuestionAnswerRecord, QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
-import { Body, Controller, Get, Path, Post, Route, Tags, Query, Security, Example, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Body, Controller, Get, Path, Post, Route, Tags, Query, Security, Example, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
 import { NotFoundError } from '../../../errors'
 import { RecordId } from '../../examples'
-import { SCOPES } from '../../../enums'
 
 @Tags('DIDComm - Question Answer')
 @Route('/didcomm/question-answer')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class QuestionAnswerController extends Controller {
-
   /**
    * Retrieve question and answer records by query
    *

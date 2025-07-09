@@ -1,22 +1,36 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { AgentInfo, AgentToken, CustomW3cJsonLdSignCredentialOptions, SafeW3cJsonLdVerifyCredentialOptions, SignDataOptions, VerifyDataOptions } from '../types'
+import type {
+  AgentInfo,
+  AgentToken,
+  CustomW3cJsonLdSignCredentialOptions,
+  SafeW3cJsonLdVerifyCredentialOptions,
+  SignDataOptions,
+  VerifyDataOptions,
+} from '../types'
 
-import { Agent, ClaimFormat, JsonTransformer, Key, TypedArrayEncoder, W3cJsonLdSignCredentialOptions, W3cJsonLdVerifiableCredential } from '@credo-ts/core'
-import { Controller, Delete, Get, Route, Tags, Security, Request, Post, Body, Path, Query } from 'tsoa'
+import { assertAskarWallet } from '@credo-ts/askar/build/utils/assertAskarWallet'
+import {
+  Agent,
+  ClaimFormat,
+  JsonTransformer,
+  Key,
+  TypedArrayEncoder,
+  W3cJsonLdSignCredentialOptions,
+  W3cJsonLdVerifiableCredential,
+} from '@credo-ts/core'
 import { Request as Req } from 'express'
 import jwt from 'jsonwebtoken'
+import { Controller, Delete, Get, Route, Tags, Security, Request, Post, Body, Path, Query } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import ErrorHandlingService from '../../errorHandlingService'
 import { AgentRole, SCOPES } from '../../enums'
-import { assertAskarWallet } from '@credo-ts/askar/build/utils/assertAskarWallet'
+import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError } from '../../errors'
 
 @Tags('Agent')
 @Route('/agent')
 @injectable()
 export class AgentController extends Controller {
-
   /**
    * Retrieve basic agent information
    */
@@ -36,8 +50,8 @@ export class AgentController extends Controller {
   }
 
   /**
-  * Retrieve agent token
-  */
+   * Retrieve agent token
+   */
   @Post('/token')
   @Security('apiKey')
   public async getAgentToken(@Request() request: Req): Promise<AgentToken> {
@@ -104,14 +118,16 @@ export class AgentController extends Controller {
     @Request() request: Req,
     @Query('storeCredential') storeCredential: boolean,
     @Query('dataTypeToSign') dataTypeToSign: 'rawData' | 'jsonLd',
-    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any
+    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any,
   ) {
     try {
       // JSON-LD VC Signing
       if (dataTypeToSign === 'jsonLd') {
         const credentialData = data as unknown as W3cJsonLdSignCredentialOptions
         credentialData.format = ClaimFormat.LdpVc
-        const signedCredential = await request.agent.w3cCredentials.signCredential(credentialData) as W3cJsonLdVerifiableCredential
+        const signedCredential = (await request.agent.w3cCredentials.signCredential(
+          credentialData,
+        )) as W3cJsonLdVerifiableCredential
         if (storeCredential) {
           return await request.agent.w3cCredentials.storeCredential({ credential: signedCredential })
         }
@@ -162,12 +178,18 @@ export class AgentController extends Controller {
   @Post('/credential/verify')
   public async verifyCredential(
     @Request() request: Req,
-    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any,
   ) {
     try {
-      const {credential,  ...credentialOptions}= credentialToVerify
-      const transformedCredential = JsonTransformer.fromJSON(credentialToVerify?.credential, W3cJsonLdVerifiableCredential)
-      const signedCred = await request.agent.w3cCredentials.verifyCredential({credential: transformedCredential, ...credentialOptions})
+      const { credential, ...credentialOptions } = credentialToVerify
+      const transformedCredential = JsonTransformer.fromJSON(
+        credentialToVerify?.credential,
+        W3cJsonLdVerifiableCredential,
+      )
+      const signedCred = await request.agent.w3cCredentials.verifyCredential({
+        credential: transformedCredential,
+        ...credentialOptions,
+      })
       return signedCred
     } catch (error) {
       throw ErrorHandlingService.handle(error)

@@ -33,13 +33,13 @@ export const credentialEvents = async (agent: Agent, config: ServerConfig) => {
     // }
 
     // if (event.metadata.contextCorrelationId === 'default') {
-      if (record?.connectionId) {
-        const connectionRecord = await agent.connections.findById(record.connectionId!)
-        body.outOfBandId = connectionRecord?.outOfBandId
-      }
+    if (record?.connectionId) {
+      const connectionRecord = await agent.connections.findById(record.connectionId!)
+      body.outOfBandId = connectionRecord?.outOfBandId
+    }
 
-      const data = await agent.credentials.getFormatData(record.id)
-      body.credentialData = data
+    const data = await agent.credentials.getFormatData(record.id)
+    body.credentialData = data
     // }
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {

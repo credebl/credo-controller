@@ -4,21 +4,20 @@ import type { SchemaMetadata } from '../types'
 import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
 import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
 import { Agent } from '@credo-ts/core'
+import { Request as Req } from 'express'
 import * as fs from 'fs'
 import { Route, Tags, Security, Controller, Post, Body, Get, Path, Request } from 'tsoa'
-import { Request as Req } from 'express'
 import { injectable } from 'tsyringe'
 
+import { CredentialEnum, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, UnprocessableEntityError } from '../../errors'
-import { CredentialEnum, SCOPES } from '../../enums'
 
 @Tags('Polygon')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @Route('/polygon')
 @injectable()
 export class Polygon extends Controller {
-
   /**
    * Create Secp256k1 key pair for polygon DID
    *
@@ -131,7 +130,11 @@ export class Polygon extends Controller {
    * @returns Schema Object
    */
   @Get(':did/:schemaId')
-  public async getSchemaById(@Request() request: Req, @Path('did') did: string, @Path('schemaId') schemaId: string): Promise<unknown> {
+  public async getSchemaById(
+    @Request() request: Req,
+    @Path('did') did: string,
+    @Path('schemaId') schemaId: string,
+  ): Promise<unknown> {
     try {
       if (!did || !schemaId) {
         throw new BadRequestError('Missing or invalid parameters.')

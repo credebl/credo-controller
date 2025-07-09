@@ -4,7 +4,7 @@ export const sendWebhookEvent = async (
   webhookUrl: string,
   body: Record<string, unknown>,
   logger: Logger,
-  timeoutMs = 5000
+  timeoutMs = 5000,
 ): Promise<void> => {
   // Abort the webhook send events if the request hangs-in for >5 secs
   // This can avoid failure of services due to bad webhook listners

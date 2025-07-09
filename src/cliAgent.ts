@@ -416,7 +416,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         secretKey: secretKeyInfo,
       },
     })
-  } else if(updateJwtSecret && recordsWithSecretKey) {
+  } else if (updateJwtSecret && recordsWithSecretKey) {
     // If secretKey already exist in genericRecord: i.e. Agent is not initialized for the first time or secretKey already found
     // And we are requested to store a new secret, with the flag: 'updateJwtSecret'
     // Generate and store secret key for agent while initialization

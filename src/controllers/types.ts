@@ -32,9 +32,9 @@ import type {
   W3cCredential,
   W3cCredentialSubject,
 } from '@credo-ts/core'
+import type { LinkedDataProofOptions } from '@credo-ts/core/build/modules/vc/data-integrity/models/LinkedDataProof'
 import type { SingleOrArray } from '@credo-ts/core/build/utils'
 import type { DIDDocument } from 'did-resolver'
-import { LinkedDataProofOptions } from '@credo-ts/core/build/modules/vc/data-integrity/models/LinkedDataProof'
 
 export type CustomTenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>
@@ -422,7 +422,7 @@ export interface credentialPayloadToSign {
 }
 export interface SafeW3cJsonLdVerifyCredentialOptions extends W3cJsonLdVerifyCredentialOptions {
   // Ommited due to issues with TSOA
-  proof: SingleOrArray<Omit<LinkedDataProofOptions, "cryptosuite"> | DataIntegrityProofOptions>
+  proof: SingleOrArray<Omit<LinkedDataProofOptions, 'cryptosuite'> | DataIntegrityProofOptions>
 }
 
 export type ExtensibleW3cCredentialSubject = W3cCredentialSubject & {

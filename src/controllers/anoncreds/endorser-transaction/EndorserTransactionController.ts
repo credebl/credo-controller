@@ -6,22 +6,21 @@ import {
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
 } from '@credo-ts/anoncreds'
-import { Body, Controller, Post, Route, Tags, Security, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Body, Controller, Post, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode, SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
 import { BadRequestError } from '../../../errors'
-import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../../types'
 import { AgentType } from '../../../types'
+import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../../types'
 
 @Tags('Anoncreds - EndorserTransaction')
 @Route('/anoncreds/transactions')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class EndorserTransactionController extends Controller {
-
   @Post('/endorse')
   public async endorserTransaction(@Request() request: Req, @Body() endorserTransaction: EndorserTransaction) {
     try {
@@ -69,7 +68,7 @@ export class EndorserTransactionController extends Controller {
 
   @Post('/write')
   public async writeSchemaAndCredDefOnLedger(
-    @Request() request: Req, 
+    @Request() request: Req,
     @Body()
     writeTransaction: WriteTransaction,
   ) {
@@ -148,7 +147,7 @@ export class EndorserTransactionController extends Controller {
   }
 
   public async submitCredDefOnLedger(
-    agent: AgentType, 
+    agent: AgentType,
     credentialDefinition: {
       schemaId: string
       issuerId: string
@@ -179,7 +178,7 @@ export class EndorserTransactionController extends Controller {
         endorserMode: EndorserMode.External,
         endorsedTransaction: endorsedTransaction,
         // Keep false for now
-        supportRevocation: false
+        supportRevocation: false,
       },
     })
 

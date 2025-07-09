@@ -2,20 +2,19 @@ import type { RestAgentModules } from '../../../cliAgent'
 import type { ConnectionRecordProps } from '@credo-ts/core'
 
 import { DidExchangeState, Agent } from '@credo-ts/core'
-import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
 import { NotFoundError } from '../../../errors'
 import { ConnectionRecordExample, RecordId } from '../../examples'
-import { SCOPES } from '../../../enums'
 
 @Tags('DIDComm - Connections')
 @Route()
 @injectable()
 export class ConnectionController extends Controller {
-
   /**
    * Retrieve all connections records
    * @param alias Alias

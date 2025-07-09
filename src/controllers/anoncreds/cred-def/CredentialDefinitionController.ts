@@ -3,8 +3,8 @@ import type { SchemaId } from '../../examples'
 
 import { getUnqualifiedCredentialDefinitionId, parseIndyCredentialDefinitionId } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Response, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Response, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode, SchemaError, SCOPES } from '../../../enums'
@@ -18,7 +18,6 @@ import { CredentialDefinitionExample, CredentialDefinitionId } from '../../examp
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class CredentialDefinitionController extends Controller {
-
   /**
    * Retrieve credential definition by credential definition id
    *
@@ -78,8 +77,8 @@ export class CredentialDefinitionController extends Controller {
     try {
       const { issuerId, schemaId, tag, endorse, endorserDid } = credentialDefinitionRequest
       credentialDefinitionRequest.endorse = credentialDefinitionRequest.endorse
-          ? credentialDefinitionRequest.endorse
-          : false
+        ? credentialDefinitionRequest.endorse
+        : false
       const credDef = {
         issuerId,
         schemaId,

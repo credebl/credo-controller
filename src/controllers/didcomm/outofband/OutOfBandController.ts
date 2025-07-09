@@ -18,22 +18,21 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
 } from '@credo-ts/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
 import { InternalServerError, NotFoundError } from '../../../errors'
 import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../../examples'
 import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../../types'
-import { SCOPES } from '../../../enums'
 
 @Tags('DIDComm - Out Of Band')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @Route('/didcomm/oob')
 @injectable()
 export class OutOfBandController extends Controller {
-
   /**
    * Retrieve all out of band records
    * @param invitationId invitation identifier
@@ -43,9 +42,11 @@ export class OutOfBandController extends Controller {
   @Get()
   public async getAllOutOfBandRecords(@Request() request: Req, @Query('invitationId') invitationId?: RecordId) {
     try {
-      const query = invitationId ? {
-        invitationId: invitationId
-      } : {}
+      const query = invitationId
+        ? {
+            invitationId: invitationId,
+          }
+        : {}
       let outOfBandRecords = await request.agent.oob.findAllByQuery(query)
 
       return outOfBandRecords.map((c) => c.toJSON())
@@ -264,7 +265,10 @@ export class OutOfBandController extends Controller {
     connectionRecord: ConnectionRecordExample,
   })
   @Post('/receive-invitation-url')
-  public async receiveInvitationFromUrl(@Request() request: Req, @Body() invitationRequest: ReceiveInvitationByUrlProps) {
+  public async receiveInvitationFromUrl(
+    @Request() request: Req,
+    @Body() invitationRequest: ReceiveInvitationByUrlProps,
+  ) {
     const { invitationUrl, ...config } = invitationRequest
 
     try {
@@ -272,7 +276,10 @@ export class OutOfBandController extends Controller {
       // if (linkSecretIds.length === 0) {
       //   await request.agent.modules.anoncreds.createLinkSecret()
       // }
-      const { outOfBandRecord, connectionRecord } = await request.agent.oob.receiveInvitationFromUrl(invitationUrl, config)
+      const { outOfBandRecord, connectionRecord } = await request.agent.oob.receiveInvitationFromUrl(
+        invitationUrl,
+        config,
+      )
       return {
         outOfBandRecord: outOfBandRecord.toJSON(),
         connectionRecord: connectionRecord?.toJSON(),

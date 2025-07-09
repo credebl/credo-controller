@@ -19,8 +19,8 @@ import { ValidateError } from 'tsoa'
 import { container } from 'tsyringe'
 
 import { setDynamicApiKey } from './authentication'
-import { BaseError } from './errors/errors'
 import { ErrorMessages } from './enums'
+import { BaseError } from './errors/errors'
 import { basicMessageEvents } from './events/BasicMessageEvents'
 import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
@@ -35,10 +35,10 @@ dotenv.config()
 export const setupServer = async (
   agent: Agent<RestMultiTenantAgentModules | RestAgentModules>,
   config: ServerConfig,
-  apiKey?: string
+  apiKey?: string,
 ) => {
   await otelSDK.start()
-  console.log('OpenTelemetry SDK started')
+  agent.config.logger.info('OpenTelemetry SDK started')
   container.registerInstance(Agent, agent as Agent)
   fs.writeFileSync('config.json', JSON.stringify(config, null, 2))
 
@@ -91,15 +91,13 @@ export const setupServer = async (
     next()
   })
 
-
-
-  app.use((async (req: ExRequest, res: ExResponse, next: NextFunction) => {
-  res.on('finish', async () => {
-    console.log("Clean-up tenant sessions 2")
-    await endTenantSessionIfActive(req)
-  })
+  app.use(async (req: ExRequest, res: ExResponse, next: NextFunction) => {
+    res.on('finish', async () => {
+      agent.config.logger.info('Clean-up tenant sessions 2')
+      await endTenantSessionIfActive(req)
+    })
     next()
-  }))
+  })
 
   const securityMiddleware = new SecurityMiddleware()
   app.use(securityMiddleware.use)

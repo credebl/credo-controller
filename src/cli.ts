@@ -154,7 +154,7 @@ async function parseArguments(): Promise<Parsed> {
     })
     .option('updateJwtSecret', {
       boolean: true,
-      default: false
+      default: false,
     })
     .config()
     .env('AFJ_REST')

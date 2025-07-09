@@ -14,13 +14,13 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
 } from '@credo-ts/core'
-import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Body, Controller, Get, Path, Post, Route, Tags, Example, Query, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
 import { CredentialExchangeRecordExample, RecordId } from '../../examples'
-import { OutOfBandController } from '../outofband/OutOfBandController'
 import {
   AcceptCredentialRequestOptions,
   ProposeCredentialOptions,
@@ -31,7 +31,7 @@ import {
   CreateOfferOobOptions,
   ThreadId,
 } from '../../types'
-import { SCOPES } from '../../../enums'
+import { OutOfBandController } from '../outofband/OutOfBandController'
 
 @Tags('DIDComm - Credentials')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
@@ -146,7 +146,10 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-proposal')
-  public async acceptProposal(@Request() request: Req, @Body() acceptCredentialProposal: AcceptCredentialProposalOptions) {
+  public async acceptProposal(
+    @Request() request: Req,
+    @Body() acceptCredentialProposal: AcceptCredentialProposalOptions,
+  ) {
     try {
       const credential = await request.agent.credentials.acceptProposal(acceptCredentialProposal)
 
@@ -272,7 +275,10 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/accept-request')
-  public async acceptRequest(@Request() request: Req, @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions) {
+  public async acceptRequest(
+    @Request() request: Req,
+    @Body() acceptCredentialRequestOptions: AcceptCredentialRequestOptions,
+  ) {
     try {
       const credential = await request.agent.credentials.acceptRequest(acceptCredentialRequestOptions)
       return credential

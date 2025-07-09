@@ -12,23 +12,22 @@ import {
   PeerDidNumAlgo,
 } from '@credo-ts/core'
 import axios from 'axios'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { DidMethod, Network, Role, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, InternalServerError } from '../../errors'
+import { AgentType } from '../../types'
 import { CreateDidResponse, Did, DidRecordExample } from '../examples'
 import { DidCreate } from '../types'
-import { AgentType } from '../../types'
 
 @Tags('Dids')
 @Route('/dids')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class DidController extends Controller {
-
   /**
    * Resolves did and returns did resolution result
    * @param did Decentralized Identifier
@@ -128,7 +127,7 @@ export class DidController extends Controller {
         numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
       },
     })
-    
+
     did = didPeerResponse.didState.did
     didResponse = {
       did,

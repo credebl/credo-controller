@@ -14,6 +14,12 @@ import { TsLogger } from './utils/logger'
 
 let dynamicApiKey: string = 'api_key' // Initialize with a default value
 
+// Cache for jwt token key
+const cache = new Map<string, string>()
+
+export const getFromCache = (key: string) => cache.get(key)
+export const setInCache = (key: string, value: string) => cache.set(key, value)
+
 export async function expressAuthentication(request: Request, securityName: string, scopes?: string[]) {
   const logger = new TsLogger(LogLevel.info)
   const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
@@ -49,21 +55,21 @@ export async function expressAuthentication(request: Request, securityName: stri
     const tokenWithHeader = apiKeyHeader
     const token = tokenWithHeader!.replace('Bearer ', '')
     const reqPath = request.path
-    let decodedToken: jwt.JwtPayload;
-    if(!token) {
+    let decodedToken: jwt.JwtPayload
+    if (!token) {
       return Promise.reject(new StatusException(`${ErrorMessages.Unauthorized}: Invalid token`, 401))
     }
 
-    let cachedKey = getFromCache("secret")
-    
-    if(!cachedKey || cachedKey == '') {
+    let cachedKey = getFromCache('secret')
+
+    if (!cachedKey || cachedKey == '') {
       // Cache key from
       cachedKey = await getSecretKey(agent as Agent)
     }
-    
+
     // Verify token
     const verified = await verifyToken(token, cachedKey)
-    
+
     // Failed to verify token
     if (!verified) {
       return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
@@ -75,10 +81,10 @@ export async function expressAuthentication(request: Request, securityName: stri
         throw new Error('Token not decoded')
       }
     } catch (err) {
-      console.error("Error decoding token", err)
+      agent.config.logger.error('Error decoding token', err as Record<string, any>)
       return Promise.reject(new StatusException(`${ErrorMessages.Unauthorized}: Invalid token`, 401))
     }
-    
+
     // Before getting ahead, we can ideally, verify the token, since, in the current approach we have stored the jwt secret in BW
     const role: AgentRole = decodedToken.role
 
@@ -90,7 +96,7 @@ export async function expressAuthentication(request: Request, securityName: stri
       }
       if (role === AgentRole.RestTenantAgent) {
         // Logic if the token is of tenant agent
-          if (scopes && scopes?.includes(SCOPES.MULTITENANT_BASE_AGENT)) {
+        if (scopes && scopes?.includes(SCOPES.MULTITENANT_BASE_AGENT)) {
           logger.debug('Tenants cannot manage tenants')
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         } else {
@@ -115,7 +121,6 @@ export async function expressAuthentication(request: Request, securityName: stri
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         }
 
-
         request.agent = agent
         return true
       } else {
@@ -131,7 +136,12 @@ export async function expressAuthentication(request: Request, securityName: stri
 
         // TODO: replace with scopes, instead of routes
         if (reqPath.includes('/multi-tenancy/'))
-          return Promise.reject(new StatusException(`${ErrorMessages.Unauthorized}: Multitenant routes are diabled for dedicated agent`, 401))
+          return Promise.reject(
+            new StatusException(
+              `${ErrorMessages.Unauthorized}: Multitenant routes are diabled for dedicated agent`,
+              401,
+            ),
+          )
 
         request.agent = agent
         return true
@@ -149,18 +159,18 @@ async function verifyToken(token: string, secretKey: string): Promise<boolean> {
 
 // Common function to pass agent object and get secretKey
 async function getSecretKey(
-  agent: Agent<RestMultiTenantAgentModules | RestAgentModules> | TenantAgent<RestAgentModules>
+  agent: Agent<RestMultiTenantAgentModules | RestAgentModules> | TenantAgent<RestAgentModules>,
 ): Promise<string> {
-  let cachedKey: string | undefined;
+  let cachedKey: string | undefined
 
-  cachedKey = getFromCache("secret")
+  cachedKey = getFromCache('secret')
 
   if (!cachedKey || cachedKey == '') {
     const genericRecord = await agent.genericRecords.getAll()
     const recordWithToken = genericRecord.find((record) => record?.content?.secretKey !== undefined)
     cachedKey = recordWithToken?.content.secretKey as string
 
-    setInCache("secret", cachedKey)
+    setInCache('secret', cachedKey)
   }
 
   return cachedKey
@@ -173,9 +183,3 @@ export function setDynamicApiKey(newApiKey: string) {
 export function getDynamicApiKey() {
   return dynamicApiKey
 }
-
-// Cache for jwt token key
-const cache = new Map<string, string>();
-
-export const getFromCache = (key: string) => cache.get(key);
-export const setInCache = (key: string, value: string) => cache.set(key, value);

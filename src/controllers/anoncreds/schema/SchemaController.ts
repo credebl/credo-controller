@@ -1,7 +1,6 @@
-
 import { getUnqualifiedSchemaId, parseIndySchemaId } from '@credo-ts/anoncreds'
-import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller, Request } from 'tsoa'
 import { Request as Req } from 'express'
+import { Example, Get, Post, Route, Tags, Security, Path, Body, Controller, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { CredentialEnum, EndorserMode, SchemaError, SCOPES } from '../../../enums'
@@ -16,7 +15,6 @@ import { CreateSchemaInput } from '../../types'
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class SchemaController extends Controller {
-
   /**
    * Get schema by schemaId
    * @param schemaId
@@ -38,7 +36,9 @@ export class SchemaController extends Controller {
           schemBySchemaId?.resolutionMetadata?.error === SchemaError.NotFound) ||
         schemBySchemaId?.resolutionMetadata?.error === SchemaError.UnSupportedAnonCredsMethod
       ) {
-        throw new NotFoundError(schemBySchemaId?.resolutionMetadata?.message || `schema details with schema id "${schemaId}" not found.`)
+        throw new NotFoundError(
+          schemBySchemaId?.resolutionMetadata?.message || `schema details with schema id "${schemaId}" not found.`,
+        )
       }
 
       return schemBySchemaId
