@@ -69,7 +69,7 @@ export async function expressAuthentication(request: Request, securityName: stri
     }
 
     // Verify token
-    const verified = await verifyToken(token, cachedKey)
+    const verified = await verifyToken(logger, token, cachedKey)
 
     // Failed to verify token
     if (!verified) {
@@ -152,11 +152,12 @@ export async function expressAuthentication(request: Request, securityName: stri
   return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
 }
 
-async function verifyToken(token: string, secretKey: string): Promise<boolean> {
+async function verifyToken(logger: TsLogger, token: string, secretKey: string): Promise<boolean> {
   try {
     jwt.verify(token, secretKey)
     return true
   } catch (error) {
+    logger.error('Error verifying jwt token', error as Record<string, any>)
     return false
   }
 }
