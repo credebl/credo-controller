@@ -44,74 +44,71 @@ The REST API provides an OpenAPI schema that can easily be viewed using the Swag
 
 Using the CLI is the easiest way to get started with the REST API.
 
-**With Docker (easiest)**
+> **Note**: The preferred operating system for development and deployment is **Ubuntu LTS (20.04 or later)**.
 
-Make sure you have [Docker](https://docs.docker.com/get-docker/) installed. To get a minimal version of the agent running the following command is sufficient:
 
-```sh
-docker run -p 5000:5000 -p 3000:3000 ghcr.io/hyperledger/afj-rest \
-  --label "AFJ Rest" \
-  --wallet-id "walletId" \
-  --wallet-key "walletKey" \
-  --endpoint http://localhost:5000 \
-  --admin-port 3000 \
-  --outbound-transport http \
-  --inbound-transport http 5000
-```
-
-See the [docker-compose.yml](https://github.com/hyperledger/aries-framework-javascript-ext/tree/main/docker-compose.yml) file for an example of using the afj-rest image with Docker Compose.
-
-> ⚠️ The Docker image is not optimized for ARM architectures and won't work on Apple Silicon Macs. See the **Directly on Computer** below on how to run it directly on your computer without Docker.
-
-**Directly on Computer**
-
-To run AFJ REST API directly on your computer you need to have the indy-sdk installed. Follow the Indy [installation steps](https://github.com/hyperledger/aries-framework-javascript/tree/main/docs/libindy) for your platform and verify Indy is installed.
-
-Once you have installed Indy, you can start the REST server using the following command:
+### Clone the Repository
 
 ```sh
-npx -p @aries-framework/rest afj-rest start \
-  --label "AFJ Rest" \
-  --wallet-id "walletId" \
-  --wallet-key "walletKey" \
-  --endpoint http://localhost:5000 \
-  --admin-port 3000 \
-  --outbound-transport http \
-  --inbound-transport http 5000
+git clone https://github.com/credebl/credo-controller.git
+cd credo-controller
 ```
 
-**Configuration**
+### Run via Docker
 
-To find out all available configuration options from the CLI, you can run the CLI command with `--help`. This will print a full list of all available options.
+#### Step 1: Create a Configuration File
 
-```sh
-# With docker
-docker run ghcr.io/hyperledger/afj-rest --help
+In the root directory of the project, create a file named `my-config.json`.
+You can base it on the sample located at `/samples/cliConfig.json`.
 
-# Directly on computer
-npx -p @aries-framework/rest afj-rest start --help
-```
-
-It is also possible to configure the REST API using a json config. When providing a lot of configuration options, this is definitely the easiest way to use configure the agent. All properties should use camelCase for the key names. See the example [CLI Config](https://github.com/hyperledger/aries-framework-javascript-ext/tree/main/packages/rest/samples/cliConfig.json) for an detailed example.
+#### Example `my-config.json`:
 
 ```json
 {
-  "label": "AFJ Rest Agent",
-  "walletId": "walletId",
-  "walletKey": "walletKey"
-  // ... other config options ... //
+  "label": "My Credo Agent",
+  "walletId": "my-wallet",
+  "walletKey": "my-secret-key",
+  "walletType": "sqlite",
+  "walletUrl": "sqlite://wallet.db",
+  "walletScheme": "ProfilePerWallet",
+  "walletAccount": "admin",
+  "walletPassword": "password",
+  "walletAdminAccount": "admin",
+  "walletAdminPassword": "admin-password",
+  "adminPort": 3000,
+  "walletConnectTimeout": 10000,
+  "walletMaxConnections": 10,
+  "walletIdleTimeout": 30000,
+  "indyLedger": [
+    {
+      "genesisTransactions": "https://raw.githubusercontent.com/bcgov/von-network/main/BCovrin/genesis_test",
+      "indyNamespace": "bcovrin:testnet"
+    }
+  ]
 }
 ```
 
-As a final option it is possible to configure the agent using environment variables. All properties are prefixed by `AFJ_REST` transformed to UPPER_SNAKE_CASE.
+> Ensure `my-config.json` is placed at the root of the project directory.
+
+> Do not commit `my-config.json` to version control. It may contain sensitive credentials.
+
+
+#### Step 2: Start the Application
+
+Run the following command from the root directory:
 
 ```sh
-# With docker
-docker run -e AFJ_REST_WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
-
-# Directly on computer
-AFJ_REST_WALLET_KEY="my-secret-key" npx -p @aries-framework/rest afj-rest start ...
+docker run -p 3000:3000 -v "$(pwd)/my-config.json:/app/my-config.json" ghcr.io/credebl/credo-controller:latest --config /app/my-config.json
 ```
+
+This will:
+
+* Map container port `3000` to your local machine.
+* Mount the `my-config.json` configuration file into the container.
+* Start the application with the specified configuration.
+
+
+
 
 #### Starting Own Server
 
@@ -155,7 +152,7 @@ The currently supported events are:
 
 When using the CLI, a webhook url can be specified using the `--webhook-url` config option.
 
-When using the REST server as an library, the WebSocket server and webhook url can be configured in the `startServer` and `setupServer` methods.
+When using the REST server as a library, the WebSocket server and webhook url can be configured in the `startServer` and `setupServer` methods.
 
 ```ts
 // You can either call startServer() or setupServer() and pass the ServerConfig interface with a webhookUrl and/or a WebSocket server
