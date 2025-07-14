@@ -1,7 +1,12 @@
 /* eslint-disable prettier/prettier */
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { CustomW3cJsonLdSignCredentialOptions, RecipientKeyOption, SafeW3cJsonLdVerifyCredentialOptions, SchemaMetadata } from '../types'
+import type {
+  CustomW3cJsonLdSignCredentialOptions,
+  RecipientKeyOption,
+  SafeW3cJsonLdVerifyCredentialOptions,
+  SchemaMetadata,
+} from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
   AcceptProofRequestOptions,
@@ -16,7 +21,8 @@ import type {
   ProofsProtocolVersionType,
   Routing,
   W3cJsonLdSignCredentialOptions,
-  W3cVerifiableCredential} from '@credo-ts/core'
+  W3cVerifiableCredential,
+} from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
 import type { TenantRecord } from '@credo-ts/tenants'
@@ -49,7 +55,8 @@ import {
   PeerDidNumAlgo,
   W3cJsonLdVerifiableCredential,
   W3cCredential,
-  ClaimFormat} from '@credo-ts/core'
+  ClaimFormat,
+} from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
@@ -86,7 +93,9 @@ import {
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
   CreateSchemaInput,
- VerifyDataOptions , SignDataOptions } from '../types'
+  VerifyDataOptions,
+  SignDataOptions,
+} from '../types'
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
@@ -1943,7 +1952,7 @@ export class MultiTenancyController extends Controller {
     @Path('tenantId') tenantId: string,
     @Query('storeCredential') storeCredential: boolean,
     @Query('dataTypeToSign') dataTypeToSign: 'rawData' | 'jsonLd',
-    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any
+    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any,
   ) {
     try {
       return await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
@@ -1952,7 +1961,9 @@ export class MultiTenancyController extends Controller {
           const credentialData = data as unknown as W3cJsonLdSignCredentialOptions
           credentialData.format = ClaimFormat.LdpVc
 
-          const signedCredential = await tenantAgent.w3cCredentials.signCredential(credentialData) as W3cJsonLdVerifiableCredential
+          const signedCredential = (await tenantAgent.w3cCredentials.signCredential(
+            credentialData,
+          )) as W3cJsonLdVerifiableCredential
 
           if (storeCredential) {
             return await tenantAgent.w3cCredentials.storeCredential({ credential: signedCredential })
@@ -2011,14 +2022,20 @@ export class MultiTenancyController extends Controller {
   @Post('/credential/verify/:tenantId')
   public async verifyCredential(
     @Path('tenantId') tenantId: string,
-    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any,
   ) {
     let formattedCredential
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        const {credential,  ...credentialOptions}= credentialToVerify
-        const transformedCredential = JsonTransformer.fromJSON(credentialToVerify?.credential, W3cJsonLdVerifiableCredential)
-        const signedCred = await tenantAgent.w3cCredentials.verifyCredential({credential: transformedCredential, ...credentialOptions})
+        const { credential, ...credentialOptions } = credentialToVerify
+        const transformedCredential = JsonTransformer.fromJSON(
+          credentialToVerify?.credential,
+          W3cJsonLdVerifiableCredential,
+        )
+        const signedCred = await tenantAgent.w3cCredentials.verifyCredential({
+          credential: transformedCredential,
+          ...credentialOptions,
+        })
         formattedCredential = signedCred
       })
       return formattedCredential
@@ -2027,4 +2044,3 @@ export class MultiTenancyController extends Controller {
     }
   }
 }
-
