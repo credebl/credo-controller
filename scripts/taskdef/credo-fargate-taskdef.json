@@ -2,7 +2,7 @@
   "family": "${FAMILY}",
   "containerDefinitions": [
     {
-      "name": "Platform-admin",
+      "name": "credo-controller",
       "image": "%REPOSITORY_URI%:CREDO_v_%BUILD_NUMBER%",
       "cpu": 0,
       "portMappings": [
@@ -65,5 +65,9 @@
         "rootDirectory": "/"
       }
     }
-  ]
+  ],
+  "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  }
 }
