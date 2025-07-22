@@ -71,3 +71,8 @@ export declare enum CustomHandshakeProtocol {
   DidExchange = 'https://didcomm.org/didexchange/1.1',
   Connections = 'https://didcomm.org/connections/1.0',
 }
+
+export enum SignerMethod {
+  Did = 'did',
+  X5c = 'x5c',
+}

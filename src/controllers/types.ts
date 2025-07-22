@@ -32,9 +32,10 @@ import type {
   W3cCredential,
   W3cCredentialSubject,
 } from '@credo-ts/core'
+import type { LinkedDataProofOptions } from '@credo-ts/core/build/modules/vc/data-integrity/models/LinkedDataProof'
 import type { SingleOrArray } from '@credo-ts/core/build/utils'
+import type { TenantsModule } from '@credo-ts/tenants'
 import type { DIDDocument } from 'did-resolver'
-import { LinkedDataProofOptions } from '@credo-ts/core/build/modules/vc/data-integrity/models/LinkedDataProof'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
   walletConfig: Pick<WalletConfig, 'id' | 'key' | 'keyDerivationMethod'>
@@ -422,7 +423,7 @@ export interface credentialPayloadToSign {
 }
 export interface SafeW3cJsonLdVerifyCredentialOptions extends W3cJsonLdVerifyCredentialOptions {
   // Ommited due to issues with TSOA
-  proof: SingleOrArray<Omit<LinkedDataProofOptions, "cryptosuite"> | DataIntegrityProofOptions>
+  proof: SingleOrArray<Omit<LinkedDataProofOptions, 'cryptosuite'> | DataIntegrityProofOptions>
 }
 
 export type ExtensibleW3cCredentialSubject = W3cCredentialSubject & {
@@ -437,3 +438,55 @@ export type ExtensibleW3cCredential = W3cCredential & {
 export type CustomW3cJsonLdSignCredentialOptions = Omit<W3cJsonLdSignCredentialOptions, 'format'> & {
   [key: string]: unknown
 }
+
+/**
+ * Base record model for Credo
+ */
+export interface CredoBaseRecord {
+  id: RecordId
+  createdAt: Date
+  updatedAt?: Date
+  type: string
+}
+
+/**
+ * The public issuer id, used for hosting OpenID4VCI metadata and endpoints
+ *
+ * @example 0ad85626-67a9-4677-8621-2906bfbf6b6d
+ */
+export type PublicIssuerId = string
+/**
+ * JSON object that can contain any key-value pairs
+ */
+export interface AnyJsonObject {
+  [key: string]: unknown
+}
+
+/**
+ * @example "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
+ */
+// export type RecordId = string
+
+/**
+ * @example "ea4e5e69-fc04-465a-90d2-9f8ff78aa71d"
+ */
+// export type ThreadId = string
+
+/**
+ * Base record model for Credo
+ */
+export interface CredoBaseRecord {
+  id: RecordId
+  createdAt: Date
+  updatedAt?: Date
+  type: string
+}
+
+export type DisclosureFrame = {
+  [key: string]: boolean | DisclosureFrame
+}
+
+/**
+ * @example did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
+ */
+export type Did = string

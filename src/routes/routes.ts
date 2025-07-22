@@ -10,6 +10,8 @@ import { Polygon } from './../controllers/polygon/PolygonController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { OutOfBandController } from './../controllers/outofband/OutOfBandController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { IssuanceSessionsController } from './../controllers/openid4vc/issuance-sessions/issuance-sessions.Controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { MultiTenancyController } from './../controllers/multi-tenancy/MultiTenancyController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { EndorserTransactionController } from './../controllers/endorser-transaction/EndorserTransactionController';
@@ -28,7 +30,13 @@ import { BasicMessageController } from './../controllers/basic-messages/BasicMes
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AgentController } from './../controllers/agent/AgentController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { IssuerController } from './../controllers/openid4vc/issuers/issuer.Controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { VerifierController } from './../controllers/openid4vc/verifiers/verifier.Controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { QuestionAnswerController } from './../controllers/question-answer/QuestionAnswerController';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { HolderController } from './../controllers/openid4vc/holder/holder.Controller';
 import { expressAuthentication } from './../authentication';
 // @ts-ignore - no great way to install types from subpackage
 import { iocContainer } from './../utils/tsyringeTsoaIocContainer';
@@ -299,6 +307,11 @@ const models: TsoaRoute.Models = {
         "enums": ["https://didcomm.org/didexchange/1.1","https://didcomm.org/connections/1.0"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SingleOrArray_string-or-Record_string.unknown__": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"union","subSchemas":[{"dataType":"string"},{"ref":"Record_string.unknown_"}]},{"dataType":"array","array":{"dataType":"union","subSchemas":[{"dataType":"string"},{"ref":"Record_string.unknown_"}]}}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "OutOfBandDidCommService": {
         "dataType": "refObject",
         "properties": {
@@ -381,6 +394,55 @@ const models: TsoaRoute.Models = {
             "mediatorId": {"dataType":"string"},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcIssuanceSessionRecord": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SignerMethod": {
+        "dataType": "refEnum",
+        "enums": ["did","x5c"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Record_string.boolean_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Record_string.boolean-or-Record_string.boolean__": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"union","subSchemas":[{"dataType":"boolean"},{"ref":"Record_string.boolean_"}]},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcIssuanceSessionCreateOfferSdJwtCredentialOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "credentialSupportedId": {"dataType":"string","required":true},
+            "format": {"dataType":"string","required":true},
+            "payload": {"dataType":"nestedObjectLiteral","nestedProperties":{"vct":{"dataType":"string"}},"additionalProperties":{"dataType":"any"},"required":true},
+            "disclosureFrame": {"ref":"Record_string.boolean-or-Record_string.boolean__"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcIssuanceSessionsCreateOffer": {
+        "dataType": "refObject",
+        "properties": {
+            "publicIssuerId": {"dataType":"string","required":true},
+            "signerOption": {"dataType":"nestedObjectLiteral","nestedProperties":{"x5c":{"dataType":"array","array":{"dataType":"string"}},"did":{"dataType":"string"},"method":{"ref":"SignerMethod","required":true}},"required":true},
+            "credentials": {"dataType":"array","array":{"dataType":"refObject","ref":"OpenId4VcIssuanceSessionCreateOfferSdJwtCredentialOptions"},"required":true},
+            "authorizationCodeFlowConfig": {"dataType":"nestedObjectLiteral","nestedProperties":{"issuerState":{"dataType":"string"},"requirePresentationDuringIssuance":{"dataType":"boolean"},"authorizationServerUrl":{"dataType":"string","required":true}}},
+            "preAuthorizedCodeFlowConfig": {"dataType":"nestedObjectLiteral","nestedProperties":{"authorizationServerUrl":{"dataType":"string","required":true},"txCode":{"dataType":"nestedObjectLiteral","nestedProperties":{"input_mode":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["numeric"]},{"dataType":"enum","enums":["text"]}]},"length":{"dataType":"double"},"description":{"dataType":"string"}}},"preAuthorizedCode":{"dataType":"string"}}},
+            "issuanceMetadata": {"ref":"Record_string.unknown_"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcIssuanceSessionState": {
+        "dataType": "refEnum",
+        "enums": ["OfferCreated","OfferUriRetrieved","AuthorizationInitiated","AuthorizationGranted","AccessTokenRequested","AccessTokenCreated","CredentialRequestReceived","CredentialsPartiallyIssued","Completed","Error"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "TenantRecord": {
@@ -655,6 +717,8 @@ const models: TsoaRoute.Models = {
         "properties": {
             "autoAcceptCredential": {"ref":"AutoAcceptCredential"},
             "comment": {"dataType":"string"},
+            "goalCode": {"dataType":"string"},
+            "goal": {"dataType":"string"},
             "credentialRecordId": {"dataType":"string","required":true},
             "credentialFormats": {"ref":"CredentialFormatPayload_CredentialFormatsFromProtocols_CredentialProtocol-Array_.acceptOffer_"},
         },
@@ -953,6 +1017,7 @@ const models: TsoaRoute.Models = {
             "error": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["invalidDid"]},{"dataType":"enum","enums":["notFound"]},{"dataType":"enum","enums":["representationNotSupported"]},{"dataType":"enum","enums":["unsupportedDidMethod"]},{"dataType":"string"}]},
             "message": {"dataType":"string"},
             "servedFromCache": {"dataType":"boolean"},
+            "servedFromDidRecord": {"dataType":"boolean"},
         },
         "additionalProperties": false,
     },
@@ -1358,6 +1423,182 @@ const models: TsoaRoute.Models = {
             "endpoints": {"dataType":"array","array":{"dataType":"string"},"required":true},
             "isInitialized": {"dataType":"boolean","required":true},
             "publicDid": {"dataType":"void","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcIssuerRecord": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Logo": {
+        "dataType": "refObject",
+        "properties": {
+            "uri": {"dataType":"string"},
+            "alt_text": {"dataType":"string"},
+        },
+        "additionalProperties": {"dataType":"any"},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CredentialDisplay": {
+        "dataType": "refObject",
+        "properties": {
+            "name": {"dataType":"string"},
+            "locale": {"dataType":"string"},
+            "logo": {"ref":"Logo"},
+        },
+        "additionalProperties": {"dataType":"any"},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProofTypeConfig": {
+        "dataType": "refObject",
+        "properties": {
+            "proof_signing_alg_values_supported": {"dataType":"array","array":{"dataType":"string"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Record_string.ProofTypeConfig_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"ref":"ProofTypeConfig"},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CredentialDefinition": {
+        "dataType": "refObject",
+        "properties": {
+            "type": {"dataType":"array","array":{"dataType":"string"},"required":true},
+        },
+        "additionalProperties": {"dataType":"any"},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CredentialConfigurationDisplay": {
+        "dataType": "refObject",
+        "properties": {
+            "name": {"dataType":"string","required":true},
+            "locale": {"dataType":"string"},
+            "logo": {"ref":"Logo"},
+            "description": {"dataType":"string"},
+            "background_color": {"dataType":"string"},
+            "background_image": {"ref":"Logo"},
+            "text_color": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CredentialConfigurationSupportedWithFormats": {
+        "dataType": "refObject",
+        "properties": {
+            "format": {"dataType":"enum","enums":["jwt_vc_json"],"required":true},
+            "scope": {"dataType":"string"},
+            "cryptographic_binding_methods_supported": {"dataType":"array","array":{"dataType":"string"}},
+            "credential_signing_alg_values_supported": {"dataType":"array","array":{"dataType":"string"}},
+            "proof_types_supported": {"ref":"Record_string.ProofTypeConfig_"},
+            "credential_definition": {"ref":"CredentialDefinition","required":true},
+            "display": {"dataType":"array","array":{"dataType":"refObject","ref":"CredentialConfigurationDisplay"}},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Record_string.CredentialConfigurationSupportedWithFormats_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"ref":"CredentialConfigurationSupportedWithFormats"},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "BatchCredentialIssuanceOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "batchSize": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UpdateIssuerRecordOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "display": {"dataType":"array","array":{"dataType":"refObject","ref":"CredentialDisplay"}},
+            "dpopSigningAlgValuesSupported": {"dataType":"array","array":{"dataType":"string"}},
+            "credentialConfigurationsSupported": {"ref":"Record_string.CredentialConfigurationSupportedWithFormats_","required":true},
+            "batchCredentialIssuance": {"ref":"BatchCredentialIssuanceOptions"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcVerifierRecord": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcSiopVerifierClientMetadata": {
+        "dataType": "refObject",
+        "properties": {
+            "client_name": {"dataType":"string"},
+            "logo_uri": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcSiopCreateVerifierOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "verifierId": {"dataType":"string"},
+            "clientMetadata": {"ref":"OpenId4VcSiopVerifierClientMetadata"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OpenId4VcUpdateVerifierRecordOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "verifierId": {"dataType":"string","required":true},
+            "clientMetadata": {"ref":"OpenId4VcSiopVerifierClientMetadata"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SdJwtVcRecord": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "MdocRecord": {
+        "dataType": "refAlias",
+        "type": {"ref":"Record_string.unknown_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ResolveCredentialOfferBody": {
+        "dataType": "refObject",
+        "properties": {
+            "credentialOfferUri": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuthorizeRequestCredentialOffer": {
+        "dataType": "refObject",
+        "properties": {
+            "credentialOfferUri": {"dataType":"string","required":true},
+            "credentialsToRequest": {"dataType":"array","array":{"dataType":"string"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RequestCredentialBody": {
+        "dataType": "refObject",
+        "properties": {
+            "credentialOfferUri": {"dataType":"string","required":true},
+            "credentialsToRequest": {"dataType":"array","array":{"dataType":"string"},"required":true},
+            "authorizationCode": {"dataType":"string"},
+            "codeVerifier": {"dataType":"string"},
+            "txCode": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ResolveProofRequest": {
+        "dataType": "refObject",
+        "properties": {
+            "proofRequestUri": {"dataType":"string","required":true},
         },
         "additionalProperties": false,
     },
@@ -2162,6 +2403,193 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'deleteOutOfBandRecord',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuanceSessionsController_createCredentialOffer: Record<string, TsoaRoute.ParameterSchema> = {
+                options: {"in":"body","name":"options","required":true,"ref":"OpenId4VcIssuanceSessionsCreateOffer"},
+        };
+        app.post('/openid4vc/issuance-sessions/create-credential-offer',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController.prototype.createCredentialOffer)),
+
+            async function IssuanceSessionsController_createCredentialOffer(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuanceSessionsController_createCredentialOffer, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuanceSessionsController>(IssuanceSessionsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createCredentialOffer',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuanceSessionsController_getIssuanceSessionsById: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                issuanceSessionId: {"in":"path","name":"issuanceSessionId","required":true,"dataType":"string"},
+        };
+        app.get('/openid4vc/issuance-sessions/:issuanceSessionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController.prototype.getIssuanceSessionsById)),
+
+            async function IssuanceSessionsController_getIssuanceSessionsById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuanceSessionsController_getIssuanceSessionsById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuanceSessionsController>(IssuanceSessionsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getIssuanceSessionsById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuanceSessionsController_getIssuanceSessionsByQuery: Record<string, TsoaRoute.ParameterSchema> = {
+                cNonce: {"in":"query","name":"cNonce","dataType":"string"},
+                publicIssuerId: {"in":"query","name":"publicIssuerId","dataType":"string"},
+                preAuthorizedCode: {"in":"query","name":"preAuthorizedCode","dataType":"string"},
+                state: {"in":"query","name":"state","ref":"OpenId4VcIssuanceSessionState"},
+                credentialOfferUri: {"in":"query","name":"credentialOfferUri","dataType":"string"},
+                authorizationCode: {"in":"query","name":"authorizationCode","dataType":"string"},
+        };
+        app.get('/openid4vc/issuance-sessions',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController.prototype.getIssuanceSessionsByQuery)),
+
+            async function IssuanceSessionsController_getIssuanceSessionsByQuery(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuanceSessionsController_getIssuanceSessionsByQuery, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuanceSessionsController>(IssuanceSessionsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getIssuanceSessionsByQuery',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuanceSessionsController_updateSessionById: Record<string, TsoaRoute.ParameterSchema> = {
+                issuanceSessionId: {"in":"path","name":"issuanceSessionId","required":true,"dataType":"string"},
+                metadata: {"in":"body","name":"metadata","required":true,"ref":"Record_string.unknown_"},
+        };
+        app.put('/openid4vc/issuance-sessions/:issuanceSessionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController.prototype.updateSessionById)),
+
+            async function IssuanceSessionsController_updateSessionById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuanceSessionsController_updateSessionById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuanceSessionsController>(IssuanceSessionsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'updateSessionById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuanceSessionsController_deleteIssuanceSessionById: Record<string, TsoaRoute.ParameterSchema> = {
+                issuanceSessionId: {"in":"path","name":"issuanceSessionId","required":true,"dataType":"string"},
+        };
+        app.delete('/openid4vc/issuance-sessions/:issuanceSessionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuanceSessionsController.prototype.deleteIssuanceSessionById)),
+
+            async function IssuanceSessionsController_deleteIssuanceSessionById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuanceSessionsController_deleteIssuanceSessionById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuanceSessionsController>(IssuanceSessionsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'deleteIssuanceSessionById',
                 controller,
                 response,
                 next,
@@ -5007,6 +5435,399 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuerController_createIssuer: Record<string, TsoaRoute.ParameterSchema> = {
+                createIssuerOptions: {"in":"body","name":"createIssuerOptions","required":true,"dataType":"any"},
+        };
+        app.post('/openid4vc/issuer',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController.prototype.createIssuer)),
+
+            async function IssuerController_createIssuer(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuerController_createIssuer, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuerController>(IssuerController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createIssuer',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuerController_updateIssuerMetadata: Record<string, TsoaRoute.ParameterSchema> = {
+                publicIssuerId: {"in":"path","name":"publicIssuerId","required":true,"dataType":"string"},
+                updateIssuerRecordOptions: {"in":"body","name":"updateIssuerRecordOptions","required":true,"ref":"UpdateIssuerRecordOptions"},
+        };
+        app.put('/openid4vc/issuer/:publicIssuerId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController.prototype.updateIssuerMetadata)),
+
+            async function IssuerController_updateIssuerMetadata(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuerController_updateIssuerMetadata, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuerController>(IssuerController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'updateIssuerMetadata',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuerController_getIssuerAgentMetaData: Record<string, TsoaRoute.ParameterSchema> = {
+                issuerId: {"in":"path","name":"issuerId","required":true,"dataType":"string"},
+        };
+        app.get('/openid4vc/issuer/:issuerId/metadata',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController.prototype.getIssuerAgentMetaData)),
+
+            async function IssuerController_getIssuerAgentMetaData(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuerController_getIssuerAgentMetaData, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuerController>(IssuerController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getIssuerAgentMetaData',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuerController_getIssuersByQuery: Record<string, TsoaRoute.ParameterSchema> = {
+                publicIssuerId: {"in":"query","name":"publicIssuerId","dataType":"string"},
+        };
+        app.get('/openid4vc/issuer',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController.prototype.getIssuersByQuery)),
+
+            async function IssuerController_getIssuersByQuery(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuerController_getIssuersByQuery, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuerController>(IssuerController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getIssuersByQuery',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuerController_getIssuer: Record<string, TsoaRoute.ParameterSchema> = {
+                publicIssuerId: {"in":"path","name":"publicIssuerId","required":true,"dataType":"string"},
+        };
+        app.get('/openid4vc/issuer/:publicIssuerId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController.prototype.getIssuer)),
+
+            async function IssuerController_getIssuer(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuerController_getIssuer, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuerController>(IssuerController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getIssuer',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIssuerController_deleteIssuer: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.delete('/openid4vc/issuer/:id',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController)),
+            ...(fetchMiddlewares<RequestHandler>(IssuerController.prototype.deleteIssuer)),
+
+            async function IssuerController_deleteIssuer(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIssuerController_deleteIssuer, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IssuerController>(IssuerController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'deleteIssuer',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsVerifierController_createVerifier: Record<string, TsoaRoute.ParameterSchema> = {
+                options: {"in":"body","name":"options","required":true,"ref":"OpenId4VcSiopCreateVerifierOptions"},
+        };
+        app.post('/openid4vc/verifier',
+            ...(fetchMiddlewares<RequestHandler>(VerifierController)),
+            ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.createVerifier)),
+
+            async function VerifierController_createVerifier(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsVerifierController_createVerifier, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<VerifierController>(VerifierController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createVerifier',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsVerifierController_updateVerifierMetadata: Record<string, TsoaRoute.ParameterSchema> = {
+                publicVerifierId: {"in":"path","name":"publicVerifierId","required":true,"dataType":"string"},
+                verifierRecordOptions: {"in":"body","name":"verifierRecordOptions","required":true,"ref":"OpenId4VcUpdateVerifierRecordOptions"},
+        };
+        app.put('/openid4vc/verifier/:publicVerifierId',
+            ...(fetchMiddlewares<RequestHandler>(VerifierController)),
+            ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.updateVerifierMetadata)),
+
+            async function VerifierController_updateVerifierMetadata(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsVerifierController_updateVerifierMetadata, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<VerifierController>(VerifierController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'updateVerifierMetadata',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsVerifierController_getVerifiersByQuery: Record<string, TsoaRoute.ParameterSchema> = {
+                publicVerifierId: {"in":"query","name":"publicVerifierId","dataType":"string"},
+        };
+        app.get('/openid4vc/verifier',
+            ...(fetchMiddlewares<RequestHandler>(VerifierController)),
+            ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.getVerifiersByQuery)),
+
+            async function VerifierController_getVerifiersByQuery(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsVerifierController_getVerifiersByQuery, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<VerifierController>(VerifierController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getVerifiersByQuery',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsVerifierController_getVerifier: Record<string, TsoaRoute.ParameterSchema> = {
+                publicVerifierId: {"in":"path","name":"publicVerifierId","required":true,"dataType":"string"},
+        };
+        app.get('/openid4vc/verifier/:publicVerifierId',
+            ...(fetchMiddlewares<RequestHandler>(VerifierController)),
+            ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.getVerifier)),
+
+            async function VerifierController_getVerifier(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsVerifierController_getVerifier, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<VerifierController>(VerifierController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getVerifier',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsVerifierController_deleteVerifier: Record<string, TsoaRoute.ParameterSchema> = {
+                verifierId: {"in":"path","name":"verifierId","required":true,"dataType":"string"},
+        };
+        app.delete('/openid4vc/verifier/:verifierId',
+            ...(fetchMiddlewares<RequestHandler>(VerifierController)),
+            ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.deleteVerifier)),
+
+            async function VerifierController_deleteVerifier(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsVerifierController_deleteVerifier, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<VerifierController>(VerifierController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'deleteVerifier',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsQuestionAnswerController_getQuestionAnswerRecords: Record<string, TsoaRoute.ParameterSchema> = {
                 connectionId: {"in":"query","name":"connectionId","dataType":"string"},
                 role: {"in":"query","name":"role","ref":"QuestionAnswerRole"},
@@ -5145,6 +5966,249 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getQuestionAnswerRecordById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_getSdJwtCredentials: Record<string, TsoaRoute.ParameterSchema> = {
+        };
+        app.get('/openid4vc/holder/sd-jwt-vcs',
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.getSdJwtCredentials)),
+
+            async function HolderController_getSdJwtCredentials(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_getSdJwtCredentials, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getSdJwtCredentials',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_getMdocCredentials: Record<string, TsoaRoute.ParameterSchema> = {
+        };
+        app.get('/openid4vc/holder/mdoc-vcs',
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.getMdocCredentials)),
+
+            async function HolderController_getMdocCredentials(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_getMdocCredentials, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getMdocCredentials',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_resolveCredOffer: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"ResolveCredentialOfferBody"},
+        };
+        app.post('/openid4vc/holder/resolve-credential-offer',
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.resolveCredOffer)),
+
+            async function HolderController_resolveCredOffer(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_resolveCredOffer, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'resolveCredOffer',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_requestAuthorizationForCredential: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"AuthorizeRequestCredentialOffer"},
+        };
+        app.post('/openid4vc/holder/authorization-request',
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.requestAuthorizationForCredential)),
+
+            async function HolderController_requestAuthorizationForCredential(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_requestAuthorizationForCredential, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'requestAuthorizationForCredential',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_requestCredential: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"RequestCredentialBody"},
+        };
+        app.post('/openid4vc/holder/request-credential',
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.requestCredential)),
+
+            async function HolderController_requestCredential(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_requestCredential, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'requestCredential',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_resolveProofRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"ResolveProofRequest"},
+        };
+        app.post('/openid4vc/holder/resolve-proof-request',
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.resolveProofRequest)),
+
+            async function HolderController_resolveProofRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_resolveProofRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'resolveProofRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_acceptProofRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"ResolveProofRequest"},
+        };
+        app.post('/openid4vc/holder/accept-proof-request',
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.acceptProofRequest)),
+
+            async function HolderController_acceptProofRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_acceptProofRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'acceptProofRequest',
                 controller,
                 response,
                 next,
