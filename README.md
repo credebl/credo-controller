@@ -1,12 +1,14 @@
 <p align="center">
   <br />
   <img
-    alt="Hyperledger Aries logo"
-    src="https://raw.githubusercontent.com/hyperledger/aries-framework-javascript/aa31131825e3331dc93694bc58414d955dcb1129/images/aries-logo.png"
+    alt="Credo logo"
+    src="https://raw.githubusercontent.com/openwallet-foundation/credo-ts/main/images/credo-logo.png"
     height="250px"
   />
 </p>
-<h1 align="center"><b>Aries Framework JavaScript REST API</b></h1>
+
+# Credo Controller REST API
+
 <p align="center">
   <a
     href="https://raw.githubusercontent.com/hyperledger/aries-framework-javascript-ext/main/LICENSE"
@@ -19,33 +21,31 @@
       alt="typescript"
       src="https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg"
   /></a>
-    <a href="https://www.npmjs.com/package/@aries-framework/rest"
+  <a href="https://github.com/credebl/credo-controller"
     ><img
-      alt="@aries-framework/rest version"
-      src="https://img.shields.io/npm/v/@aries-framework/rest"
+      alt="GitHub"
+      src="https://img.shields.io/github/stars/credebl/credo-controller?style=social"
   /></a>
-
 </p>
 <br />
 
-The Aries Framework JavaScript REST API is the most convenient way for self-sovereign identity (SSI) developers to interact with SSI agents.
+The Credo Controller REST API is the most convenient way for self-sovereign identity (SSI) developers to interact with SSI agents.
 
 - ⭐ **Endpoints** to create connections, issue credentials, and request proofs.
 - 💻 **CLI** that makes it super easy to start an instance of the REST API.
 - 🌐 **Interoperable** with all major Aries implementations.
 
-### Quick start
+## Quick Start
 
 The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI that is provided with the server. The docs can be viewed on the `/docs` endpoint (e.g. http://localhost:3000/docs).
 
-> The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
+> The OpenAPI spec is generated from the model classes used by Credo-TS. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
 
-#### Using the CLI
+### Using the CLI
 
 Using the CLI is the easiest way to get started with the REST API.
 
 > **Note**: The preferred operating system for development and deployment is **Ubuntu LTS (20.04 or later)**.
-
 
 ### Clone the Repository
 
@@ -54,79 +54,152 @@ git clone https://github.com/credebl/credo-controller.git
 cd credo-controller
 ```
 
-### Run via Docker
+## Getting Started
 
-#### Step 1: Create a Configuration File
+### Method 1: Local Development (Recommended for Development)
 
-In the root directory of the project, create a file named `my-config.json`.
-You can base it on the sample located at `/samples/cliConfig.json`.
+<details>
+<summary><strong>Local Development Setup</strong></summary>
 
-#### Example `my-config.json`:
+#### Prerequisites
+- Node.js version **18.19.0** (tested and recommended)
+- Yarn package manager
+
+> **Note**: This project requires Node.js 18.19.0. It has been tested and may not work properly with newer versions like Node.js 24.x.
+
+> **Compatibility**: While Node.js 18.19.0 is recommended, the project should also work with Node.js versions >20 (major versions). However, thorough testing is recommended when using newer Node.js versions.
+
+#### Steps
+
+1. **Install dependencies:**
+   ```sh
+   yarn install
+   ```
+
+2. **Build the project:**
+   ```sh
+   yarn build
+   ```
+
+3. **Start development server:**
+   ```sh
+   yarn dev
+   ```
+
+The application will start in development mode with hot reloading enabled.
+
+</details>
+
+### Method 2: Build and Run Local Docker Image
+
+<details>
+<summary><strong>Docker Build Instructions</strong></summary>
+
+If you want to build your own Docker image locally and run it:
+
+#### Steps
+
+1. **Build the Docker image:**
+   ```sh
+   docker build -t credo-controller:local .
+   ```
+
+2. **Run the container:**
+   ```sh
+   docker run --network host \
+     -v "$(pwd)/samples/cliConfig.json:/app/cliConfig.json" \
+     credo-controller:local --config /app/cliConfig.json
+   ```
+
+This method gives you full control over the Docker build process and allows you to customize the image as needed.
+
+> **OS Compatibility**: This containerized method has been tested and works on **WSL**, **Ubuntu**, and **Fedora**. It should work on any system with Docker support.
+
+</details>
+
+### Method 3: Using Prebuilt Docker Image with PostgreSQL
+
+<details>
+<summary><strong>PostgreSQL + Prebuilt Image Setup</strong></summary>
+
+This method uses the official prebuilt Docker image with a PostgreSQL database setup.
+
+#### Prerequisites
+
+First, you need to add these required parameters to `samples/cliConfig.json`:
 
 ```json
 {
-  "label": "My Credo Agent",
-  "walletId": "my-wallet",
-  "walletKey": "my-secret-key",
-  "walletType": "sqlite",
-  "walletUrl": "sqlite://wallet.db",
-  "walletScheme": "ProfilePerWallet",
-  "walletAccount": "admin",
-  "walletPassword": "password",
-  "walletAdminAccount": "admin",
-  "walletAdminPassword": "admin-password",
-  "adminPort": 3000,
-  "walletConnectTimeout": 10000,
-  "walletMaxConnections": 10,
-  "walletIdleTimeout": 30000,
-  "indyLedger": [
-    {
-      "genesisTransactions": "https://raw.githubusercontent.com/bcgov/von-network/main/BCovrin/genesis_test",
-      "indyNamespace": "bcovrin:testnet"
-    }
-  ]
+  // ...existing configuration...
+  "walletConnectTimeout": 30,
+  "walletMaxConnections": 90,
+  "walletIdleTimeout": 30
+  // ...rest of configuration...
 }
 ```
 
-> Ensure `my-config.json` is placed at the root of the project directory.
+> **Note**: These parameters are required to avoid wallet connection errors when using PostgreSQL.
 
-> Do not commit `my-config.json` to version control. It may contain sensitive credentials.
+#### Steps
 
+1. **Start PostgreSQL database:**
+   ```sh
+   docker run --name credo-postgres -d \
+     -e POSTGRES_DB=postgres \
+     -e POSTGRES_USER=postgres \
+     -e POSTGRES_PASSWORD=postgres \
+     -p 5432:5432 \
+     postgres:13
+   ```
 
-#### Step 2: Start the Application
+2. **Run the Credo Controller:**
+   ```sh
+   docker run --network host \
+     -v "$(pwd)/samples/cliConfig.json:/app/cliConfig.json" \
+     ghcr.io/credebl/credo-controller:latest \
+     --config /app/cliConfig.json
+   ```
 
-Run the following command from the root directory:
+This method uses the official prebuilt image and connects to your local PostgreSQL instance.
 
-```sh
-docker run -p 3000:3000 -v "$(pwd)/my-config.json:/app/my-config.json" ghcr.io/credebl/credo-controller:latest --config /app/my-config.json
-```
+> **OS Compatibility**: This containerized method has been tested and works on **WSL**, **Ubuntu**, and **Fedora**. It should work on any system with Docker support.
 
-This will:
+#### Alternative: Using .env File
 
-* Map container port `3000` to your local machine.
-* Mount the `my-config.json` configuration file into the container.
-* Start the application with the specified configuration.
+The repository includes an agent environment sample file. For a quick start:
 
+1. **Rename the sample environment file:**
+   ```sh
+   cp .env.sample .env  # (if available in the repository)
+   ```
 
+2. **Run using the binary directly:**
+   ```sh
+   yarn build
+   ./bin/afj-rest.js --config ./samples/cliConfig.json
+   ```
 
+</details>
 
-#### Starting Own Server
+## Development
+
+### Starting Your Own Server
 
 Starting your own server is more involved than using the CLI, but allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
 
 You can create an agent instance and import the `startServer` method from the `rest` package. That's all you have to do.
 
 ```ts
-import { startServer } from '@aries-framework/rest'
-import { Agent } from '@aries-framework/core'
-import { agentDependencies } from '@aries-framework/node'
+import { startServer } from '@credo-ts/rest'
+import { Agent } from '@credo-ts/core'
+import { agentDependencies } from '@credo-ts/node'
 
 // The startServer function requires an initialized agent and a port.
 // An example of how to setup an agent is located in the `samples` directory.
 const run = async () => {
   const agent = new Agent(
     {
-      // ... AFJ Config ... //
+      // ... Credo Config ... //
     },
     agentDependencies
   )
@@ -137,7 +210,7 @@ const run = async () => {
 run()
 ```
 
-### WebSocket & webhooks
+### WebSocket & Webhooks
 
 The REST API provides the option to connect as a client and receive events emitted from your agent using WebSocket and webhooks.
 
