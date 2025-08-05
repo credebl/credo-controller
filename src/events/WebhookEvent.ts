@@ -1,4 +1,5 @@
 import type { Logger } from '@credo-ts/core'
+import fetch from 'node-fetch'
 
 export const sendWebhookEvent = async (
   webhookUrl: string,
@@ -12,7 +13,6 @@ export const sendWebhookEvent = async (
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const fetch = (await import('node-fetch')).default
     await fetch(webhookUrl, {
       method: 'POST',
       body: JSON.stringify(body),

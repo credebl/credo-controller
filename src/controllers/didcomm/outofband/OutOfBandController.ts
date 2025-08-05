@@ -45,7 +45,7 @@ export class OutOfBandController extends Controller {
             invitationId: invitationId,
           }
         : {}
-      let outOfBandRecords = await request.agent.oob.findAllByQuery(query)
+      const outOfBandRecords = await request.agent.oob.findAllByQuery(query)
 
       return outOfBandRecords.map((c) => c.toJSON())
     } catch (error) {

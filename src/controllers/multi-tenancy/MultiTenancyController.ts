@@ -49,9 +49,9 @@ export class MultiTenancyController extends Controller {
       // })
 
       // Note: logic to store generate token for tenant using BW's secertKey
-      const genericRecord = await agent.genericRecords.getAll()
-      const records = genericRecord.find((record) => record?.content?.secretKey !== undefined)
-      const secretKey = records?.content.secretKey as string
+
+      const genericRecord = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+      const secretKey = genericRecord[0]?.content.secretKey as string
 
       if (!secretKey) {
         throw new Error('secretKey does not exist in wallet')
@@ -127,9 +127,8 @@ export class MultiTenancyController extends Controller {
       // })
 
       // Option2: logic to store generate token for tenant using BW's secertKey
-      const genericRecord = await agent.genericRecords.getAll()
-      const recordWithToken = genericRecord.find((record) => record?.content?.secretKey !== undefined)
-      key = recordWithToken?.content.secretKey as string
+      const genericRecord = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+      key = genericRecord[0].content.secretKey as string
 
       if (!key) {
         throw new Error('SecretKey does not exist for basewallet')

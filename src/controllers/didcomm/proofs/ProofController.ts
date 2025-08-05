@@ -36,10 +36,8 @@ export class ProofController extends Controller {
   @Get('/')
   public async getAllProofs(@Request() request: Req, @Query('threadId') threadId?: string) {
     try {
-      let query = threadId ? { threadId } : {}
-      let proofs = await request.agent.proofs.findAllByQuery(query)
-
-      // if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
+      const query = threadId ? { threadId } : {}
+      const proofs = await request.agent.proofs.findAllByQuery(query)
 
       return proofs.map((proof) => proof.toJSON())
     } catch (error) {

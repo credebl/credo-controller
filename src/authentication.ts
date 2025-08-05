@@ -63,7 +63,7 @@ export async function expressAuthentication(request: Request, securityName: stri
 
     let cachedKey = getFromCache('secret')
 
-    if (!cachedKey || cachedKey == '') {
+    if (!cachedKey) {
       // Cache key from
       cachedKey = await getSecretKey(agent as Agent)
     }
@@ -170,11 +170,13 @@ async function getSecretKey(
 
   cachedKey = getFromCache('secret')
 
-  if (!cachedKey || cachedKey == '') {
-    const genericRecord = await agent.genericRecords.getAll()
-    const recordWithToken = genericRecord.find((record) => record?.content?.secretKey !== undefined)
-    cachedKey = recordWithToken?.content.secretKey as string
+  if (!cachedKey) {
 
+    const genericRecords = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+    cachedKey = genericRecords[0]?.content.secretKey as string
+    if (!cachedKey) {
+      throw new Error('secretKey not found')
+    }
     setInCache('secret', cachedKey)
   }
 

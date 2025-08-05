@@ -403,10 +403,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  const genericRecord = await agent.genericRecords.getAll()
-  const recordsWithSecretKey = genericRecord.find((record) => record?.content?.secretKey)
+  const genericRecord = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+  const recordsWithSecretKey = genericRecord[0]
 
-  if (!genericRecord.length || !recordsWithSecretKey) {
+  if (!recordsWithSecretKey) {
     // If secretKey doesn't exist in genericRecord: i.e. Agent initialized for the first time or secretKey not found
     // Generate and store secret key for agent while initialization
     const secretKeyInfo = await generateSecretKey()
@@ -414,6 +414,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
+      },
+      tags: {
+        hasSecretKey: 'true', // custom tag to support query
       },
     })
   } else if (updateJwtSecret && recordsWithSecretKey) {

@@ -56,12 +56,11 @@ export class AgentController extends Controller {
   @Security('apiKey')
   public async getAgentToken(@Request() request: Req): Promise<AgentToken> {
     let token
-    const genericRecords = await request.agent.genericRecords.getAll()
-    const secretKeyInfo = genericRecords.find((record) => record?.content?.secretKey !== undefined)
-    if (!secretKeyInfo) {
-      throw new Error('secretKeyInfo not found')
+    const genericRecords = await request.agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+    const secretKey = genericRecords[0]?.content.secretKey as string
+    if (!secretKey) {
+      throw new Error('secretKey not found')
     }
-    const secretKey = secretKeyInfo.content.secretKey as string
     if (!('tenants' in request.agent.modules)) {
       token = jwt.sign({ role: AgentRole.RestRootAgent }, secretKey)
     } else {
