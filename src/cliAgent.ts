@@ -48,12 +48,11 @@ import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import axios from 'axios'
-import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
-import jwt from 'jsonwebtoken'
 
-import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums/enum'
+import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums'
 import { setupServer } from './server'
+import { generateSecretKey } from './utils/helpers'
 import { TsLogger } from './utils/logger'
 
 export type Transports = 'ws' | 'http'
@@ -100,6 +99,8 @@ export interface AriesRestConfig {
   fileServerToken?: string
   walletScheme?: AskarMultiWalletDatabaseScheme
   schemaFileServerURL?: string
+  apiKey: string
+  updateJwtSecret?: boolean
 }
 
 export async function readRestConfig(path: string) {
@@ -124,7 +125,7 @@ const getModules = (
   autoAcceptConnections: boolean,
   autoAcceptCredentials: AutoAcceptCredential,
   autoAcceptProofs: AutoAcceptProof,
-  walletScheme: AskarMultiWalletDatabaseScheme
+  walletScheme: AskarMultiWalletDatabaseScheme,
 ) => {
   const legacyIndyCredentialFormat = new LegacyIndyCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyProofFormatService()
@@ -212,7 +213,7 @@ const getWithTenantModules = (
   autoAcceptConnections: boolean,
   autoAcceptCredentials: AutoAcceptCredential,
   autoAcceptProofs: AutoAcceptProof,
-  walletScheme: AskarMultiWalletDatabaseScheme
+  walletScheme: AskarMultiWalletDatabaseScheme,
 ) => {
   const modules = getModules(
     networkConfig,
@@ -224,7 +225,7 @@ const getWithTenantModules = (
     autoAcceptConnections,
     autoAcceptCredentials,
     autoAcceptProofs,
-    walletScheme
+    walletScheme,
   )
   return {
     tenants: new TenantsModule<typeof modules>({
@@ -235,23 +236,23 @@ const getWithTenantModules = (
   }
 }
 
-async function generateSecretKey(length: number = 32): Promise<string> {
-  // Asynchronously generate a buffer containing random values
-  const buffer: Buffer = await new Promise((resolve, reject) => {
-    randomBytes(length, (error, buf) => {
-      if (error) {
-        reject(error)
-      } else {
-        resolve(buf)
-      }
-    })
-  })
+// async function generateSecretKey(length: number = 32): Promise<string> {
+//   // Asynchronously generate a buffer containing random values
+//   const buffer: Buffer = await new Promise((resolve, reject) => {
+//     randomBytes(length, (error, buf) => {
+//       if (error) {
+//         reject(error)
+//       } else {
+//         resolve(buf)
+//       }
+//     })
+//   })
 
-  // Convert the buffer to a hexadecimal string
-  const secretKey: string = buffer.toString('hex')
+//   // Convert the buffer to a hexadecimal string
+//   const secretKey: string = buffer.toString('hex')
 
-  return secretKey
-}
+//   return secretKey
+// }
 
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
@@ -271,6 +272,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptProofs,
     walletScheme,
+    apiKey,
+    updateJwtSecret,
     ...afjConfig
   } = restConfig
 
@@ -288,6 +291,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // As backup is only supported for sqlite storage
     // we need to manually take backup of the storage before updating the storage
     backupBeforeStorageUpdate: false,
+    // Ideally for testing connection between tenant agent we need to set this to 'true'. Default is 'false'
+    // TODO: triage: not sure if we want it to be 'true', as it would mean parallel requests on BW
+    // Setting it for now
+    processDidCommMessagesConcurrently: true,
   }
 
   async function fetchLedgerData(ledgerConfig: {
@@ -355,7 +362,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptConnections || true,
     autoAcceptCredentials || AutoAcceptCredential.Always,
     autoAcceptProofs || AutoAcceptProof.ContentApproved,
-    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
   )
   const modules = getModules(
     networkConfig,
@@ -367,7 +374,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptConnections || true,
     autoAcceptCredentials || AutoAcceptCredential.Always,
     autoAcceptProofs || AutoAcceptProof.ContentApproved,
-    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet
+    walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
   )
   const agent = new Agent({
     config: agentConfig,
@@ -396,37 +403,29 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  let token: string = ''
-  const genericRecord = await agent.genericRecords.getAll()
+  const genericRecord = await agent.genericRecords.findAllByQuery({ hasSecretKey: 'true' })
+  const recordsWithSecretKey = genericRecord[0]
 
-  const recordsWithToken = genericRecord.some((record) => record?.content?.token)
-  if (!genericRecord.length || !recordsWithToken) {
-    // Call the async function
-    const secretKeyInfo: string = await generateSecretKey()
-    // Check if the secretKey already exist in the genericRecords
+  if (!recordsWithSecretKey) {
+    // If secretKey doesn't exist in genericRecord: i.e. Agent initialized for the first time or secretKey not found
+    // Generate and store secret key for agent while initialization
+    const secretKeyInfo = await generateSecretKey()
 
-    // if already exist - then don't generate the secret key again
-    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
-    // instead use the existin JWT token
-    // if JWT token is not found, create/generate a new token and save in genericRecords
-    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-
-    // if already exist - then don't generate the secret key again
-    // Check if the JWT token already available in genericRecords - if yes, and also don't generate the JWT token
-    // instead use the existin JWT token
-    // if JWT token is not found, create/generate a new token and save in genericRecords
-    // next time, the same token should be used - instead of creating a new token on every restart event of the agent
-    token = jwt.sign({ agentInfo: 'agentInfo' }, secretKeyInfo)
     await agent.genericRecords.save({
       content: {
         secretKey: secretKeyInfo,
-        token,
+      },
+      tags: {
+        hasSecretKey: 'true', // custom tag to support query
       },
     })
-  } else {
-    const recordWithToken = genericRecord.find((record) => record?.content?.token !== undefined)
-
-    token = recordWithToken?.content.token as string
+  } else if (updateJwtSecret && recordsWithSecretKey) {
+    // If secretKey already exist in genericRecord: i.e. Agent is not initialized for the first time or secretKey already found
+    // And we are requested to store a new secret, with the flag: 'updateJwtSecret'
+    // Generate and store secret key for agent while initialization
+    recordsWithSecretKey.content.secretKey = await generateSecretKey()
+    recordsWithSecretKey.setTag('hasSecretKey', true)
+    await agent.genericRecords.update(recordsWithSecretKey)
   }
   const app = await setupServer(
     agent,
@@ -435,10 +434,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       port: adminPort,
       schemaFileServerURL,
     },
-    token
+    apiKey,
   )
 
-  logger.info(`*** API Token: ${token}`)
+  logger.info(`*** API Key: ${apiKey}`)
 
   app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)

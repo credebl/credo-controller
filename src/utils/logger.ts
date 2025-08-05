@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ILogObject } from 'tslog'
 
 import { LogLevel, BaseLogger } from '@credo-ts/core'
@@ -14,6 +13,7 @@ function logToTransport(logObject: ILogObject) {
 export class TsLogger extends BaseLogger {
   private logger: Logger
 
+  // Map our log levels to tslog levels
   private tsLogLevelMap = {
     [LogLevel.test]: 'silly',
     [LogLevel.trace]: 'trace',
@@ -24,12 +24,12 @@ export class TsLogger extends BaseLogger {
     [LogLevel.fatal]: 'fatal',
   } as const
 
-  public constructor(logLevel: LogLevel, private readonly serviceName = 'credo-controller-service' as string) {
+  public constructor(logLevel: LogLevel, name: string = 'credo-controller-service' as string) {
     super(logLevel)
 
     this.logger = new Logger({
-      name: serviceName,
-      minLevel: logLevel === LogLevel.off ? undefined : this.tsLogLevelMap[logLevel],
+      name,
+      minLevel: this.logLevel == LogLevel.off ? undefined : this.tsLogLevelMap[this.logLevel],
       ignoreStackLevels: 5,
       attachedTransports: [
         {
@@ -42,6 +42,7 @@ export class TsLogger extends BaseLogger {
             error: logToTransport,
             fatal: logToTransport,
           },
+          // always log to file
           minLevel: 'silly',
         },
       ],
@@ -51,7 +52,7 @@ export class TsLogger extends BaseLogger {
   private log(
     level: Exclude<LogLevel, LogLevel.off>,
     message: string | { message: string },
-    data?: Record<string, any>
+    data?: Record<string, any>,
   ): void {
     const tsLogLevel = this.tsLogLevelMap[level]
 
@@ -90,7 +91,6 @@ export class TsLogger extends BaseLogger {
       body: logMessage,
       severityText: LogLevel[level].toUpperCase(),
       attributes: {
-        source: this.serviceName,
         ...(data || {}),
         ...(errorDetails ? { error: errorDetails } : {}),
       },

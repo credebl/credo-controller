@@ -13,6 +13,7 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http'
 
 import { resourceFromAttributes } from '@opentelemetry/resources'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
+import type { Logger } from '@opentelemetry/api-logs'
 
 import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs'
 import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api'
@@ -41,7 +42,7 @@ const logExporter = new OTLPLogExporter({
 })
 const logProvider = new LoggerProvider({ resource })
 logProvider.addLogRecordProcessor(new BatchLogRecordProcessor(logExporter))
-export const otelLogger = logProvider.getLogger('credo-controller-logger')
+export const otelLogger: Logger = logProvider.getLogger('credo-controller-logger')
 export const otelLoggerProviderInstance = logProvider
 
 export const otelSDK = new NodeSDK({
