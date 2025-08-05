@@ -171,8 +171,7 @@ async function getSecretKey(
   cachedKey = getFromCache('secret')
 
   if (!cachedKey) {
-
-    const genericRecords = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+    const genericRecords = await agent.genericRecords.findAllByQuery({ hasSecretKey: 'true' })
     cachedKey = genericRecords[0]?.content.secretKey as string
     if (!cachedKey) {
       throw new Error('secretKey not found')

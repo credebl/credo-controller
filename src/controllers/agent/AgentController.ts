@@ -56,7 +56,7 @@ export class AgentController extends Controller {
   @Security('apiKey')
   public async getAgentToken(@Request() request: Req): Promise<AgentToken> {
     let token
-    const genericRecords = await request.agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+    const genericRecords = await request.agent.genericRecords.findAllByQuery({ hasSecretKey: 'true' })
     const secretKey = genericRecords[0]?.content.secretKey as string
     if (!secretKey) {
       throw new Error('secretKey not found')

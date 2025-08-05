@@ -50,7 +50,7 @@ export class MultiTenancyController extends Controller {
 
       // Note: logic to store generate token for tenant using BW's secertKey
 
-      const genericRecord = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+      const genericRecord = await agent.genericRecords.findAllByQuery({ hasSecretKey: 'true' })
       const secretKey = genericRecord[0]?.content.secretKey as string
 
       if (!secretKey) {
@@ -127,7 +127,7 @@ export class MultiTenancyController extends Controller {
       // })
 
       // Option2: logic to store generate token for tenant using BW's secertKey
-      const genericRecord = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+      const genericRecord = await agent.genericRecords.findAllByQuery({ hasSecretKey: 'true' })
       key = genericRecord[0].content.secretKey as string
 
       if (!key) {

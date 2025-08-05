@@ -403,7 +403,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  const genericRecord = await agent.genericRecords.findAllByQuery({hasSecretKey: 'true'})
+  const genericRecord = await agent.genericRecords.findAllByQuery({ hasSecretKey: 'true' })
   const recordsWithSecretKey = genericRecord[0]
 
   if (!recordsWithSecretKey) {
