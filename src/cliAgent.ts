@@ -424,6 +424,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // And we are requested to store a new secret, with the flag: 'updateJwtSecret'
     // Generate and store secret key for agent while initialization
     recordsWithSecretKey.content.secretKey = await generateSecretKey()
+    recordsWithSecretKey.setTag('hasSecretKey', true)
     await agent.genericRecords.update(recordsWithSecretKey)
   }
   const app = await setupServer(
