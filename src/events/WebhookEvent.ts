@@ -1,4 +1,5 @@
 import type { Logger } from '@credo-ts/core'
+
 import fetch from 'node-fetch'
 
 export const sendWebhookEvent = async (
