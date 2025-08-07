@@ -59,7 +59,7 @@ export class AgentController extends Controller {
     const genericRecords = await request.agent.genericRecords.findAllByQuery({ hasSecretKey: 'true' })
     const secretKey = genericRecords[0]?.content.secretKey as string
     if (!secretKey) {
-      throw new Error('secretKey not found')
+      throw new Error('SecretKey not found')
     }
     if (!('tenants' in request.agent.modules)) {
       token = jwt.sign({ role: AgentRole.RestRootAgent }, secretKey)
