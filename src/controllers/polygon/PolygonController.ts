@@ -12,7 +12,6 @@ import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, UnprocessableEntityError } from '../../errors'
 
 @Tags('Polygon')
-@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @Route('/polygon')
 @injectable()
 export class Polygon extends Controller {
@@ -21,6 +20,7 @@ export class Polygon extends Controller {
    *
    * @returns Secp256k1KeyPair
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT, SCOPES.MULTITENANT_BASE_AGENT])
   @Post('create-keys')
   public async createKeyPair(): Promise<{
     privateKey: string
@@ -40,6 +40,7 @@ export class Polygon extends Controller {
    *
    * @returns Schema JSON
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('create-schema')
   public async createSchema(
     @Request() request: Req,
@@ -97,6 +98,7 @@ export class Polygon extends Controller {
    *
    * @returns Transaction Object
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT, SCOPES.MULTITENANT_BASE_AGENT])
   @Post('estimate-transaction')
   public async estimateTransaction(
     @Request() request: Req,
@@ -124,6 +126,7 @@ export class Polygon extends Controller {
    *
    * @returns Schema Object
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Get(':did/:schemaId')
   public async getSchemaById(
     @Request() request: Req,
