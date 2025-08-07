@@ -1,34 +1,26 @@
-import type { RestAgentModules } from '../../cliAgent'
 import type { SchemaMetadata } from '../types'
 
 import { generateSecp256k1KeyPair } from '@ayanworks/credo-polygon-w3c-module'
-import { DidOperation } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
-import { Agent } from '@credo-ts/core'
+import { DidOperation, DidOperationOptions } from '@ayanworks/credo-polygon-w3c-module/build/ledger'
+import { Request as Req } from 'express'
 import * as fs from 'fs'
+import { Route, Tags, Security, Controller, Post, Body, Get, Path, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { CredentialEnum, SCOPES } from '../../enums'
 import ErrorHandlingService from '../../errorHandlingService'
 import { BadRequestError, UnprocessableEntityError } from '../../errors'
 
-import { Route, Tags, Security, Controller, Post, Body, Get, Path } from 'tsoa'
-
 @Tags('Polygon')
-@Security('apiKey')
 @Route('/polygon')
 @injectable()
 export class Polygon extends Controller {
-  private agent: Agent<RestAgentModules>
-
-  public constructor(agent: Agent<RestAgentModules>) {
-    super()
-    this.agent = agent
-  }
-
   /**
    * Create Secp256k1 key pair for polygon DID
    *
    * @returns Secp256k1KeyPair
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT, SCOPES.MULTITENANT_BASE_AGENT])
   @Post('create-keys')
   public async createKeyPair(): Promise<{
     privateKey: string
@@ -48,14 +40,16 @@ export class Polygon extends Controller {
    *
    * @returns Schema JSON
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Post('create-schema')
   public async createSchema(
+    @Request() request: Req,
     @Body()
     createSchemaRequest: {
       did: string
       schemaName: string
-      schema: { [key: string]: any }
-    }
+      schema: Record<string, unknown>
+    },
   ): Promise<unknown> {
     try {
       const { did, schemaName, schema } = createSchemaRequest
@@ -63,16 +57,16 @@ export class Polygon extends Controller {
         throw new BadRequestError('One or more parameters are empty or undefined.')
       }
 
-      const schemaResponse = await this.agent.modules.polygon.createSchema({
+      const schemaResponse = await request.agent.modules.polygon.createSchema({
         did,
         schemaName,
         schema,
       })
-      if (schemaResponse.schemaState?.state === 'failed') {
+      if (schemaResponse.schemaState?.state === CredentialEnum.Failed) {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
           throw new UnprocessableEntityError(
-            'Insufficient funds to the address, Please add funds to perform this operation'
+            'Insufficient funds to the address, Please add funds to perform this operation',
           )
         } else {
           throw new Error(schemaResponse.schemaState?.reason)
@@ -85,7 +79,7 @@ export class Polygon extends Controller {
       }
 
       if (!schemaResponse?.schemaId) {
-        throw new BadRequestError('Invalid schema response')
+        throw new BadRequestError('Error in getting schema response or Invalid schema response')
       }
       const schemaPayload: SchemaMetadata = {
         schemaUrl: configJson.schemaFileServerURL + schemaResponse?.schemaId,
@@ -104,13 +98,12 @@ export class Polygon extends Controller {
    *
    * @returns Transaction Object
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT, SCOPES.MULTITENANT_BASE_AGENT])
   @Post('estimate-transaction')
   public async estimateTransaction(
+    @Request() request: Req,
     @Body()
-    estimateTransactionRequest: {
-      operation: any
-      transaction: any
-    }
+    estimateTransactionRequest: DidOperationOptions,
   ): Promise<unknown> {
     try {
       const { operation } = estimateTransactionRequest
@@ -119,9 +112,9 @@ export class Polygon extends Controller {
         throw new BadRequestError('Invalid method parameter!')
       }
       if (operation === DidOperation.Create) {
-        return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
+        return request.agent.modules.polygon.estimateFeeForDidOperation({ operation })
       } else if (operation === DidOperation.Update) {
-        return this.agent.modules.polygon.estimateFeeForDidOperation({ operation })
+        return request.agent.modules.polygon.estimateFeeForDidOperation({ ...estimateTransactionRequest })
       }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -133,10 +126,19 @@ export class Polygon extends Controller {
    *
    * @returns Schema Object
    */
+  @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
   @Get(':did/:schemaId')
-  public async getSchemaById(@Path('did') did: string, @Path('schemaId') schemaId: string): Promise<unknown> {
+  public async getSchemaById(
+    @Request() request: Req,
+    @Path('did') did: string,
+    @Path('schemaId') schemaId: string,
+  ): Promise<unknown> {
     try {
-      return this.agent.modules.polygon.getSchemaById(did, schemaId)
+      if (!did || !schemaId) {
+        throw new BadRequestError('Missing or invalid parameters.')
+      }
+      const schemaDetails = await request.agent.modules.polygon.getSchemaById(did, schemaId)
+      return schemaDetails
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

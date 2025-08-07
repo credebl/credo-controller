@@ -71,3 +71,25 @@ export declare enum CustomHandshakeProtocol {
   DidExchange = 'https://didcomm.org/didexchange/1.1',
   Connections = 'https://didcomm.org/connections/1.0',
 }
+
+export enum AgentRole {
+  RestRootAgentWithTenants = 'RestRootAgentWithTenants',
+  RestRootAgent = 'RestRootAgent',
+  RestTenantAgent = 'RestTenantAgent',
+}
+
+export enum ErrorMessages {
+  Unauthorized = 'Unauthorized',
+}
+
+export enum RESULT {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+}
+
+export enum SCOPES {
+  UNPROTECTED = 'skip',
+  MULTITENANT_BASE_AGENT = 'Basewallet',
+  TENANT_AGENT = 'tenant',
+  DEDICATED_AGENT = 'dedicated',
+}

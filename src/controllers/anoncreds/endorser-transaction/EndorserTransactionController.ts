@@ -1,4 +1,3 @@
-import type { Version } from '../examples'
 import type { IndyVdrDidCreateOptions } from '@credo-ts/indy-vdr'
 
 import {
@@ -7,30 +6,23 @@ import {
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
 } from '@credo-ts/anoncreds'
-import { Agent } from '@credo-ts/core'
+import { Request as Req } from 'express'
+import { Body, Controller, Post, Route, Tags, Security, Request } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { CredentialEnum, EndorserMode } from '../../enums/enum'
-import ErrorHandlingService from '../../errorHandlingService'
-import { BadRequestError } from '../../errors'
-import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../types'
+import { CredentialEnum, EndorserMode, SCOPES } from '../../../enums'
+import ErrorHandlingService from '../../../errorHandlingService'
+import { BadRequestError } from '../../../errors'
+import { AgentType } from '../../../types'
+import { DidNymTransaction, EndorserTransaction, WriteTransaction } from '../../types'
 
-import { Body, Controller, Post, Route, Tags, Security } from 'tsoa'
-
-@Tags('EndorserTransaction')
-@Route('/transactions')
-@Security('apiKey')
+@Tags('Anoncreds - EndorserTransaction')
+@Route('/anoncreds/transactions')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class EndorserTransactionController extends Controller {
-  private agent: Agent
-
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
-
   @Post('/endorse')
-  public async endorserTransaction(@Body() endorserTransaction: EndorserTransaction) {
+  public async endorserTransaction(@Request() request: Req, @Body() endorserTransaction: EndorserTransaction) {
     try {
       if (!endorserTransaction.transaction) {
         throw new BadRequestError('Transaction is required')
@@ -38,9 +30,9 @@ export class EndorserTransactionController extends Controller {
       if (!endorserTransaction.endorserDid) {
         throw new BadRequestError('EndorserDid is required')
       }
-      const signedTransaction = await this.agent.modules.indyVdr.endorseTransaction(
+      const signedTransaction = await request.agent.modules.indyVdr.endorseTransaction(
         endorserTransaction.transaction,
-        endorserTransaction.endorserDid
+        endorserTransaction.endorserDid,
       )
 
       return { signedTransaction }
@@ -50,9 +42,9 @@ export class EndorserTransactionController extends Controller {
   }
 
   @Post('/set-endorser-role')
-  public async didNymTransaction(@Body() didNymTransaction: DidNymTransaction) {
+  public async didNymTransaction(@Request() request: Req, @Body() didNymTransaction: DidNymTransaction) {
     try {
-      const didCreateSubmitResult = await this.agent.dids.create<IndyVdrDidCreateOptions>({
+      const didCreateSubmitResult = await request.agent.dids.create<IndyVdrDidCreateOptions>({
         did: didNymTransaction.did,
         options: {
           endorserMode: EndorserMode.External,
@@ -60,6 +52,12 @@ export class EndorserTransactionController extends Controller {
             nymRequest: didNymTransaction.nymRequest,
           },
         },
+      })
+
+      // Importing did in accordance to the multi-tenant flow
+      await request.agent.dids.import({
+        did: didNymTransaction.did,
+        overwrite: true,
       })
 
       return didCreateSubmitResult
@@ -70,20 +68,23 @@ export class EndorserTransactionController extends Controller {
 
   @Post('/write')
   public async writeSchemaAndCredDefOnLedger(
+    @Request() request: Req,
     @Body()
-    writeTransaction: WriteTransaction
+    writeTransaction: WriteTransaction,
   ) {
     try {
       if (writeTransaction.schema) {
         const writeSchema = await this.submitSchemaOnLedger(
+          request.agent,
           writeTransaction.schema,
-          writeTransaction.endorsedTransaction
+          writeTransaction.endorsedTransaction,
         )
         return writeSchema
       } else if (writeTransaction.credentialDefinition) {
         const writeCredDef = await this.submitCredDefOnLedger(
+          request.agent,
           writeTransaction.credentialDefinition,
-          writeTransaction.endorsedTransaction
+          writeTransaction.endorsedTransaction,
         )
         return writeCredDef
       } else {
@@ -95,13 +96,14 @@ export class EndorserTransactionController extends Controller {
   }
 
   public async submitSchemaOnLedger(
+    agent: AgentType,
     schema: {
       issuerId: string
       name: string
-      version: Version
+      version: string
       attributes: string[]
     },
-    endorsedTransaction?: string
+    endorsedTransaction?: string,
   ) {
     if (!schema.issuerId) {
       throw new BadRequestError('IssuerId is required')
@@ -116,7 +118,7 @@ export class EndorserTransactionController extends Controller {
       throw new BadRequestError('Attributes is required')
     }
     const { issuerId, name, version, attributes } = schema
-    const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
+    const { schemaState } = await agent.modules.anoncreds.registerSchema({
       options: {
         endorserMode: EndorserMode.External,
         endorsedTransaction,
@@ -129,11 +131,14 @@ export class EndorserTransactionController extends Controller {
       },
     })
 
+    if (!schemaState.schemaId) {
+      throw new Error('Schema not created')
+    }
     const indySchemaId = parseIndySchemaId(schemaState.schemaId)
     const getSchemaUnqualifiedId = await getUnqualifiedSchemaId(
       indySchemaId.namespaceIdentifier,
       indySchemaId.schemaName,
-      indySchemaId.schemaVersion
+      indySchemaId.schemaVersion,
     )
     if (schemaState.state === CredentialEnum.Finished || schemaState.state === CredentialEnum.Action) {
       schemaState.schemaId = getSchemaUnqualifiedId
@@ -142,6 +147,7 @@ export class EndorserTransactionController extends Controller {
   }
 
   public async submitCredDefOnLedger(
+    agent: AgentType,
     credentialDefinition: {
       schemaId: string
       issuerId: string
@@ -149,7 +155,7 @@ export class EndorserTransactionController extends Controller {
       value: unknown
       type: string
     },
-    endorsedTransaction?: string
+    endorsedTransaction?: string,
   ) {
     if (!credentialDefinition.schemaId) {
       throw new BadRequestError('SchemaId is required')
@@ -166,19 +172,25 @@ export class EndorserTransactionController extends Controller {
     if (!credentialDefinition.type) {
       throw new BadRequestError('Type is required')
     }
-    const { credentialDefinitionState } = await this.agent.modules.anoncreds.registerCredentialDefinition({
+    const { credentialDefinitionState } = await agent.modules.anoncreds.registerCredentialDefinition({
       credentialDefinition,
       options: {
         endorserMode: EndorserMode.External,
         endorsedTransaction: endorsedTransaction,
+        // Keep false for now
+        supportRevocation: false,
       },
     })
+
+    if (!credentialDefinitionState.credentialDefinitionId) {
+      throw Error('Credential Definition Id not found')
+    }
 
     const indyCredDefId = parseIndyCredentialDefinitionId(credentialDefinitionState.credentialDefinitionId)
     const getCredentialDefinitionId = await getUnqualifiedCredentialDefinitionId(
       indyCredDefId.namespaceIdentifier,
       indyCredDefId.schemaSeqNo,
-      indyCredDefId.tag
+      indyCredDefId.tag,
     )
     if (
       credentialDefinitionState.state === CredentialEnum.Finished ||

@@ -2,10 +2,10 @@
   "family": "${FAMILY}",
   "containerDefinitions": [
     {
-      "name": "Platform-admin",
+      "name": "credo-controller",
       "image": "%REPOSITORY_URI%:CREDO_v_%BUILD_NUMBER%",
       "cpu": 154,
-      "memory": 307,
+      "memory": 358,
       "portMappings": [
         {
           "containerPort": 8001,
@@ -47,7 +47,7 @@
   "placementConstraints": [],
   "requiresCompatibilities": ["EC2"],
   "cpu": "154",
-  "memory": "307",
+  "memory": "358",
   "volumes": [
     {
       "name": "config",
@@ -55,5 +55,9 @@
         "sourcePath": "${SourcePath}"
       }
     }
-  ]
+  ],
+  "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  }
 }
