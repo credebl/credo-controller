@@ -1464,7 +1464,7 @@ export function RegisterRoutes(app: Router) {
         const argsPolygon_createKeyPair: Record<string, TsoaRoute.ParameterSchema> = {
         };
         app.post('/polygon/create-keys',
-            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated","Basewallet"]}]),
             ...(fetchMiddlewares<RequestHandler>(Polygon)),
             ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.createKeyPair)),
 
@@ -1538,7 +1538,7 @@ export function RegisterRoutes(app: Router) {
                 estimateTransactionRequest: {"in":"body","name":"estimateTransactionRequest","required":true,"ref":"DidOperationOptions"},
         };
         app.post('/polygon/estimate-transaction',
-            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated","Basewallet"]}]),
             ...(fetchMiddlewares<RequestHandler>(Polygon)),
             ...(fetchMiddlewares<RequestHandler>(Polygon.prototype.estimateTransaction)),
 
