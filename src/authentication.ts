@@ -97,8 +97,8 @@ export async function expressAuthentication(request: Request, securityName: stri
       }
       if (role === AgentRole.RestTenantAgent) {
         // Logic if the token is of tenant agent
-        if (scopes && scopes?.includes(SCOPES.MULTITENANT_BASE_AGENT)) {
-          logger.debug('Tenants cannot manage tenants')
+        if (scopes && !scopes?.includes(SCOPES.TENANT_AGENT)) {
+          logger.debug('Tenants cannot access this route')
           return Promise.reject(new StatusException(ErrorMessages.Unauthorized, 401))
         } else {
           // Auth: tenant agent
