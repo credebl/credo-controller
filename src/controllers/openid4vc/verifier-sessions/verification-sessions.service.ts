@@ -10,6 +10,7 @@ import {
 } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
 import { injectable } from 'tsyringe'
+import { Request as Req } from 'express'
 
 // import { CreateAuthorizationRequest } from '../types/verifier.types'
 
@@ -40,14 +41,14 @@ class VerificationSessionsService {
 //   }
 
   public async findVerificationSessionsByQuery(
-    verifierAgent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
+    agentReq: Req,
     publicVerifierId?: string,
     payloadState?: string,
     state?: OpenId4VcVerificationSessionState,
     authorizationRequestUri?: string,
     nonce?: string,
   ) {
-    return await verifierAgent.modules.openId4VcVerifier.findVerificationSessionsByQuery({
+    return await agentReq.agent.modules.openId4VcVerifier.findVerificationSessionsByQuery({
       verifierId: publicVerifierId,
       payloadState,
       state,
@@ -57,10 +58,10 @@ class VerificationSessionsService {
   }
 
   public async getVerificationSessionsById(
-    verifierAgent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
+    agentReq: Req,
     verificationSessionId: string,
   ) {
-    return await verifierAgent.modules.openId4VcVerifier.getVerificationSessionById(verificationSessionId)
+    return await agentReq.agent.modules.openId4VcVerifier.getVerificationSessionById(verificationSessionId)
   }
 
   public async getVerifiedAuthorizationResponse(

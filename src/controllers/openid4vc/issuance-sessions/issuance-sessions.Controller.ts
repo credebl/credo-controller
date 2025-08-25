@@ -30,7 +30,6 @@ export class IssuanceSessionsController extends Controller {
     @Body() options: OpenId4VcIssuanceSessionsCreateOffer,
   ) {
     try {
-      // const agent = 'rootAgent' in request ? request.rootAgent : request.tenantAgent
       return await issuanceSessionService.createCredentialOffer(options, request)
     } catch (error) {
       throw ErrorHandlingService.handle(error)

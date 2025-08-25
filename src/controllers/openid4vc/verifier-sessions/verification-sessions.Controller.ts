@@ -1,23 +1,18 @@
 import { Agent } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import { Body, Controller, Get, Path, Post, Query, Route, Tags } from 'tsoa'
+import { Controller, Get, Path, Query, Route, Request, Security, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
-
 import ErrorHandlingService from '../../../errorHandlingService'
-// import { CreateAuthorizationRequest } from '../types/verifier.types'
 
 import { verificationSessionService } from './verification-sessions.service'
+import { SCOPES } from '../../../enums'
+import { Request as Req } from 'express'
 
 @Tags('oid4vc verification sessions')
 @Route('/openid4vc/verification-sessions')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class VerificationSessionsController extends Controller {
-  private agent: Agent
-
-  public constructor(agent: Agent) {
-    super()
-    this.agent = agent
-  }
 
   /**
    * Create an authorization request, acting as a Relying Party (RP)
@@ -36,6 +31,7 @@ export class VerificationSessionsController extends Controller {
    */
   @Get('/')
   public async getAllVerificationSessions(
+    @Request() request: Req,
     @Query('publicVerifierId') publicVerifierId?: string,
     @Query('payloadState') payloadState?: string,
     @Query('state') state?: OpenId4VcVerificationSessionState,
@@ -44,7 +40,7 @@ export class VerificationSessionsController extends Controller {
   ) {
     try {
       return await verificationSessionService.findVerificationSessionsByQuery(
-        this.agent,
+        request,
         publicVerifierId,
         payloadState,
         state,
@@ -60,9 +56,9 @@ export class VerificationSessionsController extends Controller {
    * Get verification session by ID
    */
   @Get('/:verificationSessionId')
-  public async getVerificationSessionsById(@Path('verificationSessionId') verificationSessionId: string) {
+  public async getVerificationSessionsById(@Request() request: Req, @Path('verificationSessionId') verificationSessionId: string) {
     try {
-      return await verificationSessionService.getVerificationSessionsById(this.agent, verificationSessionId)
+      return await verificationSessionService.getVerificationSessionsById(request, verificationSessionId)
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

@@ -1149,6 +1149,7 @@ const models: TsoaRoute.Models = {
             "issuanceDate": {"dataType":"string","required":true},
             "expirationDate": {"dataType":"string"},
             "credentialSubject": {"ref":"SingleOrArray_JsonObject_","required":true},
+            "prettyVc": {"dataType":"any"},
         },
         "additionalProperties": {"dataType":"any"},
     },
@@ -4761,6 +4762,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsVerificationSessionsController_getAllVerificationSessions: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 publicVerifierId: {"in":"query","name":"publicVerifierId","dataType":"string"},
                 payloadState: {"in":"query","name":"payloadState","dataType":"string"},
                 state: {"in":"query","name":"state","ref":"OpenId4VcVerificationSessionState"},
@@ -4768,6 +4770,7 @@ export function RegisterRoutes(app: Router) {
                 nonce: {"in":"query","name":"nonce","dataType":"string"},
         };
         app.get('/openid4vc/verification-sessions',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(VerificationSessionsController)),
             ...(fetchMiddlewares<RequestHandler>(VerificationSessionsController.prototype.getAllVerificationSessions)),
 
@@ -4800,9 +4803,11 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsVerificationSessionsController_getVerificationSessionsById: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 verificationSessionId: {"in":"path","name":"verificationSessionId","required":true,"dataType":"string"},
         };
         app.get('/openid4vc/verification-sessions/:verificationSessionId',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(VerificationSessionsController)),
             ...(fetchMiddlewares<RequestHandler>(VerificationSessionsController.prototype.getVerificationSessionsById)),
 
@@ -4835,9 +4840,11 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsVerifierController_createVerifier: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 options: {"in":"body","name":"options","required":true,"dataType":"any"},
         };
         app.post('/openid4vc/verifier',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(VerifierController)),
             ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.createVerifier)),
 
@@ -4870,10 +4877,12 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsVerifierController_updateVerifierMetadata: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 publicVerifierId: {"in":"path","name":"publicVerifierId","required":true,"dataType":"string"},
                 verifierRecordOptions: {"in":"body","name":"verifierRecordOptions","required":true,"dataType":"any"},
         };
         app.put('/openid4vc/verifier/:publicVerifierId',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(VerifierController)),
             ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.updateVerifierMetadata)),
 
@@ -4906,9 +4915,11 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsVerifierController_getVerifiersByQuery: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 publicVerifierId: {"in":"query","name":"publicVerifierId","dataType":"string"},
         };
         app.get('/openid4vc/verifier',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(VerifierController)),
             ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.getVerifiersByQuery)),
 
@@ -4941,9 +4952,11 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsVerifierController_getVerifier: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 publicVerifierId: {"in":"path","name":"publicVerifierId","required":true,"dataType":"string"},
         };
         app.get('/openid4vc/verifier/:publicVerifierId',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(VerifierController)),
             ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.getVerifier)),
 
@@ -4976,9 +4989,11 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsVerifierController_deleteVerifier: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 verifierId: {"in":"path","name":"verifierId","required":true,"dataType":"string"},
         };
         app.delete('/openid4vc/verifier/:verifierId',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(VerifierController)),
             ...(fetchMiddlewares<RequestHandler>(VerifierController.prototype.deleteVerifier)),
 
