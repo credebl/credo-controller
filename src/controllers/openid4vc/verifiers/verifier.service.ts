@@ -4,33 +4,34 @@ import type { OpenId4VcUpdateVerifierRecordOptions } from '@credo-ts/openid4vc'
 
 import { OpenId4VcVerifierRepository } from '@credo-ts/openid4vc'
 import { OpenId4VcSiopCreateVerifierOptions } from '../types/verifier.types'
+import { Request as Req } from 'express'
 
 export class VerifierService {
   public async createVerifier(
-    agent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
+    agentReq: Req,
     options: OpenId4VcSiopCreateVerifierOptions,
   ) {
-    const verifierRecord = await agent.modules.openId4VcVerifier.createVerifier(options)
+    const verifierRecord = await agentReq.agent.modules.openId4VcVerifier.createVerifier(options)
     return verifierRecord
   }
 
   public async updateVerifierMetadata(
-    agent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
+    agentReq: Req,
     options: OpenId4VcUpdateVerifierRecordOptions,
   ) {
     // console.log(`Updating verifier ${options.verifierId}`)
 
-    await agent.modules.openId4VcVerifier.updateVerifierMetadata(options)
-    const verifierRecord = await this.getVerifier(agent, options.verifierId)
+    await agentReq.agent.modules.openId4VcVerifier.updateVerifierMetadata(options)
+    const verifierRecord = await this.getVerifier(agentReq, options.verifierId)
     return verifierRecord
   }
 
   public async getVerifiersByQuery(
-    agent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
+    agentReq: Req,
     publicVerifierId?: string,
   ) {
-    const verifierRepository = agent.dependencyManager.resolve(OpenId4VcVerifierRepository)
-    const verifiers = await verifierRepository.findByQuery(agent.context, {
+    const verifierRepository = agentReq.agent.dependencyManager.resolve(OpenId4VcVerifierRepository)
+    const verifiers = await verifierRepository.findByQuery(agentReq.agent.context, {
       verifierId: publicVerifierId,
     })
 
@@ -38,18 +39,18 @@ export class VerifierService {
   }
 
   public async getVerifier(
-    agent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
+    agentReq: Req,
     publicVerifierId: string,
   ) {
-    return await agent.modules.openId4VcVerifier.getVerifierByVerifierId(publicVerifierId)
+    return await agentReq.agent.modules.openId4VcVerifier.getVerifierByVerifierId(publicVerifierId)
   }
 
   public async deleteVerifier(
-    agent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
+    agentReq: Req,
     publicVerifierId: string,
   ) {
-    const verifierRepository = agent.dependencyManager.resolve(OpenId4VcVerifierRepository)
-    await verifierRepository.deleteById(agent.context, publicVerifierId)
+    const verifierRepository = agentReq.agent.dependencyManager.resolve(OpenId4VcVerifierRepository)
+    await verifierRepository.deleteById(agentReq.agent.context, publicVerifierId)
   }
 }
 
