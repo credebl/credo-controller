@@ -118,7 +118,7 @@ export class AgentController extends Controller {
     @Request() request: Req,
     @Query('storeCredential') storeCredential: boolean,
     @Query('dataTypeToSign') dataTypeToSign: 'rawData' | 'jsonLd',
-    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any,
+    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | unknown,
   ) {
     try {
       // JSON-LD VC Signing
