@@ -118,7 +118,7 @@ export class AgentController extends Controller {
     @Request() request: Req,
     @Query('storeCredential') storeCredential: boolean,
     @Query('dataTypeToSign') dataTypeToSign: 'rawData' | 'jsonLd',
-    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions,
+    @Body() data: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | unknown,
   ) {
     try {
       // JSON-LD VC Signing
@@ -160,7 +160,7 @@ export class AgentController extends Controller {
       }
 
       if (!keyToUse) {
-        throw new Error('Unable to construct signing key.')
+        throw new Error('Unable to construct signing key. ')
       }
 
       const signature = await request.agent.context.wallet.sign({
@@ -178,7 +178,7 @@ export class AgentController extends Controller {
   @Post('/credential/verify')
   public async verifyCredential(
     @Request() request: Req,
-    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions,
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any,
   ) {
     try {
       const { credential, ...credentialOptions } = credentialToVerify
