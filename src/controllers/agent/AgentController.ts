@@ -160,7 +160,7 @@ export class AgentController extends Controller {
       }
 
       if (!keyToUse) {
-        throw new Error('Unable to construct signing key.')
+        throw new Error('Unable to construct signing key. ')
       }
 
       const signature = await request.agent.context.wallet.sign({
