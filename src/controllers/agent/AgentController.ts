@@ -178,7 +178,7 @@ export class AgentController extends Controller {
   @Post('/credential/verify')
   public async verifyCredential(
     @Request() request: Req,
-    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions,
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any,
   ) {
     try {
       const { credential, ...credentialOptions } = credentialToVerify
