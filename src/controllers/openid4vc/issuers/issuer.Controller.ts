@@ -1,4 +1,3 @@
-import { Agent } from '@credo-ts/core'
 import {
   Controller,
   Delete,
@@ -11,16 +10,18 @@ import {
   Query,
   Body,
   Security,
-  Request
+  Request,
+  Example
 } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../../errorHandlingService'
-import { UpdateIssuerRecordOptions } from '../types/issuer.types'
+import { CreateIssuerOptions, UpdateIssuerRecordOptions } from '../types/issuer.types'
 import { Request as Req } from 'express'
 
 import { issuerService } from './issuer.service'
 import { SCOPES } from '../../../enums'
+import { OpenId4VcUpdateIssuerRecordOptionsExample } from '../examples/issuer.examples'
 @Route('/openid4vc/issuer')
 @Tags('oid4vc issuers')
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
@@ -30,7 +31,10 @@ export class IssuerController extends Controller {
    * Creates an issuer with issuer metadata.
    */
   @Post()
-  public async createIssuer(@Request() request: Req, @Body() createIssuerOptions: any) {
+   @Example(
+    OpenId4VcUpdateIssuerRecordOptionsExample.withScope.value
+  )
+  public async createIssuer(@Request() request: Req, @Body() createIssuerOptions: CreateIssuerOptions) {
     try {
       return await issuerService.createIssuerAgent(request, createIssuerOptions)
     } catch (error) {

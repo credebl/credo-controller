@@ -1568,6 +1568,24 @@ const models: TsoaRoute.Models = {
         "additionalProperties": {"dataType":"any"},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuthorizationServerClientAuth": {
+        "dataType": "refObject",
+        "properties": {
+            "clientId": {"dataType":"string","required":true},
+            "clientSecret": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuthorizationServerConfig": {
+        "dataType": "refObject",
+        "properties": {
+            "issuer": {"dataType":"string","required":true},
+            "clientAuthentication": {"ref":"AuthorizationServerClientAuth"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ProofTypeConfig": {
         "dataType": "refObject",
         "properties": {
@@ -1606,12 +1624,15 @@ const models: TsoaRoute.Models = {
     "CredentialConfigurationSupportedWithFormats": {
         "dataType": "refObject",
         "properties": {
-            "format": {"dataType":"enum","enums":["jwt_vc_json"],"required":true},
+            "format": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["vc+sd-jwt"]},{"dataType":"enum","enums":["mso_mdoc"]},{"dataType":"enum","enums":["jwt_vc_json"]},{"dataType":"string"}],"required":true},
+            "vct": {"dataType":"string"},
+            "doctype": {"dataType":"string"},
             "scope": {"dataType":"string"},
+            "claims": {"ref":"Record_string.unknown_"},
             "cryptographic_binding_methods_supported": {"dataType":"array","array":{"dataType":"string"}},
             "credential_signing_alg_values_supported": {"dataType":"array","array":{"dataType":"string"}},
             "proof_types_supported": {"ref":"Record_string.ProofTypeConfig_"},
-            "credential_definition": {"ref":"CredentialDefinition","required":true},
+            "credential_definition": {"ref":"CredentialDefinition"},
             "display": {"dataType":"array","array":{"dataType":"refObject","ref":"CredentialConfigurationDisplay"}},
         },
         "additionalProperties": false,
@@ -1626,6 +1647,20 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "batchSize": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateIssuerOptions": {
+        "dataType": "refObject",
+        "properties": {
+            "issuerId": {"dataType":"string"},
+            "accessTokenSignerKeyType": {"dataType":"string"},
+            "display": {"dataType":"array","array":{"dataType":"refObject","ref":"CredentialDisplay"}},
+            "authorizationServerConfigs": {"dataType":"array","array":{"dataType":"refObject","ref":"AuthorizationServerConfig"}},
+            "dpopSigningAlgValuesSupported": {"dataType":"array","array":{"dataType":"string"}},
+            "credentialConfigurationsSupported": {"ref":"Record_string.CredentialConfigurationSupportedWithFormats_","required":true},
+            "batchCredentialIssuance": {"ref":"BatchCredentialIssuanceOptions"},
         },
         "additionalProperties": false,
     },
@@ -4540,7 +4575,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsIssuerController_createIssuer: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                createIssuerOptions: {"in":"body","name":"createIssuerOptions","required":true,"dataType":"any"},
+                createIssuerOptions: {"in":"body","name":"createIssuerOptions","required":true,"ref":"CreateIssuerOptions"},
         };
         app.post('/openid4vc/issuer',
             authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
