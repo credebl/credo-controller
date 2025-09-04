@@ -95,15 +95,17 @@ export interface CredentialDefinition {
 }
 
 export interface CredentialConfigurationSupportedWithFormats {
-  format: 'jwt_vc_json'
+  format: 'vc+sd-jwt' | 'mso_mdoc' | 'jwt_vc_json' | string,
+  vct?: string,
+  doctype?: string,
   scope?: string
+  claims?: Record<string, unknown>
   cryptographic_binding_methods_supported?: string[]
   credential_signing_alg_values_supported?: string[]
   proof_types_supported?: Record<string, ProofTypeConfig>
-  credential_definition: CredentialDefinition
+  credential_definition?: CredentialDefinition
   display?: CredentialConfigurationDisplay[]
 }
-
 export interface CreateIssuerOptions {
   issuerId?: string
   accessTokenSignerKeyType?: string
