@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { ILogObject } from 'tslog'
 
 import { LogLevel, BaseLogger } from '@credo-ts/core'
 import { appendFileSync } from 'fs'
 import { Logger } from 'tslog'
+
+import { otelLogger } from '../tracer'
 
 function logToTransport(logObject: ILogObject) {
   appendFileSync('logs.txt', JSON.stringify(logObject) + '\n')
@@ -24,7 +24,7 @@ export class TsLogger extends BaseLogger {
     [LogLevel.fatal]: 'fatal',
   } as const
 
-  public constructor(logLevel: LogLevel, name?: string) {
+  public constructor(logLevel: LogLevel, name: string = 'credo-controller-service' as string) {
     super(logLevel)
 
     this.logger = new Logger({
@@ -49,7 +49,11 @@ export class TsLogger extends BaseLogger {
     })
   }
 
-  private log(level: Exclude<LogLevel, LogLevel.off>, message: string, data?: Record<string, any>): void {
+  private log(
+    level: Exclude<LogLevel, LogLevel.off>,
+    message: string | { message: string },
+    data?: Record<string, any>,
+  ): void {
     const tsLogLevel = this.tsLogLevelMap[level]
 
     if (data) {
@@ -57,6 +61,40 @@ export class TsLogger extends BaseLogger {
     } else {
       this.logger[tsLogLevel](message)
     }
+    let logMessage = ''
+    if (typeof message === 'string') {
+      logMessage = message
+    } else if (typeof message === 'object' && 'message' in message) {
+      logMessage = message.message
+    }
+
+    let errorDetails
+    if (data?.error) {
+      const error = data.error
+      if (typeof error === 'string') {
+        errorDetails = error
+      } else if (error instanceof Error) {
+        errorDetails = {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        }
+      } else {
+        try {
+          errorDetails = JSON.parse(JSON.stringify(error))
+        } catch {
+          errorDetails = String(error)
+        }
+      }
+    }
+    otelLogger.emit({
+      body: logMessage,
+      severityText: LogLevel[level].toUpperCase(),
+      attributes: {
+        ...(data || {}),
+        ...(errorDetails ? { error: errorDetails } : {}),
+      },
+    })
   }
 
   public test(message: string, data?: Record<string, any>): void {

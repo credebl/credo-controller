@@ -10,11 +10,16 @@
         "type": "apiKey",
         "name": "Authorization",
         "in": "header"
+      },
+      "jwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
   "routes": {
-    "routesDir": "src/routes",
+    "routesDir": "./src/routes",
     "iocModule": "./src/utils/tsyringeTsoaIocContainer",
     "authenticationModule": "src/authentication"
   }
