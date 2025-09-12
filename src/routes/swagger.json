@@ -4830,7 +4830,8 @@
 									},
 									{
 										"$ref": "#/components/schemas/SignDataOptions"
-									}
+									},
+									{}
 								]
 							}
 						}
@@ -4870,7 +4871,12 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/SafeW3cJsonLdVerifyCredentialOptions"
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/SafeW3cJsonLdVerifyCredentialOptions"
+									},
+									{}
+								]
 							}
 						}
 					}
