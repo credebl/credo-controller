@@ -332,6 +332,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // Ideally for testing connection between tenant agent we need to set this to 'true'. Default is 'false'
     // TODO: triage: not sure if we want it to be 'true', as it would mean parallel requests on BW
     // Setting it for now //TODO: check if this is needed
+    allowInsecureHttpUrls: true
   }
 
   async function fetchLedgerData(ledgerConfig: {

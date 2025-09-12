@@ -94,9 +94,9 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
           issuer:
             holderBindings[0].method === 'did'
               ? {
-                  method: 'did',
-                  didUrl: issuerDidUrl ?? '',
-                }
+                method: 'did',
+                didUrl: issuerDidUrl ?? '',
+              }
               : { method: 'x5c', x5c: trustedCertificates, issuer: 'ISSUER_HOST ' },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -143,13 +143,11 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
     }
 
     if (credentialConfiguration.format === OpenId4VciCredentialFormatProfile.SdJwtVc) {
-      const disclosureFramePayload = {
-        _sd: credentialPayload[0].disclosureFrame
-          ? Array.isArray(credentialPayload[0].disclosureFrame._sd)
-            ? credentialPayload[0].disclosureFrame._sd
-            : []
-          : [],
-      }
+      const disclosureFramePayload =
+        credentialPayload[0].disclosureFrame &&
+          Object.keys(credentialPayload[0].disclosureFrame).length > 0
+          ? credentialPayload[0].disclosureFrame
+          : {};
 
       return {
         credentialConfigurationId,
@@ -159,14 +157,14 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
           holder: holderBinding,
           issuer: issuerDidUrl
             ? {
-                method: 'did',
-                didUrl: issuerDidUrl,
-              }
+              method: 'did',
+              didUrl: issuerDidUrl,
+            }
             : {
-                method: 'x5c',
-                x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
-                issuer: process.env.AGENT_HOST ?? 'http://localhost:4001',
-              },
+              method: 'x5c',
+              x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
+              issuer: process.env.AGENT_HOST ?? 'http://localhost:4001',
+            },
           disclosureFrame: disclosureFramePayload
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -185,7 +183,7 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
     agentContext,
     authorization,
   }) => {
-   
+
     const issuanceMetadata = issuanceSession.issuanceMetadata;
     const issuerx509certificate = issuanceMetadata?.["issuerx509certificate"] as string[] | undefined;
 
@@ -212,7 +210,7 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
       if (credential.signerOptions.did) {
         const didsApi = agentContext.dependencyManager.resolve(DidsApi);
         const didDocument = await didsApi.resolveDidDocument(credential.signerOptions.did);
-  
+
         // Set the first verificationMethod as backup, in case we won't find a match
         if (didDocument.verificationMethod?.[0].id) {
           issuerDidVerificationMethod = didDocument.verificationMethod?.[0].id;
@@ -336,11 +334,11 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
             method: 'did',
             didUrl: issuerDidVerificationMethod
           }
-          : {
-            method: 'x5c',
-            x5c: issuerx509certificate ?? [],//[issuerx509certificate??""],
-            issuer: `${process.env.AGENT_HTTP_URL}`,
-          },
+            : {
+              method: 'x5c',
+              x5c: issuerx509certificate ?? [],//[issuerx509certificate??""],
+              issuer: `${process.env.AGENT_HTTP_URL}`,
+            },
           disclosureFrame: disclosureFramePayload
         })),
       } satisfies OpenId4VciSignSdJwtCredentials

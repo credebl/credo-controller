@@ -2373,7 +2373,7 @@ export function RegisterRoutes(app: Router) {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
                 storeCredential: {"in":"query","name":"storeCredential","required":true,"dataType":"boolean"},
                 dataTypeToSign: {"in":"query","name":"dataTypeToSign","required":true,"dataType":"union","subSchemas":[{"dataType":"enum","enums":["rawData"]},{"dataType":"enum","enums":["jsonLd"]}]},
-                data: {"in":"body","name":"data","required":true,"dataType":"union","subSchemas":[{"ref":"CustomW3cJsonLdSignCredentialOptions"},{"ref":"SignDataOptions"}]},
+                data: {"in":"body","name":"data","required":true,"dataType":"union","subSchemas":[{"ref":"CustomW3cJsonLdSignCredentialOptions"},{"ref":"SignDataOptions"},{"dataType":"any"}]},
         };
         app.post('/agent/credential/sign',
             authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
@@ -2410,7 +2410,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsAgentController_verifyCredential: Record<string, TsoaRoute.ParameterSchema> = {
                 request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                credentialToVerify: {"in":"body","name":"credentialToVerify","required":true,"ref":"SafeW3cJsonLdVerifyCredentialOptions"},
+                credentialToVerify: {"in":"body","name":"credentialToVerify","required":true,"dataType":"union","subSchemas":[{"ref":"SafeW3cJsonLdVerifyCredentialOptions"},{"dataType":"any"}]},
         };
         app.post('/agent/credential/verify',
             authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
