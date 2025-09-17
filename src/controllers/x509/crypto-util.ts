@@ -28,9 +28,7 @@ export async function pemToRawEd25519PrivateKey(pem: string): Promise<string> {
   
     // Ed25519 JWK exports the *seed* (first 32 bytes of the private key)
     const jwk = keyObj.export({ format: 'jwk' });
-    if (!jwk.d) throw new Error("Not an Ed25519 private key");
-
-    console.log(`JWK DETAILS-----------> ${JSON.stringify(jwk,null,2)}`)
+    if (!jwk.d) throw new Error("Not an Ed25519 private key");    
   
     return Buffer.from(jwk.d, 'base64').toString('hex');
   }
