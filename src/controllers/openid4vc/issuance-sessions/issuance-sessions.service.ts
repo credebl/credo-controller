@@ -1,66 +1,59 @@
-import type { RestAgentModules, RestMultiTenantAgentModules } from '../../../cliAgent'
-import type { OpenId4VcIssuanceSessionsCreateOffer, X509GenericRecord } from '../types/issuer.types'
-import type { Agent } from '@credo-ts/core'
+import type { OpenId4VcIssuanceSessionsCreateOffer } from '../types/issuer.types'
 import type { OpenId4VcIssuanceSessionState } from '@credo-ts/openid4vc'
+import type { Request as Req } from 'express'
 
 import { OpenId4VcIssuanceSessionRepository } from '@credo-ts/openid4vc/build/openid4vc-issuer/repository'
 
 import { SignerMethod } from '../../../enums/enum'
 import { BadRequestError, NotFoundError } from '../../../errors/errors'
-import { X509_CERTIFICATE_RECORD } from '../../../utils/constant'
-import { Request as Req } from 'express'
 
 class IssuanceSessionsService {
-  public async createCredentialOffer(
-    options: OpenId4VcIssuanceSessionsCreateOffer,
-    agentReq: Req
-  ) {
+  public async createCredentialOffer(options: OpenId4VcIssuanceSessionsCreateOffer, agentReq: Req) {
     const { credentials, publicIssuerId } = options
 
     const issuer = await agentReq.agent.modules.openId4VcIssuer.getIssuerByIssuerId(publicIssuerId)
 
-    // if (!signerOption || !signerOption.method) {
-    //   throw new BadRequestError(`signerOption must be provided with one of: ${Object.values(SignerMethod).join(', ')}`)
-    // }
-    // if (signerOption.method === SignerMethod.Did && !signerOption.did) {
-    //   throw new BadRequestError(`'did' must be provided when signer method is 'did'`)
-    // }
-
-    const mappedCredentials = credentials.map((c) => {
-      const supported = issuer.credentialConfigurationsSupported[c.credentialSupportedId]
+    const mappedCredentials = credentials.map((cred) => {
+      const supported = issuer.credentialConfigurationsSupported[cred.credentialSupportedId]
       if (!supported) {
-        throw new Error(`CredentialSupportedId '${c.credentialSupportedId}' is not supported by issuer`)
+        throw new Error(`CredentialSupportedId '${cred.credentialSupportedId}' is not supported by issuer`)
       }
-      if (supported.format !== c.format) {
+      if (supported.format !== cred.format) {
         throw new Error(
-          `Format mismatch for '${c.credentialSupportedId}': expected '${supported.format}', got '${c.format}'`,
+          `Format mismatch for '${cred.credentialSupportedId}': expected '${supported.format}', got '${cred.format}'`,
         )
       }
 
       // must have signing options
-      if (!c.signerOptions || !c.signerOptions.method) {
-        throw new BadRequestError(`signerOptions must be provided and allowed methods are ${Object.values(SignerMethod).join(', ')}`);
+      if (!cred.signerOptions?.method) {
+        throw new BadRequestError(
+          `signerOptions must be provided and allowed methods are ${Object.values(SignerMethod).join(', ')}`,
+        )
       }
 
-      if (c.signerOptions.method == SignerMethod.Did && !c.signerOptions.did) {
-        throw new BadRequestError(`For ${c.credentialSupportedId} : did must be present inside signerOptions if SignerMethod is 'did' `);
+      if (cred.signerOptions.method == SignerMethod.Did && !cred.signerOptions.did) {
+        throw new BadRequestError(
+          `For ${cred.credentialSupportedId} : did must be present inside signerOptions if SignerMethod is 'did' `,
+        )
       }
 
-      if (c.signerOptions.method === SignerMethod.X5c && !c.signerOptions.x5c){
-        throw new BadRequestError(`For ${c.credentialSupportedId} : x5c must be present inside signerOptions if SignerMethod is 'x5c' `);
+      if (cred.signerOptions.method === SignerMethod.X5c && !cred.signerOptions.x5c) {
+        throw new BadRequestError(
+          `For ${cred.credentialSupportedId} : x5c must be present inside signerOptions if SignerMethod is 'x5c' `,
+        )
       }
 
       return {
-        ...c,
+        ...cred,
         payload: {
-          ...c.payload,
-          vct: c.payload?.vct ?? (typeof supported.vct === 'string' ? supported.vct : undefined),
+          ...cred.payload,
+          vct: cred.payload?.vct ?? (typeof supported.vct === 'string' ? supported.vct : undefined),
         },
       }
       // format: c.format as OpenId4VciCredentialFormatProfile, TODO: fix this type
     })
 
-    options.issuanceMetadata ||= {}    
+    options.issuanceMetadata ||= {}
 
     options.issuanceMetadata.credentials = mappedCredentials
 
@@ -75,10 +68,7 @@ class IssuanceSessionsService {
     return { credentialOffer, issuanceSession }
   }
 
-  public async getIssuanceSessionsById(
-    agentReq: Req,
-    sessionId: string,
-  ) {
+  public async getIssuanceSessionsById(agentReq: Req, sessionId: string) {
     return agentReq.agent.modules.openId4VcIssuer.getIssuanceSessionById(sessionId)
   }
 
@@ -114,11 +104,7 @@ class IssuanceSessionsService {
    * @param metadata
    * @returns the updated issuance session record
    */
-  public async updateSessionIssuanceMetadataById(
-    agentReq: Req,
-    sessionId: string,
-    metadata: Record<string, unknown>,
-  ) {
+  public async updateSessionIssuanceMetadataById(agentReq: Req, sessionId: string, metadata: Record<string, unknown>) {
     const issuanceSessionRepository = agentReq.agent.dependencyManager.resolve(OpenId4VcIssuanceSessionRepository)
 
     const record = await issuanceSessionRepository.findById(agentReq.agent.context, sessionId)
@@ -143,10 +129,7 @@ class IssuanceSessionsService {
    * @param sessionId
    * @param issuerAgent
    */
-  public async deleteById(
-    agentReq: Req,
-    sessionId: string,
-  ): Promise<void> {
+  public async deleteById(agentReq: Req, sessionId: string): Promise<void> {
     const issuanceSessionRepository = agentReq.agent.dependencyManager.resolve(OpenId4VcIssuanceSessionRepository)
     await issuanceSessionRepository.deleteById(agentReq.agent.context, sessionId)
   }

@@ -21,6 +21,7 @@ import {
   w3cDate,
 } from '@credo-ts/core'
 import { OpenId4VciCredentialFormatProfile } from '@credo-ts/openid4vc'
+
 import { SignerMethod } from '../enums/enum'
 
 export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRequestToCredentialMapper {
@@ -36,9 +37,9 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
     holderBindings: OpenId4VcCredentialHolderBinding[]
     issuanceSession: any
     verification?: any
-    credentialConfigurationIds: string[],
-    credentialConfigurationsSupported: any,
-    agentContext: any,
+    credentialConfigurationIds: string[]
+    credentialConfigurationsSupported: any
+    agentContext: any
     authorization: any
   }) => {
     const issuanceMetadata = issuanceSession.issuanceMetadata
@@ -94,9 +95,9 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
           issuer:
             holderBindings[0].method === 'did'
               ? {
-                method: 'did',
-                didUrl: issuerDidUrl ?? '',
-              }
+                  method: 'did',
+                  didUrl: issuerDidUrl ?? '',
+                }
               : { method: 'x5c', x5c: trustedCertificates, issuer: 'ISSUER_HOST ' },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -144,10 +145,9 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
 
     if (credentialConfiguration.format === OpenId4VciCredentialFormatProfile.SdJwtVc) {
       const disclosureFramePayload =
-        credentialPayload[0].disclosureFrame &&
-          Object.keys(credentialPayload[0].disclosureFrame).length > 0
+        credentialPayload[0].disclosureFrame && Object.keys(credentialPayload[0].disclosureFrame).length > 0
           ? credentialPayload[0].disclosureFrame
-          : {};
+          : {}
 
       return {
         credentialConfigurationId,
@@ -157,15 +157,15 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
           holder: holderBinding,
           issuer: issuerDidUrl
             ? {
-              method: 'did',
-              didUrl: issuerDidUrl,
-            }
+                method: 'did',
+                didUrl: issuerDidUrl,
+              }
             : {
-              method: 'x5c',
-              x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
-              issuer: process.env.AGENT_HOST ?? 'http://localhost:4001',
-            },
-          disclosureFrame: disclosureFramePayload
+                method: 'x5c',
+                x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
+                issuer: process.env.AGENT_HOST ?? 'http://localhost:4001',
+              },
+          disclosureFrame: disclosureFramePayload,
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
     }
@@ -183,42 +183,39 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
     agentContext,
     authorization,
   }) => {
+    const issuanceMetadata = issuanceSession.issuanceMetadata
 
-    const issuanceMetadata = issuanceSession.issuanceMetadata;
-    
+    if (!issuanceMetadata?.['credentials']) throw new Error('credential payload is not provided')
 
-    if (!issuanceMetadata?.["credentials"])
-      throw new Error('credential payload is not provided')
-
-    const allCredentialPayload = issuanceMetadata?.["credentials"]
+    const allCredentialPayload = issuanceMetadata?.['credentials']
 
     const credentialConfigurationId = credentialConfigurationIds[0]
 
     // Returns an array of all matching credentials
     const credentialPayload = Array.isArray(allCredentialPayload)
       ? allCredentialPayload.filter(
-        (c: Record<string, unknown>) => c.credentialSupportedId === credentialConfigurationId
-      )
-      : [];
+          (c: Record<string, unknown>) => c.credentialSupportedId === credentialConfigurationId,
+        )
+      : []
     const credentialConfiguration = credentialConfigurationsSupported[credentialConfigurationId]
 
     const credential = credentialPayload[0]
 
-    let issuerDidVerificationMethod: string | undefined = '';
-    let issuerx509certificate: string[] | undefined;
+    let issuerDidVerificationMethod: string | undefined = ''
+    let issuerx509certificate: string[] | undefined
 
     if (credential.signerOptions.method === SignerMethod.Did) {
       if (credential.signerOptions.did) {
-        const didsApi = agentContext.dependencyManager.resolve(DidsApi);
-        const didDocument = await didsApi.resolveDidDocument(credential.signerOptions.did);
+        const didsApi = agentContext.dependencyManager.resolve(DidsApi)
+        const didDocument = await didsApi.resolveDidDocument(credential.signerOptions.did)
 
         // Set the first verificationMethod as backup, in case we won't find a match
         if (didDocument.verificationMethod?.[0].id) {
-          issuerDidVerificationMethod = didDocument.verificationMethod?.[0].id;
+          issuerDidVerificationMethod = didDocument.verificationMethod?.[0].id
         }
 
         if (!issuerDidVerificationMethod) {
-          throw new Error("No matching verification method found");
+          throw new Error('No matching verification method found')
         }
       }
     } else if (credential.signerOptions.method === SignerMethod.X5c) {
@@ -226,7 +223,7 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
         issuerx509certificate = credential.signerOptions.x5c // as string[] | undefined;
 
         if (!issuerx509certificate) {
-          throw new Error("x509certificate must be provided when using x5c as signer method");
+          throw new Error('x509certificate must be provided when using x5c as signer method')
         }
       }
     }
@@ -249,9 +246,9 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
           issuer:
             holderBindings[0].method === 'did'
               ? {
-                method: 'did',
-                didUrl: issuerDidVerificationMethod ?? '',
-              }
+                  method: 'did',
+                  didUrl: issuerDidVerificationMethod ?? '',
+                }
               : { method: 'x5c', x5c: trustedCertificates, issuer: 'ISSUER_HOST ' },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -259,10 +256,14 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
 
     if (credentialConfiguration.format === OpenId4VciCredentialFormatProfile.MsoMdoc) {
       if (!issuerx509certificate)
-        throw new Error(`issuerx509certificate is not provided for credential type ${OpenId4VciCredentialFormatProfile.MsoMdoc}`)
+        throw new Error(
+          `issuerx509certificate is not provided for credential type ${OpenId4VciCredentialFormatProfile.MsoMdoc}`,
+        )
 
       if (!credentialConfiguration.doctype) {
-        throw new Error(`'doctype' not found in credential configuration, ${JSON.stringify(credentialConfiguration, null, 2)}`)
+        throw new Error(
+          `'doctype' not found in credential configuration, ${JSON.stringify(credentialConfiguration, null, 2)}`,
+        )
       }
 
       // national id and ICAO default
@@ -276,8 +277,8 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
           holderKey: holderBinding.key,
           namespaces: {
             [namespace]: {
-              ...credential.payload
-            }
+              ...credential.payload,
+            },
           },
           // TODO - add validity info
           /*validityInfo: {
@@ -311,26 +312,28 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
                 {
                   id: parseDid(holderBinding.didUrl).did,
                   claims: {
-                    ...credential.payload
-                  }
+                    ...credential.payload,
+                  },
                 },
-                W3cCredentialSubject
+                W3cCredentialSubject,
               ),
               issuanceDate: w3cDate(Date.now()),
             }),
             verificationMethod: issuerDidVerificationMethod,
           }
-          console.log(`Final ClaimFormat.JwtVc ---> ${JSON.stringify(finalVC)}`)
-          return finalVC;
+          return finalVC
         }),
       } satisfies OpenId4VciSignW3cCredentials
     }
 
     if (credentialConfiguration.format === OpenId4VciCredentialFormatProfile.SdJwtVc) {
-      const disclosureFramePayload = {
-        _sd: credential.disclosureFrame ?
-          Array.isArray(credential.disclosureFrame._sd) ? credential.disclosureFrame._sd : []
-          : []
+      let sdArray: unknown[] = []
+      if (credential.disclosureFrame && Array.isArray(credential.disclosureFrame._sd)) {
+        sdArray = credential.disclosureFrame._sd
+      }
+
+      const disclosureFramePayload: any = {
+        _sd: sdArray,
       }
 
       return {
@@ -339,16 +342,17 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
         credentials: holderBindings.map((holderBinding) => ({
           payload: credential.payload,
           holder: holderBinding,
-          issuer: issuerDidVerificationMethod ? {
-            method: 'did',
-            didUrl: issuerDidVerificationMethod
-          }
+          issuer: issuerDidVerificationMethod
+            ? {
+                method: 'did',
+                didUrl: issuerDidVerificationMethod,
+              }
             : {
-              method: 'x5c',
-              x5c: issuerx509certificate ?? [],//[issuerx509certificate??""],
-              issuer: `${process.env.AGENT_HTTP_URL}`,
-            },
-          disclosureFrame: disclosureFramePayload
+                method: 'x5c',
+                x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
+                issuer: `${process.env.AGENT_HTTP_URL}`,
+              },
+          disclosureFrame: disclosureFramePayload,
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
     }
@@ -364,11 +368,6 @@ function assertDidBasedHolderBinding(
     throw new CredoError('Only did based holder bindings supported for this credential type')
   }
 }
-
-// async function fetchCredentialConfiguration(credentialConfigurationId: string, issuerDid: string) {
-//     // Fetch from database or API instead of static imports
-//     return database.findOne("credential_configurations", { id: credentialConfigurationId, issuerDid });
-// }
 
 export interface OpenId4VcIssuanceSessionCreateOfferSdJwtCredentialOptions {
   /**
