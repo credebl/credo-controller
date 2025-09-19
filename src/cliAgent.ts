@@ -22,7 +22,8 @@ import {
   InMemoryLruCache,
   WebDidResolver,
   LogLevel,
-  Agent
+  Agent,
+  X509Module
 } from '@credo-ts/core'
 import {
   HttpOutboundTransport,
@@ -64,7 +65,7 @@ import { generateSecretKey } from './utils/helpers'
 import { TsLogger } from './utils/logger'
 import { OpenId4VcHolderModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule } from '@credo-ts/openid4vc'
 import { Router } from 'express'
-import { getCredentialRequestToCredentialMapper } from './utils/oid4vc-agent'
+import { getCredentialRequestToCredentialMapper, getMixedCredentialRequestToCredentialMapper } from './utils/oid4vc-agent'
 
 const openId4VciRouter = Router()
 const openId4VpRouter = Router()
@@ -201,7 +202,7 @@ const getModules = (
     didcomm: new DidCommModule({
       processDidCommMessagesConcurrently: true,
      
-    }),
+    }),    
     oob: new OutOfBandModule(),
     mediationRecipient: new MediationRecipientModule(),
     discovery: new DiscoverFeaturesModule(),
@@ -223,20 +224,43 @@ const getModules = (
       serverUrl: fileServerUrl ? fileServerUrl : (process.env.SERVER_URL as string),
     }),
     openId4VcVerifier: new OpenId4VcVerifierModule({
-      baseUrl: `http://${process.env.APP_URL}/oid4vp`,
+      
+      baseUrl: process.env.NODE_ENV === 'PROD' ?
+      `https://${process.env.APP_URL}/oid4vp`: 
+        `${process.env.AGENT_HTTP_URL}/oid4vp`,
       router: openId4VpRouter,
     }),
     openId4VcIssuer: new OpenId4VcIssuerModule({
-      baseUrl: `http://${process.env.APP_URL}/oid4vci`,
+      baseUrl: process.env.NODE_ENV === 'PROD' ?
+        `https://${process.env.APP_URL}/oid4vci` :
+        `${process.env.AGENT_HTTP_URL}/oid4vci`,
       router: openId4VciRouter,
       statefulCredentialOfferExpirationInSeconds: Number(process.env.OPENID_CRED_OFFER_EXPIRY) || 3600,
       accessTokenExpiresInSeconds: Number(process.env.OPENID_ACCESS_TOKEN_EXPIRY) || 3600,
       authorizationCodeExpiresInSeconds: Number(process.env.OPENID_AUTH_CODE_EXPIRY) || 3600,
       cNonceExpiresInSeconds: Number(process.env.OPENID_CNONCE_EXPIRY) || 3600,
       dpopRequired: false,
-      credentialRequestToCredentialMapper: (...args) => getCredentialRequestToCredentialMapper()(...args),
+      credentialRequestToCredentialMapper: (...args) => getMixedCredentialRequestToCredentialMapper()(...args),
     }),
     openId4VcHolderModule: new OpenId4VcHolderModule(),
+     x509: new X509Module({
+      // getTrustedCertificatesForVerification: (_agentContext, { certificateChain, verification }) => {
+      //   //TODO: We need to trust the certificate tenant wise, for that we need to fetch those details from platform 
+      //   const firstCertificate = certificateChain[0]
+      //   console.log(
+      //         `dyncamically trusting certificate ${firstCertificate?.getIssuerNameField('C')?.toString()} for verification of ${
+      //           verification.type
+      //     }`,
+      //     true
+      //   )
+      
+      //   const trustedCertificates = _agentContext.dependencyManager.resolve(X509ModuleConfig).trustedCertificates?.map((cert) =>
+      //     X509Certificate.fromEncodedCertificate(cert).toString('pem')
+      //   ) as [string, ...string[]]
+
+      //   return [...trustedCertificates]
+      // }
+    }),
   }
 }
 
@@ -332,7 +356,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     // Ideally for testing connection between tenant agent we need to set this to 'true'. Default is 'false'
     // TODO: triage: not sure if we want it to be 'true', as it would mean parallel requests on BW
     // Setting it for now //TODO: check if this is needed
-    allowInsecureHttpUrls: true
+    allowInsecureHttpUrls: process.env.ALLOW_INSECURE_HTTP_URLS === 'true'
   }
 
   async function fetchLedgerData(ledgerConfig: {

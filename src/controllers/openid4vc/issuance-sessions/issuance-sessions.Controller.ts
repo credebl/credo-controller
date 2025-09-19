@@ -1,16 +1,17 @@
-import { Agent } from '@credo-ts/core'
 import { OpenId4VcIssuanceSessionState } from '@credo-ts/openid4vc'
+import { Request as Req } from 'express'
 import { Body, Controller, Delete, Get, Path, Post, Put, Query, Request, Route, Tags, Security } from 'tsoa'
 import { injectable } from 'tsyringe'
+
+import { SCOPES } from '../../../enums'
 // eslint-disable-next-line import/order
 import ErrorHandlingService from '../../../errorHandlingService'
 
 // import { AgentWithRootOrTenant } from '../../types/agent'
 import { OpenId4VcIssuanceSessionsCreateOffer } from '../types/issuer.types'
-import { Request as Req } from 'express'
 
 import { issuanceSessionService } from './issuance-sessions.service'
-import { SCOPES } from '../../../enums'
+
 /**
  * Controller for managing OpenID4VC issuance sessions.
  * Provides endpoints to create credential offers, retrieve issuance sessions,
@@ -25,10 +26,7 @@ export class IssuanceSessionsController extends Controller {
    * Creates a credential offer with the specified credential configurations and authorization type.
    */
   @Post('/create-credential-offer')
-  public async createCredentialOffer(
-    @Request() request: Req,
-    @Body() options: OpenId4VcIssuanceSessionsCreateOffer,
-  ) {
+  public async createCredentialOffer(@Request() request: Req, @Body() options: OpenId4VcIssuanceSessionsCreateOffer) {
     try {
       return await issuanceSessionService.createCredentialOffer(options, request)
     } catch (error) {
