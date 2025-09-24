@@ -1,5 +1,6 @@
 import type {
   AuthorizeRequestCredentialOffer,
+  CompactSdJwtVc,
   RequestCredentialBody,
   ResolveCredentialOfferBody,
   ResolveProofRequest,
@@ -58,9 +59,9 @@ export class HolderService {
     return await agent.mdoc.getAll()
   }
 
-  // public async resolveCredentialOffer(agent: Agent, body: ResolveCredentialOfferBody) {
-  //   return await agent.modules.openId4VcHolderModule.resolveCredentialOffer(body.credentialOfferUri)
-  // }
+  public async resolveCredentialOffer(agent: Agent, body: ResolveCredentialOfferBody) {
+    return await agent.modules.openId4VcHolderModule.resolveCredentialOffer(body.credentialOfferUri)
+  }
 
   public async requestAuthorizationForCredential(agent: Agent, body: AuthorizeRequestCredentialOffer) {
     console.log('Requesting authorization for credential offer:', body)
@@ -251,4 +252,10 @@ export class HolderService {
 
     return submissionResult.serverResponse
   }
+
+  // public async decodeSdJwt(agent: Agent, body: CompactSdJwtVc) {
+  //   console.log('Decoding SD-JWT:', body.compactSdJwtVc)
+  //   return await agent.modules.sdJwtVc.fromCompact(body.compactSdJwtVc)
+  // }
 }
+    

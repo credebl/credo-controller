@@ -4,16 +4,18 @@ import { injectable } from 'tsyringe'
 
 import {
   AuthorizeRequestCredentialOffer,
+  CompactSdJwtVc,
   RequestCredentialBody,
   ResolveCredentialOfferBody,
   ResolveProofRequest,
 } from '../types/holder.types'
 
 import { HolderService } from './holder.service'
+import { SCOPES } from '../../../enums'
 
 @Tags('oid4vc holders')
-@Security('apiKey')
 @Route('openid4vc/holder')
+@Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class HolderController {
   private agent: Agent
@@ -43,10 +45,10 @@ export class HolderController {
   /**
    * Resolve a credential offer
    */
-  // @Post('resolve-credential-offer')
-  // public async resolveCredOffer(@Body() body: ResolveCredentialOfferBody) {
-  //   return await this.holderService.resolveCredentialOffer(this.agent, body)
-  // }
+  @Post('resolve-credential-offer')
+  public async resolveCredOffer(@Body() body: ResolveCredentialOfferBody) {
+    return await this.holderService.resolveCredentialOffer(this.agent, body)
+  }
 
   /**
    * Initiate an OID4VCI authorization request
@@ -79,4 +81,9 @@ export class HolderController {
   public async acceptProofRequest(@Body() body: ResolveProofRequest) {
     return await this.holderService.acceptPresentationRequest(this.agent, body)
   }
+
+  // @Post('decode-sd-jwt')
+  // public async decodeSdJwt(@Body() body: CompactSdJwtVc) {
+  //   return await this.holderService.decodeSdJwt(this.agent, body)
+  // }
 }

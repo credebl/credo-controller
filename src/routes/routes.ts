@@ -1515,6 +1515,14 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"Record_string.unknown_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ResolveCredentialOfferBody": {
+        "dataType": "refObject",
+        "properties": {
+            "credentialOfferUri": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuthorizeRequestCredentialOffer": {
         "dataType": "refObject",
         "properties": {
@@ -4362,7 +4370,7 @@ export function RegisterRoutes(app: Router) {
         const argsHolderController_getSdJwtCredentials: Record<string, TsoaRoute.ParameterSchema> = {
         };
         app.get('/openid4vc/holder/sd-jwt-vcs',
-            authenticateMiddleware([{"apiKey":[]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(HolderController)),
             ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.getSdJwtCredentials)),
 
@@ -4397,7 +4405,7 @@ export function RegisterRoutes(app: Router) {
         const argsHolderController_getMdocCredentials: Record<string, TsoaRoute.ParameterSchema> = {
         };
         app.get('/openid4vc/holder/mdoc-vcs',
-            authenticateMiddleware([{"apiKey":[]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(HolderController)),
             ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.getMdocCredentials)),
 
@@ -4429,11 +4437,47 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHolderController_resolveCredOffer: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"ResolveCredentialOfferBody"},
+        };
+        app.post('/openid4vc/holder/resolve-credential-offer',
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
+            ...(fetchMiddlewares<RequestHandler>(HolderController)),
+            ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.resolveCredOffer)),
+
+            async function HolderController_resolveCredOffer(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHolderController_resolveCredOffer, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<HolderController>(HolderController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'resolveCredOffer',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsHolderController_requestAuthorizationForCredential: Record<string, TsoaRoute.ParameterSchema> = {
                 body: {"in":"body","name":"body","required":true,"ref":"AuthorizeRequestCredentialOffer"},
         };
         app.post('/openid4vc/holder/authorization-request',
-            authenticateMiddleware([{"apiKey":[]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(HolderController)),
             ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.requestAuthorizationForCredential)),
 
@@ -4469,7 +4513,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"RequestCredentialBody"},
         };
         app.post('/openid4vc/holder/request-credential',
-            authenticateMiddleware([{"apiKey":[]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(HolderController)),
             ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.requestCredential)),
 
@@ -4505,7 +4549,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"ResolveProofRequest"},
         };
         app.post('/openid4vc/holder/resolve-proof-request',
-            authenticateMiddleware([{"apiKey":[]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(HolderController)),
             ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.resolveProofRequest)),
 
@@ -4541,7 +4585,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"ResolveProofRequest"},
         };
         app.post('/openid4vc/holder/accept-proof-request',
-            authenticateMiddleware([{"apiKey":[]}]),
+            authenticateMiddleware([{"jwt":["tenant","dedicated"]}]),
             ...(fetchMiddlewares<RequestHandler>(HolderController)),
             ...(fetchMiddlewares<RequestHandler>(HolderController.prototype.acceptProofRequest)),
 

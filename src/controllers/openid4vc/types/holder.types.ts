@@ -19,6 +19,10 @@ export interface ResolveProofRequest {
   proofRequestUri: string
 }
 
+export interface CompactSdJwtVc {
+  compactSdJwtVc: string
+}
+
 export interface AcceptProofRequest {
   proofRequestUri: string
   // selectedCredentials?: { [inputDescriptorId: string]: string }

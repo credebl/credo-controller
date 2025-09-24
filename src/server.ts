@@ -29,6 +29,8 @@ import { questionAnswerEvents } from './events/QuestionAnswerEvents'
 import { reuseConnectionEvents } from './events/ReuseConnectionEvents'
 import { RegisterRoutes } from './routes/routes'
 import { SecurityMiddleware } from './securityMiddleware'
+import { openId4VcVerificationSessionEvents } from './events/openId4VcVerificationSessionEvents'
+import { openId4VcIssuanceSessionEvents } from './events/openId4VcIssuanceSessionEvents'
 
 dotenv.config()
 
@@ -52,6 +54,8 @@ export const setupServer = async (
     credentialEvents(agent, config)
     proofEvents(agent, config)
     reuseConnectionEvents(agent, config)
+    openId4VcVerificationSessionEvents(agent, config)
+    openId4VcIssuanceSessionEvents(agent, config)
   }
 
   // Use body parser to read sent json payloads
