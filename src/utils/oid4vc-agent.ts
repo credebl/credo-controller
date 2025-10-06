@@ -8,7 +8,7 @@ import type {
   OpenId4VciSignW3cCredentials,
 } from '@credo-ts/openid4vc'
 
-import { DidsApi } from '@credo-ts/core'
+import { DidsApi, X509Service } from '@credo-ts/core'
 import {
   ClaimFormat,
   CredoError,
@@ -95,9 +95,9 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
           issuer:
             holderBindings[0].method === 'did'
               ? {
-                  method: 'did',
-                  didUrl: issuerDidUrl ?? '',
-                }
+                method: 'did',
+                didUrl: issuerDidUrl ?? '',
+              }
               : { method: 'x5c', x5c: trustedCertificates, issuer: 'ISSUER_HOST ' },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -157,14 +157,14 @@ export function getCredentialRequestToCredentialMapper(): OpenId4VciCredentialRe
           holder: holderBinding,
           issuer: issuerDidUrl
             ? {
-                method: 'did',
-                didUrl: issuerDidUrl,
-              }
+              method: 'did',
+              didUrl: issuerDidUrl,
+            }
             : {
-                method: 'x5c',
-                x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
-                issuer: process.env.AGENT_HOST ?? 'http://localhost:4001',
-              },
+              method: 'x5c',
+              x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
+              issuer: process.env.AGENT_HOST ?? 'http://localhost:4001',
+            },
           disclosureFrame: disclosureFramePayload,
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -194,8 +194,8 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
     // Returns an array of all matching credentials
     const credentialPayload = Array.isArray(allCredentialPayload)
       ? allCredentialPayload.filter(
-          (c: Record<string, unknown>) => c.credentialSupportedId === credentialConfigurationId,
-        )
+        (c: Record<string, unknown>) => c.credentialSupportedId === credentialConfigurationId,
+      )
       : []
     const credentialConfiguration = credentialConfigurationsSupported[credentialConfigurationId]
 
@@ -246,9 +246,9 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
           issuer:
             holderBindings[0].method === 'did'
               ? {
-                  method: 'did',
-                  didUrl: issuerDidVerificationMethod ?? '',
-                }
+                method: 'did',
+                didUrl: issuerDidVerificationMethod ?? '',
+              }
               : { method: 'x5c', x5c: trustedCertificates, issuer: 'ISSUER_HOST ' },
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
@@ -275,17 +275,7 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
         credentials: holderBindings.map((holderBinding) => ({
           issuerCertificate: issuerx509certificate[0],
           holderKey: holderBinding.key,
-          namespaces: {
-            [namespace]: {
-              ...credential.payload,
-            },
-          },
-          // TODO - add validity info
-          /*validityInfo: {
-            expectedUpdate: true,
-            validFrom: '',
-            validUntil: ''
-          },*/
+          ...credential.payload,
           docType: credentialConfiguration.doctype,
         })),
       } satisfies OpenId4VciSignMdocCredentials
@@ -327,14 +317,19 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
     }
 
     if (credentialConfiguration.format === OpenId4VciCredentialFormatProfile.SdJwtVc) {
-      let sdArray: unknown[] = []
-      if (credential.disclosureFrame && Array.isArray(credential.disclosureFrame._sd)) {
-        sdArray = credential.disclosureFrame._sd
+      const disclosureFramePayload =
+        credentialPayload[0].disclosureFrame && Object.keys(credentialPayload[0].disclosureFrame).length > 0
+          ? credentialPayload[0].disclosureFrame
+          : {}
+
+      //Taking leaf certifcate from chain as issuer certificate, if not provided explicitly taking AGENT_HTTP_URL as issuer
+      let parsedCertificate: any;
+      if (!issuerDidVerificationMethod) {
+        parsedCertificate = X509Service.parseCertificate(agentContext, {
+          encodedCertificate: (issuerx509certificate ?? [`${process.env.AGENT_HTTP_URL}`])[0],
+        })
       }
 
-      const disclosureFramePayload: any = {
-        _sd: sdArray,
-      }
 
       return {
         credentialConfigurationId,
@@ -344,14 +339,14 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
           holder: holderBinding,
           issuer: issuerDidVerificationMethod
             ? {
-                method: 'did',
-                didUrl: issuerDidVerificationMethod,
-              }
+              method: 'did',
+              didUrl: issuerDidVerificationMethod,
+            }
             : {
-                method: 'x5c',
-                x5c: issuerx509certificate ?? [], //[issuerx509certificate??""],
-                issuer: `${process.env.AGENT_HTTP_URL}`,
-              },
+              method: 'x5c',
+              x5c: issuerx509certificate ?? [],
+              issuer: parsedCertificate.sanUriNames[0],
+            },
           disclosureFrame: disclosureFramePayload,
         })),
       } satisfies OpenId4VciSignSdJwtCredentials
