@@ -51,27 +51,6 @@ class IssuanceSessionsService {
       vct: currentVct ?? (typeof supported.vct === 'string' ? supported.vct : undefined),
     },
   }
-
-      // if (cred.format === OpenId4VciCredentialFormatProfile.SdJwtVc) {
-      //   return {
-      //     ...cred,
-      //     payload: {
-      //       ...cred.payload,
-      //       vct: cred.payload?.vct ?? (typeof supported.vct === 'string' ? supported.vct : undefined),
-      //     },
-      //   }
-      // }
-      // else {
-      //   return {
-      //     ...cred,
-      //     payload: {
-      //       ...cred.payload            
-      //     },
-      //   }
-      // }
-
-      // format: c.format as OpenId4VciCredentialFormatProfile, TODO: fix this type    
-
     })
 
     options.issuanceMetadata ||= {}
