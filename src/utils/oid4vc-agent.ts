@@ -275,7 +275,12 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
         credentials: holderBindings.map((holderBinding) => ({
           issuerCertificate: issuerx509certificate[0],
           holderKey: holderBinding.key,
-          ...credential.payload,
+          namespaces: {
+            ...credential.payload,
+            // [namespace]: {
+            //   ...credential.payload,
+            // },
+          },
           docType: credentialConfiguration.doctype,
         })),
       } satisfies OpenId4VciSignMdocCredentials
