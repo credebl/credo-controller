@@ -16,29 +16,34 @@ import { Request as Req } from 'express'
 
 @injectable()
 class VerificationSessionsService {
-//   public async createProofRequest(
-//     verifierAgent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
-//     dto: any, // CreateAuthorizationRequest
-//   ) {
-//     const didDocument = await verifierAgent.dids.resolveDidDocument(dto.verifierDid)
+  public async createProofRequest(
+    agentReq: Req,
+    dto: any, // CreateAuthorizationRequest
+  ) {
+    const didDocument = await agentReq.agent.dids.resolveDidDocument(dto.verifierDid)
 
-//     let verifierDidUrl: string | undefined = undefined
-//     if (!verifierDidUrl && didDocument.verificationMethod?.[0].id) {
-//       verifierDidUrl = didDocument.verificationMethod?.[0].id
-//     }
+    let verifierDidUrl: string | undefined = undefined
+    if (!verifierDidUrl && didDocument.verificationMethod?.[0].id) {
+      verifierDidUrl = didDocument.verificationMethod?.[0].id
+    }
 
-//     if (!verifierDidUrl) throw new Error('No matching verification method found')
+    if (!verifierDidUrl) throw new Error('No matching verification method found')
+    const temp = {
+      requestSigner: {
+        method: "did" as "did",
+        didUrl: verifierDidUrl,
+      },
+      verifierId: dto.verifierId,
+      dcql: dto.dcql,
+      responseMode: dto.responseMode,
+    }
 
-//     return await verifierAgent.modules.openId4VcVerifier.createAuthorizationRequest({
-//       requestSigner: {
-//         method: 'did',
-//         didUrl: verifierDidUrl,
-//       },
-//       verifierId: dto.verifierId,
-//       presentationExchange: dto.presentationExchange,
-//       responseMode: dto.responseMode,
-//     })
-//   }
+    console.log('Creating presentation request with params:', {...temp})
+
+    return await agentReq.agent.modules.openId4VcVerifier.createAuthorizationRequest({
+      ...temp
+    })
+  }
 
   public async findVerificationSessionsByQuery(
     agentReq: Req,

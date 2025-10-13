@@ -1,12 +1,13 @@
 import { Agent } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
-import { Controller, Get, Path, Query, Route, Request, Security, Tags } from 'tsoa'
+import { Controller, Get, Path, Query, Route, Request, Security, Tags, Post, Body } from 'tsoa'
 import { injectable } from 'tsyringe'
 import ErrorHandlingService from '../../../errorHandlingService'
 
 import { verificationSessionService } from './verification-sessions.service'
 import { SCOPES } from '../../../enums'
 import { Request as Req } from 'express'
+import { CreateAuthorizationRequest } from '../types/verifier.types'
 
 @Tags('oid4vc verification sessions')
 @Route('/openid4vc/verification-sessions')
@@ -17,14 +18,14 @@ export class VerificationSessionsController extends Controller {
   /**
    * Create an authorization request, acting as a Relying Party (RP)
    */
-//   @Post('/create-presentation-request')
-//   public async createProofRequest(@Body() createAuthorizationRequest: any) {
-//     try {
-//       return await verificationSessionService.createProofRequest(this.agent, createAuthorizationRequest)
-//     } catch (error) {
-//       throw ErrorHandlingService.handle(error)
-//     }
-//   }
+  @Post('/create-presentation-request')
+  public async createProofRequest(@Request() request: Req, @Body() createAuthorizationRequest: CreateAuthorizationRequest) {
+    try {
+      return await verificationSessionService.createProofRequest(request, createAuthorizationRequest)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
 
   /**
    * Retrieve all verification session records

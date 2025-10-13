@@ -2,7 +2,7 @@ import { SCOPES } from '../../../enums'
 import { Body, Delete, Get, Path, Post, Put, Query, Route, Request, Security, Tags } from 'tsoa'
 import { Request as Req } from 'express'
 
-// import { OpenId4VcSiopCreateVerifierOptions, OpenId4VcUpdateVerifierRecordOptions } from '../types/verifier.types'
+import { OpenId4VcSiopCreateVerifierOptions, OpenId4VcUpdateVerifierRecordOptions } from '../types/verifier.types'
 import { VerifierService } from '../verifiers/verifier.service'
 
 @Tags('oid4vc verifiers')
@@ -19,7 +19,7 @@ export class VerifierController {
    * Create a new verifier and store the verifier record
    */
   @Post('/')
-  public async createVerifier(@Request() request: Req, @Body() options: any) {
+  public async createVerifier(@Request() request: Req, @Body() options: OpenId4VcSiopCreateVerifierOptions) {
     return await this.verifierService.createVerifier(request, options)
   }
 
@@ -30,7 +30,7 @@ export class VerifierController {
   public async updateVerifierMetadata(
     @Request() request: Req,
     @Path('publicVerifierId') publicVerifierId: string,
-    @Body() verifierRecordOptions: any,
+    @Body() verifierRecordOptions: OpenId4VcUpdateVerifierRecordOptions,
   ) {
     return await this.verifierService.updateVerifierMetadata(request, {
       verifierId: publicVerifierId,

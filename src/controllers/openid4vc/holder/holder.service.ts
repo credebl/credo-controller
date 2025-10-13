@@ -1,267 +1,281 @@
-import type {
-  AuthorizeRequestCredentialOffer,
-  RequestCredentialBody,
-  ResolveCredentialOfferBody,
-  ResolveProofRequest,
-} from '../types/holder.types'
-import type { Agent } from '@credo-ts/core'
-import type {
-  OpenId4VcAuthorizationCodeTokenRequestOptions,
-  OpenId4VciPreAuthorizedTokenRequestOptions,
-  OpenId4VciResolvedCredentialOffer,
-  OpenId4VciTokenRequestOptions,
-} from '@credo-ts/openid4vc'
+// import type {
+//   AuthorizeRequestCredentialOffer,
+//   RequestCredentialBody,
+//   ResolveCredentialOfferBody,
+//   ResolveProofRequest,
+// } from '../types/holder.types'
+// import type { Agent, DcqlCredentialsForRequest, DcqlQueryResult } from '@credo-ts/core'
+// import type {
+//   OpenId4VcAuthorizationCodeTokenRequestOptions,
+//   OpenId4VciPreAuthorizedTokenRequestOptions,
+//   OpenId4VciResolvedCredentialOffer,
+//   OpenId4VciTokenRequestOptions,
+// } from '@credo-ts/openid4vc'
 
-import {
-  DifPresentationExchangeService,
-  DidKey,
-  DidJwk,
-  getJwkFromKey,
-  Mdoc,
-  W3cJsonLdVerifiableCredential,
-  W3cJwtVerifiableCredential,
-} from '@credo-ts/core'
-import {
-  OpenId4VciAuthorizationFlow,
-  authorizationCodeGrantIdentifier,
-  preAuthorizedCodeGrantIdentifier,
-} from '@credo-ts/openid4vc'
+// import {
+//   DifPresentationExchangeService,
+//   DidKey,
+//   DidJwk,
+//   getJwkFromKey,
+//   Mdoc,
+//   W3cJsonLdVerifiableCredential,
+//   W3cJwtVerifiableCredential,
+// } from '@credo-ts/core'
+// import {
+//   OpenId4VciAuthorizationFlow,
+//   authorizationCodeGrantIdentifier,
+//   preAuthorizedCodeGrantIdentifier,
+// } from '@credo-ts/openid4vc'
+// import { Request as Req } from 'express'
+// export class HolderService {
+//   private HOLDER_REDIRECT = process.env.HOLDER_REDIRECT ?? 'http://localhost:4001/redirect'
+//   private HOLDER_CLIENT_ID = process.env.HOLDER_CLIENT_ID ?? 'wallet'
 
-type MappedAttributesReturnType =
-  | string
-  | number
-  | boolean
-  | { [key: string]: MappedAttributesReturnType }
-  | null
-  | undefined
-  | Array<MappedAttributesReturnType>
+//   public async getSdJwtCredentials(agentReq: Req) {
+//     return await agentReq.agent.sdJwtVc.getAll()
+//   }
 
-function recursivelyMapAttribues(value: unknown): MappedAttributesReturnType {
-  if (value === null || value === undefined || typeof value === 'number' || typeof value === 'boolean') return value
-  if (typeof value === 'string') return value
-  if (value instanceof Map) {
-    return Object.fromEntries(Array.from(value.entries()).map(([key, value]) => [key, recursivelyMapAttribues(value)]))
-  }
-  if (Array.isArray(value)) return value.map(recursivelyMapAttribues)
-  return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, recursivelyMapAttribues(value)]))
-}
+//   public async getMdocCredentials(agentReq: Req) {
+//     return await agentReq.agent.mdoc.getAll()
+//   }
 
-export class HolderService {
-  private HOLDER_REDIRECT = process.env.HOLDER_REDIRECT ?? 'http://localhost:4001/redirect'
-  private HOLDER_CLIENT_ID = process.env.HOLDER_CLIENT_ID ?? 'wallet'
+//   public async decodeMdocCredential(agentReq : Req, options: {
+//     base64Url: string
+//   }) {
 
-  public async getSdJwtCredentials(agent: Agent) {
-    return await agent.sdJwtVc.getAll()
-  }
+//     const credential = Mdoc.fromBase64Url(options.base64Url)
+//     return {
+//       namespace: credential.issuerSignedNamespaces,
+//       docType: credential.docType,
+//       validityInfo: credential.validityInfo,
+//       issuerSignedCertificateChain: credential.issuerSignedCertificateChain
+//     } as any
+//   }
 
-  public async getMdocCredentials(agent: Agent) {
-    return await agent.mdoc.getAll()
-  }
+//   // public async resolveCredentialOffer(agent: Agent, body: ResolveCredentialOfferBody) {
+//   //   return await agent.modules.openId4VcHolderModule.resolveCredentialOffer(body.credentialOfferUri)
+//   // }
 
-  public async decodeMdocCredential(agent: Agent, options: {
-    base64Url: string
-  }) {
+//   public async requestAuthorizationForCredential(agentReq: Req, body: AuthorizeRequestCredentialOffer) {
+//     console.log('Requesting authorization for credential offer:', body)
+//     const resolvedCredentialOffer = await agentReq.agent.modules.openId4VcHolderModule.resolveCredentialOffer(
+//       body.credentialOfferUri,
+//     )
+//     console.log('Resolved credential offer:', resolvedCredentialOffer)
+//     const resolvedAuthorization = await this.initiateAuthorization(
+//       agentReq,
+//       resolvedCredentialOffer,
+//       body.credentialsToRequest,
+//     )
 
-    const credential = Mdoc.fromBase64Url(options.base64Url)
-    return {
-      namespace: credential.issuerSignedNamespaces,
-      docType: credential.docType,
-      validityInfo: credential.validityInfo,
-      issuerSignedCertificateChain: credential.issuerSignedCertificateChain
-    } as any
-  }
+//     let actionToTake = ''
+//     let authorizationRequestUrl: string | undefined = undefined
+//     let codeVerifier: string | undefined = undefined
+//     console.log('Resolved authorization:::::::::::::', resolvedAuthorization)
 
-  // public async resolveCredentialOffer(agent: Agent, body: ResolveCredentialOfferBody) {
-  //   return await agent.modules.openId4VcHolderModule.resolveCredentialOffer(body.credentialOfferUri)
-  // }
+//     switch (resolvedAuthorization.authorizationFlow) {
+//       case 'Oauth2Redirect':
+//         actionToTake = 'Open the authorizationRequestUrl in your browser.'
+//         authorizationRequestUrl = resolvedAuthorization.authorizationRequestUrl
+//         codeVerifier = resolvedAuthorization.codeVerifier
+//         break
+//       case 'PresentationDuringIssuance':
+//         actionToTake = 'Presentation during issuance not supported yet'
+//         break
+//       case 'PreAuthorized':
+//         if (resolvedCredentialOffer.credentialOfferPayload.grants?.[preAuthorizedCodeGrantIdentifier]?.tx_code) {
+//           actionToTake = 'Ask for txcode from issuer and use it further'
+//         }
+//         break
+//     }
 
-  public async requestAuthorizationForCredential(agent: Agent, body: AuthorizeRequestCredentialOffer) {
-    console.log('Requesting authorization for credential offer:', body)
-    const resolvedCredentialOffer = await agent.modules.openId4VcHolderModule.resolveCredentialOffer(
-      body.credentialOfferUri,
-    )
-    console.log('Resolved credential offer:', resolvedCredentialOffer)
-    const resolvedAuthorization = await this.initiateAuthorization(
-      agent,
-      resolvedCredentialOffer,
-      body.credentialsToRequest,
-    )
+//     return { actionToTake, authorizationRequestUrl, codeVerifier }
+//   }
 
-    let actionToTake = ''
-    let authorizationRequestUrl: string | undefined = undefined
-    let codeVerifier: string | undefined = undefined
-    console.log('Resolved authorization:::::::::::::', resolvedAuthorization)
+//   public async requestCredential(agentReq: Req, body: RequestCredentialBody) {
+//     const resolvedCredentialOffer = await agentReq.agent.modules.openId4VcHolderModule.resolveCredentialOffer(
+//       body.credentialOfferUri,
+//     )
 
-    switch (resolvedAuthorization.authorizationFlow) {
-      case 'Oauth2Redirect':
-        actionToTake = 'Open the authorizationRequestUrl in your browser.'
-        authorizationRequestUrl = resolvedAuthorization.authorizationRequestUrl
-        codeVerifier = resolvedAuthorization.codeVerifier
-        break
-      case 'PresentationDuringIssuance':
-        actionToTake = 'Presentation during issuance not supported yet'
-        break
-      case 'PreAuthorized':
-        if (resolvedCredentialOffer.credentialOfferPayload.grants?.[preAuthorizedCodeGrantIdentifier]?.tx_code) {
-          actionToTake = 'Ask for txcode from issuer and use it further'
-        }
-        break
-    }
+//     let options: OpenId4VciTokenRequestOptions
+//     if (resolvedCredentialOffer.credentialOfferPayload.grants?.[preAuthorizedCodeGrantIdentifier]) {
+//       options = {
+//         resolvedCredentialOffer,
+//         txCode: body.txCode,
+//         code: body.authorizationCode,
+//       } as OpenId4VciPreAuthorizedTokenRequestOptions
+//     } else {
+//       options = {
+//         resolvedCredentialOffer,
+//         code: body.authorizationCode,
+//         clientId: this.HOLDER_CLIENT_ID,
+//         codeVerifier: body.codeVerifier,
+//         redirectUri: this.HOLDER_REDIRECT,
+//       } as OpenId4VcAuthorizationCodeTokenRequestOptions
+//     }
 
-    return { actionToTake, authorizationRequestUrl, codeVerifier }
-  }
+//     return await this.requestAndStoreCredentials(agentReq.req, resolvedCredentialOffer, options)
+//   }
 
-  public async requestCredential(agent: Agent, body: RequestCredentialBody) {
-    const resolvedCredentialOffer = await agent.modules.openId4VcHolderModule.resolveCredentialOffer(
-      body.credentialOfferUri,
-    )
+//   private async requestAndStoreCredentials(
+//     agent: Agent,
+//     resolvedCredentialOffer: OpenId4VciResolvedCredentialOffer,
+//     options: OpenId4VciTokenRequestOptions,
+//   ) {
+//     const tokenResponse = await agent.modules.openId4VcHolderModule.requestToken({ ...options })
+//     const credentialResponse = await agent.modules.openId4VcHolderModule.requestCredentials({
+//       ...options,
+//       credentialConfigurationIds: resolvedCredentialOffer.credentialOfferPayload.credential_configuration_ids,
+//       credentialBindingResolver: async ({
+//         keyTypes,
+//         supportedDidMethods,
+//         supportsAllDidMethods,
+//       }: {
+//         keyTypes: string[]
+//         supportedDidMethods?: string[]
+//         supportsAllDidMethods?: boolean
+//       }) => {
+//         const key = await agent.wallet.createKey({ keyType: keyTypes[0] as any })
+//         if (supportsAllDidMethods || supportedDidMethods?.includes('did:key')) {
+//           const didKey = new DidKey(key)
+//           return { method: 'did', didUrl: `${didKey.did}#${didKey.key.fingerprint}` }
+//         }
+//         if (supportedDidMethods?.includes('did:jwk')) {
+//           const didJwk = DidJwk.fromJwk(getJwkFromKey(key))
+//           return { method: 'did', didUrl: `${didJwk.did}#0` }
+//         }
+//         return { method: 'jwk', jwk: getJwkFromKey(key) }
+//       },
+//       ...tokenResponse,
+//     })
 
-    let options: OpenId4VciTokenRequestOptions
-    if (resolvedCredentialOffer.credentialOfferPayload.grants?.[preAuthorizedCodeGrantIdentifier]) {
-      options = {
-        resolvedCredentialOffer,
-        txCode: body.txCode,
-        code: body.authorizationCode,
-      } as OpenId4VciPreAuthorizedTokenRequestOptions
-    } else {
-      options = {
-        resolvedCredentialOffer,
-        code: body.authorizationCode,
-        clientId: this.HOLDER_CLIENT_ID,
-        codeVerifier: body.codeVerifier,
-        redirectUri: this.HOLDER_REDIRECT,
-      } as OpenId4VcAuthorizationCodeTokenRequestOptions
-    }
+//     const storedCredentials = await Promise.all(
+//       credentialResponse.credentials.map(async (response: any) => {
+//         const credential = response.credentials[0]
+//         if (credential instanceof W3cJwtVerifiableCredential || credential instanceof W3cJsonLdVerifiableCredential) {
+//           return await agent.w3cCredentials.storeCredential({ credential })
+//         }
+//         if (credential instanceof Mdoc) {
+//           return await agent.mdoc.store(credential)
+//         }
+//         return await agent.sdJwtVc.store(credential.compact)
+//       }),
+//     )
 
-    return await this.requestAndStoreCredentials(agent, resolvedCredentialOffer, options)
-  }
+//     return storedCredentials
+//   }
 
-  private async requestAndStoreCredentials(
-    agent: Agent,
-    resolvedCredentialOffer: OpenId4VciResolvedCredentialOffer,
-    options: OpenId4VciTokenRequestOptions,
-  ) {
-    const tokenResponse = await agent.modules.openId4VcHolderModule.requestToken({ ...options })
-    const credentialResponse = await agent.modules.openId4VcHolderModule.requestCredentials({
-      ...options,
-      credentialConfigurationIds: resolvedCredentialOffer.credentialOfferPayload.credential_configuration_ids,
-      credentialBindingResolver: async ({
-        keyTypes,
-        supportedDidMethods,
-        supportsAllDidMethods,
-      }: {
-        keyTypes: string[]
-        supportedDidMethods?: string[]
-        supportsAllDidMethods?: boolean
-      }) => {
-        const key = await agent.wallet.createKey({ keyType: keyTypes[0] as any })
-        if (supportsAllDidMethods || supportedDidMethods?.includes('did:key')) {
-          const didKey = new DidKey(key)
-          return { method: 'did', didUrl: `${didKey.did}#${didKey.key.fingerprint}` }
-        }
-        if (supportedDidMethods?.includes('did:jwk')) {
-          const didJwk = DidJwk.fromJwk(getJwkFromKey(key))
-          return { method: 'did', didUrl: `${didJwk.did}#0` }
-        }
-        return { method: 'jwk', jwk: getJwkFromKey(key) }
-      },
-      ...tokenResponse,
-    })
+//   private async initiateAuthorization(
+//     agent: Agent,
+//     resolvedCredentialOffer: OpenId4VciResolvedCredentialOffer,
+//     credentialsToRequest: string[],
+//   ) {
+//     console.log("agent::::::::::::::", Object.keys(agent.modules.openId4VcHolderModule))
 
-    const storedCredentials = await Promise.all(
-      credentialResponse.credentials.map(async (response: any) => {
-        const credential = response.credentials[0]
-        if (credential instanceof W3cJwtVerifiableCredential || credential instanceof W3cJsonLdVerifiableCredential) {
-          return await agent.w3cCredentials.storeCredential({ credential })
-        }
-        if (credential instanceof Mdoc) {
-          return await agent.mdoc.store(credential)
-        }
-        return await agent.sdJwtVc.store(credential.compact)
-      }),
-    )
+//     console.log('Initiating authorization with resolvedCredentialOffer:', resolvedCredentialOffer)
+//     console.log('Credentials to request:', credentialsToRequest)
 
-    return storedCredentials
-  }
+//     const grants = resolvedCredentialOffer.credentialOfferPayload.grants
+//     console.log('Grants:', grants)
 
-  private async initiateAuthorization(
-    agent: Agent,
-    resolvedCredentialOffer: OpenId4VciResolvedCredentialOffer,
-    credentialsToRequest: string[],
-  ) {
-    console.log("agent::::::::::::::", Object.keys(agent.modules.openId4VcHolderModule))
+//     // 👉 Handle Pre-Authorized Code Grant
+//     if (grants?.[preAuthorizedCodeGrantIdentifier]) {
+//       const preAuthorizedCode = grants[preAuthorizedCodeGrantIdentifier]['pre-authorized_code']
+//       return {
+//         authorizationFlow: 'PreAuthorized' as const,
+//         preAuthorizedCode,
+//       }
+//     }
 
-    console.log('Initiating authorization with resolvedCredentialOffer:', resolvedCredentialOffer)
-    console.log('Credentials to request:', credentialsToRequest)
+//     // 👉 Handle Authorization Code Grant
+//     if (grants?.[authorizationCodeGrantIdentifier]) {
+//       console.log('Using authorization code grant flow')
 
-    const grants = resolvedCredentialOffer.credentialOfferPayload.grants
-    console.log('Grants:', grants)
+//       const scope = Object.entries(resolvedCredentialOffer.offeredCredentialConfigurations)
+//         .map(([id, val]) => (credentialsToRequest.includes(id) ? val.scope : undefined))
+//         .filter((v): v is string => Boolean(v))
 
-    // 👉 Handle Pre-Authorized Code Grant
-    if (grants?.[preAuthorizedCodeGrantIdentifier]) {
-      const preAuthorizedCode = grants[preAuthorizedCodeGrantIdentifier]['pre-authorized_code']
-      return {
-        authorizationFlow: 'PreAuthorized' as const,
-        preAuthorizedCode,
-      }
-    }
+//       const resolved = await agent.modules.openId4VcHolderModule.resolveIssuanceAuthorizationRequest(
+//         resolvedCredentialOffer,
+//         {
+//           clientId: this.HOLDER_CLIENT_ID,
+//           redirectUri: this.HOLDER_REDIRECT,
+//           scope,
+//         },
+//       )
 
-    // 👉 Handle Authorization Code Grant
-    if (grants?.[authorizationCodeGrantIdentifier]) {
-      console.log('Using authorization code grant flow')
+//       // 👉 Support Presentation During Issuance flow
+//       if (resolved.authorizationFlow === OpenId4VciAuthorizationFlow.PresentationDuringIssuance) {
+//         return {
+//           ...resolved,
+//           authorizationFlow: 'PresentationDuringIssuance' as const,
+//         }
+//       }
 
-      const scope = Object.entries(resolvedCredentialOffer.offeredCredentialConfigurations)
-        .map(([id, val]) => (credentialsToRequest.includes(id) ? val.scope : undefined))
-        .filter((v): v is string => Boolean(v))
+//       return {
+//         ...resolved,
+//         authorizationFlow: 'Oauth2Redirect' as const,
+//       }
+//     }
 
-      const resolved = await agent.modules.openId4VcHolderModule.resolveIssuanceAuthorizationRequest(
-        resolvedCredentialOffer,
-        {
-          clientId: this.HOLDER_CLIENT_ID,
-          redirectUri: this.HOLDER_REDIRECT,
-          scope,
-        },
-      )
+//     // ❌ Unsupported grant
+//     throw new Error('Unsupported grant type')
+//   }
 
-      // 👉 Support Presentation During Issuance flow
-      if (resolved.authorizationFlow === OpenId4VciAuthorizationFlow.PresentationDuringIssuance) {
-        return {
-          ...resolved,
-          authorizationFlow: 'PresentationDuringIssuance' as const,
-        }
-      }
+//   public async resolveProofRequest(agent: Agent, body: ResolveProofRequest) {
+//     return await agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(body.proofRequestUri)
+//   }
 
-      return {
-        ...resolved,
-        authorizationFlow: 'Oauth2Redirect' as const,
-      }
-    }
+//   public async acceptPresentationRequest(agent: Agent, body: ResolveProofRequest) {
+//     const resolved = await agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(
+//       body.proofRequestUri,
+//     )
+//     console.log('Resolved proof request:', resolved)
+//     // const presentationExchangeService = agent.dependencyManager.resolve(DifPresentationExchangeService)
 
-    // ❌ Unsupported grant
-    throw new Error('Unsupported grant type')
-  }
+//     const dcqlService = agent.dependencyManager.resolve(DifPresentationExchangeService)
 
-  public async resolveProofRequest(agent: Agent, body: ResolveProofRequest) {
-    return await agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(body.proofRequestUri)
-  }
+//     // console.log('Resolved proof request:', resolved)
 
-  public async acceptPresentationRequest(agent: Agent, body: ResolveProofRequest) {
-    const resolved = await agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(
-      body.proofRequestUri,
-    )
-    const presentationExchangeService = agent.dependencyManager.resolve(DifPresentationExchangeService)
+//     // console.log('Presentation exchange service:', presentationExchangeService)
 
-    if (!resolved.presentationExchange) throw new Error('Missing presentation exchange on request')
+//     if (!resolved.dcql) throw new Error('Missing DCQL on request')
+//     console.log('DCQL query result:', resolved.dcql.queryResult)
+//     //
+//     let dcqlCredentials
+//     try {
+//       dcqlCredentials = await agent.modules.openId4VcHolder.selectCredentialsForDcqlRequest(
+//         resolved.dcql.queryResult
+//       )
+//       console.log('Selected credentials for DCQL request:', dcqlCredentials)
+//     } catch (error) {
+//       console.error('Error selecting credentials for DCQL request:', error)
+//       throw error
+//     }
+//     const submissionResult = await agent.modules.openId4VcHolderModule.acceptOpenId4VpAuthorizationRequest({
+//       authorizationRequestPayload: resolved.authorizationRequestPayload,
+//       dcql: {
+//         credentials: dcqlCredentials as DcqlCredentialsForRequest,
+//       },
+//     })
+//     console.log('Presentation submission result:', submissionResult)
+//     return submissionResult.serverResponse
+//   }
 
-    const submissionResult = await agent.modules.openId4VcHolderModule.acceptOpenId4VpAuthorizationRequest({
-      authorizationRequestPayload: resolved.authorizationRequestPayload,
-      presentationExchange: {
-        credentials: presentationExchangeService.selectCredentialsForRequest(
-          resolved.presentationExchange.credentialsForRequest,
-        ),
-      },
-    })
+//   public async decodeSdJwt(agent: Agent, body: { jwt: string }) {
+//     const sdJwt = agent.sdJwtVc.fromCompact(body.jwt)
+//     return sdJwt as any
+//   }
 
-    return submissionResult.serverResponse
-  }
-}
+//   public async getSelectedCredentialsForRequest(
+//     dcqlQueryResult: DcqlQueryResult,
+//     selectedCredentials: { [credentialQueryId: string]: string }
+//   ) {
+//     if (!dcqlQueryResult.canBeSatisfied) {
+//       throw new Error('Cannot select the credentials for the dcql query presentation if the request cannot be satisfied')
+//     }
+//     // TODO: Implement logic to select credentials based on selectedCredentials
+//     return {}; // Placeholder return to avoid errors
+//   }
+// }
+// export const holderService = new HolderService()
