@@ -4,7 +4,11 @@ export const IsCustomDocumentLoaderEnabled = (): boolean => {
 
   if (isCustomDocumentLoaderEnabled) {
     if (!process.env.DEPRECATED_DOMAIN || !process.env.CURRENT_DOMAIN) {
-      console.error(
+      console.debug('Invalid configuration set for enabling custom document loader')
+      console.info(
+        "If you are unsure about what the error is about. Try setting the 'ENABLE_CUSTOM_DOCUMENT_LOADER' flag in the env variable to false",
+      )
+      throw new Error(
         `Custom document loader for the agent is enabled but the deprecated domain and updated domain is not set`,
       )
     }
