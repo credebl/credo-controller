@@ -19,9 +19,7 @@ function isW3CDeprecatedCredeblSchema(url: string, agentContext: AgentContext): 
  */
 function resolvableCredeblSchemaUrl(url: string, agent: AgentContext): string {
   agent.config.logger.debug(`Replacing deprecated domain with updated domain`)
-  const updatedUrl = url.replace(process.env.DEPRECATED_DOMAIN!, process.env.CURRENT_DOMAIN!)
-
-  return updatedUrl
+  return url.replace(process.env.DEPRECATED_DOMAIN!, process.env.CURRENT_DOMAIN!)
 }
 
 /**
@@ -43,7 +41,7 @@ export const CustomDocumentLoader = (agentContext: AgentContext): DocumentLoader
       agentContext.config.logger.debug(`Passing url(${url}) to default loader`)
       return await defaultLoader(url)
     } catch (error) {
-      throw new CredoError(`Failed to load document for ${url}: ${error}`)
+      throw new CredoError(`Failed to load document for ${url}`, { cause: error as Error })
     }
   }
 }
