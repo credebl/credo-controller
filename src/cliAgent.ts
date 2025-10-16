@@ -54,6 +54,8 @@ import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network,
 import { setupServer } from './server'
 import { generateSecretKey } from './utils/helpers'
 import { TsLogger } from './utils/logger'
+import { IsCustomDocumentLoaderEnabled } from './utils/config'
+import { CustomDocumentLoader } from './utils/customDocumentLoader'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -183,7 +185,9 @@ const getModules = (
         }),
       ],
     }),
-    w3cCredentials: new W3cCredentialsModule(),
+    w3cCredentials: IsCustomDocumentLoaderEnabled() ? new W3cCredentialsModule() : new W3cCredentialsModule({
+      documentLoader: CustomDocumentLoader
+    }),
     cache: new CacheModule({
       cache: new InMemoryLruCache({ limit: Number(process.env.INMEMORY_LRU_CACHE_LIMIT) || Infinity }),
     }),
@@ -381,8 +385,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     modules: {
       ...(afjConfig.tenancy
         ? {
-            ...tenantModule,
-          }
+          ...tenantModule,
+        }
         : {}),
       ...modules,
     },
