@@ -52,10 +52,10 @@ import { readFile } from 'fs/promises'
 
 import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums'
 import { setupServer } from './server'
-import { generateSecretKey } from './utils/helpers'
-import { TsLogger } from './utils/logger'
 import { IsCustomDocumentLoaderEnabled } from './utils/config'
 import { CustomDocumentLoader } from './utils/customDocumentLoader'
+import { generateSecretKey } from './utils/helpers'
+import { TsLogger } from './utils/logger'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
