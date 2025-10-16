@@ -7,7 +7,7 @@ import { defaultDocumentLoader } from '@credo-ts/core/build/modules/vc/data-inte
 /**
  * Check if URL belongs to CREDEBL schema domain
  */
-function isW3CDeprecatedCredeblSchema(url: string, agentContext: AgentContext): boolean {
+function isW3CDeprecatedUrl(url: string, agentContext: AgentContext): boolean {
   agentContext.config.logger.debug(
     `Checking if w3c url(${url}) contains deprecated domain for agent: ${agentContext.config.label}`,
   )
@@ -17,7 +17,7 @@ function isW3CDeprecatedCredeblSchema(url: string, agentContext: AgentContext): 
 /**
  * For JSON-LD schemas replace deprecated domain to migrated/updated domain
  */
-function resolvableCredeblSchemaUrl(url: string, agent: AgentContext): string {
+function replaceUrl(url: string, agent: AgentContext): string {
   agent.config.logger.debug(`Replacing deprecated domain with updated domain`)
   return url.replace(process.env.DEPRECATED_DOMAIN!, process.env.CURRENT_DOMAIN!)
 }
@@ -31,11 +31,11 @@ export const CustomDocumentLoader = (agentContext: AgentContext): DocumentLoader
   return async function (url: string): Promise<DocumentLoaderResult> {
     try {
       // Intercept credebl schemas
-      if (isW3CDeprecatedCredeblSchema(url, agentContext)) {
+      if (isW3CDeprecatedUrl(url, agentContext)) {
         agentContext.config.logger.debug(
           `Found w3c url(${url}) containing deprecated domain for agent: ${agentContext.config.label}`,
         )
-        url = resolvableCredeblSchemaUrl(url, agentContext)
+        url = replaceUrl(url, agentContext)
       }
 
       agentContext.config.logger.debug(`Passing url(${url}) to default loader`)

@@ -52,7 +52,7 @@ import { readFile } from 'fs/promises'
 
 import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums'
 import { setupServer } from './server'
-import { IsCustomDocumentLoaderEnabled } from './utils/config'
+import { isCustomDocumentLoaderEnabled } from './utils/config'
 import { CustomDocumentLoader } from './utils/customDocumentLoader'
 import { generateSecretKey } from './utils/helpers'
 import { TsLogger } from './utils/logger'
@@ -185,7 +185,7 @@ const getModules = (
         }),
       ],
     }),
-    w3cCredentials: IsCustomDocumentLoaderEnabled()
+    w3cCredentials: isCustomDocumentLoaderEnabled()
       ? new W3cCredentialsModule()
       : new W3cCredentialsModule({
           documentLoader: CustomDocumentLoader,
