@@ -185,9 +185,11 @@ const getModules = (
         }),
       ],
     }),
-    w3cCredentials: IsCustomDocumentLoaderEnabled() ? new W3cCredentialsModule() : new W3cCredentialsModule({
-      documentLoader: CustomDocumentLoader
-    }),
+    w3cCredentials: IsCustomDocumentLoaderEnabled()
+      ? new W3cCredentialsModule()
+      : new W3cCredentialsModule({
+          documentLoader: CustomDocumentLoader,
+        }),
     cache: new CacheModule({
       cache: new InMemoryLruCache({ limit: Number(process.env.INMEMORY_LRU_CACHE_LIMIT) || Infinity }),
     }),
@@ -385,8 +387,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     modules: {
       ...(afjConfig.tenancy
         ? {
-          ...tenantModule,
-        }
+            ...tenantModule,
+          }
         : {}),
       ...modules,
     },
