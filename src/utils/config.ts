@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 export const IsCustomDocumentLoaderEnabled = (): boolean => {
   const flag = process.env.ENABLE_CUSTOM_DOCUMENT_LOADER ?? 'false'
   const isCustomDocumentLoaderEnabled = flag.toLowerCase() === 'true'

@@ -1,4 +1,6 @@
-import { CredoError, AgentContext, DocumentLoader } from '@credo-ts/core'
+import type { AgentContext, DocumentLoader } from '@credo-ts/core'
+
+import { CredoError } from '@credo-ts/core'
 import { DocumentLoaderResult } from '@credo-ts/core/build/modules/vc/data-integrity/jsonldUtil'
 import { defaultDocumentLoader } from '@credo-ts/core/build/modules/vc/data-integrity/libraries/documentLoader'
 
