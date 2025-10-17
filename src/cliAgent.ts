@@ -186,10 +186,10 @@ const getModules = (
       ],
     }),
     w3cCredentials: isCustomDocumentLoaderEnabled()
-      ? new W3cCredentialsModule()
-      : new W3cCredentialsModule({
+      ? new W3cCredentialsModule({
           documentLoader: CustomDocumentLoader,
-        }),
+        })
+      : new W3cCredentialsModule(),
     cache: new CacheModule({
       cache: new InMemoryLruCache({ limit: Number(process.env.INMEMORY_LRU_CACHE_LIMIT) || Infinity }),
     }),
