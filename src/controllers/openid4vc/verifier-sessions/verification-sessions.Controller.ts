@@ -14,12 +14,14 @@ import { CreateAuthorizationRequest } from '../types/verifier.types'
 @Security('jwt', [SCOPES.TENANT_AGENT, SCOPES.DEDICATED_AGENT])
 @injectable()
 export class VerificationSessionsController extends Controller {
-
   /**
    * Create an authorization request, acting as a Relying Party (RP)
    */
   @Post('/create-presentation-request')
-  public async createProofRequest(@Request() request: Req, @Body() createAuthorizationRequest: CreateAuthorizationRequest) {
+  public async createProofRequest(
+    @Request() request: Req,
+    @Body() createAuthorizationRequest: CreateAuthorizationRequest,
+  ) {
     try {
       return await verificationSessionService.createProofRequest(request, createAuthorizationRequest)
     } catch (error) {
@@ -57,7 +59,10 @@ export class VerificationSessionsController extends Controller {
    * Get verification session by ID
    */
   @Get('/:verificationSessionId')
-  public async getVerificationSessionsById(@Request() request: Req, @Path('verificationSessionId') verificationSessionId: string) {
+  public async getVerificationSessionsById(
+    @Request() request: Req,
+    @Path('verificationSessionId') verificationSessionId: string,
+  ) {
     try {
       return await verificationSessionService.getVerificationSessionsById(request, verificationSessionId)
     } catch (error) {
@@ -68,12 +73,15 @@ export class VerificationSessionsController extends Controller {
   // /**
   //  * Get verification response by verification Session ID
   //  */
-  // @Get('/response/:verificationSessionId')
-  // public async getVerifiedAuthorizationResponse(@Path('verificationSessionId') verificationSessionId: string) {
-  //   try {
-  //     return await verificationSessionService.getVerifiedAuthorizationResponse(this.agent, verificationSessionId)
-  //   } catch (error) {
-  //     throw ErrorHandlingService.handle(error)
-  //   }
-  // }
+  @Get('/response/:verificationSessionId')
+  public async getVerifiedAuthorizationResponse(
+    @Request() request: Req,
+    @Path('verificationSessionId') verificationSessionId: string,
+  ) {
+    try {
+      return await verificationSessionService.getVerifiedAuthorizationResponse(request, verificationSessionId)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
 }

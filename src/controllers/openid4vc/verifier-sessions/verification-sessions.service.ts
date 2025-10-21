@@ -4,7 +4,12 @@ import {
   Agent,
   ClaimFormat,
   DidKey,
+  JsonEncoder,
+  JsonTransformer,
   Jwt,
+  MdocDeviceResponse,
+  RecordNotFoundError,
+  TypedArrayEncoder,
   W3cJsonLdVerifiablePresentation,
   W3cJwtVerifiablePresentation,
 } from '@credo-ts/core'
@@ -21,45 +26,44 @@ class VerificationSessionsService {
     try {
       const didToResolve = dto.requestSigner?.didUrl
       if (!didToResolve) {
-        throw new Error('No DID provided to resolve (neither requestSigner.didUrl nor verifierDid present)');
+        throw new Error('No DID provided to resolve (neither requestSigner.didUrl nor verifierDid present)')
       }
 
-      const didDocument = await agentReq.agent.dids.resolveDidDocument(didToResolve);
+      const didDocument = await agentReq.agent.dids.resolveDidDocument(didToResolve)
 
-      let verifierDidUrl: string | undefined = undefined;
+      let verifierDidUrl: string | undefined = undefined
       if (didDocument.verificationMethod?.[0]?.id) {
-        verifierDidUrl = didDocument.verificationMethod[0].id;
+        verifierDidUrl = didDocument.verificationMethod[0].id
       }
 
       if (!verifierDidUrl) {
-        throw new Error('No matching verification method found on verifier DID document');
+        throw new Error('No matching verification method found on verifier DID document')
       }
-      let requestSigner = dto.requestSigner;
+      let requestSigner = dto.requestSigner
       if (!requestSigner) {
-        requestSigner = { method: 'did', didUrl: verifierDidUrl } as any;
+        requestSigner = { method: 'did', didUrl: verifierDidUrl } as any
       } else if (requestSigner.method === 'did') {
         if (!requestSigner.didUrl || !String(requestSigner.didUrl).includes('#')) {
-          requestSigner.didUrl = verifierDidUrl;
+          requestSigner.didUrl = verifierDidUrl
         }
       }
       const options: any = {
         requestSigner,
         verifierId: dto.verifierId,
-      };
-
-      if (dto.responseMode) options.responseMode = dto.responseMode;
-      if (dto.presentationExchange) {
-        options.presentationExchange = dto.presentationExchange;
-      } else if (dto.dcql) {
-        options.dcql = dto.dcql;
       }
 
-      return await agentReq.agent.modules.openId4VcVerifier.createAuthorizationRequest(options);
+      if (dto.responseMode) options.responseMode = dto.responseMode
+      if (dto.presentationExchange) {
+        options.presentationExchange = dto.presentationExchange
+      } else if (dto.dcql) {
+        options.dcql = dto.dcql
+      }
+
+      return (await agentReq.agent.modules.openId4VcVerifier.createAuthorizationRequest(options)) as any
     } catch (error) {
-      throw error;
+      throw error
     }
   }
-
 
   public async findVerificationSessionsByQuery(
     agentReq: Req,
@@ -78,53 +82,105 @@ class VerificationSessionsService {
     })
   }
 
-  public async getVerificationSessionsById(
-    agentReq: Req,
-    verificationSessionId: string,
-  ) {
+  public async getVerificationSessionsById(agentReq: Req, verificationSessionId: string) {
     return await agentReq.agent.modules.openId4VcVerifier.getVerificationSessionById(verificationSessionId)
   }
 
-  public async getVerifiedAuthorizationResponse(
-    verifierAgent: Agent<RestMultiTenantAgentModules> | Agent<RestAgentModules>,
-    verificationSessionId: string,
-  ) {
-    const verifiedAuthorizationResponse =
-      await verifierAgent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(verificationSessionId)
+  public async getVerifiedAuthorizationResponse(request: Req, verificationSessionId: string) {
+    const verificationSession =
+      await request.agent.modules.openId4VcVerifier.getVerificationSessionById(verificationSessionId)
+    const verified = await request.agent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(
+      verificationSession.id,
+    )
+    console.log(verified.presentationExchange?.presentations)
+    console.log(verified.dcql?.presentationResult)
 
-    const presentations = verifiedAuthorizationResponse.presentationExchange?.presentations.map((presentation) => {
-      if (presentation instanceof W3cJsonLdVerifiablePresentation) {
-        return {
-          format: presentation.claimFormat,
-          encoded: presentation.toJSON(),
-          vcPayload: presentation.toJSON(),
-        }
-      } else if (presentation instanceof W3cJwtVerifiablePresentation) {
-        return {
-          format: presentation.claimFormat,
-          encoded: presentation.serializedJwt,
-          vcPayload: presentation.presentation.toJSON(),
-          signedPayload: presentation.jwt.payload.toJson(),
-          header: presentation.jwt.header,
-        }
-      } else {
-        const sdJwtPresentation: any = presentation
-        return {
-          format: ClaimFormat.SdJwtVc,
-          encoded: sdJwtPresentation.compact,
-          vcPayload: sdJwtPresentation.prettyClaims,
-          signedPayload: sdJwtPresentation.payload,
-          header: sdJwtPresentation.header as Jwt['header'],
-        }
-      }
-    })
+    const presentations = await Promise.all(
+      (verified.presentationExchange?.presentations ?? Object.values(verified.dcql?.presentations ?? {}))
+        .flat()
+        .map(async (presentation) => {
+          if (presentation instanceof W3cJsonLdVerifiablePresentation) {
+            return {
+              pretty: presentation.toJson(),
+              encoded: presentation.toJson(),
+            }
+          }
+
+          if (presentation instanceof W3cJwtVerifiablePresentation) {
+            return {
+              pretty: JsonTransformer.toJSON(presentation.presentation),
+              encoded: presentation.serializedJwt,
+            }
+          }
+
+          if (presentation instanceof MdocDeviceResponse) {
+            return {
+              pretty: JsonTransformer.toJSON({
+                documents: presentation.documents.map((doc) => ({
+                  doctype: doc.docType,
+                  alg: doc.alg,
+                  base64Url: doc.base64Url,
+                  validityInfo: doc.validityInfo,
+                  deviceSignedNamespaces: doc.deviceSignedNamespaces,
+                  issuerSignedNamespaces: Object.entries(doc.issuerSignedNamespaces).map(
+                    ([nameSpace, nameSpacEntries]) => [
+                      nameSpace,
+                      Object.entries(nameSpacEntries).map(([key, value]) =>
+                        value instanceof Uint8Array
+                          ? [`base64:${key}`, `data:image/jpeg;base64,${TypedArrayEncoder.toBase64(value)}`]
+                          : [key, value],
+                      ),
+                    ],
+                  ),
+                })),
+              }),
+              encoded: presentation.base64Url,
+            }
+          }
+
+          // if (
+          //   presentation instanceof W3cV2JwtVerifiablePresentation ||
+          //   presentation instanceof W3cV2SdJwtVerifiablePresentation
+          // ) {
+          //   throw new Error('W3C V2 presentations are not supported yet')
+          // }
+
+          return {
+            pretty: {
+              ...presentation,
+              compact: undefined,
+            },
+            encoded: presentation.compact,
+          }
+        }) ?? [],
+    )
+
+    const dcqlSubmission = verified.dcql
+      ? Object.keys(verified.dcql.presentations).map((key, index) => ({
+          queryCredentialId: key,
+          presentationIndex: index,
+        }))
+      : undefined
+
+    console.log('presentations', presentations)
 
     return {
-      ...verifiedAuthorizationResponse,
-      presentationExchange: verifiedAuthorizationResponse.presentationExchange
-        ? { ...verifiedAuthorizationResponse.presentationExchange, presentations }
+      verificationSessionId: verificationSession.id,
+      responseStatus: verificationSession.state,
+      error: verificationSession.errorMessage,
+      //authorizationRequest,
+
+      presentations: presentations,
+
+      submission: verified.presentationExchange?.submission,
+      definition: verified.presentationExchange?.definition,
+      transactionDataSubmission: verified.transactionData,
+
+      // dcqlQuery,
+      dcqlSubmission: verified.dcql
+        ? { ...verified.dcql.presentationResult, vpTokenMapping: dcqlSubmission }
         : undefined,
-    }
+    } as any
   }
 }
 
