@@ -3966,71 +3966,6 @@
 				],
 				"type": "string"
 			},
-			"SdJwtVcRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"MdocRecord": {
-				"$ref": "#/components/schemas/Record_string.unknown_"
-			},
-			"AuthorizeRequestCredentialOffer": {
-				"properties": {
-					"credentialOfferUri": {
-						"type": "string"
-					},
-					"credentialsToRequest": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"credentialOfferUri",
-					"credentialsToRequest"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RequestCredentialBody": {
-				"properties": {
-					"credentialOfferUri": {
-						"type": "string"
-					},
-					"credentialsToRequest": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"authorizationCode": {
-						"type": "string"
-					},
-					"codeVerifier": {
-						"type": "string"
-					},
-					"txCode": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"credentialOfferUri",
-					"credentialsToRequest"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ResolveProofRequest": {
-				"properties": {
-					"proofRequestUri": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"proofRequestUri"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"OpenId4VcIssuerRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_",
 				"description": "For OID4VC you need to expose metadata files. Each issuer needs to host this metadata. This is not the case for DIDComm where we can just have one /didcomm endpoint.\nSo we create a record per openid issuer/verifier that you want, and each tenant can create multiple issuers/verifiers which have different endpoints\nand metadata files"
@@ -4187,9 +4122,7 @@
 					"scope": {
 						"type": "string"
 					},
-					"claims": {
-						"$ref": "#/components/schemas/Record_string.unknown_"
-					},
+					"claims": {},
 					"cryptographic_binding_methods_supported": {
 						"items": {
 							"type": "string"
@@ -4308,6 +4241,769 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"JwtObject": {
+				"properties": {
+					"alg": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"alg"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"LdpObject": {
+				"properties": {
+					"proof_type": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"proof_type"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DiObject": {
+				"properties": {
+					"proof_type": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"cryptosuite": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"proof_type",
+					"cryptosuite"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SdJwtObject": {
+				"properties": {
+					"undefined": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MsoMdocObject": {
+				"properties": {
+					"alg": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"alg"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Format": {
+				"properties": {
+					"jwt": {
+						"$ref": "#/components/schemas/JwtObject"
+					},
+					"jwt_vc": {
+						"$ref": "#/components/schemas/JwtObject"
+					},
+					"jwt_vc_json": {
+						"$ref": "#/components/schemas/JwtObject"
+					},
+					"jwt_vp": {
+						"$ref": "#/components/schemas/JwtObject"
+					},
+					"jwt_vp_json": {
+						"$ref": "#/components/schemas/JwtObject"
+					},
+					"ldp": {
+						"$ref": "#/components/schemas/LdpObject"
+					},
+					"ldp_vc": {
+						"$ref": "#/components/schemas/LdpObject"
+					},
+					"ldp_vp": {
+						"$ref": "#/components/schemas/LdpObject"
+					},
+					"di": {
+						"$ref": "#/components/schemas/DiObject"
+					},
+					"di_vc": {
+						"$ref": "#/components/schemas/DiObject"
+					},
+					"di_vp": {
+						"$ref": "#/components/schemas/DiObject"
+					},
+					"undefined": {
+						"$ref": "#/components/schemas/SdJwtObject"
+					},
+					"mso_mdoc": {
+						"$ref": "#/components/schemas/MsoMdocObject"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Issuance": {
+				"properties": {
+					"manifest": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": {}
+			},
+			"Optionality": {
+				"type": "string",
+				"enum": [
+					"required",
+					"preferred"
+				]
+			},
+			"Directives": {
+				"type": "string",
+				"enum": [
+					"required",
+					"allowed",
+					"disallowed"
+				]
+			},
+			"PdStatus": {
+				"properties": {
+					"directive": {
+						"$ref": "#/components/schemas/Directives"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Statuses": {
+				"properties": {
+					"active": {
+						"$ref": "#/components/schemas/PdStatus"
+					},
+					"suspended": {
+						"$ref": "#/components/schemas/PdStatus"
+					},
+					"revoked": {
+						"$ref": "#/components/schemas/PdStatus"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"OneOfNumberStringBoolean": {
+				"anyOf": [
+					{
+						"type": "boolean"
+					},
+					{
+						"type": "number",
+						"format": "double"
+					},
+					{
+						"type": "string"
+					}
+				]
+			},
+			"OneOfNumberString": {
+				"anyOf": [
+					{
+						"type": "number",
+						"format": "double"
+					},
+					{
+						"type": "string"
+					}
+				]
+			},
+			"FilterV2": {
+				"properties": {
+					"const": {
+						"$ref": "#/components/schemas/OneOfNumberStringBoolean"
+					},
+					"enum": {
+						"items": {
+							"$ref": "#/components/schemas/OneOfNumberStringBoolean"
+						},
+						"type": "array"
+					},
+					"exclusiveMinimum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"exclusiveMaximum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"format": {
+						"type": "string"
+					},
+					"formatMaximum": {
+						"type": "string"
+					},
+					"formatMinimum": {
+						"type": "string"
+					},
+					"formatExclusiveMaximum": {
+						"type": "string"
+					},
+					"formatExclusiveMinimum": {
+						"type": "string"
+					},
+					"minLength": {
+						"type": "number",
+						"format": "double"
+					},
+					"maxLength": {
+						"type": "number",
+						"format": "double"
+					},
+					"minimum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"maximum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"not": {
+						"additionalProperties": false,
+						"type": "object"
+					},
+					"pattern": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					},
+					"contains": {
+						"$ref": "#/components/schemas/FilterV2"
+					},
+					"items": {
+						"$ref": "#/components/schemas/FilterV2Items"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FilterV2Items": {
+				"properties": {
+					"const": {
+						"$ref": "#/components/schemas/OneOfNumberStringBoolean"
+					},
+					"enum": {
+						"items": {
+							"$ref": "#/components/schemas/OneOfNumberStringBoolean"
+						},
+						"type": "array"
+					},
+					"exclusiveMinimum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"exclusiveMaximum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"format": {
+						"type": "string"
+					},
+					"formatMaximum": {
+						"type": "string"
+					},
+					"formatMinimum": {
+						"type": "string"
+					},
+					"formatExclusiveMaximum": {
+						"type": "string"
+					},
+					"formatExclusiveMinimum": {
+						"type": "string"
+					},
+					"minLength": {
+						"type": "number",
+						"format": "double"
+					},
+					"maxLength": {
+						"type": "number",
+						"format": "double"
+					},
+					"minimum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"maximum": {
+						"$ref": "#/components/schemas/OneOfNumberString"
+					},
+					"not": {
+						"additionalProperties": false,
+						"type": "object"
+					},
+					"pattern": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					},
+					"contains": {
+						"$ref": "#/components/schemas/FilterV2"
+					},
+					"items": {
+						"$ref": "#/components/schemas/FilterV2Items"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FieldV2": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"path": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"purpose": {
+						"type": "string"
+					},
+					"filter": {
+						"$ref": "#/components/schemas/FilterV2"
+					},
+					"predicate": {
+						"$ref": "#/components/schemas/Optionality"
+					},
+					"intent_to_retain": {
+						"type": "boolean"
+					},
+					"name": {
+						"type": "string"
+					},
+					"optional": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"path"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HolderSubject": {
+				"properties": {
+					"field_id": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"directive": {
+						"$ref": "#/components/schemas/Optionality"
+					}
+				},
+				"required": [
+					"field_id",
+					"directive"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ConstraintsV2": {
+				"properties": {
+					"limit_disclosure": {
+						"$ref": "#/components/schemas/Optionality"
+					},
+					"statuses": {
+						"$ref": "#/components/schemas/Statuses"
+					},
+					"fields": {
+						"items": {
+							"$ref": "#/components/schemas/FieldV2"
+						},
+						"type": "array"
+					},
+					"subject_is_issuer": {
+						"$ref": "#/components/schemas/Optionality"
+					},
+					"is_holder": {
+						"items": {
+							"$ref": "#/components/schemas/HolderSubject"
+						},
+						"type": "array"
+					},
+					"same_subject": {
+						"items": {
+							"$ref": "#/components/schemas/HolderSubject"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"InputDescriptorV2Model": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"purpose": {
+						"type": "string"
+					},
+					"format": {
+						"$ref": "#/components/schemas/Format"
+					},
+					"group": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"issuance": {
+						"items": {
+							"$ref": "#/components/schemas/Issuance"
+						},
+						"type": "array"
+					},
+					"constraints": {
+						"$ref": "#/components/schemas/ConstraintsV2"
+					}
+				},
+				"required": [
+					"id",
+					"constraints"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Rules": {
+				"type": "string",
+				"enum": [
+					"all",
+					"pick"
+				]
+			},
+			"SubmissionRequirement": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"purpose": {
+						"type": "string"
+					},
+					"rule": {
+						"$ref": "#/components/schemas/Rules"
+					},
+					"count": {
+						"type": "number",
+						"format": "double"
+					},
+					"min": {
+						"type": "number",
+						"format": "double"
+					},
+					"max": {
+						"type": "number",
+						"format": "double"
+					},
+					"from": {
+						"type": "string"
+					},
+					"from_nested": {
+						"items": {
+							"$ref": "#/components/schemas/SubmissionRequirement"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"rule"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"InputDescriptorV2": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"purpose": {
+						"type": "string"
+					},
+					"format": {
+						"$ref": "#/components/schemas/Format"
+					},
+					"group": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"issuance": {
+						"items": {
+							"$ref": "#/components/schemas/Issuance"
+						},
+						"type": "array"
+					},
+					"constraints": {
+						"$ref": "#/components/schemas/ConstraintsV2"
+					}
+				},
+				"required": [
+					"id",
+					"constraints"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PresentationDefinitionV2": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"purpose": {
+						"type": "string"
+					},
+					"format": {
+						"$ref": "#/components/schemas/Format"
+					},
+					"submission_requirements": {
+						"items": {
+							"$ref": "#/components/schemas/SubmissionRequirement"
+						},
+						"type": "array"
+					},
+					"input_descriptors": {
+						"items": {
+							"$ref": "#/components/schemas/InputDescriptorV2"
+						},
+						"type": "array"
+					},
+					"frame": {
+						"additionalProperties": false,
+						"type": "object"
+					}
+				},
+				"required": [
+					"id",
+					"input_descriptors"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DifPresentationExchangeDefinitionV2Model": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"purpose": {
+						"type": "string"
+					},
+					"format": {
+						"$ref": "#/components/schemas/Format"
+					},
+					"submission_requirements": {
+						"items": {},
+						"type": "array"
+					},
+					"input_descriptors": {
+						"items": {
+							"$ref": "#/components/schemas/InputDescriptorV2Model"
+						},
+						"type": "array"
+					},
+					"frame": {
+						"additionalProperties": false,
+						"type": "object"
+					}
+				},
+				"required": [
+					"id",
+					"input_descriptors"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PresentationDefinition": {
+				"properties": {
+					"definition": {
+						"$ref": "#/components/schemas/DifPresentationExchangeDefinitionV2Model"
+					}
+				},
+				"required": [
+					"definition"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DcqlClaim": {
+				"properties": {
+					"path": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"intent_to_retain": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"path"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DcqlCredential": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"format": {
+						"type": "string"
+					},
+					"meta": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"require_cryptographic_holder_binding": {
+						"type": "boolean"
+					},
+					"claims": {
+						"items": {
+							"$ref": "#/components/schemas/DcqlClaim"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id",
+					"format",
+					"claims"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DcqlQuery": {
+				"properties": {
+					"combine": {
+						"type": "string",
+						"enum": [
+							"all",
+							"any"
+						]
+					},
+					"credentials": {
+						"items": {
+							"$ref": "#/components/schemas/DcqlCredential"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"credentials"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DcqlDefinition": {
+				"properties": {
+					"query": {
+						"$ref": "#/components/schemas/DcqlQuery"
+					}
+				},
+				"required": [
+					"query"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ResponseModeEnum": {
+				"enum": [
+					"direct_post",
+					"direct_post.jwt"
+				],
+				"type": "string"
+			},
+			"OpenId4VcJwtIssuerDid": {
+				"properties": {
+					"method": {
+						"type": "string",
+						"enum": [
+							"did"
+						],
+						"nullable": false
+					},
+					"didUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"method",
+					"didUrl"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateAuthorizationRequest": {
+				"properties": {
+					"verifierId": {
+						"type": "string"
+					},
+					"presentationExchange": {
+						"$ref": "#/components/schemas/PresentationDefinition"
+					},
+					"dcql": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"$ref": "#/components/schemas/DcqlDefinition"
+							}
+						]
+					},
+					"responseMode": {
+						"$ref": "#/components/schemas/ResponseModeEnum"
+					},
+					"requestSigner": {
+						"$ref": "#/components/schemas/OpenId4VcJwtIssuerDid"
+					}
+				},
+				"required": [
+					"verifierId",
+					"requestSigner"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"OpenId4VcVerificationSessionRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
@@ -4320,9 +5016,122 @@
 				],
 				"type": "string"
 			},
+			"SdJwtVcRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"MdocRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"ResolveCredentialOfferBody": {
+				"properties": {
+					"credentialOfferUri": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"credentialOfferUri"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AuthorizeRequestCredentialOffer": {
+				"properties": {
+					"credentialOfferUri": {
+						"type": "string"
+					},
+					"credentialsToRequest": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"credentialOfferUri",
+					"credentialsToRequest"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RequestCredentialBody": {
+				"properties": {
+					"credentialOfferUri": {
+						"type": "string"
+					},
+					"credentialsToRequest": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"authorizationCode": {
+						"type": "string"
+					},
+					"codeVerifier": {
+						"type": "string"
+					},
+					"txCode": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"credentialOfferUri",
+					"credentialsToRequest"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ResolveProofRequest": {
+				"properties": {
+					"proofRequestUri": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"proofRequestUri"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"OpenId4VcVerifierRecord": {
 				"$ref": "#/components/schemas/Record_string.unknown_",
 				"description": "For OID4VC you need to expos metadata files. Each issuer needs to host this metadata. This is not the case for DIDComm where we can just have one /didcomm endpoint.\nSo we create a record per openid issuer/verifier that you want, and each tenant can create multiple issuers/verifiers which have different endpoints\nand metadata files"
+			},
+			"OpenId4VcSiopVerifierClientMetadata": {
+				"properties": {
+					"client_name": {
+						"type": "string"
+					},
+					"logo_uri": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"OpenId4VcSiopCreateVerifierOptions": {
+				"properties": {
+					"verifierId": {
+						"type": "string"
+					},
+					"clientMetadata": {
+						"$ref": "#/components/schemas/OpenId4VcSiopVerifierClientMetadata"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"OpenId4VcUpdateVerifierRecordOptions": {
+				"properties": {
+					"verifierId": {
+						"type": "string"
+					},
+					"clientMetadata": {
+						"$ref": "#/components/schemas/OpenId4VcSiopVerifierClientMetadata"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {
@@ -8770,68 +9579,6 @@
 				]
 			}
 		},
-		"/multi-tenancy": {
-			"get": {
-				"operationId": "GetTenants",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"MultiTenancy"
-				],
-				"security": [
-					{
-						"jwt": [
-							"Basewallet"
-						]
-					}
-				],
-				"parameters": []
-			}
-		},
 		"/openid4vc/issuance-sessions/create-credential-offer": {
 			"post": {
 				"operationId": "CreateCredentialOffer",
@@ -9080,270 +9827,6 @@
 						}
 					}
 				]
-			}
-		},
-		"/openid4vc/holder/sd-jwt-vcs": {
-			"get": {
-				"operationId": "GetSdJwtCredentials",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/SdJwtVcRecord"
-									},
-									"type": "array"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get SdJwt type of credentials",
-				"tags": [
-					"oid4vc holders"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/openid4vc/holder/mdoc-vcs": {
-			"get": {
-				"operationId": "GetMdocCredentials",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/MdocRecord"
-									},
-									"type": "array"
-								}
-							}
-						}
-					}
-				},
-				"description": "Fetch all mso mdoc credentials in wallet",
-				"tags": [
-					"oid4vc holders"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/openid4vc/holder/mdoc-vcs/decode": {
-			"post": {
-				"operationId": "DecodeMdocCredential",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"description": "Decode mso mdoc credential in wallet",
-				"tags": [
-					"oid4vc holders"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"base64Url": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"base64Url"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/openid4vc/holder/authorization-request": {
-			"post": {
-				"operationId": "RequestAuthorizationForCredential",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"codeVerifier": {
-											"type": "string"
-										},
-										"authorizationRequestUrl": {
-											"type": "string"
-										},
-										"actionToTake": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"codeVerifier",
-										"authorizationRequestUrl",
-										"actionToTake"
-									],
-									"type": "object"
-								}
-							}
-						}
-					}
-				},
-				"description": "Resolve a credential offer",
-				"tags": [
-					"oid4vc holders"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/AuthorizeRequestCredentialOffer"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/openid4vc/holder/request-credential": {
-			"post": {
-				"operationId": "RequestCredential",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {},
-									"type": "array"
-								}
-							}
-						}
-					}
-				},
-				"description": "Initiates a token request, then requests credentials from issuer",
-				"tags": [
-					"oid4vc holders"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RequestCredentialBody"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/openid4vc/holder/resolve-proof-request": {
-			"post": {
-				"operationId": "ResolveProofRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"description": "Resolve a proof request",
-				"tags": [
-					"oid4vc holders"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ResolveProofRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/openid4vc/holder/accept-proof-request": {
-			"post": {
-				"operationId": "AcceptProofRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
-					}
-				},
-				"description": "Accept a proof request",
-				"tags": [
-					"oid4vc holders"
-				],
-				"security": [
-					{
-						"apiKey": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ResolveProofRequest"
-							}
-						}
-					}
-				}
 			}
 		},
 		"/openid4vc/issuer": {
@@ -9880,6 +10363,44 @@
 				]
 			}
 		},
+		"/openid4vc/verification-sessions/create-presentation-request": {
+			"post": {
+				"operationId": "CreateProofRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Create an authorization request, acting as a Relying Party (RP)",
+				"tags": [
+					"oid4vc verification sessions"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateAuthorizationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/openid4vc/verification-sessions": {
 			"get": {
 				"operationId": "GetAllVerificationSessions",
@@ -9898,7 +10419,7 @@
 						}
 					}
 				},
-				"description": "Create an authorization request, acting as a Relying Party (RP)",
+				"description": "Retrieve all verification session records",
 				"tags": [
 					"oid4vc verification sessions"
 				],
@@ -9993,6 +10514,430 @@
 				]
 			}
 		},
+		"/openid4vc/verification-sessions/response/{verificationSessionId}": {
+			"get": {
+				"operationId": "GetVerifiedAuthorizationResponse",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"oid4vc verification sessions"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "verificationSessionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/openid4vc/holder/sd-jwt-vcs": {
+			"get": {
+				"operationId": "GetSdJwtCredentials",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/SdJwtVcRecord"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get SdJwt type of credentials",
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/openid4vc/holder/mdoc-vcs": {
+			"get": {
+				"operationId": "GetMdocCredentials",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/MdocRecord"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"description": "Fetch all mso mdoc credentials in wallet",
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/openid4vc/holder/mdoc-vcs/decode": {
+			"post": {
+				"operationId": "DecodeMdocCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Decode mso mdoc credential in wallet",
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"base64Url": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"base64Url"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/openid4vc/holder/resolve-credential-offer": {
+			"post": {
+				"operationId": "ResolveCredOffer",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Resolve a credential offer",
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResolveCredentialOfferBody"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/openid4vc/holder/authorization-request": {
+			"post": {
+				"operationId": "RequestAuthorizationForCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AuthorizeRequestCredentialOffer"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/openid4vc/holder/request-credential": {
+			"post": {
+				"operationId": "RequestCredential",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Initiates a token request, then requests credentials from issuer",
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RequestCredentialBody"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/openid4vc/holder/resolve-proof-request": {
+			"post": {
+				"operationId": "ResolveProofRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Resolve a proof request",
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResolveProofRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/openid4vc/holder/accept-proof-request": {
+			"post": {
+				"operationId": "AcceptProofRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"properties": {
+												"body": {
+													"anyOf": [
+														{
+															"type": "string"
+														},
+														{
+															"$ref": "#/components/schemas/Record_string.unknown_"
+														}
+													]
+												},
+												"status": {
+													"type": "number",
+													"format": "double"
+												}
+											},
+											"required": [
+												"body",
+												"status"
+											],
+											"type": "object"
+										},
+										{
+											"properties": {
+												"body": {
+													"$ref": "#/components/schemas/Record_string.unknown_"
+												},
+												"status": {
+													"type": "number",
+													"format": "double"
+												}
+											},
+											"required": [
+												"body",
+												"status"
+											],
+											"type": "object"
+										}
+									]
+								}
+							}
+						}
+					}
+				},
+				"description": "Accept a proof request",
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResolveProofRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/openid4vc/holder/decode-sdjwt": {
+			"post": {
+				"operationId": "DecodeSdJwt",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"oid4vc holders"
+				],
+				"security": [
+					{
+						"jwt": [
+							"tenant",
+							"dedicated"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"jwt": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"jwt"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/openid4vc/verifier": {
 			"post": {
 				"operationId": "CreateVerifier",
@@ -10025,7 +10970,9 @@
 					"required": true,
 					"content": {
 						"application/json": {
-							"schema": {}
+							"schema": {
+								"$ref": "#/components/schemas/OpenId4VcSiopCreateVerifierOptions"
+							}
 						}
 					}
 				}
@@ -10112,7 +11059,9 @@
 					"required": true,
 					"content": {
 						"application/json": {
-							"schema": {}
+							"schema": {
+								"$ref": "#/components/schemas/OpenId4VcUpdateVerifierRecordOptions"
+							}
 						}
 					}
 				}

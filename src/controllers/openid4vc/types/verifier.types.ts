@@ -4,14 +4,17 @@ import type { SubmissionRequirement, Format, Issuance, InputDescriptorV2 } from 
 
 export enum ResponseModeEnum {
   DIRECT_POST = 'direct_post',
-  DIRECT_POSJWT = 'direct_post.jwt',
-}// export interface SubmissionRequirementModel extends SubmissionRequirement {
+  DIRECT_POST_JWT = 'direct_post.jwt',
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             PRESENTATION MODELS                            */
+/* -------------------------------------------------------------------------- */
 
 export interface InputDescriptorV2Model extends InputDescriptorV2 {
   format?: Format
   group?: string[]
   issuance?: Issuance[]
-  // constraints already inherited
 }
 
 export interface DifPresentationExchangeDefinitionV2Model extends DifPresentationExchangeDefinitionV2 {
@@ -25,12 +28,60 @@ export interface PresentationDefinition {
   definition: DifPresentationExchangeDefinitionV2Model
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                 DCQL MODELS                                */
+/* -------------------------------------------------------------------------- */
+
+export interface DcqlClaim {
+  path: string[]
+  intent_to_retain?: boolean
+}
+
+export interface DcqlCredential {
+  id: string
+  format: string
+  meta?: Record<string, any>
+  require_cryptographic_holder_binding?: boolean
+  claims: DcqlClaim[]
+}
+
+export interface DcqlQuery {
+  combine?: 'all' | 'any'
+  credentials: DcqlCredential[]
+}
+
+export interface DcqlDefinition {
+  query: DcqlQuery
+}
+
+/* -------------------------------------------------------------------------- */
+/*                       AUTHORIZATION REQUEST MODEL                          */
+/* -------------------------------------------------------------------------- */
+export interface OpenId4VcJwtIssuerDid {
+  method: 'did'
+  didUrl: string
+}
+
+export interface OpenId4VcIssuerX5c {
+  method: 'x5c'
+  issuer: string
+  x5c: string[]
+  alg: string
+}
+
 export interface CreateAuthorizationRequest {
   verifierId: string
-  verifierDid: string
-  presentationExchange: PresentationDefinition
+  presentationExchange?: PresentationDefinition
+  dcql?: string | DcqlDefinition
+
   responseMode?: ResponseModeEnum
+
+  requestSigner: OpenId4VcJwtIssuerDid
 }
+
+/* -------------------------------------------------------------------------- */
+/*                            VERIFIER METADATA                               */
+/* -------------------------------------------------------------------------- */
 
 export class OpenId4VcSiopVerifierClientMetadata {
   client_name?: string
@@ -43,6 +94,6 @@ export class OpenId4VcSiopCreateVerifierOptions {
 }
 
 export class OpenId4VcUpdateVerifierRecordOptions {
-  verifierId!: string
+  verifierId?: string
   clientMetadata?: OpenId4VcSiopVerifierClientMetadata
 }

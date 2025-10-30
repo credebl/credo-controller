@@ -4,7 +4,7 @@ import type {
   ResolveCredentialOfferBody,
   ResolveProofRequest,
 } from '../types/holder.types'
-import type { Agent } from '@credo-ts/core'
+import type { Agent, DcqlCredentialsForRequest, DcqlQueryResult } from '@credo-ts/core'
 import type {
   OpenId4VcAuthorizationCodeTokenRequestOptions,
   OpenId4VciPreAuthorizedTokenRequestOptions,
@@ -26,42 +26,22 @@ import {
   authorizationCodeGrantIdentifier,
   preAuthorizedCodeGrantIdentifier,
 } from '@credo-ts/openid4vc'
-
-type MappedAttributesReturnType =
-  | string
-  | number
-  | boolean
-  | { [key: string]: MappedAttributesReturnType }
-  | null
-  | undefined
-  | Array<MappedAttributesReturnType>
-
-function recursivelyMapAttribues(value: unknown): MappedAttributesReturnType {
-  if (value === null || value === undefined || typeof value === 'number' || typeof value === 'boolean') return value
-  if (typeof value === 'string') return value
-  if (value instanceof Map) {
-    return Object.fromEntries(Array.from(value.entries()).map(([key, value]) => [key, recursivelyMapAttribues(value)]))
-  }
-  if (Array.isArray(value)) return value.map(recursivelyMapAttribues)
-  return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, recursivelyMapAttribues(value)]))
-}
-
+import { Request as Req } from 'express'
 export class HolderService {
   private HOLDER_REDIRECT = process.env.HOLDER_REDIRECT ?? 'http://localhost:4001/redirect'
   private HOLDER_CLIENT_ID = process.env.HOLDER_CLIENT_ID ?? 'wallet'
 
-  public async getSdJwtCredentials(agent: Agent) {
-    return await agent.sdJwtVc.getAll()
+  public async getSdJwtCredentials(agentReq: Req) {
+    return await agentReq.agent.sdJwtVc.getAll()
   }
 
-  public async getMdocCredentials(agent: Agent) {
-    return await agent.mdoc.getAll()
+  public async getMdocCredentials(agentReq: Req) {
+    return await agentReq.agent.mdoc.getAll()
   }
 
-  public async decodeMdocCredential(agent: Agent, options: {
+  public async decodeMdocCredential(agentReq : Req, options: {
     base64Url: string
   }) {
-
     const credential = Mdoc.fromBase64Url(options.base64Url)
     return {
       namespace: credential.issuerSignedNamespaces,
@@ -71,18 +51,18 @@ export class HolderService {
     } as any
   }
 
-  // public async resolveCredentialOffer(agent: Agent, body: ResolveCredentialOfferBody) {
-  //   return await agent.modules.openId4VcHolderModule.resolveCredentialOffer(body.credentialOfferUri)
-  // }
+  public async resolveCredentialOffer(agentReq: Req, body: ResolveCredentialOfferBody) {
+    return await agentReq.agent.modules.openId4VcHolderModule.resolveCredentialOffer(body.credentialOfferUri) as any
+  }
 
-  public async requestAuthorizationForCredential(agent: Agent, body: AuthorizeRequestCredentialOffer) {
+  public async requestAuthorizationForCredential(agentReq: Req, body: AuthorizeRequestCredentialOffer) {
     console.log('Requesting authorization for credential offer:', body)
-    const resolvedCredentialOffer = await agent.modules.openId4VcHolderModule.resolveCredentialOffer(
+    const resolvedCredentialOffer = await agentReq.agent.modules.openId4VcHolderModule.resolveCredentialOffer(
       body.credentialOfferUri,
     )
     console.log('Resolved credential offer:', resolvedCredentialOffer)
     const resolvedAuthorization = await this.initiateAuthorization(
-      agent,
+      agentReq,
       resolvedCredentialOffer,
       body.credentialsToRequest,
     )
@@ -108,11 +88,11 @@ export class HolderService {
         break
     }
 
-    return { actionToTake, authorizationRequestUrl, codeVerifier }
+    return { actionToTake, authorizationRequestUrl, codeVerifier } as any
   }
 
-  public async requestCredential(agent: Agent, body: RequestCredentialBody) {
-    const resolvedCredentialOffer = await agent.modules.openId4VcHolderModule.resolveCredentialOffer(
+  public async requestCredential(agentReq: Req, body: RequestCredentialBody) {
+    const resolvedCredentialOffer = await agentReq.agent.modules.openId4VcHolderModule.resolveCredentialOffer(
       body.credentialOfferUri,
     )
 
@@ -133,16 +113,16 @@ export class HolderService {
       } as OpenId4VcAuthorizationCodeTokenRequestOptions
     }
 
-    return await this.requestAndStoreCredentials(agent, resolvedCredentialOffer, options)
+    return await this.requestAndStoreCredentials(agentReq, resolvedCredentialOffer, options) as any
   }
 
   private async requestAndStoreCredentials(
-    agent: Agent,
+    agentReq: Req,
     resolvedCredentialOffer: OpenId4VciResolvedCredentialOffer,
     options: OpenId4VciTokenRequestOptions,
   ) {
-    const tokenResponse = await agent.modules.openId4VcHolderModule.requestToken({ ...options })
-    const credentialResponse = await agent.modules.openId4VcHolderModule.requestCredentials({
+    const tokenResponse = await agentReq.agent.modules.openId4VcHolderModule.requestToken({ ...options })
+    const credentialResponse = await agentReq.agent.modules.openId4VcHolderModule.requestCredentials({
       ...options,
       credentialConfigurationIds: resolvedCredentialOffer.credentialOfferPayload.credential_configuration_ids,
       credentialBindingResolver: async ({
@@ -154,7 +134,7 @@ export class HolderService {
         supportedDidMethods?: string[]
         supportsAllDidMethods?: boolean
       }) => {
-        const key = await agent.wallet.createKey({ keyType: keyTypes[0] as any })
+        const key = await agentReq.agent.wallet.createKey({ keyType: keyTypes[0] as any })
         if (supportsAllDidMethods || supportedDidMethods?.includes('did:key')) {
           const didKey = new DidKey(key)
           return { method: 'did', didUrl: `${didKey.did}#${didKey.key.fingerprint}` }
@@ -172,24 +152,24 @@ export class HolderService {
       credentialResponse.credentials.map(async (response: any) => {
         const credential = response.credentials[0]
         if (credential instanceof W3cJwtVerifiableCredential || credential instanceof W3cJsonLdVerifiableCredential) {
-          return await agent.w3cCredentials.storeCredential({ credential })
+          return await agentReq.agent.w3cCredentials.storeCredential({ credential })
         }
         if (credential instanceof Mdoc) {
-          return await agent.mdoc.store(credential)
+          return await agentReq.agent.mdoc.store(credential)
         }
-        return await agent.sdJwtVc.store(credential.compact)
+        return await agentReq.agent.sdJwtVc.store(credential.compact)
       }),
     )
 
-    return storedCredentials
+    return storedCredentials as any
   }
 
   private async initiateAuthorization(
-    agent: Agent,
+    agentReq: Req,
     resolvedCredentialOffer: OpenId4VciResolvedCredentialOffer,
     credentialsToRequest: string[],
   ) {
-    console.log("agent::::::::::::::", Object.keys(agent.modules.openId4VcHolderModule))
+    console.log("agent::::::::::::::", Object.keys(agentReq.agent.modules.openId4VcHolderModule))
 
     console.log('Initiating authorization with resolvedCredentialOffer:', resolvedCredentialOffer)
     console.log('Credentials to request:', credentialsToRequest)
@@ -214,7 +194,7 @@ export class HolderService {
         .map(([id, val]) => (credentialsToRequest.includes(id) ? val.scope : undefined))
         .filter((v): v is string => Boolean(v))
 
-      const resolved = await agent.modules.openId4VcHolderModule.resolveIssuanceAuthorizationRequest(
+      const resolved = await agentReq.agent.modules.openId4VcHolderModule.resolveOpenId4VciAuthorizationRequest(
         resolvedCredentialOffer,
         {
           clientId: this.HOLDER_CLIENT_ID,
@@ -234,34 +214,67 @@ export class HolderService {
       return {
         ...resolved,
         authorizationFlow: 'Oauth2Redirect' as const,
-      }
+      } as any
     }
 
     // ❌ Unsupported grant
     throw new Error('Unsupported grant type')
   }
 
-  public async resolveProofRequest(agent: Agent, body: ResolveProofRequest) {
-    return await agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(body.proofRequestUri)
+  public async resolveProofRequest(agentReq: Req, body: ResolveProofRequest) {
+    return await agentReq.agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(body.proofRequestUri) as any
   }
 
-  public async acceptPresentationRequest(agent: Agent, body: ResolveProofRequest) {
-    const resolved = await agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(
+  public async acceptPresentationRequest(agentReq: Req, body: ResolveProofRequest) {
+    const resolved = await agentReq.agent.modules.openId4VcHolderModule.resolveOpenId4VpAuthorizationRequest(
       body.proofRequestUri,
     )
-    const presentationExchangeService = agent.dependencyManager.resolve(DifPresentationExchangeService)
+    console.log('Resolved proof request:', resolved)
+    // const presentationExchangeService = agent.dependencyManager.resolve(DifPresentationExchangeService)
 
-    if (!resolved.presentationExchange) throw new Error('Missing presentation exchange on request')
+    const dcqlService = agentReq.agent.dependencyManager.resolve(DifPresentationExchangeService)
 
-    const submissionResult = await agent.modules.openId4VcHolderModule.acceptOpenId4VpAuthorizationRequest({
+    // console.log('Resolved proof request:', resolved)
+
+    // console.log('Presentation exchange service:', presentationExchangeService)
+
+    if (!resolved.dcql) throw new Error('Missing DCQL on request')
+    console.log('DCQL query result:', resolved.dcql.queryResult)
+    //
+    let dcqlCredentials
+    try {
+      dcqlCredentials = await agentReq.agent.modules.openId4VcHolderModule.selectCredentialsForDcqlRequest(
+        resolved.dcql.queryResult
+      )
+      console.log('Selected credentials for DCQL request:', dcqlCredentials)
+    } catch (error) {
+      console.error('Error selecting credentials for DCQL request:', error)
+      throw error
+    }
+    const submissionResult = await agentReq.agent.modules.openId4VcHolderModule.acceptOpenId4VpAuthorizationRequest({
       authorizationRequestPayload: resolved.authorizationRequestPayload,
-      presentationExchange: {
-        credentials: presentationExchangeService.selectCredentialsForRequest(
-          resolved.presentationExchange.credentialsForRequest,
-        ),
+      dcql: {
+        credentials: dcqlCredentials as DcqlCredentialsForRequest,
       },
     })
-
+    console.log('Presentation submission result:', submissionResult)
     return submissionResult.serverResponse
   }
+
+  public async decodeSdJwt(agentReq: Req, body: { jwt: string }) {
+    const sdJwt = agentReq.agent.sdJwtVc.fromCompact(body.jwt)
+    return sdJwt as any
+  }
+
+  public async getSelectedCredentialsForRequest(
+    dcqlQueryResult: DcqlQueryResult,
+    selectedCredentials: { [credentialQueryId: string]: string }
+  ) {
+    if (!dcqlQueryResult.canBeSatisfied) {
+      throw new Error('Cannot select the credentials for the dcql query presentation if the request cannot be satisfied')
+    }
+    // TODO: Implement logic to select credentials based on selectedCredentials
+    return {} as any; // Placeholder return to avoid errors
+  } 
 }
+export const holderService = new HolderService()
