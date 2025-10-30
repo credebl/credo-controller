@@ -328,7 +328,7 @@ export function getMixedCredentialRequestToCredentialMapper(): OpenId4VciCredent
         parsedCertificate = X509Service.parseCertificate(agentContext, {
           encodedCertificate: issuerx509certificate[0],
         })
-      } else {
+      } else if (!issuerDidVerificationMethod) {
         throw new Error(`issuerx509certificate is not provided for credential ${credentialConfigurationId}`)
       }
 
