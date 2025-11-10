@@ -232,6 +232,7 @@ const getModules = (
           ? `https://${process.env.APP_URL}/oid4vp`
           : `${process.env.AGENT_HTTP_URL}/oid4vp`,
       router: openId4VpRouter,
+      authorizationRequestExpirationInSeconds: Number(process.env.OID4VP_AUTH_REQUEST_PROOF_REQUEST_EXPIRY) || 3600,
     }),
     openId4VcIssuer: new OpenId4VcIssuerModule({
       baseUrl:
@@ -239,10 +240,10 @@ const getModules = (
           ? `https://${process.env.APP_URL}/oid4vci`
           : `${process.env.AGENT_HTTP_URL}/oid4vci`,
       router: openId4VciRouter,
-      statefulCredentialOfferExpirationInSeconds: Number(process.env.OPENID_CRED_OFFER_EXPIRY) || 3600,
-      accessTokenExpiresInSeconds: Number(process.env.OPENID_ACCESS_TOKEN_EXPIRY) || 3600,
-      authorizationCodeExpiresInSeconds: Number(process.env.OPENID_AUTH_CODE_EXPIRY) || 3600,
-      cNonceExpiresInSeconds: Number(process.env.OPENID_CNONCE_EXPIRY) || 3600,
+      statefulCredentialOfferExpirationInSeconds: Number(process.env.OID4VCI_CRED_OFFER_EXPIRY) || 3600,
+      accessTokenExpiresInSeconds: Number(process.env.OID4VCI_ACCESS_TOKEN_EXPIRY) || 3600,
+      authorizationCodeExpiresInSeconds: Number(process.env.OID4VCI_AUTH_CODE_EXPIRY) || 3600,
+      cNonceExpiresInSeconds: Number(process.env.OID4VCI_CNONCE_EXPIRY) || 3600,
       dpopRequired: false,
       credentialRequestToCredentialMapper: (...args) => getMixedCredentialRequestToCredentialMapper()(...args),
     }),
