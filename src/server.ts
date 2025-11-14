@@ -62,13 +62,13 @@ export const setupServer = async (
   app.use(
     bodyParser.urlencoded({
       extended: true,
-      limit: '50mb',
+      limit: process.env.APP_URL_ENCODED_BODY_SIZE ?? '5mb',
     }),
   )
 
   setDynamicApiKey(apiKey ? apiKey : '')
 
-  app.use(bodyParser.json({ limit: '50mb' }))
+  app.use(bodyParser.json({ limit: process.env.APP_JSON_BODY_SIZE ?? '5mb' }))
   app.use('/docs', serve, (_req: ExRequest, res: ExResponse, next: NextFunction) => {
     import('./routes/swagger.json')
       .then((swaggerJson) => {
