@@ -70,6 +70,7 @@ import {
   getMixedCredentialRequestToCredentialMapper,
   getTrustedCerts,
 } from './utils/oid4vc-agent'
+import bodyParser from 'body-parser'
 
 const openId4VciRouter = Router()
 const openId4VpRouter = Router()
@@ -466,6 +467,14 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
     // Configure the oid4vc routers on the http inbound transport
     if (transport instanceof HttpInboundTransport) {
+      transport.app.use(
+        bodyParser.urlencoded({
+          extended: true,
+          limit: process.env.APP_URL_ENCODED_BODY_SIZE ?? '5mb',
+        }),
+      )
+      transport.app.use(bodyParser.json({ limit: process.env.APP_JSON_BODY_SIZE ?? '5mb' }))
+
       transport.app.use('/oid4vci', modules.openId4VcIssuer.config.router as any)
       transport.app.use('/oid4vp', modules.openId4VcVerifier.config.router as any)
     }

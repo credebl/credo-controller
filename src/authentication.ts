@@ -25,9 +25,6 @@ export async function expressAuthentication(request: Request, securityName: stri
   const logger = new TsLogger(LogLevel.info)
   const agent = container.resolve(Agent<RestMultiTenantAgentModules>)
 
-  logger.info(`securityName::: ${securityName}`)
-  logger.info(`scopes::: ${scopes}`)
-
   if (scopes && scopes?.includes(SCOPES.UNPROTECTED)) {
     // Skip authentication for this route or controller
     request.agent = agent
